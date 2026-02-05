@@ -175,13 +175,12 @@ export function useShufflePlay(): UseShufflePlayReturn {
 
       // First call uses DJ endpoint for harmonic ordering
       // Subsequent calls (for pagination) use regular shuffle
-      const isFirstFetch = true;
 
       // Fetch tracks until we have enough unseen ones
       while (newTracks.length < BATCH_SIZE && attempts < maxAttempts) {
         // Use DJ endpoint for first fetch, regular for subsequent
         let response: ShuffledTracksResponse | DjShuffledTracksResponse;
-        if (isFirstFetch && attempts === 0) {
+        if (attempts === 0) {
           response = await tracksService.getDjShuffled({
             seed: currentSeed ?? undefined,
             skip: currentSkip,

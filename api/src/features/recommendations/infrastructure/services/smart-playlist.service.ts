@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { eq, inArray } from 'drizzle-orm';
 import { ScoringService } from '../../domain/services/scoring.service';
 import { SmartPlaylistConfig, TrackScore } from '../../domain/entities/track-score.entity';
+import { SmartPlaylistResult } from '../../domain/ports/playlist-generator.ports';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { tracks, trackGenres, playHistory } from '@infrastructure/database/schema';
 
@@ -16,7 +17,7 @@ export class SmartPlaylistService {
    * Generate smart playlist based on configuration
    * Can be filtered by artist, genre, or mood
    */
-  async generateSmartPlaylist(userId: string, config: SmartPlaylistConfig): Promise<{ tracks: TrackScore[]; metadata: any }> {
+  async generateSmartPlaylist(userId: string, config: SmartPlaylistConfig): Promise<SmartPlaylistResult> {
     const maxTracks = config.maxTracks || 50;
     const minScore = config.minScore || 20;
 

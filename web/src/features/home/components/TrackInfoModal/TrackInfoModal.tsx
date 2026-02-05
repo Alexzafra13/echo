@@ -226,7 +226,7 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
                 <div className={styles.trackInfoModal__djItem}>
                   <span className={styles.trackInfoModal__djLabel}>BPM</span>
                   <span className={styles.trackInfoModal__djValue}>
-                    {djAnalysis.bpm ?? '—'}
+                    {djAnalysis.bpm && djAnalysis.bpm > 0 ? Math.round(djAnalysis.bpm) : '—'}
                   </span>
                 </div>
 
@@ -246,7 +246,7 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
                       </span>
                     ) : null}
                     <span className={styles.trackInfoModal__musicalKey}>
-                      {djAnalysis.key ?? '—'}
+                      {djAnalysis.key && djAnalysis.key !== 'Unknown' ? djAnalysis.key : '—'}
                     </span>
                   </div>
                 </div>

@@ -28,6 +28,28 @@ import * as path from 'path';
 // Setting key for music library path
 const LIBRARY_PATH_KEY = 'library.music.path';
 
+/** Options for enqueueing a scan job */
+interface EnqueueScanOptions {
+  path?: string;
+  recursive?: boolean;
+  pruneDeleted?: boolean;
+}
+
+/** Data passed to full scan job processor */
+interface ScanJobData {
+  scanId: string;
+  path: string;
+  recursive: boolean;
+  pruneDeleted: boolean;
+}
+
+/** Data passed to incremental scan job processor */
+interface IncrementalScanJobData {
+  files: string[];
+  source: string;
+  timestamp: string;
+}
+
 /**
  * ScanProcessorService - Orchestrates library scanning
  *
@@ -93,7 +115,7 @@ export class ScanProcessorService implements OnModuleInit {
   /**
    * Queue a new scan job
    */
-  async enqueueScan(scanId: string, options?: any): Promise<void> {
+  async enqueueScan(scanId: string, options?: EnqueueScanOptions): Promise<void> {
     const libraryPath = await this.getMusicLibraryPath();
     await this.bullmq.addJob(
       this.QUEUE_NAME,
@@ -117,7 +139,7 @@ export class ScanProcessorService implements OnModuleInit {
   /**
    * Process a full library scan
    */
-  private async processScanning(data: any): Promise<void> {
+  private async processScanning(data: ScanJobData): Promise<void> {
     const { scanId, path: scanPath, recursive, pruneDeleted } = data;
     const startTime = Date.now();
     const tracker = new ScanProgressTracker();
@@ -328,7 +350,7 @@ export class ScanProcessorService implements OnModuleInit {
   /**
    * Process incremental scan from file watcher
    */
-  private async processIncrementalScan(data: any): Promise<void> {
+  private async processIncrementalScan(data: IncrementalScanJobData): Promise<void> {
     const { files, source, timestamp } = data;
     const scanId = generateUuid();
 

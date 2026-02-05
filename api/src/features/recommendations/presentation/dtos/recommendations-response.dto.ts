@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { SmartPlaylistConfigDto } from './recommendations.dto';
 
 export class ScoreBreakdownDto {
   @ApiProperty() explicitFeedback!: number;
@@ -58,12 +59,14 @@ export class AutoPlaylistDto {
 // Legacy alias
 export class DailyMixDto extends AutoPlaylistDto {}
 
+export class SmartPlaylistMetadataDto {
+  @ApiProperty() totalTracks!: number;
+  @ApiProperty() avgScore!: number;
+  @ApiProperty({ type: SmartPlaylistConfigDto, required: false }) config?: SmartPlaylistConfigDto;
+}
+
 export class SmartPlaylistDto {
   @ApiProperty({ type: [TrackScoreDto] }) tracks!: TrackScoreDto[];
-  @ApiProperty()
-  metadata!: {
-    totalTracks: number;
-    avgScore: number;
-    config: any;
-  };
+  @ApiProperty({ type: SmartPlaylistMetadataDto })
+  metadata!: SmartPlaylistMetadataDto;
 }

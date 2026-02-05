@@ -201,7 +201,11 @@ export class RecommendationsController {
             : undefined,
         };
       }),
-      metadata: result.metadata,
+      metadata: {
+        totalTracks: result.metadata.totalTracks,
+        avgScore: result.metadata.avgScore,
+        config: result.metadata.config as SmartPlaylistConfigDto | undefined,
+      },
     };
   }
 
