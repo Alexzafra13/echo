@@ -18,8 +18,9 @@
 .trendingPage__content {
   flex: 1 1 0;
   min-height: 0;
-  padding: 30px 40px calc(40px + var(--player-bottom-spacer, 0px));
+  margin-top: -84px; /* Content starts behind header for glass effect */
   overflow-y: auto;
+  padding: 114px 40px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 30px */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -295,6 +296,7 @@
   }
 
   .trendingPage__content {
+    margin-top: 0;
     padding: 20px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
