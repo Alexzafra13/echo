@@ -273,7 +273,7 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .playlistDetailPage__content {
-    padding: 20px 32px;
+    padding: 20px 32px calc(40px + var(--player-bottom-spacer, 0px));
   }
 
   .playlistDetailPage__hero {
