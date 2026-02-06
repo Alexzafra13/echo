@@ -3,7 +3,7 @@ import type { Socket } from 'socket.io-client';
 import WebSocketService from '../services/websocket.service';
 import { logger } from '@shared/utils/logger';
 
-export type WebSocketNamespace = 'scanner' | 'metadata' | 'federation';
+export type WebSocketNamespace = 'scanner';
 
 // WebSocket events can receive various data types, so we use `any` intentionally
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

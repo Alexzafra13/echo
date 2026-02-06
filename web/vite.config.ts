@@ -53,36 +53,8 @@ export default defineConfig({
               },
             },
           },
-          {
-            // Cache Google Fonts stylesheets - use StaleWhileRevalidate for resilience
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            // Cache Google Fonts files (woff2) - use CacheFirst since fonts rarely change
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
+          // Google Fonts are NOT cached by Workbox - the browser handles
+          // font caching natively via HTTP cache headers, avoiding CORS issues
         ],
       },
       // Don't generate manifest - we already have one
