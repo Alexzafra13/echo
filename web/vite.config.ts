@@ -38,7 +38,8 @@ export default defineConfig({
           },
           {
             // Network first for API data (always fresh when online)
-            urlPattern: /^.*\/api\/.*/,
+            // Exclude SSE streams and audio streaming endpoints
+            urlPattern: /^.*\/api\/(?!.*\/stream)(?!.*\/radio\/)(?!tracks\/.*\/audio).*/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
