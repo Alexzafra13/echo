@@ -13,11 +13,13 @@ import {
 } from '../../presentation/dtos/social.dto';
 
 /**
- * Helper function to generate avatar URL from path
+ * Helper function to generate avatar URL from path.
+ * Includes avatarUpdatedAt as cache-buster to prevent stale browser cache.
  */
-function getAvatarUrl(userId: string, avatarPath: string | null): string | null {
+function getAvatarUrl(userId: string, avatarPath: string | null, avatarUpdatedAt?: Date | null): string | null {
   if (!avatarPath) return null;
-  return `/api/images/users/${userId}/avatar`;
+  const base = `/api/images/users/${userId}/avatar`;
+  return avatarUpdatedAt ? `${base}?v=${avatarUpdatedAt.getTime()}` : base;
 }
 
 /**
@@ -55,7 +57,7 @@ export class SocialMapper {
       id: friend.id,
       username: friend.username,
       name: friend.name,
-      avatarUrl: getAvatarUrl(friend.id, friend.avatarPath),
+      avatarUrl: getAvatarUrl(friend.id, friend.avatarPath, friend.avatarUpdatedAt),
       isPublicProfile: friend.isPublicProfile,
       friendshipId: friend.friendshipId,
       friendsSince: friend.friendsSince,
@@ -67,7 +69,7 @@ export class SocialMapper {
       id: user.id,
       username: user.username,
       name: user.name,
-      avatarUrl: getAvatarUrl(user.id, user.avatarPath),
+      avatarUrl: getAvatarUrl(user.id, user.avatarPath, user.avatarUpdatedAt),
       isPlaying: user.isPlaying,
       currentTrack: user.currentTrack
         ? {
@@ -111,7 +113,7 @@ export class SocialMapper {
         id: activity.userId,
         username: activity.username,
         name: activity.userName,
-        avatarUrl: getAvatarUrl(activity.userId, activity.userAvatarPath),
+        avatarUrl: getAvatarUrl(activity.userId, activity.userAvatarPath, activity.userAvatarUpdatedAt),
       },
       actionType: activity.actionType,
       targetType: activity.targetType,
@@ -130,7 +132,7 @@ export class SocialMapper {
         id: activity.secondUserId,
         username: activity.targetName, // targetName stores second user's username
         name: activity.secondUserName || null,
-        avatarUrl: getAvatarUrl(activity.secondUserId, activity.secondUserAvatarPath || null),
+        avatarUrl: getAvatarUrl(activity.secondUserId, activity.secondUserAvatarPath || null, activity.secondUserAvatarUpdatedAt),
       };
     }
 
@@ -142,13 +144,14 @@ export class SocialMapper {
     username: string;
     name: string | null;
     avatarPath: string | null;
+    avatarUpdatedAt?: Date | null;
     friendshipStatus: string | null;
   }): SearchUserResultDto {
     return {
       id: user.id,
       username: user.username,
       name: user.name,
-      avatarUrl: getAvatarUrl(user.id, user.avatarPath),
+      avatarUrl: getAvatarUrl(user.id, user.avatarPath, user.avatarUpdatedAt),
       friendshipStatus: user.friendshipStatus,
     };
   }

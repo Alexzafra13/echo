@@ -495,8 +495,9 @@ export class ImagesController {
       // Obtener información del avatar
       const imageResult = await this.imageService.getUserAvatar(userId);
 
-      // Configurar headers de caché
-      this.setCacheHeaders(res, imageResult);
+      // User avatars use revalidation-based caching (ETag) instead of
+      // immutable caching, because the URL stays the same when avatar changes
+      this.setRevalidateCacheHeaders(res, imageResult);
 
       // Crear stream del archivo
       const fileStream = createReadStream(imageResult.filePath);
@@ -609,6 +610,23 @@ export class ImagesController {
       artistId,
       images: transformedImages,
     };
+  }
+
+  /**
+   * Cache headers for mutable resources (user avatars).
+   * Uses ETag revalidation so browser always checks if content changed,
+   * but gets a fast 304 response when it hasn't.
+   */
+  private setRevalidateCacheHeaders(
+    res: FastifyReply,
+    imageResult: { mimeType: string; lastModified: Date; tag: string },
+  ): void {
+    res.header('Content-Type', imageResult.mimeType);
+    res.header('Last-Modified', imageResult.lastModified.toUTCString());
+    res.header('ETag', `"${imageResult.tag}"`);
+    res.header('Cache-Control', 'no-cache');
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   }
 
   private setCacheHeaders(

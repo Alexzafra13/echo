@@ -19,6 +19,7 @@ export interface FriendshipWithUser extends Friendship {
     username: string;
     name: string | null;
     avatarPath: string | null;
+    avatarUpdatedAt: Date | null;
     isPublicProfile: boolean;
   };
   addressee: {
@@ -26,6 +27,7 @@ export interface FriendshipWithUser extends Friendship {
     username: string;
     name: string | null;
     avatarPath: string | null;
+    avatarUpdatedAt: Date | null;
     isPublicProfile: boolean;
   };
 }
@@ -35,6 +37,7 @@ export interface Friend {
   username: string;
   name: string | null;
   avatarPath: string | null;
+  avatarUpdatedAt: Date | null;
   isPublicProfile: boolean;
   friendshipId: string;
   friendsSince: Date;
@@ -45,6 +48,7 @@ export interface ListeningUser {
   username: string;
   name: string | null;
   avatarPath: string | null;
+  avatarUpdatedAt: Date | null;
   isPlaying: boolean;
   currentTrack: {
     id: string;
@@ -63,6 +67,7 @@ export interface ActivityItem {
   username: string;
   userName: string | null;
   userAvatarPath: string | null;
+  userAvatarUpdatedAt: Date | null;
   actionType: ActivityType;
   targetType: string;
   targetId: string;
@@ -74,6 +79,7 @@ export interface ActivityItem {
   secondUserId?: string; // for became_friends: the other user
   secondUserName?: string | null;
   secondUserAvatarPath?: string | null;
+  secondUserAvatarUpdatedAt?: Date | null;
   createdAt: Date;
 }
 

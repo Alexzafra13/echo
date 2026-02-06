@@ -101,6 +101,7 @@ export interface ISocialRepository {
     username: string;
     name: string | null;
     avatarPath: string | null;
+    avatarUpdatedAt: Date | null;
     friendshipStatus: FriendshipStatus | null;
   }[]>;
 }

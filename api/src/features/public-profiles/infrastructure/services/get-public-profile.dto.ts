@@ -8,6 +8,7 @@ export interface PublicProfileUser {
   username: string;
   name?: string;
   hasAvatar: boolean;
+  avatarUpdatedAt?: Date;
   bio?: string;
   isPublicProfile: boolean;
   createdAt: Date;

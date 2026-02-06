@@ -113,7 +113,9 @@ export class PublicProfileResponseDto {
       id: data.user.id,
       username: data.user.username,
       name: data.user.name,
-      avatarUrl: data.user.hasAvatar ? `/api/images/users/${data.user.id}/avatar` : undefined,
+      avatarUrl: data.user.hasAvatar
+        ? `/api/images/users/${data.user.id}/avatar${data.user.avatarUpdatedAt ? `?v=${data.user.avatarUpdatedAt.getTime()}` : ''}`
+        : undefined,
       bio: data.user.bio,
       isPublicProfile: data.user.isPublicProfile,
       memberSince: data.user.createdAt.toISOString(),

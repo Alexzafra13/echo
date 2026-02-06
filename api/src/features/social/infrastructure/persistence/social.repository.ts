@@ -168,6 +168,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         username: users.username,
         name: users.name,
         avatarPath: users.avatarPath,
+        avatarUpdatedAt: users.avatarUpdatedAt,
         isPublicProfile: users.isPublicProfile,
       })
       .from(users)
@@ -182,6 +183,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         username: user?.username || '',
         name: user?.name || null,
         avatarPath: user?.avatarPath || null,
+        avatarUpdatedAt: user?.avatarUpdatedAt || null,
         isPublicProfile: user?.isPublicProfile || false,
         friendshipId: r.friendshipId,
         friendsSince: r.friendsSince,
@@ -198,6 +200,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         username: users.username,
         name: users.name,
         avatarPath: users.avatarPath,
+        avatarUpdatedAt: users.avatarUpdatedAt,
         isPublicProfile: users.isPublicProfile,
       })
       .from(friendships)
@@ -215,6 +218,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
       username: r.username,
       name: r.name,
       avatarPath: r.avatarPath,
+      avatarUpdatedAt: r.avatarUpdatedAt,
       isPublicProfile: r.isPublicProfile,
       friendshipId: r.friendshipId,
       friendsSince: r.friendsSince,
@@ -230,6 +234,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         username: users.username,
         name: users.name,
         avatarPath: users.avatarPath,
+        avatarUpdatedAt: users.avatarUpdatedAt,
         isPublicProfile: users.isPublicProfile,
       })
       .from(friendships)
@@ -247,6 +252,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
       username: r.username,
       name: r.name,
       avatarPath: r.avatarPath,
+      avatarUpdatedAt: r.avatarUpdatedAt,
       isPublicProfile: r.isPublicProfile,
       friendshipId: r.friendshipId,
       friendsSince: r.friendsSince,
@@ -302,6 +308,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         username: users.username,
         name: users.name,
         avatarPath: users.avatarPath,
+        avatarUpdatedAt: users.avatarUpdatedAt,
         isPlaying: playQueues.isPlaying,
         updatedAt: playQueues.updatedAt,
         trackId: tracks.id,
@@ -323,6 +330,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
       username: r.username,
       name: r.name,
       avatarPath: r.avatarPath,
+      avatarUpdatedAt: r.avatarUpdatedAt,
       isPlaying: r.isPlaying || false,
       currentTrack: r.trackId
         ? {
@@ -345,6 +353,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         username: users.username,
         name: users.name,
         avatarPath: users.avatarPath,
+        avatarUpdatedAt: users.avatarUpdatedAt,
         isPlaying: playQueues.isPlaying,
         updatedAt: playQueues.updatedAt,
         trackId: tracks.id,
@@ -367,6 +376,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
       username: r.username,
       name: r.name,
       avatarPath: r.avatarPath,
+      avatarUpdatedAt: r.avatarUpdatedAt,
       isPlaying: r.isPlaying || false,
       currentTrack: r.trackId
         ? {
@@ -468,6 +478,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         username: users.username,
         name: users.name,
         avatarPath: users.avatarPath,
+        avatarUpdatedAt: users.avatarUpdatedAt,
       })
       .from(users)
       .where(inArray(users.id, allUserIds));
@@ -522,6 +533,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
           username: user.username,
           userName: user.name,
           userAvatarPath: user.avatarPath,
+          userAvatarUpdatedAt: user.avatarUpdatedAt,
           actionType: 'created_playlist',
           targetType: 'playlist',
           targetId: p.id,
@@ -544,6 +556,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
           username: requester.username,
           userName: requester.name,
           userAvatarPath: requester.avatarPath,
+          userAvatarUpdatedAt: requester.avatarUpdatedAt,
           actionType: 'became_friends',
           targetType: 'user',
           targetId: f.addresseeId,
@@ -551,6 +564,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
           secondUserId: f.addresseeId,
           secondUserName: addressee.name,
           secondUserAvatarPath: addressee.avatarPath,
+          secondUserAvatarUpdatedAt: addressee.avatarUpdatedAt,
           createdAt: f.updatedAt,
         });
       }
@@ -575,6 +589,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
     username: string;
     name: string | null;
     avatarPath: string | null;
+    avatarUpdatedAt: Date | null;
     friendshipStatus: FriendshipStatus | null;
   }[]> {
     const searchPattern = `%${query}%`;
@@ -585,6 +600,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         username: users.username,
         name: users.name,
         avatarPath: users.avatarPath,
+        avatarUpdatedAt: users.avatarUpdatedAt,
       })
       .from(users)
       .where(
