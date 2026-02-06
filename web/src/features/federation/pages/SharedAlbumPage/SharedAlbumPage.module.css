@@ -522,8 +522,8 @@
   .sharedAlbumPage__content {
     overflow-y: auto;
     overflow-x: hidden;
-    margin-top: 0;
-    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px));
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: 152px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .sharedAlbumPage__hero {
@@ -583,7 +583,7 @@
 /* Small Mobile */
 @media (max-width: 480px) {
   .sharedAlbumPage__content {
-    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 142px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .sharedAlbumPage__hero {

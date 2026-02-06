@@ -257,8 +257,8 @@
   .searchResultsPage__content {
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
-    margin-top: 0; /* Eliminar margin negativo */
-    padding: 20px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: 72px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* 52px + 20px top + bottom nav + player */
   }
 
   .searchResultsPage__header h1 {
@@ -307,7 +307,7 @@
   }
 
   .searchResultsPage__content {
-    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+    padding: 68px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* 52px header + 16px + bottom nav + player */
   }
 
   .searchResultsPage__header h1 {

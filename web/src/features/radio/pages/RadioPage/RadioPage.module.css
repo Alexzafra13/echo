@@ -207,9 +207,9 @@
   }
 
   .radioPage__content {
-    margin-top: 0;
+    margin-top: -52px; /* Content behind header for glass effect */
     overflow-x: hidden;
-    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 68px 16px calc(60px + var(--player-bottom-spacer, 0px));
     width: 100%;
     max-width: 100%;
   }
@@ -294,7 +294,7 @@
   }
 
   .radioPage__content {
-    padding: 16px var(--space-3) calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 68px var(--space-3) calc(60px + var(--player-bottom-spacer, 0px));
     width: 100%;
     max-width: 100%;
   }
