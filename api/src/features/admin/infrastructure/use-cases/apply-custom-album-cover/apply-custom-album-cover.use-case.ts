@@ -4,7 +4,7 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and } from 'drizzle-orm';
 import { albums, customAlbumCovers } from '@infrastructure/database/schema';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
-import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '@features/external-metadata/infrastructure/services/metadata-events.service';
 import {
   ApplyCustomAlbumCoverInput,
   ApplyCustomAlbumCoverOutput,
@@ -21,7 +21,7 @@ export class ApplyCustomAlbumCoverUseCase {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEnrichmentGateway,
+    private readonly metadataGateway: MetadataEventsService,
   ) {}
 
   async execute(input: ApplyCustomAlbumCoverInput): Promise<ApplyCustomAlbumCoverOutput> {

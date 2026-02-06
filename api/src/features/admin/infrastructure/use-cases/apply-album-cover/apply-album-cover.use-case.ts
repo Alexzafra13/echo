@@ -7,7 +7,7 @@ import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
-import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '@features/external-metadata/infrastructure/services/metadata-events.service';
 import { ImageProcessingError } from '@shared/errors';
 import { safeDeleteFile, fileExists } from '@shared/utils';
 import * as path from 'path';
@@ -31,7 +31,7 @@ export class ApplyAlbumCoverUseCase {
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEnrichmentGateway,
+    private readonly metadataGateway: MetadataEventsService,
   ) {}
 
   async execute(input: ApplyAlbumCoverInput): Promise<ApplyAlbumCoverOutput> {

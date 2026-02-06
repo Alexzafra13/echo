@@ -7,7 +7,7 @@ import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
-import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '@features/external-metadata/infrastructure/services/metadata-events.service';
 import * as fs from 'fs/promises';
 
 jest.mock('fs/promises');
@@ -30,7 +30,7 @@ describe('ApplyArtistAvatarUseCase', () => {
   let mockImageDownload: jest.Mocked<ImageDownloadService>;
   let mockStorage: jest.Mocked<StorageService>;
   let mockImageService: jest.Mocked<ImageService>;
-  let mockGateway: jest.Mocked<MetadataEnrichmentGateway>;
+  let mockGateway: jest.Mocked<MetadataEventsService>;
 
   const mockArtist = {
     id: 'artist-123',
@@ -106,7 +106,7 @@ describe('ApplyArtistAvatarUseCase', () => {
         { provide: ImageDownloadService, useValue: mockImageDownload },
         { provide: StorageService, useValue: mockStorage },
         { provide: ImageService, useValue: mockImageService },
-        { provide: MetadataEnrichmentGateway, useValue: mockGateway },
+        { provide: MetadataEventsService, useValue: mockGateway },
       ],
     }).compile();
 

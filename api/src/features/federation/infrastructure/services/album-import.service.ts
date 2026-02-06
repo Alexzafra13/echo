@@ -1,4 +1,4 @@
-import { Injectable, Inject, forwardRef, ConflictException } from '@nestjs/common';
+import { Injectable, Inject, ConflictException } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { eq, and, ilike } from 'drizzle-orm';
 import * as fs from 'fs/promises';
@@ -10,7 +10,6 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { albums, artists, tracks, settings } from '@infrastructure/database/schema';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../../domain/ports/federation.repository';
 import { AlbumImportQueue, ConnectedServer } from '../../domain/types';
-import { FederationGateway } from '../../presentation/federation.gateway';
 import { ImportProgressService } from './import-progress.service';
 
 /**
@@ -116,8 +115,6 @@ export class AlbumImportService {
     @Inject(FEDERATION_REPOSITORY)
     private readonly repository: IFederationRepository,
     private readonly drizzle: DrizzleService,
-    @Inject(forwardRef(() => FederationGateway))
-    private readonly federationGateway: FederationGateway,
     private readonly importProgressService: ImportProgressService,
   ) {}
 
@@ -748,9 +745,6 @@ export class AlbumImportService {
       error,
     };
 
-    // Emit via WebSocket (existing)
-    this.federationGateway.emitProgress(event);
-    // Emit via SSE (new - more reliable)
     this.importProgressService.emit(event);
   }
 

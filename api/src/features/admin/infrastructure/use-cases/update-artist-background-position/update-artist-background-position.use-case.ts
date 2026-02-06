@@ -4,7 +4,7 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { artists } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
-import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '@features/external-metadata/infrastructure/services/metadata-events.service';
 import {
   UpdateArtistBackgroundPositionInput,
   UpdateArtistBackgroundPositionOutput,
@@ -21,7 +21,7 @@ export class UpdateArtistBackgroundPositionUseCase {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
-    private readonly metadataGateway: MetadataEnrichmentGateway,
+    private readonly metadataGateway: MetadataEventsService,
   ) {}
 
   async execute(
