@@ -86,6 +86,59 @@ export class DjAnalysisQueueService implements OnModuleInit {
       },
       { concurrency: this.concurrency },
     );
+
+    // Resume any pending/stale analyses from a previous run (e.g. after restart or Redis flush)
+    setTimeout(() => this.resumePendingAnalyses(), 5000);
+  }
+
+  /**
+   * Re-enqueue tracks that are pending or stuck in analyzing state.
+   * This handles container restarts and Redis flushes gracefully.
+   */
+  private async resumePendingAnalyses(): Promise<void> {
+    try {
+      // Reset stale "analyzing" back to pending
+      await this.drizzle.db
+        .update(djAnalysis)
+        .set({ status: 'pending', updatedAt: new Date() })
+        .where(eq(djAnalysis.status, 'analyzing'));
+
+      // Check for pending tracks
+      const pendingTracks = await this.drizzle.db
+        .select({
+          trackId: djAnalysis.trackId,
+          title: tracks.title,
+          path: tracks.path,
+        })
+        .from(djAnalysis)
+        .innerJoin(tracks, eq(djAnalysis.trackId, tracks.id))
+        .where(eq(djAnalysis.status, 'pending'));
+
+      if (pendingTracks.length === 0) return;
+
+      this.logger.info(
+        { count: pendingTracks.length },
+        'Resuming pending DJ analyses from previous session',
+      );
+
+      this.isRunning = true;
+      this.processedInSession = 0;
+      this.sessionStartedAt = new Date();
+      this.totalToProcess = pendingTracks.length;
+
+      for (const track of pendingTracks) {
+        await this.bullmq.addJob(DJ_ANALYSIS_QUEUE, DJ_ANALYSIS_JOB, {
+          trackId: track.trackId,
+          trackTitle: track.title,
+          filePath: track.path,
+        });
+      }
+    } catch (error) {
+      this.logger.error(
+        { error: error instanceof Error ? error.message : 'Unknown' },
+        'Failed to resume pending DJ analyses',
+      );
+    }
   }
 
   /**
