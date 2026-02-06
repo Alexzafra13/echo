@@ -20,17 +20,24 @@ const DJ_ANALYSIS_QUEUE = 'dj-analysis-queue';
 const DJ_ANALYSIS_JOB = 'analyze-track';
 
 function getOptimalConcurrency(): number {
+  // Allow override via environment variable
+  const envConcurrency = parseInt(process.env.DJ_ANALYSIS_CONCURRENCY || '', 10);
+  if (envConcurrency > 0) {
+    return envConcurrency;
+  }
+
   const cpuCores = os.cpus().length;
   const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
 
-  // Essentia analysis is relatively lightweight
-  let concurrency = Math.max(1, Math.floor(cpuCores / 2));
+  // Conservative: use 1/4 of cores to leave room for the app, DB, Redis, etc.
+  let concurrency = Math.max(1, Math.floor(cpuCores / 4));
 
-  // Each analysis uses ~500MB
-  const maxByMemory = Math.max(1, Math.floor((totalMemoryGB - 1) / 0.5));
+  // Each analysis uses ~500MB peak
+  const maxByMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.5));
   concurrency = Math.min(concurrency, maxByMemory);
 
-  return Math.min(concurrency, DJ_CONFIG.analysis.concurrency * 4); // Allow up to 4x config for faster systems
+  // Cap at config value (default 2) to avoid saturating the server
+  return Math.min(concurrency, DJ_CONFIG.analysis.concurrency);
 }
 
 @Injectable()
