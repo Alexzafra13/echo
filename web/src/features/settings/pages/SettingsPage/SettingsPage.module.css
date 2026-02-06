@@ -20,7 +20,7 @@
   min-height: 100vh;
   max-height: 100vh;
   overflow-y: auto;
-  padding-bottom: var(--player-bottom-spacer, 0px);
+  padding-bottom: 0;
 }
 
 .settingsPage__content {
@@ -507,11 +507,11 @@
     margin-left: 0;
     max-height: none;
     min-height: 100vh;
-    padding-bottom: calc(var(--player-bottom-spacer, 0px) + 20px);
+    padding-bottom: 0;
   }
 
   .settingsPage__content {
-    padding: var(--space-5) var(--space-5) 40px;
+    padding: var(--space-5) var(--space-5) calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .settingsPage__header {
@@ -542,11 +542,11 @@
   .settingsPage__main {
     margin-left: 0;
     padding-top: 0;
-    padding-bottom: calc(var(--player-bottom-spacer, 0px) + 20px);
+    padding-bottom: 0;
   }
 
   .settingsPage__content {
-    padding: 16px 16px 40px;
+    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .settingsPage__header h1 {

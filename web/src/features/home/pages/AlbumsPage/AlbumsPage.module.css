@@ -127,7 +127,7 @@
   }
 
   .albumsPage__content {
-    padding: 24px 32px;
+    padding: 24px 32px calc(40px + var(--player-bottom-spacer, 0px));
   }
 
   .albumsPage__title {
