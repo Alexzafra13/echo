@@ -154,40 +154,32 @@ process.on('message', async (message) => {
         key = 'Unknown';
       }
 
-      // Energy - use RMS for better normalization
+      // Energy - use RMS with logarithmic scaling (loudness is perceptual/log)
       let energy = 0.5;
       try {
-        // Calculate RMS (Root Mean Square) for normalized energy
         const rmsResult = essentia.RMS(audioVector);
         const rms = rmsResult.rms;
 
-        // RMS is typically 0-1 for normalized audio, but can vary
-        // Use a sigmoid-like scaling for better distribution
-        const rawEnergy = rms;
-        energy = Math.min(1, Math.max(0, rawEnergy * 3)); // Scale up since RMS is usually < 0.5
+        // Map RMS to 0-1 using log scale
+        // Typical music RMS: 0.01 (very quiet) to 0.5 (very loud/compressed)
+        // log10(0.01)=-2 → 0, log10(0.1)=-1 → 0.59, log10(0.5)=-0.3 → 1.0
+        if (rms > 0) {
+          energy = Math.min(1, Math.max(0, (Math.log10(rms) + 2) / 1.7));
+        } else {
+          energy = 0;
+        }
 
         process.send({ type: 'debug', step: 'energy_done', rawRms: rms, energy });
       } catch (e) {
-        // Fallback: try simple Energy algorithm
-        try {
-          const energyResult = essentia.Energy(audioVector);
-          const rawEnergy = energyResult.energy;
-          // Energy is sum of squares, so very large for full tracks
-          // Normalize by sample count and apply log scale
-          const normalizedEnergy = rawEnergy / audioData.length;
-          energy = Math.min(1, Math.max(0, Math.sqrt(normalizedEnergy) * 3));
-          process.send({ type: 'debug', step: 'energy_fallback', rawEnergy, normalizedEnergy, energy });
-        } catch (e2) {
-          process.send({ type: 'debug', step: 'energy_failed', error: e2?.message || String(e2) });
-          energy = 0.5;
-        }
+        process.send({ type: 'debug', step: 'energy_failed', error: e?.message || String(e) });
+        energy = 0.5;
       }
 
-      // Danceability (optional)
+      // Danceability (optional) — Essentia returns ~0-3, normalize to 0-1
       let danceability = undefined;
       try {
         const danceResult = essentia.Danceability(audioVector);
-        danceability = danceResult.danceability;
+        danceability = Math.min(1, Math.max(0, danceResult.danceability / 2.5));
         process.send({ type: 'debug', step: 'danceability_done', danceability });
       } catch (e) {
         process.send({ type: 'debug', step: 'danceability_failed', error: e?.message || String(e) });
