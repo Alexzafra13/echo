@@ -22,18 +22,19 @@ const DJ_ANALYSIS_JOB = 'analyze-track';
 /**
  * Calculate optimal concurrency based on system resources.
  *
- * Each Essentia analysis spawns FFmpeg (I/O) + WASM processing (CPU),
- * using roughly 1 full core per analysis. We reserve half the cores
- * for the app server, PostgreSQL, Redis, and OS overhead.
+ * Each Essentia worker uses ~50-80MB (WASM vectors are freed after each
+ * analysis). The main bottleneck is CPU — each worker uses ~1 core for
+ * FFmpeg decode + WASM processing. Using half the cores leaves the other
+ * half for the app server, PostgreSQL, Redis, LUFS analysis, and OS.
  *
  * Override with DJ_ANALYSIS_CONCURRENCY env var if needed.
  *
  * Results by server size:
  *   1-2 cores  → 1 worker
- *   4 cores    → 1 worker
- *   8 cores    → 2 workers
- *  16 cores    → 4 workers
- *  32 cores    → 6 workers (capped)
+ *   4 cores    → 2 workers
+ *   8 cores    → 4 workers
+ *  16 cores    → 8 workers
+ *  32 cores    → 12 workers (capped)
  */
 function getOptimalConcurrency(): number {
   const envConcurrency = parseInt(process.env.DJ_ANALYSIS_CONCURRENCY || '', 10);
@@ -44,15 +45,14 @@ function getOptimalConcurrency(): number {
   const cpuCores = os.cpus().length;
   const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
 
-  // Use 1/4 of cores — leaves 75% for app, DB, Redis, LUFS, OS
-  const byCpu = Math.max(1, Math.floor(cpuCores / 4));
+  // Use half the cores — WASM memory leak is fixed, each worker is ~50-80MB
+  const byCpu = Math.max(1, Math.floor(cpuCores / 2));
 
-  // Reserve 2GB for system, ~300MB per concurrent analysis
-  const byMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.3));
+  // Reserve 2GB for system, ~80MB per concurrent Essentia worker
+  const byMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.08));
 
-  // Hard cap at 6 — Essentia WASM is single-threaded per worker,
-  // beyond 6 there are diminishing returns and disk I/O becomes the bottleneck
-  return Math.min(byCpu, byMemory, 6);
+  // Cap at 12 — beyond this disk I/O becomes the bottleneck
+  return Math.min(byCpu, byMemory, 12);
 }
 
 @Injectable()

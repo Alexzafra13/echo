@@ -18,18 +18,18 @@ const LUFS_JOB = 'analyze-track';
 /**
  * Auto-detect optimal concurrency based on system resources.
  *
- * LUFS analysis uses FFmpeg (lighter than Essentia WASM), but still
- * spawns a process per track. We reserve resources for the app,
- * DB, Redis, and any concurrent DJ analysis.
+ * LUFS analysis spawns one FFmpeg process per track (~30-50MB each).
+ * Using half the cores keeps responsiveness while maximizing throughput.
+ * The other half is shared with the app, DB, Redis, and DJ analysis.
  *
  * Override with LUFS_CONCURRENCY env var if needed.
  *
  * Results by server size:
  *   1-2 cores  → 1 worker
- *   4 cores    → 1 worker
- *   8 cores    → 2 workers
- *  16 cores    → 4 workers
- *  32 cores    → 8 workers (capped)
+ *   4 cores    → 2 workers
+ *   8 cores    → 4 workers
+ *  16 cores    → 8 workers
+ *  32 cores    → 12 workers (capped)
  */
 function getOptimalConcurrency(): number {
   const envConcurrency = parseInt(process.env.LUFS_CONCURRENCY || '', 10);
@@ -40,14 +40,14 @@ function getOptimalConcurrency(): number {
   const cpuCores = os.cpus().length;
   const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
 
-  // Use 1/4 of cores — leaves 75% for app, DB, Redis, DJ analysis, OS
-  const byCpu = Math.max(1, Math.floor(cpuCores / 4));
+  // Use half the cores — FFmpeg processes are lightweight (~30-50MB each)
+  const byCpu = Math.max(1, Math.floor(cpuCores / 2));
 
-  // Reserve 2GB for system, ~150MB per FFmpeg process
-  const byMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.15));
+  // Reserve 2GB for system, ~50MB per FFmpeg process
+  const byMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.05));
 
-  // Cap at 8 — beyond this disk I/O becomes the bottleneck
-  return Math.min(byCpu, byMemory, 8);
+  // Cap at 12 — beyond this disk I/O becomes the bottleneck
+  return Math.min(byCpu, byMemory, 12);
 }
 
 interface LufsAnalysisJob {
