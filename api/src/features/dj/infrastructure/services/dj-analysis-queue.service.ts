@@ -380,9 +380,17 @@ export class DjAnalysisQueueService implements OnModuleInit {
       .from(djAnalysis)
       .where(eq(djAnalysis.status, 'pending'));
 
+    const analyzing = await this.drizzle.db
+      .select()
+      .from(djAnalysis)
+      .where(eq(djAnalysis.status, 'analyzing'));
+
+    // Use DB state (survives restarts) — if tracks are pending or analyzing, work is happening
+    const hasWork = pending.length > 0 || analyzing.length > 0;
+
     return {
-      isRunning: this.isRunning,
-      pendingTracks: pending.length,
+      isRunning: this.isRunning || hasWork,
+      pendingTracks: pending.length + analyzing.length,
       processedInSession: this.processedInSession,
       startedAt: this.sessionStartedAt,
       concurrency: this.concurrency,
