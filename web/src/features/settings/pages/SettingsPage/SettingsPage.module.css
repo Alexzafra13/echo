@@ -19,12 +19,12 @@
   position: relative;
   min-height: 100vh;
   max-height: 100vh;
+  overflow-y: auto;
 }
 
 .settingsPage__content {
   flex: 1 1 0;
   min-height: 0;
-  overflow-y: auto;
   padding: var(--space-6) 40px calc(40px + var(--player-bottom-spacer, 0px));
   scrollbar-width: none;
   -ms-overflow-style: none;
