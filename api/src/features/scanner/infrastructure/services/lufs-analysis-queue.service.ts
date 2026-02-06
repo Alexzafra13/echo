@@ -25,11 +25,11 @@ const LUFS_JOB = 'analyze-track';
  * Override with LUFS_CONCURRENCY env var if needed.
  *
  * Results by server size:
- *   1-2 cores,  1GB  → 1 worker
- *   4 cores,    4GB  → 1 worker
- *   8 cores,    8GB  → 2 workers
- *  16 cores,   16GB  → 4 workers
- *  32 cores,   32GB  → 8 workers (capped)
+ *   1-2 cores  → 1 worker
+ *   4 cores    → 1 worker
+ *   8 cores    → 2 workers
+ *  16 cores    → 4 workers
+ *  32 cores    → 8 workers (capped)
  */
 function getOptimalConcurrency(): number {
   const envConcurrency = parseInt(process.env.LUFS_CONCURRENCY || '', 10);
@@ -40,11 +40,8 @@ function getOptimalConcurrency(): number {
   const cpuCores = os.cpus().length;
   const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
 
-  // Reserve cores for app + DB + Redis + DJ analysis + OS
-  const reservedCores = Math.max(2, Math.min(4, Math.ceil(cpuCores * 0.3)));
-  const availableCores = cpuCores - reservedCores;
-  // FFmpeg LUFS is lighter than Essentia, but still 1 process per worker
-  const byCpu = Math.max(1, Math.floor(availableCores / 2));
+  // Use 1/4 of cores — leaves 75% for app, DB, Redis, DJ analysis, OS
+  const byCpu = Math.max(1, Math.floor(cpuCores / 4));
 
   // Reserve 2GB for system, ~150MB per FFmpeg process
   const byMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.15));
