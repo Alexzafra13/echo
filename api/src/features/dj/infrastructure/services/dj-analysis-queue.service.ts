@@ -19,18 +19,42 @@ interface DjAnalysisJob {
 const DJ_ANALYSIS_QUEUE = 'dj-analysis-queue';
 const DJ_ANALYSIS_JOB = 'analyze-track';
 
+/**
+ * Calculate optimal concurrency based on system resources.
+ *
+ * Each Essentia analysis spawns FFmpeg (I/O) + WASM processing (CPU),
+ * using roughly 1 full core per analysis. We reserve cores for the
+ * app server, PostgreSQL, Redis, and OS overhead.
+ *
+ * Override with DJ_ANALYSIS_CONCURRENCY env var if needed.
+ *
+ * Results by server size:
+ *   1-2 cores,  1GB  → 1 worker
+ *   4 cores,    4GB  → 1 worker
+ *   8 cores,    8GB  → 2 workers
+ *  16 cores,   16GB  → 4 workers
+ *  32 cores,   32GB  → 6 workers (capped)
+ */
 function getOptimalConcurrency(): number {
+  const envConcurrency = parseInt(process.env.DJ_ANALYSIS_CONCURRENCY || '', 10);
+  if (envConcurrency > 0) {
+    return envConcurrency;
+  }
+
   const cpuCores = os.cpus().length;
   const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
 
-  // Essentia analysis is relatively lightweight
-  let concurrency = Math.max(1, Math.floor(cpuCores / 2));
+  // Reserve cores for app + DB + Redis + OS (minimum 2, scale with system)
+  const reservedCores = Math.max(2, Math.min(4, Math.ceil(cpuCores * 0.3)));
+  const availableCores = cpuCores - reservedCores;
+  const byCpu = Math.max(1, Math.floor(availableCores / 2));
 
-  // Each analysis uses ~500MB
-  const maxByMemory = Math.max(1, Math.floor((totalMemoryGB - 1) / 0.5));
-  concurrency = Math.min(concurrency, maxByMemory);
+  // Reserve 2GB for system, ~300MB per concurrent analysis
+  const byMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.3));
 
-  return Math.min(concurrency, DJ_CONFIG.analysis.concurrency * 4); // Allow up to 4x config for faster systems
+  // Hard cap at 6 — Essentia WASM is single-threaded per worker,
+  // beyond 6 there are diminishing returns and disk I/O becomes the bottleneck
+  return Math.min(byCpu, byMemory, 6);
 }
 
 @Injectable()
