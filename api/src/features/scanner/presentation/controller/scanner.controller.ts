@@ -27,6 +27,7 @@ import {
   GetScansHistoryUseCase,
 } from '../../domain/use-cases';
 import { LufsAnalysisQueueService, LufsQueueStats } from '../../infrastructure/services/lufs-analysis-queue.service';
+import { DjAnalysisQueueService } from '@features/dj/infrastructure/services/dj-analysis-queue.service';
 import { LibraryCleanupService, PurgeMode } from '../../infrastructure/services/scanning/library-cleanup.service';
 import {
   StartScanRequestDto,
@@ -49,6 +50,7 @@ export class ScannerController {
     private readonly getScanStatusUseCase: GetScanStatusUseCase,
     private readonly getScansHistoryUseCase: GetScansHistoryUseCase,
     private readonly lufsQueueService: LufsAnalysisQueueService,
+    private readonly djAnalysisQueue: DjAnalysisQueueService,
     private readonly libraryCleanup: LibraryCleanupService,
   ) {}
 
@@ -83,6 +85,16 @@ export class ScannerController {
   })
   async getLufsStatus(): Promise<LufsQueueStats> {
     return this.lufsQueueService.getQueueStats();
+  }
+
+  @Get('dj-status')
+  @ApiOperation({ summary: 'Obtiene el estado del análisis DJ en segundo plano' })
+  @ApiResponse({
+    status: 200,
+    description: 'Estado del análisis DJ (BPM, Key, Energy)',
+  })
+  async getDjStatus() {
+    return this.djAnalysisQueue.getQueueStats();
   }
 
   @Get(':id')
