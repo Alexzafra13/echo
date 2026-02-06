@@ -6,7 +6,7 @@ import { albums, customAlbumCovers } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
-import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '@features/external-metadata/infrastructure/services/metadata-events.service';
 import * as path from 'path';
 import {
   validateFileUpload,
@@ -35,7 +35,7 @@ export class UploadCustomAlbumCoverUseCase {
     private readonly redis: RedisService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEnrichmentGateway,
+    private readonly metadataGateway: MetadataEventsService,
   ) {}
 
   async execute(input: UploadCustomAlbumCoverInput): Promise<UploadCustomAlbumCoverOutput> {

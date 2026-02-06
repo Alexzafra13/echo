@@ -215,5 +215,16 @@ process.on('unhandledRejection', (reason) => {
   process.send({ type: 'result', success: false, error: `Unhandled: ${errorMessage}` });
 });
 
-// Signal ready
-process.send({ type: 'ready' });
+// Initialize WASM eagerly before signaling ready
+// This prevents the first analysis requests from crashing due to uninitialized WASM
+(async () => {
+  try {
+    await initEssentia();
+    process.send({ type: 'ready' });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    process.send({ type: 'init_error', error: errorMessage });
+    // Exit so parent knows to fall back to FFmpeg
+    process.exit(1);
+  }
+})();

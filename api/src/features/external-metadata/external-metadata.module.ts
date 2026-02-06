@@ -72,7 +72,7 @@ import { MaintenanceController } from './presentation/maintenance.controller';
 import { MetadataConflictsController } from './presentation/metadata-conflicts.controller';
 import { MusicBrainzSearchController } from './presentation/musicbrainz-search.controller';
 import { MbidAutoSearchController } from './presentation/mbid-auto-search.controller';
-import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from './infrastructure/services/metadata-events.service';
 
 // Domain ports
 import { STORAGE_SERVICE, SETTINGS_REPOSITORY } from './domain/ports';
@@ -168,7 +168,7 @@ import { STORAGE_SERVICE, SETTINGS_REPOSITORY } from './domain/ports';
     ImageSearchOrchestratorService,
 
     // WebSocket gateway
-    MetadataEnrichmentGateway,
+    MetadataEventsService,
   ],
   controllers: [
     ExternalMetadataController,
@@ -193,7 +193,7 @@ import { STORAGE_SERVICE, SETTINGS_REPOSITORY } from './domain/ports';
     ImageDownloadService,
     MetadataConflictService,
     MbidAutoSearchService,
-    MetadataEnrichmentGateway,
+    MetadataEventsService,
     EnrichmentQueueService,
     // Agents (for direct use in other modules)
     LastfmAgent,

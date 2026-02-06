@@ -1,5 +1,5 @@
 import ffmpegStatic from 'ffmpeg-static';
-import * as path from 'path';
+import * as fs from 'fs';
 
 /**
  * Get the path to the FFmpeg binary
@@ -14,14 +14,17 @@ export function getFfmpegPath(): string {
 
 /**
  * Get the path to the FFprobe binary
- * Assumes ffprobe is in the same directory as ffmpeg
+ * Uses @ffprobe-installer/ffprobe if available, otherwise falls back to system ffprobe
  */
 export function getFfprobePath(): string {
-  const ffmpegPath = getFfmpegPath();
-  if (ffmpegPath === 'ffmpeg') {
-    return 'ffprobe';
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
+    if (ffprobeInstaller?.path && fs.existsSync(ffprobeInstaller.path)) {
+      return ffprobeInstaller.path;
+    }
+  } catch {
+    // Package not available, fall through
   }
-  const dir = path.dirname(ffmpegPath);
-  const ext = process.platform === 'win32' ? '.exe' : '';
-  return path.join(dir, `ffprobe${ext}`);
+  return 'ffprobe';
 }

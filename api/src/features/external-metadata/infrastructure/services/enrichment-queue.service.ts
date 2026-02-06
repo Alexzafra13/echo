@@ -5,7 +5,7 @@ import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { albums, artists } from '@infrastructure/database/schema';
 import { isNull, sql } from 'drizzle-orm';
 import { ExternalMetadataService } from '../../application/external-metadata.service';
-import { MetadataEnrichmentGateway } from '../../presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from './metadata-events.service';
 import { SettingsService } from './settings.service';
 
 /**
@@ -71,7 +71,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     private readonly drizzle: DrizzleService,
     private readonly bullmq: BullmqService,
     private readonly externalMetadataService: ExternalMetadataService,
-    private readonly gateway: MetadataEnrichmentGateway,
+    private readonly gateway: MetadataEventsService,
     private readonly settings: SettingsService,
   ) {}
 

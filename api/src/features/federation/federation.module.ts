@@ -7,7 +7,6 @@ import { AccessTokenController } from './presentation/access-token.controller';
 // Existing controllers
 import { FederationPublicController } from './presentation/federation-public.controller';
 import { FederationImportController } from './presentation/federation-import.controller';
-import { FederationGateway } from './presentation/federation.gateway';
 import { FederationTokenService } from './domain/services';
 import { RemoteServerService, AlbumImportService, ImportProgressService } from './infrastructure/services';
 import { FederationAccessGuard } from './presentation/guards';
@@ -65,14 +64,12 @@ import { ExternalMetadataModule } from '@features/external-metadata/external-met
     ImportProgressService,
     FederationAccessGuard,
     CoverArtService,
-    // WebSocket Gateway
-    FederationGateway,
     // Repository
     {
       provide: FEDERATION_REPOSITORY,
       useClass: FederationRepository,
     },
   ],
-  exports: [FederationTokenService, RemoteServerService, AlbumImportService, FEDERATION_REPOSITORY, FederationGateway],
+  exports: [FederationTokenService, RemoteServerService, AlbumImportService, FEDERATION_REPOSITORY],
 })
 export class FederationModule {}

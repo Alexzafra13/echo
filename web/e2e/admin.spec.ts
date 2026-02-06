@@ -4,7 +4,6 @@ test.describe('Panel de Administración', () => {
   test.describe('Acceso y navegación', () => {
     test('accede al panel admin', async ({ page }) => {
       await page.goto('/admin');
-      await page.waitForLoadState('networkidle');
 
       // Debe mostrar el dashboard por defecto (o cualquier contenido del admin)
       await expect(page.locator('h1, h2, h3').filter({ hasText: /Dashboard|Admin|Panel/i }).first()).toBeVisible({ timeout: 15000 });
@@ -12,7 +11,6 @@ test.describe('Panel de Administración', () => {
 
     test('muestra las tabs de navegación', async ({ page }) => {
       await page.goto('/admin');
-      await page.waitForLoadState('networkidle');
 
       // Esperar a que cargue el panel - buscar cualquier tab del sidebar
       await expect(page.getByRole('button', { name: /Usuarios|Dashboard|Librería/i }).first()).toBeVisible({ timeout: 15000 });
@@ -29,18 +27,15 @@ test.describe('Panel de Administración', () => {
     test('navega entre tabs por URL', async ({ page }) => {
       // Navegar a Usuarios por URL
       await page.goto('/admin?tab=users');
-      await page.waitForLoadState('networkidle');
       await expect(page.getByText('Gestión de Usuarios')).toBeVisible({ timeout: 15000 });
 
       // Navegar a Logs por URL
       await page.goto('/admin?tab=logs');
-      await page.waitForLoadState('networkidle');
       await expect(page.getByText(/Logs|Sistema/i).first()).toBeVisible({ timeout: 15000 });
     });
 
     test('navega entre tabs por click en sidebar', async ({ page }) => {
       await page.goto('/admin');
-      await page.waitForLoadState('networkidle');
 
       // Esperar a que cargue
       await expect(page.getByRole('button', { name: /Usuarios|Dashboard/i }).first()).toBeVisible({ timeout: 15000 });
@@ -51,7 +46,6 @@ test.describe('Panel de Administración', () => {
 
       // Click en Mantenimiento
       await page.getByRole('button', { name: /Mantenimiento/i }).click();
-      await page.waitForLoadState('networkidle');
       await expect(page.getByText('Almacenamiento')).toBeVisible({ timeout: 15000 });
     });
   });
@@ -59,7 +53,6 @@ test.describe('Panel de Administración', () => {
   test.describe('Panel de Usuarios', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/admin?tab=users');
-      await page.waitForLoadState('networkidle');
       await expect(page.getByText('Gestión de Usuarios')).toBeVisible({ timeout: 15000 });
     });
 
@@ -88,7 +81,6 @@ test.describe('Panel de Administración', () => {
   test.describe('Panel de Mantenimiento', () => {
     test('carga la pestaña de mantenimiento', async ({ page }) => {
       await page.goto('/admin?tab=maintenance');
-      await page.waitForLoadState('networkidle');
 
       // Verificar que estamos en la URL correcta y la página cargó
       expect(page.url()).toContain('tab=maintenance');
@@ -108,7 +100,6 @@ test.describe('Panel de Administración', () => {
     test.skip('muestra notificación de éxito al guardar configuración', async ({ page }) => {
       // Skipped: depende de configuración específica que puede no existir en CI
       await page.goto('/admin?tab=metadata');
-      await page.waitForLoadState('networkidle');
 
       const saveButton = page.getByRole('button', { name: /Guardar/i }).first();
 
@@ -124,7 +115,6 @@ test.describe('Panel de Administración', () => {
     test.skip('la notificación se cierra automáticamente', async ({ page }) => {
       // Skipped: depende de configuración específica que puede no existir en CI
       await page.goto('/admin?tab=metadata');
-      await page.waitForLoadState('networkidle');
 
       const saveButton = page.getByRole('button', { name: /Guardar/i }).first();
 
