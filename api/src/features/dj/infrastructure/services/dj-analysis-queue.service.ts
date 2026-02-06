@@ -251,6 +251,29 @@ export class DjAnalysisQueueService implements OnModuleInit {
       const finalBpm = trackBpm > 0 ? trackBpm : analyzedBpm;
       const finalKey = trackKey && trackKey !== 'Unknown' ? trackKey : analyzedKey;
 
+      // If no useful data from any source, mark as failed so it gets retried
+      const hasUsefulData = finalBpm > 0 || (finalKey && finalKey !== 'Unknown');
+      if (!hasUsefulData) {
+        await this.drizzle.db
+          .update(djAnalysis)
+          .set({
+            status: 'failed',
+            analysisError: 'No BPM or key detected from analysis or ID3 tags',
+            updatedAt: new Date(),
+          })
+          .where(eq(djAnalysis.id, analysisId));
+
+        this.processedInSession++;
+        this.updateAverageProcessingTime(Date.now() - startTime);
+        this.emitProgress();
+
+        this.logger.warn(
+          { trackId: job.trackId },
+          'DJ analysis produced no useful data, marked as failed for retry',
+        );
+        return;
+      }
+
       // Convert key to Camelot
       const camelotKey = DjAnalysis.keyToCamelot(finalKey);
 
