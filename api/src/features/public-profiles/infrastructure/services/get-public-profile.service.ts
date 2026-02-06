@@ -45,6 +45,7 @@ export class GetPublicProfileUseCase {
       username: user.username,
       name: user.name,
       hasAvatar: !!user.avatarPath,
+      avatarUpdatedAt: user.avatarUpdatedAt,
       bio: user.bio,
       isPublicProfile: user.isPublicProfile,
       createdAt: user.createdAt,
