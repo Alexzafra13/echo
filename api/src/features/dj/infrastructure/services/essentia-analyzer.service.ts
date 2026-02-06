@@ -109,6 +109,12 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
           clearTimeout(timeout);
           this.logger.info('Essentia worker ready');
           resolve();
+        } else if (message.type === 'init_error') {
+          // WASM initialization failed - worker will exit
+          this.logger.warn({ error: message.error }, 'Essentia WASM initialization failed');
+          clearTimeout(timeout);
+          this.spawningPromise = null;
+          reject(new Error(message.error || 'WASM init failed'));
         } else if (message.type === 'debug') {
           // Log debug messages from worker
           this.logger.debug({ workerDebug: message }, `Worker step: ${message.step}`);
