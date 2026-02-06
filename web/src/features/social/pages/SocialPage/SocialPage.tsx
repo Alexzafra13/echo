@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Users, UserPlus } from 'lucide-react';
+import { Users, Search, X, UserPlus, CheckCircle } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
@@ -14,9 +14,7 @@ import {
 import { useListeningNowSSE } from '../../hooks/useListeningNowSSE';
 import { logger } from '@shared/utils/logger';
 import {
-  SearchUsersPanel,
   ListeningNowSection,
-  StatsBar,
   PendingRequestsSection,
   FriendsSection,
   ActivityFeed,
@@ -26,17 +24,17 @@ import styles from './SocialPage.module.css';
 /**
  * SocialPage Component
  * Main social hub: friends, listening now, activity feed
+ * Premium redesign with hero header, asymmetric layout, and integrated search
  */
 export default function SocialPage() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const { data: overview, isLoading } = useSocialOverview();
   const { data: searchResults, refetch: refetchSearch } = useSearchUsers(
     searchQuery,
-    showSearch && searchQuery.length >= 2
+    searchQuery.length >= 2
   );
 
   // Enable real-time SSE updates for "listening now"
@@ -91,6 +89,7 @@ export default function SocialPage() {
 
   // Filter users who are actually playing
   const actuallyListening = overview?.listeningNow?.filter((u) => u.isPlaying) || [];
+  const pendingReceived = overview?.pendingRequests?.received?.length || 0;
 
   return (
     <div className={styles.socialPage}>
@@ -100,33 +99,119 @@ export default function SocialPage() {
         <Header disableSearch />
 
         <div className={styles.socialPage__content}>
-          {/* Page Header */}
-          <div className={styles.socialPage__header}>
-            <div className={styles.socialPage__titleRow}>
-              <h1 className={styles.socialPage__title}>
-                <Users size={28} />
-                Social
-              </h1>
-            </div>
-            <p className={styles.socialPage__subtitle}>
-              Conecta con tus amigos y descubre qué están escuchando
-            </p>
-            <Button variant="primary" onClick={() => setShowSearch(!showSearch)} className={styles.socialPage__addButton}>
-              <UserPlus size={20} />
-              Añadir amigo
-            </Button>
+          {/* Hero Header */}
+          <div className={styles.hero}>
+            <div className={styles.hero__glow} />
+            <div className={styles.hero__glowSecondary} />
+            <div className={styles.hero__inner}>
+              <div className={styles.hero__top}>
+                <div className={styles.hero__titleBlock}>
+                  <h1 className={styles.hero__title}>
+                    <Users size={32} />
+                    Social
+                  </h1>
+                  <p className={styles.hero__subtitle}>
+                    Conecta con tus amigos y descubre qué están escuchando
+                  </p>
+                </div>
+                <div className={styles.hero__badges}>
+                  <span className={styles.hero__badge}>
+                    <Users size={14} />
+                    {overview?.friends?.length || 0} amigos
+                  </span>
+                  {actuallyListening.length > 0 && (
+                    <span className={`${styles.hero__badge} ${styles['hero__badge--live']}`}>
+                      <span className={styles.hero__liveDot} />
+                      {actuallyListening.length} escuchando
+                    </span>
+                  )}
+                  {pendingReceived > 0 && (
+                    <span className={`${styles.hero__badge} ${styles['hero__badge--pending']}`}>
+                      {pendingReceived} pendiente{pendingReceived !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              </div>
 
-            {/* Search Users */}
-            {showSearch && (
-              <SearchUsersPanel
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                searchResults={searchResults}
-                onSendRequest={handleSendRequest}
-                isSending={sendRequestMutation.isPending}
-                successMessage={successMessage}
-              />
-            )}
+              {/* Integrated Search */}
+              <div className={styles.hero__searchRow}>
+                <div className={styles.hero__searchWrapper}>
+                  <Search size={18} className={styles.hero__searchIcon} />
+                  <input
+                    type="text"
+                    placeholder="Buscar usuarios por nombre..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={styles.hero__searchInput}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className={styles.hero__searchClear}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Search Results Dropdown */}
+              {searchQuery.length >= 2 && (
+                <div className={styles.hero__searchResults}>
+                  {searchResults && searchResults.length > 0 ? (
+                    searchResults.map((user) => (
+                      <div key={user.id} className={styles.searchResult}>
+                        <img
+                          src={user.avatarUrl || `/api/users/${user.id}/avatar`}
+                          alt={user.username}
+                          className={styles.searchResult__avatar}
+                          onError={(e) => { e.currentTarget.src = '/default-avatar.png'; }}
+                        />
+                        <div className={styles.searchResult__info}>
+                          <span className={styles.searchResult__name}>
+                            {user.name || user.username}
+                          </span>
+                          <span className={styles.searchResult__username}>
+                            @{user.username}
+                          </span>
+                        </div>
+                        {user.friendshipStatus === 'accepted' ? (
+                          <span className={styles.searchResult__status}>
+                            Amigos
+                          </span>
+                        ) : user.friendshipStatus === 'pending' ? (
+                          <span className={styles.searchResult__statusPending}>
+                            Pendiente
+                          </span>
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleSendRequest(user.id, user.name || user.username)}
+                            disabled={sendRequestMutation.isPending}
+                          >
+                            <UserPlus size={16} />
+                            Añadir
+                          </Button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className={styles.hero__searchEmpty}>
+                      No se encontraron usuarios
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Success message */}
+              {successMessage && (
+                <div className={styles.hero__successMessage}>
+                  <CheckCircle size={16} />
+                  {successMessage}
+                </div>
+              )}
+            </div>
           </div>
 
           {isLoading ? (
@@ -136,47 +221,44 @@ export default function SocialPage() {
             </div>
           ) : (
             <>
-              {/* Stats Bar */}
-              <StatsBar
-                friendsCount={overview?.friends?.length || 0}
-                pendingCount={overview?.pendingRequests?.received?.length || 0}
-                listeningCount={actuallyListening.length}
-                activityCount={overview?.recentActivity?.length || 0}
-              />
-
               {/* Listening Now Section */}
               <ListeningNowSection
                 listeningUsers={actuallyListening}
                 onUserClick={handleUserClick}
               />
 
-              {/* Main Grid */}
-              <div className={styles.socialPage__grid}>
-                {/* Pending Requests */}
-                {overview?.pendingRequests && (
-                  <PendingRequestsSection
-                    received={overview.pendingRequests.received}
-                    sent={overview.pendingRequests.sent}
-                    onAccept={handleAcceptRequest}
-                    onReject={handleRejectRequest}
-                    isAccepting={acceptRequestMutation.isPending}
-                    isRemoving={removeFriendshipMutation.isPending}
+              {/* Asymmetric Layout: Feed + Sidebar */}
+              <div className={styles.mainLayout}>
+                {/* Primary Column: Activity Feed */}
+                <div className={styles.mainLayout__feed}>
+                  <ActivityFeed
+                    activities={overview?.recentActivity || []}
+                    onUserClick={handleUserClick}
+                    onTargetClick={handleTargetClick}
                   />
-                )}
+                </div>
 
-                {/* Friends Section */}
-                <FriendsSection
-                  friends={overview?.friends || []}
-                  onFriendClick={handleUserClick}
-                  onShowSearch={() => setShowSearch(true)}
-                />
+                {/* Secondary Column: Friends + Pending */}
+                <div className={styles.mainLayout__sidebar}>
+                  {/* Pending Requests */}
+                  {overview?.pendingRequests && (
+                    <PendingRequestsSection
+                      received={overview.pendingRequests.received}
+                      sent={overview.pendingRequests.sent}
+                      onAccept={handleAcceptRequest}
+                      onReject={handleRejectRequest}
+                      isAccepting={acceptRequestMutation.isPending}
+                      isRemoving={removeFriendshipMutation.isPending}
+                    />
+                  )}
 
-                {/* Activity Feed */}
-                <ActivityFeed
-                  activities={overview?.recentActivity || []}
-                  onUserClick={handleUserClick}
-                  onTargetClick={handleTargetClick}
-                />
+                  {/* Friends Section */}
+                  <FriendsSection
+                    friends={overview?.friends || []}
+                    listeningUsers={actuallyListening}
+                    onFriendClick={handleUserClick}
+                  />
+                </div>
               </div>
             </>
           )}

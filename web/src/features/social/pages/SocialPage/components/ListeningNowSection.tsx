@@ -18,7 +18,7 @@ export const ListeningNowSection = memo(function ListeningNowSection({ listening
       <div className={styles.listeningSection__header}>
         <div className={styles.listeningSection__titleWrapper}>
           <div className={styles.listeningSection__iconPulse}>
-            <Headphones size={24} />
+            <Headphones size={22} />
           </div>
           <div>
             <h2 className={styles.listeningSection__title}>
@@ -30,6 +30,7 @@ export const ListeningNowSection = memo(function ListeningNowSection({ listening
           </div>
         </div>
         <span className={styles.listeningSection__count}>
+          <span className={styles.listeningSection__countDot} />
           {listeningUsers.length} {listeningUsers.length === 1 ? 'amigo' : 'amigos'}
         </span>
       </div>
@@ -41,60 +42,80 @@ export const ListeningNowSection = memo(function ListeningNowSection({ listening
             className={styles.listeningCard}
             onClick={() => onUserClick(user.id)}
           >
-            {/* User Avatar */}
-            <img
-              src={user.avatarUrl || getUserAvatarUrl(user.id, false)}
-              alt={user.username}
-              className={styles.listeningCard__avatar}
-              loading="lazy"
-              decoding="async"
-              onError={handleAvatarError}
-            />
-
-            {/* Album Cover */}
-            <div className={styles.listeningCard__coverWrapper}>
-              {user.currentTrack?.coverUrl ? (
+            {/* Album art background */}
+            {user.currentTrack?.coverUrl && (
+              <div className={styles.listeningCard__bg}>
                 <img
                   src={user.currentTrack.coverUrl}
-                  alt={user.currentTrack.albumName}
-                  className={styles.listeningCard__cover}
+                  alt=""
+                  className={styles.listeningCard__bgImg}
                   loading="lazy"
                   decoding="async"
                 />
-              ) : (
-                <div className={styles.listeningCard__coverPlaceholder}>
-                  <Music size={20} />
+              </div>
+            )}
+
+            <div className={styles.listeningCard__content}>
+              {/* User Avatar */}
+              <div className={styles.listeningCard__avatarWrapper}>
+                <img
+                  src={user.avatarUrl || getUserAvatarUrl(user.id, false)}
+                  alt={user.username}
+                  className={styles.listeningCard__avatar}
+                  loading="lazy"
+                  decoding="async"
+                  onError={handleAvatarError}
+                />
+                {user.isPlaying && (
+                  <span className={styles.listeningCard__avatarDot} />
+                )}
+              </div>
+
+              {/* Album Cover */}
+              <div className={styles.listeningCard__coverWrapper}>
+                {user.currentTrack?.coverUrl ? (
+                  <img
+                    src={user.currentTrack.coverUrl}
+                    alt={user.currentTrack.albumName}
+                    className={styles.listeningCard__cover}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className={styles.listeningCard__coverPlaceholder}>
+                    <Music size={20} />
+                  </div>
+                )}
+              </div>
+
+              {/* Info */}
+              <div className={styles.listeningCard__info}>
+                <span className={styles.listeningCard__name}>
+                  {user.name || user.username}
+                </span>
+                {user.currentTrack ? (
+                  <>
+                    <span className={styles.listeningCard__trackTitle}>
+                      {user.currentTrack.title}
+                    </span>
+                    <span className={styles.listeningCard__trackArtist}>
+                      {user.currentTrack.artistName}
+                    </span>
+                  </>
+                ) : (
+                  <span className={styles.listeningCard__offline}>
+                    Sin reproducir
+                  </span>
+                )}
+              </div>
+
+              {/* Equalizer */}
+              {user.isPlaying && (
+                <div className={styles.listeningCard__equalizer}>
+                  <Equalizer size="sm" />
                 </div>
               )}
             </div>
-
-            {/* Info */}
-            <div className={styles.listeningCard__info}>
-              <span className={styles.listeningCard__name}>
-                {user.name || user.username}
-              </span>
-              {user.currentTrack ? (
-                <>
-                  <span className={styles.listeningCard__trackTitle}>
-                    {user.currentTrack.title}
-                  </span>
-                  <span className={styles.listeningCard__trackArtist}>
-                    {user.currentTrack.artistName}
-                  </span>
-                </>
-              ) : (
-                <span className={styles.listeningCard__offline}>
-                  Sin reproducir
-                </span>
-              )}
-            </div>
-
-            {/* Equalizer */}
-            {user.isPlaying && (
-              <div className={styles.listeningCard__equalizer}>
-                <Equalizer size="sm" />
-              </div>
-            )}
           </div>
         ))}
       </div>

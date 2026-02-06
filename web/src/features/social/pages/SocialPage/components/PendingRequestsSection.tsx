@@ -22,17 +22,19 @@ export const PendingRequestsSection = memo(function PendingRequestsSection({
   isAccepting,
   isRemoving,
 }: PendingRequestsSectionProps) {
+  if (received.length === 0 && sent.length === 0) return null;
+
   return (
     <>
       {/* Received Requests */}
       {received.length > 0 && (
-        <section className={styles.section}>
-          <h2 className={styles.section__title}>
-            <div className={styles.section__titleIcon}>
-              <Clock size={18} />
+        <section className={`${styles.sideSection} ${styles['sideSection--urgent']}`}>
+          <h2 className={styles.sideSection__title}>
+            <div className={`${styles.sideSection__titleIcon} ${styles['sideSection__titleIcon--pending']}`}>
+              <Clock size={16} />
             </div>
-            Solicitudes recibidas
-            <span className={styles.section__badge}>
+            Solicitudes
+            <span className={styles.sideSection__badge}>
               {received.length}
             </span>
           </h2>
@@ -63,7 +65,6 @@ export const PendingRequestsSection = memo(function PendingRequestsSection({
                     disabled={isAccepting}
                   >
                     <Check size={16} />
-                    Aceptar
                   </Button>
                   <Button
                     variant="ghost"
@@ -82,13 +83,13 @@ export const PendingRequestsSection = memo(function PendingRequestsSection({
 
       {/* Sent Requests */}
       {sent.length > 0 && (
-        <section className={styles.section}>
-          <h2 className={styles.section__title}>
-            <div className={styles.section__titleIcon}>
-              <Send size={18} />
+        <section className={styles.sideSection}>
+          <h2 className={styles.sideSection__title}>
+            <div className={styles.sideSection__titleIcon}>
+              <Send size={16} />
             </div>
-            Solicitudes enviadas
-            <span className={styles.section__badge}>
+            Enviadas
+            <span className={styles.sideSection__countSmall}>
               {sent.length}
             </span>
           </h2>
