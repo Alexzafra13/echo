@@ -97,6 +97,7 @@ function formatKey(key, scale) {
 process.on('message', async (message) => {
   if (message.type === 'analyze') {
     const requestId = message.requestId; // Track requestId for response correlation
+    let audioVector = null;
     try {
       // Send debug info via IPC
       process.send({ type: 'debug', step: 'start', filePath: message.filePath, requestId });
@@ -117,7 +118,8 @@ process.on('message', async (message) => {
 
       // Step 3: Convert to vector
       process.send({ type: 'debug', step: 'convert_vector' });
-      const audioVector = essentia.arrayToVector(audioData);
+      audioVector = essentia.arrayToVector(audioData);
+      // audioData can now be GC'd — we only need audioVector from here
       process.send({ type: 'debug', step: 'vector_ready' });
 
       // Step 4: Analyze
@@ -192,8 +194,18 @@ process.on('message', async (message) => {
         // Danceability is optional, leave as undefined
       }
 
+      // Free WASM vector to prevent memory leak
+      if (audioVector && typeof audioVector.delete === 'function') {
+        audioVector.delete();
+        audioVector = null;
+      }
+
       process.send({ type: 'result', requestId, success: true, data: { bpm, key, energy, danceability } });
     } catch (error) {
+      // Free WASM vector on error too
+      if (audioVector && typeof audioVector.delete === 'function') {
+        try { audioVector.delete(); } catch { /* ignore */ }
+      }
       // Serialize error properly
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
