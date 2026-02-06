@@ -10,7 +10,7 @@
   justify-content: flex-start;
   padding: 16px 20px;
   padding-top: max(16px, env(safe-area-inset-top, 0));
-  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)); /* Space for actions button */
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0));
   overflow: hidden;
   overflow-y: auto;
   background: rgb(12, 12, 12); /* Solid base background */
@@ -326,10 +326,10 @@
   box-shadow: 0 8px 24px var(--black-40);
 }
 
-/* Bottom Actions - positioned above the bottom navigation */
+/* Bottom Actions */
 .nowPlaying__actions {
   position: absolute;
-  bottom: calc(90px + env(safe-area-inset-bottom, 0));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0));
   right: 20px;
   display: flex;
   align-items: center;
