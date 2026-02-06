@@ -294,7 +294,7 @@
   }
 
   .trendingPage__content {
-    padding: 20px 16px calc(40px + var(--player-bottom-spacer, 0px));
+    padding: 20px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .trendingPage__title {

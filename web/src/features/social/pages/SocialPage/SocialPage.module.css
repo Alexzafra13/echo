@@ -1322,7 +1322,7 @@
 
   .socialPage__content {
     padding: 0 16px 16px;
-    padding-bottom: calc(160px + var(--player-bottom-spacer, 0px));
+    padding-bottom: calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .hero {
