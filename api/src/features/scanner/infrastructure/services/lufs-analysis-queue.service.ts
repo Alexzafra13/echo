@@ -16,25 +16,41 @@ const LUFS_QUEUE = 'lufs-analysis-queue';
 const LUFS_JOB = 'analyze-track';
 
 /**
- * Auto-detect optimal concurrency based on system resources
- * - Uses half the CPU cores (leave room for other processes)
- * - Minimum 1, maximum 8
- * - Can be overridden with LUFS_CONCURRENCY env var
+ * Auto-detect optimal concurrency based on system resources.
+ *
+ * LUFS analysis uses FFmpeg (lighter than Essentia WASM), but still
+ * spawns a process per track. We reserve resources for the app,
+ * DB, Redis, and any concurrent DJ analysis.
+ *
+ * Override with LUFS_CONCURRENCY env var if needed.
+ *
+ * Results by server size:
+ *   1-2 cores,  1GB  → 1 worker
+ *   4 cores,    4GB  → 1 worker
+ *   8 cores,    8GB  → 2 workers
+ *  16 cores,   16GB  → 4 workers
+ *  32 cores,   32GB  → 8 workers (capped)
  */
 function getOptimalConcurrency(): number {
+  const envConcurrency = parseInt(process.env.LUFS_CONCURRENCY || '', 10);
+  if (envConcurrency > 0) {
+    return envConcurrency;
+  }
+
   const cpuCores = os.cpus().length;
   const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
 
-  // Use half the cores, minimum 1
-  let concurrency = Math.max(1, Math.floor(cpuCores / 2));
+  // Reserve cores for app + DB + Redis + DJ analysis + OS
+  const reservedCores = Math.max(2, Math.min(4, Math.ceil(cpuCores * 0.3)));
+  const availableCores = cpuCores - reservedCores;
+  // FFmpeg LUFS is lighter than Essentia, but still 1 process per worker
+  const byCpu = Math.max(1, Math.floor(availableCores / 2));
 
-  // Each FFmpeg process uses ~150MB, limit based on available memory
-  // Reserve 1GB for system, use 150MB per worker
-  const maxByMemory = Math.max(1, Math.floor((totalMemoryGB - 1) / 0.15));
-  concurrency = Math.min(concurrency, maxByMemory);
+  // Reserve 2GB for system, ~150MB per FFmpeg process
+  const byMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.15));
 
-  // Cap at 8 to avoid overwhelming the system
-  return Math.min(concurrency, 8);
+  // Cap at 8 — beyond this disk I/O becomes the bottleneck
+  return Math.min(byCpu, byMemory, 8);
 }
 
 interface LufsAnalysisJob {
