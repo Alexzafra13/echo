@@ -255,8 +255,34 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Update track state
       setCurrentTrack(track);
 
-      // Start crossfade transition (uses separate effective volumes for each audio)
-      crossfade.performCrossfade();
+      // Start crossfade transition. On mobile, playInactive() can fail due to
+      // autoplay policy. If crossfade fails, fall back to normal (non-crossfade) playback.
+      const crossfadeStarted = await crossfade.performCrossfade();
+
+      if (!crossfadeStarted) {
+        // Crossfade failed - fall back to normal playback so the music doesn't stop
+        logger.warn('[Player] Crossfade failed on mobile, falling back to normal playback');
+        isTransitioningRef.current = true;
+        normalization.applyGain(track);
+        audioElements.stopInactive();
+        audioElements.loadOnActive(streamUrl);
+
+        try {
+          await audioElements.playActive();
+        } catch (error) {
+          logger.warn('[Player] Fallback play failed, retrying:', (error as Error).message);
+          try {
+            await audioElements.playActive(false);
+          } catch (retryError) {
+            logger.error('[Player] Fallback retry failed:', (retryError as Error).message);
+          }
+        } finally {
+          isTransitioningRef.current = false;
+          if (audioElements.getActiveAudio()?.paused) {
+            setIsPlaying(false);
+          }
+        }
+      }
 
       // Start new play session
       playTracking.startPlaySession(track);
