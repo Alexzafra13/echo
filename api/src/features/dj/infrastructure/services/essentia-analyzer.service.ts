@@ -495,6 +495,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
           requestId,
           filePath,
           ffmpegPath: getFfmpegPath(),
+          ffprobePath: getFfprobePath(),
         });
       } catch (error) {
         // Worker process died between acquire and send

@@ -48,39 +48,83 @@ async function initEssentia() {
   }
 }
 
-async function decodeAudio(filePath, ffmpegPath) {
+/**
+ * Get audio duration via FFprobe (fast, reads container headers only).
+ */
+async function getAudioDuration(filePath, ffprobePath) {
   const { execFile } = require('child_process');
   const { promisify } = require('util');
   const execFileAsync = promisify(execFile);
+  const ffprobe = ffprobePath || 'ffprobe';
 
-  // Use ffmpegPath passed from parent service, fallback to system ffmpeg
+  try {
+    const { stdout } = await execFileAsync(
+      ffprobe,
+      ['-v', 'quiet', '-show_entries', 'format=duration', '-of', 'csv=p=0', filePath],
+      { encoding: 'utf8', timeout: 10000 }
+    );
+    return parseFloat(stdout.trim()) || 0;
+  } catch {
+    return 0; // Unknown duration — will decode full track as fallback
+  }
+}
+
+/**
+ * Decode audio to mono 44.1kHz float32 PCM.
+ * For tracks longer than 90s, extracts only a representative segment
+ * from the core section (skipping intro/outro) for ~3-5x faster processing.
+ * BPM, Key, and Energy analysis only need 60-90s for accurate results.
+ */
+async function decodeAudio(filePath, ffmpegPath, ffprobePath) {
+  const { execFile } = require('child_process');
+  const { promisify } = require('util');
+  const execFileAsync = promisify(execFile);
   const ffmpeg = ffmpegPath || 'ffmpeg';
 
   try {
-    // Decode to mono 44.1kHz float32 PCM
+    // Get duration to determine optimal analysis segment
+    const duration = await getAudioDuration(filePath, ffprobePath);
+
+    // Build FFmpeg args — extract 90s segment from core section when possible
+    const SEGMENT_LENGTH = 90;
+    const ffmpegArgs = [];
+
+    if (duration > SEGMENT_LENGTH + 30) {
+      // Long track (>2min): seek to 15% to skip intro, analyze 90s of core
+      const seekTo = Math.floor(duration * 0.15);
+      ffmpegArgs.push('-ss', String(seekTo)); // -ss before -i = fast keyframe seek
+    }
+
+    ffmpegArgs.push('-i', filePath);
+
+    if (duration > SEGMENT_LENGTH) {
+      // Cap output to segment length
+      ffmpegArgs.push('-t', String(SEGMENT_LENGTH));
+    }
+    // Short tracks (<90s): decode full track
+
+    ffmpegArgs.push(
+      '-ac', '1',           // mono
+      '-ar', '44100',       // 44.1kHz
+      '-f', 'f32le',        // 32-bit float little-endian
+      '-acodec', 'pcm_f32le',
+      'pipe:1',
+    );
+
     const { stdout } = await execFileAsync(
       ffmpeg,
-      [
-        '-i', filePath,
-        '-ac', '1',           // mono
-        '-ar', '44100',       // 44.1kHz
-        '-f', 'f32le',        // 32-bit float little-endian
-        '-acodec', 'pcm_f32le',
-        'pipe:1',             // output to stdout
-      ],
+      ffmpegArgs,
       {
         encoding: 'buffer',
         maxBuffer: 100 * 1024 * 1024, // 100MB buffer
-        timeout: 120000, // 2 minute timeout to prevent hanging
+        timeout: 60000, // 1 minute — enough for a 90s segment
       }
     );
 
-    // Validate buffer length is divisible by 4 (float32 = 4 bytes)
     if (stdout.length % 4 !== 0) {
       throw new Error(`Invalid PCM buffer length: ${stdout.length} (not divisible by 4)`);
     }
 
-    // Convert buffer to Float32Array
     return new Float32Array(stdout.buffer, stdout.byteOffset, stdout.length / 4);
   } catch (error) {
     throw new Error(`FFmpeg decode failed: ${error.message || error}`);
@@ -109,7 +153,7 @@ process.on('message', async (message) => {
 
       // Step 2: Decode audio
       process.send({ type: 'debug', step: 'decode_audio' });
-      const audioData = await decodeAudio(message.filePath, message.ffmpegPath);
+      const audioData = await decodeAudio(message.filePath, message.ffmpegPath, message.ffprobePath);
       process.send({ type: 'debug', step: 'decoded', samples: audioData?.length || 0 });
 
       if (!audioData || audioData.length === 0) {
@@ -166,15 +210,23 @@ process.on('message', async (message) => {
       // contrast to prevent clustering around the mean.
       let energy = 0.5;
       try {
+        // Pre-compute spectrum once (reused by centroid and entropy)
+        let spectrum = null;
+        try {
+          spectrum = essentia.Spectrum(audioVector).spectrum;
+        } catch (e) { /* spectrum unavailable, dependent features will use defaults */ }
+
         // 1. Spectral centroid (timbre) — high = bright/aggressive, low = dark/calm
         //    Log-frequency scale for perceptual accuracy
         //    Most music: 800-4000 Hz centroid range
         let spectralScore = 0.5;
         try {
-          const centroidResult = essentia.Centroid(essentia.Spectrum(audioVector).spectrum);
-          const centroidHz = centroidResult.centroid * 22050;
-          // Log2 scale: 500Hz→0, 1000Hz→0.33, 2000Hz→0.67, 4000Hz→1.0
-          spectralScore = Math.min(1, Math.max(0, (Math.log2(Math.max(centroidHz, 500)) - 9) / 3));
+          if (spectrum) {
+            const centroidResult = essentia.Centroid(spectrum);
+            const centroidHz = centroidResult.centroid * 22050;
+            // Log2 scale: 500Hz→0, 1000Hz→0.33, 2000Hz→0.67, 4000Hz→1.0
+            spectralScore = Math.min(1, Math.max(0, (Math.log2(Math.max(centroidHz, 500)) - 9) / 3));
+          }
         } catch (e) { /* use default */ }
 
         // 2. Dynamic complexity — inverted: compressed/loud = more energetic
@@ -214,9 +266,10 @@ process.on('message', async (message) => {
         //    Typical music spectra: entropy 3-8 range
         let entropyScore = 0.5;
         try {
-          const spectrum = essentia.Spectrum(audioVector).spectrum;
-          const entropyResult = essentia.Entropy(spectrum);
-          entropyScore = Math.min(1, Math.max(0, (entropyResult.entropy - 3) / 5));
+          if (spectrum) {
+            const entropyResult = essentia.Entropy(spectrum);
+            entropyScore = Math.min(1, Math.max(0, (entropyResult.entropy - 3) / 5));
+          }
         } catch (e) { /* use default */ }
 
         // Weighted combination (inspired by Spotify/EchoNest):
