@@ -511,8 +511,8 @@
   }
 
   .settingsPage__content {
-    margin-top: 0;
-    padding: var(--space-5) var(--space-5) calc(60px + var(--player-bottom-spacer, 0px));
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: calc(52px + var(--space-5)) var(--space-5) calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .settingsPage__header {
@@ -547,7 +547,7 @@
   }
 
   .settingsPage__content {
-    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 68px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .settingsPage__header h1 {

@@ -135,8 +135,8 @@
   }
 
   .adminPage__content {
-    margin-top: 0; /* Remove negative margin */
-    padding: 0 20px calc(60px + var(--player-bottom-spacer, 0px)); /* No top padding + base padding + player spacer */
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: 52px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* 52px top for header + base padding + player spacer */
   }
 
   .title {
@@ -150,7 +150,7 @@
 
 @media (max-width: 480px) {
   .adminPage__content {
-    padding: 0 16px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 52px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 }
 

@@ -308,8 +308,8 @@
 
   .artistPlaylistsPage__content {
     overflow-y: auto; /* Permitir scroll vertical */
-    margin-top: 0; /* Eliminar margin negativo */
-    padding: 20px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: 72px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* 52px + 20px top + bottom nav + player */
   }
 
   /* Remove grid layout on mobile for natural content flow */
@@ -383,7 +383,7 @@
 
 @media (max-width: 480px) {
   .artistPlaylistsPage__content {
-    padding: 12px 12px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 64px 12px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .artistPlaylistsPage__hero {

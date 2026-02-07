@@ -143,9 +143,9 @@
   }
 
   .albumsPage__content {
-    margin-top: 0;
+    margin-top: -52px; /* Content behind header for glass effect */
     overflow-x: hidden;
-    padding: 16px 20px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 68px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   /* Remove grid layout on mobile for natural content flow */
@@ -186,7 +186,7 @@
   }
 
   .albumsPage__content {
-    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 68px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .albumsPage__pageHeader {

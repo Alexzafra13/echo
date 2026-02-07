@@ -573,8 +573,8 @@
   }
 
   .profilePage__content {
-    margin-top: 0;
-    padding: 20px 20px calc(60px + var(--player-bottom-spacer, 0px));
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: 72px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .profilePage__header {
@@ -646,7 +646,7 @@
   }
 
   .profilePage__content {
-    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+    padding: 68px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* 52px header + 16px + bottom nav + player */
   }
 
   .profilePage__header h1 {

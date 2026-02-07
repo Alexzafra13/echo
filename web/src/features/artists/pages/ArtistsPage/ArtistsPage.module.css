@@ -200,8 +200,8 @@
   }
 
   .artistsPage__content {
-    margin-top: 0;
-    padding: 16px 20px calc(60px + var(--player-bottom-spacer, 0px));
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: 68px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .artistsPage__title {
@@ -228,7 +228,7 @@
 
 @media (max-width: 480px) {
   .artistsPage__content {
-    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 68px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .artistsPage__title {

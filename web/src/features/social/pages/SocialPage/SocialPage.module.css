@@ -1322,8 +1322,8 @@
   }
 
   .socialPage__content {
-    margin-top: 0;
-    padding: 0 16px 16px;
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: 52px 16px 16px;
     padding-bottom: calc(60px + var(--player-bottom-spacer, 0px));
   }
 
