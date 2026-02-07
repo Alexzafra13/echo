@@ -49,6 +49,7 @@ export class GetShuffledTracksUseCase {
       rgTrackPeak: track.rgTrackPeak,
       rgAlbumGain: track.rgAlbumGain,
       rgAlbumPeak: track.rgAlbumPeak,
+      outroStart: track.outroStart,
       createdAt: track.createdAt,
       updatedAt: track.updatedAt,
     }));

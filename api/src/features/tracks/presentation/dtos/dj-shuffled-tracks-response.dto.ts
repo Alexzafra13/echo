@@ -23,6 +23,7 @@ export class DjShuffledTrackDto {
   @ApiProperty({ nullable: true }) rgTrackPeak!: number | null;
   @ApiProperty({ nullable: true }) rgAlbumGain!: number | null;
   @ApiProperty({ nullable: true }) rgAlbumPeak!: number | null;
+  @ApiProperty({ nullable: true, description: 'Seconds where outro/silence begins (for smart crossfade)' }) outroStart!: number | null;
   @ApiProperty() createdAt!: Date;
   @ApiProperty() updatedAt!: Date;
 }

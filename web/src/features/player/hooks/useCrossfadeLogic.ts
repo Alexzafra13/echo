@@ -260,22 +260,37 @@ export function useCrossfadeLogic({
   }, [settings, isCrossfading, isRadioMode, repeatMode, hasNextTrack, audioElements, currentTrackOutroStart]);
 
   /**
-   * Effect to listen for timeupdate and trigger crossfade
+   * Ref-based handler for timeupdate events.
+   * Uses the same ref indirection pattern as handleEnded in PlayerContext to
+   * prevent listener churn. Previously, the timeupdate effect depended on
+   * checkCrossfadeTiming (which changes when isCrossfading toggles), causing
+   * rapid listener removal/re-addition during crossfade transitions.
+   * On mobile, the timeupdate event could fire in the gap between removal
+   * and re-attachment, causing a missed crossfade trigger.
    */
+  const handleTimeUpdateRef = useRef<() => void>(() => {});
+
+  // Keep the handler up to date with the latest checkCrossfadeTiming logic
+  useEffect(() => {
+    handleTimeUpdateRef.current = () => {
+      if (checkCrossfadeTiming()) {
+        logger.debug('[Crossfade] Triggering crossfade to next track');
+        callbacksRef.current.onCrossfadeTrigger?.();
+      }
+    };
+  }, [checkCrossfadeTiming]);
+
+  // Stable event listeners - only set up once when audio elements are created.
+  // The ref indirection ensures the handler always uses the latest state
+  // without needing to remove/re-add DOM event listeners on every state change.
   useEffect(() => {
     const audioA = audioElements.audioRefA.current;
     const audioB = audioElements.audioRefB.current;
     if (!audioA || !audioB) return;
 
     const handleTimeUpdate = () => {
-      if (checkCrossfadeTiming()) {
-        logger.debug('[Crossfade] Triggering crossfade to next track');
-        callbacksRef.current.onCrossfadeTrigger?.();
-      }
+      handleTimeUpdateRef.current();
     };
-
-    // Reset crossfade flag when setting up new listeners
-    crossfadeStartedRef.current = false;
 
     audioA.addEventListener('timeupdate', handleTimeUpdate);
     audioB.addEventListener('timeupdate', handleTimeUpdate);
@@ -284,7 +299,7 @@ export function useCrossfadeLogic({
       audioA.removeEventListener('timeupdate', handleTimeUpdate);
       audioB.removeEventListener('timeupdate', handleTimeUpdate);
     };
-  }, [audioElements, checkCrossfadeTiming]);
+  }, [audioElements.audioRefA, audioElements.audioRefB]);
 
   // Cleanup on unmount
   useEffect(() => {

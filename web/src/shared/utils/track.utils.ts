@@ -28,6 +28,8 @@ export interface TrackSource {
   // Audio normalization (LUFS)
   rgTrackGain?: number | null;
   rgTrackPeak?: number | null;
+  // Smart crossfade
+  outroStart?: number | null;
 }
 
 /**
@@ -79,6 +81,8 @@ export function toPlayerTrack(source: TrackSource, context?: AlbumContext): Trac
     // Audio normalization data (LUFS)
     rgTrackGain: source.rgTrackGain ?? undefined,
     rgTrackPeak: source.rgTrackPeak ?? undefined,
+    // Smart crossfade
+    outroStart: source.outroStart ?? undefined,
   };
 }
 

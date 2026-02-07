@@ -225,6 +225,7 @@ export class GetDjShuffledTracksUseCase {
       rgTrackPeak: track.rgTrackPeak ?? null,
       rgAlbumGain: track.rgAlbumGain ?? null,
       rgAlbumPeak: track.rgAlbumPeak ?? null,
+      outroStart: track.outroStart ?? null,
       createdAt: track.createdAt,
       updatedAt: track.updatedAt,
     };
