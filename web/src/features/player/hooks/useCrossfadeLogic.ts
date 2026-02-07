@@ -125,7 +125,13 @@ export function useCrossfadeLogic({
 
     try {
       // Start playing the inactive audio (should already have src loaded)
-      await audioElements.playInactive();
+      // On mobile, playInactive() can fail due to autoplay policy. Retry once.
+      try {
+        await audioElements.playInactive();
+      } catch (playError) {
+        logger.warn('[Crossfade] playInactive failed, retrying:', (playError as Error).message);
+        await audioElements.playInactive(false);
+      }
 
       const fadeDuration = settings.duration * 1000; // Convert to ms
 

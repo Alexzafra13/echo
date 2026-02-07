@@ -25,10 +25,12 @@ export function useSocialSync({
     const isAuthenticated = useAuthStore.getState().isAuthenticated;
     if (!isAuthenticated) return;
 
-    // Send playback state to backend (fire and forget, errors are handled silently)
+    // Send playback state to backend (fire and forget)
     updatePlaybackState({
       isPlaying,
       currentTrackId: isPlaying && currentTrackId ? currentTrackId : null,
+    }).catch(() => {
+      // Silently ignore sync failures - non-critical feature
     });
   }, [isPlaying, currentTrackId, isRadioMode]);
 }

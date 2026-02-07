@@ -177,6 +177,9 @@ export function AudioPlayer() {
     const deltaX = swipeOffset;
 
     if (Math.abs(deltaX) >= SWIPE_THRESHOLD) {
+      // Clear any pending swipe action to prevent rapid swipes from queuing multiple skips
+      if (swipeTimeoutRef.current) clearTimeout(swipeTimeoutRef.current);
+
       if (deltaX < 0) {
         // Swipe left → next track
         setSwipeDirection('left');
