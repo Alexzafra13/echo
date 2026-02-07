@@ -22,9 +22,12 @@ test.describe('Reproductor de Audio', () => {
 
     expect(page.url()).toContain('/albums');
 
-    // Debe mostrar lista de álbumes o mensaje de vacío
-    const hasContent = await page.locator('[class*="album"], [class*="card"], [class*="grid"], [class*="empty"]').first().isVisible({ timeout: 10000 }).catch(() => false);
-    expect(hasContent).toBeTruthy();
+    // Debe mostrar título de página, álbumes, loading o estado vacío
+    await expect(
+      page.getByRole('heading', { name: /Álbumes/i }).or(
+        page.getByText(/Cargando álbumes|No hay álbumes|Error al cargar/i)
+      ).first()
+    ).toBeVisible({ timeout: 15000 });
   });
 
   test('página de artistas carga correctamente', async ({ page }) => {
@@ -76,10 +79,11 @@ test.describe('Radio', () => {
 
     expect(page.url()).toContain('/radio');
 
-    // Debe mostrar contenido de radio
-    const hasRadioContent = await page.locator('[class*="radio"], [class*="station"]').first().isVisible({ timeout: 10000 }).catch(() => false);
-    const hasTitle = await page.getByText(/Radio/i).isVisible().catch(() => false);
-
-    expect(hasRadioContent || hasTitle).toBeTruthy();
+    // Debe mostrar el título "Radio" o estado de carga
+    await expect(
+      page.getByRole('heading', { name: /Radio/i, level: 1 }).or(
+        page.getByText(/Cargando emisoras|No se encontraron emisoras/i)
+      ).first()
+    ).toBeVisible({ timeout: 15000 });
   });
 });

@@ -85,14 +85,10 @@ test.describe('Panel de Administración', () => {
       // Verificar que estamos en la URL correcta y la página cargó
       expect(page.url()).toContain('tab=maintenance');
 
-      // El contenido puede tardar en cargar si el API está lento
-      // Buscar cualquier contenido de mantenimiento o el estado de carga
-      const hasContent = await page.locator('[class*="maintenance"], [class*="storage"], [class*="cleanup"]').first().isVisible({ timeout: 10000 }).catch(() => false);
-      const hasText = await page.getByText(/Almacenamiento|Limpieza|Cargando|Storage|Cleanup/i).first().isVisible().catch(() => false);
-      const hasButtons = await page.getByRole('button').first().isVisible().catch(() => false);
-
-      // Al menos algo debe estar visible (contenido, loading o botones)
-      expect(hasContent || hasText || hasButtons).toBeTruthy();
+      // Debe mostrar contenido de mantenimiento (almacenamiento, limpieza, etc.)
+      await expect(
+        page.getByText(/Almacenamiento|Limpieza|Cargando/i).first()
+      ).toBeVisible({ timeout: 15000 });
     });
   });
 

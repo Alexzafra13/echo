@@ -55,16 +55,14 @@ test.describe('Navegación principal', () => {
   test('sidebar o navegación muestra links principales', async ({ page }) => {
     await page.goto('/home');
 
-    // Buscar navegación
-    const nav = page.locator('nav, aside, [class*="sidebar"], [class*="nav"]').first();
+    // Esperar a que el sidebar renderice con los links de navegación
+    const sidebar = page.locator('aside').first();
+    await expect(sidebar).toBeVisible({ timeout: 15000 });
 
-    // Debe tener links a secciones principales
-    const hasHomeLink = await nav.getByText(/Home|Inicio/i).isVisible().catch(() => false);
-    const hasAlbumsLink = await nav.getByText(/Albums|Álbumes/i).isVisible().catch(() => false);
-    const hasArtistsLink = await nav.getByText(/Artists|Artistas/i).isVisible().catch(() => false);
-
-    // Al menos algunos links de navegación deben estar visibles
-    expect(hasHomeLink || hasAlbumsLink || hasArtistsLink).toBeTruthy();
+    // Debe tener al menos un link a secciones principales
+    await expect(
+      sidebar.getByText(/Inicio|Albums|Artists/i).first()
+    ).toBeVisible({ timeout: 5000 });
   });
 });
 
@@ -74,12 +72,14 @@ test.describe('Playlists', () => {
 
     expect(page.url()).toContain('/playlists');
 
-    // Debe mostrar título o contenido de playlists
-    const hasTitle = await page.getByText(/Playlist|Listas/i).first().isVisible({ timeout: 10000 }).catch(() => false);
-    const hasCreateButton = await page.getByRole('button', { name: /Crear|Nueva|New|Create/i }).isVisible().catch(() => false);
-    const hasContent = await page.locator('[class*="playlist"], [class*="list"]').first().isVisible().catch(() => false);
-
-    expect(hasTitle || hasCreateButton || hasContent).toBeTruthy();
+    // Debe mostrar título, botón crear, loading o estado vacío
+    await expect(
+      page.getByRole('heading', { name: /Playlists/i }).or(
+        page.getByText(/Cargando playlists|No tienes playlists/i)
+      ).or(
+        page.getByRole('button', { name: /Nueva Playlist/i })
+      ).first()
+    ).toBeVisible({ timeout: 15000 });
   });
 
   test('crear nueva playlist', async ({ page }) => {
@@ -130,8 +130,11 @@ test.describe('Perfil de usuario', () => {
 
     expect(page.url()).toContain('/settings');
 
-    // Debe mostrar opciones de configuración
-    const hasSettings = await page.locator('[class*="setting"], form, [class*="option"]').first().isVisible({ timeout: 10000 }).catch(() => false);
-    expect(hasSettings).toBeTruthy();
+    // Debe mostrar el título "Configuración" o contenido de ajustes
+    await expect(
+      page.getByRole('heading', { name: /Configuración/i }).or(
+        page.getByText(/Personaliza tu experiencia|Cargando/i)
+      ).first()
+    ).toBeVisible({ timeout: 15000 });
   });
 });
