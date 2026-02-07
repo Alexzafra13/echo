@@ -12,16 +12,28 @@
   "categories": ["music", "entertainment"],
   "icons": [
     {
-      "src": "/images/logos/echo-icon.png",
+      "src": "/images/logos/echo-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/images/logos/echo-icon.png",
+      "src": "/images/logos/echo-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logos/echo-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/images/logos/echo-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
@@ -30,14 +42,14 @@
       "short_name": "Buscar",
       "description": "Busca en tu biblioteca de música",
       "url": "/search",
-      "icons": [{ "src": "/images/logos/echo-icon.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/images/logos/echo-icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Mis Playlists",
       "short_name": "Playlists",
       "description": "Ver tus playlists",
       "url": "/playlists",
-      "icons": [{ "src": "/images/logos/echo-icon.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/images/logos/echo-icon-192.png", "sizes": "192x192" }]
     }
   ],
   "screenshots": [],
