@@ -71,11 +71,12 @@ async function getAudioDuration(filePath, ffprobePath) {
 
 /**
  * Decode audio to mono 44.1kHz float32 PCM.
- * For tracks longer than 90s, extracts only a representative segment
- * from the core section (skipping intro/outro) for ~3-5x faster processing.
- * BPM, Key, and Energy analysis only need 60-90s for accurate results.
+ * Extracts only a representative segment from the core section (skipping
+ * intro/outro) for faster processing. Segment length depends on analysis needs:
+ * - 60s for full analysis (BPM + Key + Energy)
+ * - 30s for energy-only (when BPM/Key come from ID3 tags)
  */
-async function decodeAudio(filePath, ffmpegPath, ffprobePath) {
+async function decodeAudio(filePath, ffmpegPath, ffprobePath, segmentLength) {
   const { execFile } = require('child_process');
   const { promisify } = require('util');
   const execFileAsync = promisify(execFile);
@@ -85,9 +86,7 @@ async function decodeAudio(filePath, ffmpegPath, ffprobePath) {
     // Get duration to determine optimal analysis segment
     const duration = await getAudioDuration(filePath, ffprobePath);
 
-    // Build FFmpeg args — extract 60s segment from core section when possible
-    // 60s is enough for accurate BPM, Key, Energy, and Danceability detection
-    const SEGMENT_LENGTH = 60;
+    const SEGMENT_LENGTH = segmentLength || 60;
     const ffmpegArgs = [];
 
     if (duration > SEGMENT_LENGTH + 30) {
@@ -102,7 +101,7 @@ async function decodeAudio(filePath, ffmpegPath, ffprobePath) {
       // Cap output to segment length
       ffmpegArgs.push('-t', String(SEGMENT_LENGTH));
     }
-    // Short tracks (<90s): decode full track
+    // Short tracks (< SEGMENT_LENGTH): decode full track
 
     ffmpegArgs.push(
       '-ac', '1',           // mono
@@ -145,7 +144,10 @@ process.on('message', async (message) => {
     let audioVector = null;
     try {
       // Send debug info via IPC
-      process.send({ type: 'debug', step: 'start', filePath: message.filePath, requestId });
+      const hints = message.hints || {};
+      const energyOnly = hints.bpm > 0 && hints.key && hints.key !== 'Unknown' && hints.key !== '';
+      const segmentLength = energyOnly ? 30 : 60; // 30s is enough for energy-only analysis
+      process.send({ type: 'debug', step: 'start', filePath: message.filePath, requestId, energyOnly, segmentLength });
 
       // Step 1: Init Essentia
       process.send({ type: 'debug', step: 'init_essentia' });
@@ -154,7 +156,7 @@ process.on('message', async (message) => {
 
       // Step 2: Decode audio
       process.send({ type: 'debug', step: 'decode_audio' });
-      const audioData = await decodeAudio(message.filePath, message.ffmpegPath, message.ffprobePath);
+      const audioData = await decodeAudio(message.filePath, message.ffmpegPath, message.ffprobePath, segmentLength);
       process.send({ type: 'debug', step: 'decoded', samples: audioData?.length || 0 });
 
       if (!audioData || audioData.length === 0) {
@@ -168,8 +170,6 @@ process.on('message', async (message) => {
       process.send({ type: 'debug', step: 'vector_ready' });
 
       // Step 4: Analyze
-      // Use hints from ID3 tags to skip expensive algorithms when possible
-      const hints = message.hints || {};
       process.send({ type: 'debug', step: 'analyze', hasHints: { bpm: !!hints.bpm, key: !!hints.key } });
 
       // BPM — skip RhythmExtractor2013 if ID3 tag provides BPM (saves ~40-60% of total time)
