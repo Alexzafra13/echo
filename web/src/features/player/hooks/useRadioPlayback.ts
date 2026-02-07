@@ -95,23 +95,27 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
       // Wait for audio to be ready before playing
       audio.oncanplay = () => {
         audio.play().catch((error) => {
-          logger.error('[Radio] Failed to play:', error.message);
-          // Clear state on play failure
-          audio.src = '';
-          // Show error state briefly before closing
-          setState(prev => ({
-            ...prev,
-            signalStatus: 'error',
-          }));
-          // Close radio mode after showing error
-          setTimeout(() => {
-            setState({
-              currentStation: null,
-              isRadioMode: false,
-              signalStatus: null,
-              metadata: null,
-            });
-          }, 2000);
+          // On mobile, play() can fail due to autoplay policy. Retry once.
+          logger.warn('[Radio] Play failed, retrying:', error.message);
+          audio.play().catch((retryError) => {
+            logger.error('[Radio] Retry failed:', retryError.message);
+            // Clear state on play failure
+            audio.src = '';
+            // Show error state briefly before closing
+            setState(prev => ({
+              ...prev,
+              signalStatus: 'error',
+            }));
+            // Close radio mode after showing error
+            setTimeout(() => {
+              setState({
+                currentStation: null,
+                isRadioMode: false,
+                signalStatus: null,
+                metadata: null,
+              });
+            }, 2000);
+          });
         });
         audio.oncanplay = null;
       };
