@@ -3,7 +3,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
 import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
-import { eq, notInArray, count, inArray } from 'drizzle-orm';
+import { eq, notInArray, count, inArray, sql } from 'drizzle-orm';
 import { EssentiaAnalyzerService } from './essentia-analyzer.service';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
 import { ScannerGateway } from '../../../scanner/infrastructure/gateways/scanner.gateway';
@@ -271,6 +271,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
       let analyzedBpm = 0;
       let analyzedKey = 'Unknown';
       let energy = 0.5;
+      let rawEnergy: number | null = null;
       let danceability: number | null = null;
 
       try {
@@ -281,6 +282,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
         analyzedBpm = result.bpm;
         analyzedKey = result.key;
         energy = result.energy;
+        rawEnergy = result.rawEnergy ?? null;
         danceability = result.danceability ?? null;
       } catch (error) {
         this.logger.warn(
@@ -327,6 +329,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
           key: finalKey,
           camelotKey: camelotKey || null,
           energy: energy,
+          rawEnergy: rawEnergy,
           danceability,
           status: 'completed',
           analyzedAt: new Date(),
@@ -346,6 +349,14 @@ export class DjAnalysisQueueService implements OnModuleInit {
       if (this.processedInSession >= this.totalToProcess) {
         this.isRunning = false;
         this.emitProgress(); // Final update with isRunning = false
+
+        // Auto-calibrate energy for the entire library now that batch is complete
+        this.recalibrateEnergy().catch((err) => {
+          this.logger.warn(
+            { error: err instanceof Error ? err.message : 'Unknown' },
+            'Energy recalibration failed (non-critical)',
+          );
+        });
       }
 
       // Determine the source of BPM/Key
@@ -530,6 +541,64 @@ export class DjAnalysisQueueService implements OnModuleInit {
       retried: failedAnalyses.length,
       message: `Retrying ${failedAnalyses.length} failed analyses.`,
     };
+  }
+
+  /**
+   * Auto-calibrate energy values using the real median of rawEnergy.
+   *
+   * The raw energy (weighted average of 5 audio features) clusters around
+   * a library-specific center that depends on the music genres present.
+   * A classical library clusters differently than EDM or rock.
+   *
+   * This method:
+   * 1. Computes the median rawEnergy across all completed tracks
+   * 2. Applies a sigmoid centered on that median to spread values across 0-1
+   * 3. Updates all tracks in a single SQL statement (no re-analysis needed)
+   *
+   * Called automatically after each analysis batch completes.
+   */
+  async recalibrateEnergy(): Promise<void> {
+    // Need raw_energy data to calibrate
+    const countResult = await this.drizzle.db
+      .select({ value: count() })
+      .from(djAnalysis)
+      .where(eq(djAnalysis.status, 'completed'));
+
+    const totalCompleted = countResult[0]?.value ?? 0;
+    if (totalCompleted < 20) {
+      this.logger.debug(
+        { totalCompleted },
+        'Skipping energy recalibration — need at least 20 completed tracks',
+      );
+      return;
+    }
+
+    // Compute median rawEnergy using PostgreSQL percentile_cont
+    const medianResult = await this.drizzle.db.execute(
+      sql`SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY raw_energy) AS median
+          FROM dj_analysis
+          WHERE status = 'completed' AND raw_energy IS NOT NULL`,
+    );
+
+    const median = parseFloat((medianResult as any).rows?.[0]?.median ?? (medianResult as any)[0]?.median);
+    if (isNaN(median) || median <= 0 || median >= 1) {
+      this.logger.debug({ median }, 'Skipping recalibration — invalid median');
+      return;
+    }
+
+    // Apply sigmoid: energy = 1 / (1 + exp(-12 * (raw_energy - median)))
+    // Steepness 12 provides good contrast without extreme compression
+    const updated = await this.drizzle.db.execute(
+      sql`UPDATE dj_analysis
+          SET energy = 1.0 / (1.0 + exp(-12.0 * (raw_energy - ${median}))),
+              updated_at = NOW()
+          WHERE status = 'completed' AND raw_energy IS NOT NULL`,
+    );
+
+    this.logger.info(
+      { median: median.toFixed(4), totalCompleted },
+      'Energy recalibrated using library median',
+    );
   }
 
   /**

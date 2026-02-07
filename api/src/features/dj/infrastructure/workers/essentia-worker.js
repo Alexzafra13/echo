@@ -222,6 +222,7 @@ process.on('message', async (message) => {
       // well-distributed values across 0-1. A final sigmoid curve enhances
       // contrast to prevent clustering around the mean.
       let energy = 0.5;
+      let rawEnergyValue = undefined; // Pre-sigmoid weighted average (for auto-calibration)
       try {
         // Pre-compute spectrum once (reused by centroid and entropy)
         let spectrum = null;
@@ -289,12 +290,14 @@ process.on('message', async (message) => {
         // Loudness 30%, Onset rate 25%, Timbre 15%, Dynamics 15%, Entropy 15%
         // RMS and onset rate are the strongest perceptual energy correlates
         const rawEnergy = rmsScore * 0.30 + onsetScore * 0.25 + spectralScore * 0.15 + dynamicScore * 0.15 + entropyScore * 0.15;
+        rawEnergyValue = rawEnergy;
 
         // Apply sigmoid contrast enhancement to spread values across full 0-1 range
         // Without this, averaging 5 features causes regression to the mean (~0.5-0.7)
-        // Center at 0.77: empirically calibrated from real library analysis (~4000 tracks)
-        // Steepness 12: maps 0.60→0.12, 0.70→0.30, 0.77→0.50, 0.84→0.70, 0.90→0.83
-        energy = 1 / (1 + Math.exp(-12 * (rawEnergy - 0.77)));
+        // Default center 0.50: neutral starting point — queue service will auto-calibrate
+        // using the real median from the library after enough tracks are analyzed
+        // Steepness 12: provides good contrast spread
+        energy = 1 / (1 + Math.exp(-12 * (rawEnergy - 0.50)));
         energy = Math.min(1, Math.max(0, energy));
 
         process.send({ type: 'debug', step: 'energy_done', rmsScore, spectralScore, dynamicScore, onsetScore, entropyScore, rawEnergy, energy });
@@ -320,7 +323,7 @@ process.on('message', async (message) => {
         audioVector = null;
       }
 
-      process.send({ type: 'result', requestId, success: true, data: { bpm, key, energy, danceability } });
+      process.send({ type: 'result', requestId, success: true, data: { bpm, key, energy, rawEnergy: rawEnergyValue, danceability } });
     } catch (error) {
       // Free WASM vector on error too
       if (audioVector && typeof audioVector.delete === 'function') {
