@@ -160,62 +160,77 @@ process.on('message', async (message) => {
       // 3. Timbre/brightness (Spectral Centroid)
       // 4. Onset rate (how busy/active the track is)
       // 5. Spectral entropy (general complexity/noise)
+      //
+      // Normalization ranges are calibrated for typical music to produce
+      // well-distributed values across 0-1. A final sigmoid curve enhances
+      // contrast to prevent clustering around the mean.
       let energy = 0.5;
       try {
         // 1. Spectral centroid (timbre) — high = bright/aggressive, low = dark/calm
+        //    Log-frequency scale for perceptual accuracy
+        //    Most music: 800-4000 Hz centroid range
         let spectralScore = 0.5;
         try {
           const centroidResult = essentia.Centroid(essentia.Spectrum(audioVector).spectrum);
-          const centroid = centroidResult.centroid * 22050;
-          spectralScore = Math.min(1, Math.max(0, (centroid - 500) / 5000));
+          const centroidHz = centroidResult.centroid * 22050;
+          // Log2 scale: 500Hz→0, 1000Hz→0.33, 2000Hz→0.67, 4000Hz→1.0
+          spectralScore = Math.min(1, Math.max(0, (Math.log2(Math.max(centroidHz, 500)) - 9) / 3));
         } catch (e) { /* use default */ }
 
         // 2. Dynamic complexity — inverted: compressed/loud = more energetic
+        //    Typical music: 2-12 complexity range
         let dynamicScore = 0.5;
         try {
           const dynResult = essentia.DynamicComplexity(audioVector);
-          dynamicScore = Math.min(1, Math.max(0, 1 - (dynResult.dynamicComplexity / 15)));
+          dynamicScore = Math.min(1, Math.max(0, 1 - (dynResult.dynamicComplexity / 12)));
         } catch (e) { /* use default */ }
 
-        // 3. RMS (perceived loudness)
+        // 3. RMS (perceived loudness) — dB scale with music-calibrated range
+        //    Typical music: -40dB (quiet acoustic) to -3dB (loud mastered)
         let rmsScore = 0.5;
         try {
           const rmsResult = essentia.RMS(audioVector);
           const rms = rmsResult.rms;
           if (rms > 0) {
-            rmsScore = Math.min(1, Math.max(0, (Math.log10(rms) + 2) / 2.3));
+            const rmsDb = 20 * Math.log10(rms);
+            rmsScore = Math.min(1, Math.max(0, (rmsDb + 40) / 37));
           } else {
             rmsScore = 0;
           }
         } catch (e) { /* use default */ }
 
-        // 4. Onset rate — how many note/beat onsets per second (busyness)
+        // 4. Onset rate — log scale for perceptual accuracy
         //    Ballad ~1-3/s, Pop ~4-6/s, Metal/EDM ~8-15/s
+        //    Log2: 1/s→0, 3/s→0.37, 8/s→0.69, 20/s→1.0
         let onsetScore = 0.5;
         try {
           const onsetResult = essentia.OnsetRate(audioVector);
           const onsetsPerSecond = onsetResult.onsetRate;
-          // Map: 1/s → 0.1, 5/s → 0.4, 10/s → 0.7, 15/s → 1.0
-          onsetScore = Math.min(1, Math.max(0, (onsetsPerSecond - 1) / 14));
+          onsetScore = Math.min(1, Math.max(0, Math.log2(Math.max(onsetsPerSecond, 1)) / Math.log2(20)));
         } catch (e) { /* use default */ }
 
         // 5. Spectral entropy — general complexity/noise of the spectrum
         //    Tonal/simple music has low entropy, noisy/complex has high
+        //    Typical music spectra: entropy 3-8 range
         let entropyScore = 0.5;
         try {
           const spectrum = essentia.Spectrum(audioVector).spectrum;
           const entropyResult = essentia.Entropy(spectrum);
-          // Entropy range typically 0-10 for audio spectra
-          // Higher entropy = more complex/noisy = more energetic
-          entropyScore = Math.min(1, Math.max(0, entropyResult.entropy / 10));
+          entropyScore = Math.min(1, Math.max(0, (entropyResult.entropy - 3) / 5));
         } catch (e) { /* use default */ }
 
         // Weighted combination (inspired by Spotify/EchoNest):
-        // Loudness 25%, Timbre 20%, Dynamics 20%, Onset rate 20%, Entropy 15%
-        energy = rmsScore * 0.25 + spectralScore * 0.20 + dynamicScore * 0.20 + onsetScore * 0.20 + entropyScore * 0.15;
+        // Loudness 30%, Onset rate 25%, Timbre 15%, Dynamics 15%, Entropy 15%
+        // RMS and onset rate are the strongest perceptual energy correlates
+        const rawEnergy = rmsScore * 0.30 + onsetScore * 0.25 + spectralScore * 0.15 + dynamicScore * 0.15 + entropyScore * 0.15;
+
+        // Apply sigmoid contrast enhancement to spread values across full 0-1 range
+        // Without this, averaging 5 features causes regression to the mean (~0.5-0.7)
+        // Sigmoid center at 0.45, steepness 8: maps 0.15→0.08, 0.3→0.23, 0.45→0.50, 0.6→0.77, 0.75→0.92
+        energy = 1 / (1 + Math.exp(-8 * (rawEnergy - 0.45)));
         energy = Math.min(1, Math.max(0, energy));
 
-        process.send({ type: 'debug', step: 'energy_done', rmsScore, spectralScore, dynamicScore, onsetScore, entropyScore, energy });
+        process.send({ type: 'debug', step: 'energy_done', rmsScore, spectralScore, dynamicScore, onsetScore, entropyScore, rawEnergy, energy });
       } catch (e) {
         process.send({ type: 'debug', step: 'energy_failed', error: e?.message || String(e) });
         energy = 0.5;
