@@ -266,14 +266,18 @@ export class DjAnalysisQueueService implements OnModuleInit {
       const trackBpm = trackData[0]?.bpm || 0;
       const trackKey = trackData[0]?.initialKey || '';
 
-      // Run audio analysis
+      // Run audio analysis — pass ID3 hints so the worker can skip expensive
+      // BPM/Key algorithms when tags are already available
       let analyzedBpm = 0;
       let analyzedKey = 'Unknown';
       let energy = 0.5;
       let danceability: number | null = null;
 
       try {
-        const result = await this.analyzer.analyze(job.filePath);
+        const result = await this.analyzer.analyze(job.filePath, {
+          bpm: trackBpm,
+          key: trackKey,
+        });
         analyzedBpm = result.bpm;
         analyzedKey = result.key;
         energy = result.energy;

@@ -14,11 +14,18 @@ export interface AudioAnalysisResult {
   danceability?: number; // 0.0 - 1.0
 }
 
+/** Hints from ID3 tags — lets the analyzer skip expensive algorithms when data is already available */
+export interface AnalysisHints {
+  bpm?: number; // Skip RhythmExtractor2013 if > 0
+  key?: string; // Skip KeyExtractor if valid key
+}
+
 export interface IAudioAnalyzer {
   /**
-   * Analyze audio file for DJ characteristics
+   * Analyze audio file for DJ characteristics.
+   * Pass hints to skip expensive BPM/Key detection when ID3 tags are available.
    */
-  analyze(filePath: string): Promise<AudioAnalysisResult>;
+  analyze(filePath: string, hints?: AnalysisHints): Promise<AudioAnalysisResult>;
 
   /**
    * Check if the analyzer is available
