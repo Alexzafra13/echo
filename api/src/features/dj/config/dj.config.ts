@@ -67,8 +67,6 @@ export const DJ_CONFIG = {
       /** BPM values below this are doubled (likely half-time detection) */
       halfTimeThreshold: 60,
     },
-    /** Concurrency for batch analysis */
-    concurrency: 2,
   },
 
   /**
