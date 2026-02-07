@@ -154,49 +154,68 @@ process.on('message', async (message) => {
         key = 'Unknown';
       }
 
-      // Energy - combine multiple features for perceptual energy
-      // RMS alone doesn't work because mastered music is loudness-normalized
-      // We combine: spectral energy (brightness/aggression) + dynamic complexity + RMS
+      // Energy - Spotify-style perceptual energy combining 5 features:
+      // 1. Perceived loudness (RMS)
+      // 2. Dynamic range (DynamicComplexity)
+      // 3. Timbre/brightness (Spectral Centroid)
+      // 4. Onset rate (how busy/active the track is)
+      // 5. Spectral entropy (general complexity/noise)
       let energy = 0.5;
       try {
-        // 1. Spectral centroid — high = bright/energetic, low = dark/calm
-        //    Typical range: 500-5000 Hz for music
+        // 1. Spectral centroid (timbre) — high = bright/aggressive, low = dark/calm
         let spectralScore = 0.5;
         try {
           const centroidResult = essentia.Centroid(essentia.Spectrum(audioVector).spectrum);
-          const centroid = centroidResult.centroid * 22050; // Convert from normalized to Hz
-          // Map: 500Hz → 0.1, 2000Hz → 0.5, 5000Hz → 0.9
+          const centroid = centroidResult.centroid * 22050;
           spectralScore = Math.min(1, Math.max(0, (centroid - 500) / 5000));
         } catch (e) { /* use default */ }
 
-        // 2. Dynamic complexity — high = varied dynamics (less compressed), low = flat/loud
+        // 2. Dynamic complexity — inverted: compressed/loud = more energetic
         let dynamicScore = 0.5;
         try {
           const dynResult = essentia.DynamicComplexity(audioVector);
-          // Typical range: 0-15. Higher = more dynamic range
-          // Energetic tracks tend to be compressed (low dynamic complexity)
-          // So we invert: low complexity = high energy
           dynamicScore = Math.min(1, Math.max(0, 1 - (dynResult.dynamicComplexity / 15)));
         } catch (e) { /* use default */ }
 
-        // 3. RMS (loudness) — still useful as a factor but not dominant
+        // 3. RMS (perceived loudness)
         let rmsScore = 0.5;
         try {
           const rmsResult = essentia.RMS(audioVector);
           const rms = rmsResult.rms;
           if (rms > 0) {
-            // Wider range: RMS 0.01 → 0.0, RMS 0.1 → 0.4, RMS 0.3 → 0.7, RMS 0.5 → 0.85
             rmsScore = Math.min(1, Math.max(0, (Math.log10(rms) + 2) / 2.3));
           } else {
             rmsScore = 0;
           }
         } catch (e) { /* use default */ }
 
-        // Weighted combination: spectral 40%, loudness 30%, dynamics 30%
-        energy = spectralScore * 0.4 + rmsScore * 0.3 + dynamicScore * 0.3;
+        // 4. Onset rate — how many note/beat onsets per second (busyness)
+        //    Ballad ~1-3/s, Pop ~4-6/s, Metal/EDM ~8-15/s
+        let onsetScore = 0.5;
+        try {
+          const onsetResult = essentia.OnsetRate(audioVector);
+          const onsetsPerSecond = onsetResult.onsetRate;
+          // Map: 1/s → 0.1, 5/s → 0.4, 10/s → 0.7, 15/s → 1.0
+          onsetScore = Math.min(1, Math.max(0, (onsetsPerSecond - 1) / 14));
+        } catch (e) { /* use default */ }
+
+        // 5. Spectral entropy — general complexity/noise of the spectrum
+        //    Tonal/simple music has low entropy, noisy/complex has high
+        let entropyScore = 0.5;
+        try {
+          const spectrum = essentia.Spectrum(audioVector).spectrum;
+          const entropyResult = essentia.Entropy(spectrum);
+          // Entropy range typically 0-10 for audio spectra
+          // Higher entropy = more complex/noisy = more energetic
+          entropyScore = Math.min(1, Math.max(0, entropyResult.entropy / 10));
+        } catch (e) { /* use default */ }
+
+        // Weighted combination (inspired by Spotify/EchoNest):
+        // Loudness 25%, Timbre 20%, Dynamics 20%, Onset rate 20%, Entropy 15%
+        energy = rmsScore * 0.25 + spectralScore * 0.20 + dynamicScore * 0.20 + onsetScore * 0.20 + entropyScore * 0.15;
         energy = Math.min(1, Math.max(0, energy));
 
-        process.send({ type: 'debug', step: 'energy_done', spectralScore, rmsScore, dynamicScore, energy });
+        process.send({ type: 'debug', step: 'energy_done', rmsScore, spectralScore, dynamicScore, onsetScore, entropyScore, energy });
       } catch (e) {
         process.send({ type: 'debug', step: 'energy_failed', error: e?.message || String(e) });
         energy = 0.5;
