@@ -7,6 +7,7 @@ import { fork, ChildProcess } from 'child_process';
 import {
   IAudioAnalyzer,
   AudioAnalysisResult,
+  AnalysisHints,
 } from '../../domain/ports/audio-analyzer.port';
 import { getFfmpegPath, getFfprobePath } from '../utils/ffmpeg.util';
 import { DJ_CONFIG } from '../../config/dj.config';
@@ -451,11 +452,11 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
     return 'essentia';
   }
 
-  async analyze(filePath: string): Promise<AudioAnalysisResult> {
+  async analyze(filePath: string, hints?: AnalysisHints): Promise<AudioAnalysisResult> {
     // Try Essentia.js pool first
     try {
       await this.initPool();
-      const result = await this.analyzeWithEssentia(filePath);
+      const result = await this.analyzeWithEssentia(filePath, hints);
       if (result.bpm > 0 || result.key !== 'Unknown') {
         return result;
       }
@@ -470,7 +471,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
 
   // ─── Analysis implementations ──────────────────────────────────────
 
-  private async analyzeWithEssentia(filePath: string): Promise<AudioAnalysisResult> {
+  private async analyzeWithEssentia(filePath: string, hints?: AnalysisHints): Promise<AudioAnalysisResult> {
     const worker = await this.acquireWorker();
     const requestId = crypto.randomUUID();
 
@@ -496,6 +497,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
           filePath,
           ffmpegPath: getFfmpegPath(),
           ffprobePath: getFfprobePath(),
+          hints: hints || {},
         });
       } catch (error) {
         // Worker process died between acquire and send
