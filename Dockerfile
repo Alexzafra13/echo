@@ -110,6 +110,9 @@ WORKDIR /app
 # Copy production node_modules from deps stage
 COPY --from=deps --chown=echoapp:nodejs /prod/node_modules ./node_modules
 
+# Ensure ffmpeg/ffprobe binaries from npm packages have execute permissions
+RUN find ./node_modules -type f \( -name "ffmpeg" -o -name "ffprobe" \) -exec chmod +x {} + 2>/dev/null || true
+
 # Copy only migration SQL files (no TypeScript schemas needed at runtime)
 # This saves ~1MB and avoids shipping source code
 COPY --from=builder --chown=echoapp:nodejs /build/api/drizzle ./drizzle

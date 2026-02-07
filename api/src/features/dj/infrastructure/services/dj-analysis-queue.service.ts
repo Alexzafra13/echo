@@ -4,7 +4,7 @@ import * as os from 'os';
 import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
 import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
-import { eq, notInArray } from 'drizzle-orm';
+import { eq, notInArray, count } from 'drizzle-orm';
 import { EssentiaAnalyzerService } from './essentia-analyzer.service';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
 import { ScannerGateway } from '../../../scanner/infrastructure/gateways/scanner.gateway';
@@ -428,22 +428,26 @@ export class DjAnalysisQueueService implements OnModuleInit {
     concurrency: number;
     analyzerBackend: string;
   }> {
-    const pending = await this.drizzle.db
-      .select()
+    // Use COUNT(*) instead of loading all rows — much lighter with thousands of tracks
+    const [pendingResult] = await this.drizzle.db
+      .select({ value: count() })
       .from(djAnalysis)
       .where(eq(djAnalysis.status, 'pending'));
 
-    const analyzing = await this.drizzle.db
-      .select()
+    const [analyzingResult] = await this.drizzle.db
+      .select({ value: count() })
       .from(djAnalysis)
       .where(eq(djAnalysis.status, 'analyzing'));
 
+    const pendingCount = pendingResult?.value ?? 0;
+    const analyzingCount = analyzingResult?.value ?? 0;
+
     // Use DB state (survives restarts) — if tracks are pending or analyzing, work is happening
-    const hasWork = pending.length > 0 || analyzing.length > 0;
+    const hasWork = pendingCount > 0 || analyzingCount > 0;
 
     return {
       isRunning: this.isRunning || hasWork,
-      pendingTracks: pending.length + analyzing.length,
+      pendingTracks: pendingCount + analyzingCount,
       processedInSession: this.processedInSession,
       startedAt: this.sessionStartedAt,
       concurrency: this.concurrency,
