@@ -154,22 +154,49 @@ process.on('message', async (message) => {
         key = 'Unknown';
       }
 
-      // Energy - use RMS with logarithmic scaling (loudness is perceptual/log)
+      // Energy - combine multiple features for perceptual energy
+      // RMS alone doesn't work because mastered music is loudness-normalized
+      // We combine: spectral energy (brightness/aggression) + dynamic complexity + RMS
       let energy = 0.5;
       try {
-        const rmsResult = essentia.RMS(audioVector);
-        const rms = rmsResult.rms;
+        // 1. Spectral centroid — high = bright/energetic, low = dark/calm
+        //    Typical range: 500-5000 Hz for music
+        let spectralScore = 0.5;
+        try {
+          const centroidResult = essentia.Centroid(essentia.Spectrum(audioVector).spectrum);
+          const centroid = centroidResult.centroid * 22050; // Convert from normalized to Hz
+          // Map: 500Hz → 0.1, 2000Hz → 0.5, 5000Hz → 0.9
+          spectralScore = Math.min(1, Math.max(0, (centroid - 500) / 5000));
+        } catch (e) { /* use default */ }
 
-        // Map RMS to 0-1 using log scale
-        // Typical music RMS: 0.01 (very quiet) to 0.5 (very loud/compressed)
-        // log10(0.01)=-2 → 0, log10(0.1)=-1 → 0.59, log10(0.5)=-0.3 → 1.0
-        if (rms > 0) {
-          energy = Math.min(1, Math.max(0, (Math.log10(rms) + 2) / 1.7));
-        } else {
-          energy = 0;
-        }
+        // 2. Dynamic complexity — high = varied dynamics (less compressed), low = flat/loud
+        let dynamicScore = 0.5;
+        try {
+          const dynResult = essentia.DynamicComplexity(audioVector);
+          // Typical range: 0-15. Higher = more dynamic range
+          // Energetic tracks tend to be compressed (low dynamic complexity)
+          // So we invert: low complexity = high energy
+          dynamicScore = Math.min(1, Math.max(0, 1 - (dynResult.dynamicComplexity / 15)));
+        } catch (e) { /* use default */ }
 
-        process.send({ type: 'debug', step: 'energy_done', rawRms: rms, energy });
+        // 3. RMS (loudness) — still useful as a factor but not dominant
+        let rmsScore = 0.5;
+        try {
+          const rmsResult = essentia.RMS(audioVector);
+          const rms = rmsResult.rms;
+          if (rms > 0) {
+            // Wider range: RMS 0.01 → 0.0, RMS 0.1 → 0.4, RMS 0.3 → 0.7, RMS 0.5 → 0.85
+            rmsScore = Math.min(1, Math.max(0, (Math.log10(rms) + 2) / 2.3));
+          } else {
+            rmsScore = 0;
+          }
+        } catch (e) { /* use default */ }
+
+        // Weighted combination: spectral 40%, loudness 30%, dynamics 30%
+        energy = spectralScore * 0.4 + rmsScore * 0.3 + dynamicScore * 0.3;
+        energy = Math.min(1, Math.max(0, energy));
+
+        process.send({ type: 'debug', step: 'energy_done', spectralScore, rmsScore, dynamicScore, energy });
       } catch (e) {
         process.send({ type: 'debug', step: 'energy_failed', error: e?.message || String(e) });
         energy = 0.5;
