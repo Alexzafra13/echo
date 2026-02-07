@@ -226,9 +226,9 @@ process.on('message', async (message) => {
 
         // Apply sigmoid contrast enhancement to spread values across full 0-1 range
         // Without this, averaging 5 features causes regression to the mean (~0.5-0.7)
-        // Center at 0.72: empirically measured median raw energy for modern mastered music
-        // Steepness 8: maps 0.55→0.20, 0.65→0.36, 0.72→0.50, 0.80→0.66, 0.90→0.81
-        energy = 1 / (1 + Math.exp(-8 * (rawEnergy - 0.72)));
+        // Center at 0.70: calibrated median raw energy for varied music libraries
+        // Steepness 12: maps 0.50→0.08, 0.60→0.23, 0.70→0.50, 0.80→0.77, 0.90→0.92
+        energy = 1 / (1 + Math.exp(-12 * (rawEnergy - 0.70)));
         energy = Math.min(1, Math.max(0, energy));
 
         process.send({ type: 'debug', step: 'energy_done', rmsScore, spectralScore, dynamicScore, onsetScore, entropyScore, rawEnergy, energy });
