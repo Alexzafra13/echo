@@ -1,6 +1,5 @@
 import { Injectable, OnModuleInit, Inject, forwardRef } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import * as os from 'os';
 import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
 import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
@@ -8,7 +7,6 @@ import { eq, notInArray, count, inArray } from 'drizzle-orm';
 import { EssentiaAnalyzerService } from './essentia-analyzer.service';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
 import { ScannerGateway } from '../../../scanner/infrastructure/gateways/scanner.gateway';
-import { DJ_CONFIG } from '../../config/dj.config';
 
 interface DjAnalysisJob {
   trackId: string;
@@ -18,42 +16,6 @@ interface DjAnalysisJob {
 
 const DJ_ANALYSIS_QUEUE = 'dj-analysis-queue';
 const DJ_ANALYSIS_JOB = 'analyze-track';
-
-/**
- * Calculate optimal concurrency based on system resources.
- *
- * Each Essentia worker uses ~50-80MB (WASM vectors are freed after each
- * analysis). The main bottleneck is CPU — each worker uses ~1 core for
- * FFmpeg decode + WASM processing. Using half the cores leaves the other
- * half for the app server, PostgreSQL, Redis, LUFS analysis, and OS.
- *
- * Override with DJ_ANALYSIS_CONCURRENCY env var if needed.
- *
- * Results by server size:
- *   1-2 cores  → 1 worker
- *   4 cores    → 2 workers
- *   8 cores    → 4 workers
- *  16 cores    → 8 workers
- *  32 cores    → 12 workers (capped)
- */
-function getOptimalConcurrency(): number {
-  const envConcurrency = parseInt(process.env.DJ_ANALYSIS_CONCURRENCY || '', 10);
-  if (envConcurrency > 0) {
-    return envConcurrency;
-  }
-
-  const cpuCores = os.cpus().length;
-  const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
-
-  // Use half the cores — WASM memory leak is fixed, each worker is ~50-80MB
-  const byCpu = Math.max(1, Math.floor(cpuCores / 2));
-
-  // Reserve 2GB for system, ~80MB per concurrent Essentia worker
-  const byMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.08));
-
-  // Cap at 12 — beyond this disk I/O becomes the bottleneck
-  return Math.min(byCpu, byMemory, 12);
-}
 
 @Injectable()
 export class DjAnalysisQueueService implements OnModuleInit {
@@ -74,7 +36,8 @@ export class DjAnalysisQueueService implements OnModuleInit {
     @Inject(forwardRef(() => ScannerGateway))
     private readonly scannerGateway: ScannerGateway,
   ) {
-    this.concurrency = getOptimalConcurrency();
+    // Match BullMQ concurrency to the Essentia worker pool size
+    this.concurrency = this.analyzer.getPoolSize();
     this.logger.info({ concurrency: this.concurrency }, 'DJ Analysis queue initialized');
   }
 
