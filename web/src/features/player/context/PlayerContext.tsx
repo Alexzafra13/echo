@@ -63,12 +63,25 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // Ref for playNext callback to avoid circular dependencies
   const playNextRef = useRef<(useCrossfade: boolean) => void>(() => {});
 
+  // Ref to suppress pause events during track transitions on mobile.
+  // When loading a new track, audio.load() fires a 'pause' event which sets isPlaying=false.
+  // On mobile, this flicker causes MediaSession to report 'paused', which can revoke
+  // the browser's autoplay permission and prevent the next play() from succeeding.
+  const isTransitioningRef = useRef(false);
+
   // ========== AUDIO ELEMENTS ==========
   const audioElements = useAudioElements({
     initialVolume: 0.7,
     callbacks: {
       onPlay: () => setIsPlaying(true),
-      onPause: () => setIsPlaying(false),
+      onPause: () => {
+        // Suppress pause events during track transitions (mobile autoplay fix).
+        // audio.load() fires 'pause' which would flicker isPlaying and break
+        // the mobile browser's autoplay permission chain.
+        if (!isTransitioningRef.current) {
+          setIsPlaying(false);
+        }
+      },
       onTimeUpdate: (time) => setCurrentTime(time),
       onDurationChange: (dur) => setDuration(dur),
     },
@@ -249,18 +262,36 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playTracking.startPlaySession(track);
     } else {
       // Normal play (no crossfade) - apply gain to both elements
+      isTransitioningRef.current = true;
       normalization.applyGain(track);
 
       crossfade.clearCrossfade();
       audioElements.stopInactive();
       audioElements.loadOnActive(streamUrl);
 
-      audioElements.playActive().catch((error) => {
-        logger.error('[Player] Failed to play:', error.message);
-      });
-
       setCurrentTrack(track);
       playTracking.startPlaySession(track);
+
+      try {
+        await audioElements.playActive();
+      } catch (error) {
+        // On mobile, play() can fail due to autoplay policy (NotAllowedError)
+        // or load interruption (AbortError). Retry without buffer wait as fallback.
+        logger.warn('[Player] Play failed, retrying:', (error as Error).message);
+        try {
+          await audioElements.playActive(false);
+        } catch (retryError) {
+          logger.error('[Player] Retry failed:', (retryError as Error).message);
+        }
+      } finally {
+        isTransitioningRef.current = false;
+        // Sync isPlaying with actual audio state after transition completes.
+        // Pause events were suppressed during transition, so we need to check
+        // if play actually succeeded or if the audio is still paused.
+        if (audioElements.getActiveAudio()?.paused) {
+          setIsPlaying(false);
+        }
+      }
     }
 
     crossfade.resetCrossfadeFlag();
@@ -470,13 +501,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, [queue, playTrack]);
 
   // ========== TRACK ENDED HANDLER ==========
-  useEffect(() => {
-    const audioA = audioElements.audioRefA.current;
-    const audioB = audioElements.audioRefB.current;
-    if (!audioA || !audioB) return;
+  // Use ref-based handler to prevent event listener churn during track transitions.
+  // Previously, this effect had 11 dependencies that changed during every track transition,
+  // causing the 'ended' listeners to be rapidly removed and re-added. On mobile browsers,
+  // the 'ended' event could fire in the gap between removal and re-attachment, causing
+  // playback to silently stop after the current track finished.
+  const handleEndedRef = useRef<(event: Event) => void>(() => {});
 
-    const handleEnded = async (event: Event) => {
-      // Get which audio element triggered the ended event
+  // Keep the handler up to date with the latest state and callbacks
+  useEffect(() => {
+    handleEndedRef.current = async (event: Event) => {
       const endedAudio = event.target as HTMLAudioElement;
       const activeAudio = audioElements.getActiveAudio();
 
@@ -518,6 +552,19 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         await handlePlayNext(crossfadeSettings.enabled);
       }
     };
+  }, [audioElements, crossfade.isCrossfading, playTracking, queue, handlePlayNext, autoplaySettings.enabled, currentTrack, radio.isRadioMode, crossfadeSettings.enabled]);
+
+  // Stable event listeners - only set up once when audio elements are created.
+  // The ref indirection ensures the handler always uses the latest state
+  // without needing to remove/re-add DOM event listeners on every state change.
+  useEffect(() => {
+    const audioA = audioElements.audioRefA.current;
+    const audioB = audioElements.audioRefB.current;
+    if (!audioA || !audioB) return;
+
+    const handleEnded = (event: Event) => {
+      handleEndedRef.current(event);
+    };
 
     audioA.addEventListener('ended', handleEnded);
     audioB.addEventListener('ended', handleEnded);
@@ -525,7 +572,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audioA.removeEventListener('ended', handleEnded);
       audioB.removeEventListener('ended', handleEnded);
     };
-  }, [audioElements, crossfade.isCrossfading, playTracking, queue, handlePlayNext, autoplaySettings.enabled, currentTrack, radio.isRadioMode, triggerAutoplay, crossfadeSettings.enabled]);
+  }, [audioElements.audioRefA, audioElements.audioRefB]);
 
   // ========== AUTOPLAY PREFETCH ==========
   // Prefetch similar artist tracks when nearing end of queue for instant playback
