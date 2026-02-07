@@ -71,11 +71,12 @@ async function getAudioDuration(filePath, ffprobePath) {
 
 /**
  * Decode audio to mono 44.1kHz float32 PCM.
- * For tracks longer than 90s, extracts only a representative segment
- * from the core section (skipping intro/outro) for ~3-5x faster processing.
- * BPM, Key, and Energy analysis only need 60-90s for accurate results.
+ * Extracts only a representative segment from the core section (skipping
+ * intro/outro) for faster processing. Segment length depends on analysis needs:
+ * - 60s for full analysis (BPM + Key + Energy)
+ * - 30s for energy-only (when BPM/Key come from ID3 tags)
  */
-async function decodeAudio(filePath, ffmpegPath, ffprobePath) {
+async function decodeAudio(filePath, ffmpegPath, ffprobePath, segmentLength) {
   const { execFile } = require('child_process');
   const { promisify } = require('util');
   const execFileAsync = promisify(execFile);
@@ -85,9 +86,7 @@ async function decodeAudio(filePath, ffmpegPath, ffprobePath) {
     // Get duration to determine optimal analysis segment
     const duration = await getAudioDuration(filePath, ffprobePath);
 
-    // Build FFmpeg args — extract 60s segment from core section when possible
-    // 60s is enough for accurate BPM, Key, Energy, and Danceability detection
-    const SEGMENT_LENGTH = 60;
+    const SEGMENT_LENGTH = segmentLength || 60;
     const ffmpegArgs = [];
 
     if (duration > SEGMENT_LENGTH + 30) {
@@ -102,7 +101,7 @@ async function decodeAudio(filePath, ffmpegPath, ffprobePath) {
       // Cap output to segment length
       ffmpegArgs.push('-t', String(SEGMENT_LENGTH));
     }
-    // Short tracks (<90s): decode full track
+    // Short tracks (< SEGMENT_LENGTH): decode full track
 
     ffmpegArgs.push(
       '-ac', '1',           // mono
@@ -145,7 +144,10 @@ process.on('message', async (message) => {
     let audioVector = null;
     try {
       // Send debug info via IPC
-      process.send({ type: 'debug', step: 'start', filePath: message.filePath, requestId });
+      const hints = message.hints || {};
+      const energyOnly = hints.bpm > 0 && hints.key && hints.key !== 'Unknown' && hints.key !== '';
+      const segmentLength = energyOnly ? 30 : 60; // 30s is enough for energy-only analysis
+      process.send({ type: 'debug', step: 'start', filePath: message.filePath, requestId, energyOnly, segmentLength });
 
       // Step 1: Init Essentia
       process.send({ type: 'debug', step: 'init_essentia' });
@@ -154,7 +156,7 @@ process.on('message', async (message) => {
 
       // Step 2: Decode audio
       process.send({ type: 'debug', step: 'decode_audio' });
-      const audioData = await decodeAudio(message.filePath, message.ffmpegPath, message.ffprobePath);
+      const audioData = await decodeAudio(message.filePath, message.ffmpegPath, message.ffprobePath, segmentLength);
       process.send({ type: 'debug', step: 'decoded', samples: audioData?.length || 0 });
 
       if (!audioData || audioData.length === 0) {
@@ -168,8 +170,6 @@ process.on('message', async (message) => {
       process.send({ type: 'debug', step: 'vector_ready' });
 
       // Step 4: Analyze
-      // Use hints from ID3 tags to skip expensive algorithms when possible
-      const hints = message.hints || {};
       process.send({ type: 'debug', step: 'analyze', hasHints: { bpm: !!hints.bpm, key: !!hints.key } });
 
       // BPM — skip RhythmExtractor2013 if ID3 tag provides BPM (saves ~40-60% of total time)
@@ -222,6 +222,7 @@ process.on('message', async (message) => {
       // well-distributed values across 0-1. A final sigmoid curve enhances
       // contrast to prevent clustering around the mean.
       let energy = 0.5;
+      let rawEnergyValue = undefined; // Pre-sigmoid weighted average (for auto-calibration)
       try {
         // Pre-compute spectrum once (reused by centroid and entropy)
         let spectrum = null;
@@ -289,12 +290,14 @@ process.on('message', async (message) => {
         // Loudness 30%, Onset rate 25%, Timbre 15%, Dynamics 15%, Entropy 15%
         // RMS and onset rate are the strongest perceptual energy correlates
         const rawEnergy = rmsScore * 0.30 + onsetScore * 0.25 + spectralScore * 0.15 + dynamicScore * 0.15 + entropyScore * 0.15;
+        rawEnergyValue = rawEnergy;
 
         // Apply sigmoid contrast enhancement to spread values across full 0-1 range
         // Without this, averaging 5 features causes regression to the mean (~0.5-0.7)
-        // Center at 0.70: calibrated median raw energy for varied music libraries
-        // Steepness 12: maps 0.50→0.08, 0.60→0.23, 0.70→0.50, 0.80→0.77, 0.90→0.92
-        energy = 1 / (1 + Math.exp(-12 * (rawEnergy - 0.70)));
+        // Default center 0.50: neutral starting point — queue service will auto-calibrate
+        // using the real median from the library after enough tracks are analyzed
+        // Steepness 12: provides good contrast spread
+        energy = 1 / (1 + Math.exp(-12 * (rawEnergy - 0.50)));
         energy = Math.min(1, Math.max(0, energy));
 
         process.send({ type: 'debug', step: 'energy_done', rmsScore, spectralScore, dynamicScore, onsetScore, entropyScore, rawEnergy, energy });
@@ -320,7 +323,7 @@ process.on('message', async (message) => {
         audioVector = null;
       }
 
-      process.send({ type: 'result', requestId, success: true, data: { bpm, key, energy, danceability } });
+      process.send({ type: 'result', requestId, success: true, data: { bpm, key, energy, rawEnergy: rawEnergyValue, danceability } });
     } catch (error) {
       // Free WASM vector on error too
       if (audioVector && typeof audioVector.delete === 'function') {

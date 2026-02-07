@@ -33,7 +33,8 @@ export const djAnalysis = pgTable(
     bpm: real('bpm'), // Detected BPM (e.g., 128.5)
     key: varchar('key', { length: 10 }), // Musical key (e.g., "Am", "C#m")
     camelotKey: varchar('camelot_key', { length: 5 }), // Camelot notation (e.g., "8A", "11B")
-    energy: real('energy'), // Energy level 0.0 - 1.0
+    energy: real('energy'), // Energy level 0.0 - 1.0 (sigmoid-normalized)
+    rawEnergy: real('raw_energy'), // Pre-sigmoid weighted average 0.0 - 1.0 (for auto-calibration)
     danceability: real('danceability'), // Danceability 0.0 - 1.0
 
     // Analysis status

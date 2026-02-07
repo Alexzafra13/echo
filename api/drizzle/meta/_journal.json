@@ -106,6 +106,13 @@
       "when": 1768762456351,
       "tag": "0014_cleanup_dj_analysis",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1768848856351,
+      "tag": "0015_add_raw_energy",
+      "breakpoints": true
     }
   ]
 }

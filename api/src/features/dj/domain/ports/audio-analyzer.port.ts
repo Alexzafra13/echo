@@ -10,7 +10,8 @@
 export interface AudioAnalysisResult {
   bpm: number;
   key: string; // Musical key (e.g., "Am", "C#m")
-  energy: number; // 0.0 - 1.0
+  energy: number; // 0.0 - 1.0 (sigmoid-normalized)
+  rawEnergy?: number; // 0.0 - 1.0 (pre-sigmoid weighted average, used for auto-calibration)
   danceability?: number; // 0.0 - 1.0
 }
 

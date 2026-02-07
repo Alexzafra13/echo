@@ -24,7 +24,8 @@ export interface DjAnalysisProps {
   bpm?: number;
   key?: string; // Musical key (e.g., "Am", "C#m")
   camelotKey?: string; // Camelot notation (e.g., "8A", "11B")
-  energy?: number; // 0.0 - 1.0
+  energy?: number; // 0.0 - 1.0 (sigmoid-normalized)
+  rawEnergy?: number; // 0.0 - 1.0 (pre-sigmoid, for auto-calibration)
   danceability?: number; // 0.0 - 1.0
 
   // Status
@@ -118,6 +119,10 @@ export class DjAnalysis {
 
   get energy(): number | undefined {
     return this.props.energy;
+  }
+
+  get rawEnergy(): number | undefined {
+    return this.props.rawEnergy;
   }
 
   get danceability(): number | undefined {
@@ -218,6 +223,7 @@ export class DjAnalysis {
       key: this.key,
       camelotKey: this.camelotKey,
       energy: this.energy,
+      rawEnergy: this.rawEnergy,
       danceability: this.danceability,
       status: this.status,
       analysisError: this.analysisError,
