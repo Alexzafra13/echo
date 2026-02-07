@@ -103,6 +103,10 @@ export class TrackResponseDto {
   @Expose()
   rgAlbumPeak?: number;
 
+  @ApiPropertyOptional({ description: 'Seconds where outro/silence begins (for smart crossfade)', example: 234.5 })
+  @Expose()
+  outroStart?: number;
+
   @ApiProperty({ description: 'Archivo falta en disco', example: false })
   @Expose()
   isMissing!: boolean;
@@ -151,6 +155,8 @@ export class TrackResponseDto {
     dto.rgTrackPeak = data.rgTrackPeak;
     dto.rgAlbumGain = data.rgAlbumGain;
     dto.rgAlbumPeak = data.rgAlbumPeak;
+    // Smart crossfade
+    dto.outroStart = data.outroStart;
     // Missing file status
     dto.isMissing = data.missingAt !== undefined && data.missingAt !== null;
     dto.createdAt = data.createdAt;
