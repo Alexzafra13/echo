@@ -45,6 +45,13 @@ export interface GetShuffledTracksOutput {
     artistName?: string;
     albumArtistName?: string;
     compilation: boolean;
+    // Audio normalization (LUFS/ReplayGain)
+    rgTrackGain?: number;
+    rgTrackPeak?: number;
+    rgAlbumGain?: number;
+    rgAlbumPeak?: number;
+    // Smart crossfade
+    outroStart?: number;
     createdAt: Date;
     updatedAt: Date;
   }>;
