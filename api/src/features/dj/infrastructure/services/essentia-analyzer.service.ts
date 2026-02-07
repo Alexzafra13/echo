@@ -29,6 +29,8 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       timeout: ReturnType<typeof setTimeout>;
     }
   > = new Map();
+  private analysisCount = 0;
+  private static readonly RESTART_THRESHOLD = 500;
 
   constructor(
     @InjectPinoLogger(EssentiaAnalyzerService.name)
@@ -84,8 +86,13 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       // Capture stderr from worker for error visibility
       if (this.worker.stderr) {
         let stderrBuffer = '';
+        const MAX_STDERR_BUFFER = 64 * 1024; // 64KB max to prevent unbounded growth
         this.worker.stderr.on('data', (chunk: Buffer) => {
           stderrBuffer += chunk.toString();
+          // Prevent unbounded growth from incomplete lines
+          if (stderrBuffer.length > MAX_STDERR_BUFFER) {
+            stderrBuffer = stderrBuffer.slice(-MAX_STDERR_BUFFER / 2);
+          }
           // Flush complete lines
           const lines = stderrBuffer.split('\n');
           stderrBuffer = lines.pop() || '';
@@ -192,6 +199,14 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
   }
 
   async analyze(filePath: string): Promise<AudioAnalysisResult> {
+    // Periodically recycle worker to prevent WASM memory accumulation
+    if (this.analysisCount >= EssentiaAnalyzerService.RESTART_THRESHOLD && this.pendingRequests.size === 0) {
+      this.logger.info({ count: this.analysisCount }, 'Recycling Essentia worker for memory health');
+      this.analysisCount = 0;
+      await this.terminateWorker();
+    }
+    this.analysisCount++;
+
     // Try Essentia.js first
     try {
       const result = await this.analyzeWithEssentia(filePath);
@@ -215,7 +230,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
     }
 
     return new Promise((resolve, reject) => {
-      const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const requestId = crypto.randomUUID();
 
       // Set timeout
       const timeout = setTimeout(() => {

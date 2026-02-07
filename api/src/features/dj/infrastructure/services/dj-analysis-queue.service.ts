@@ -4,7 +4,7 @@ import * as os from 'os';
 import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
 import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
-import { eq, notInArray } from 'drizzle-orm';
+import { eq, notInArray, count, inArray } from 'drizzle-orm';
 import { EssentiaAnalyzerService } from './essentia-analyzer.service';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
 import { ScannerGateway } from '../../../scanner/infrastructure/gateways/scanner.gateway';
@@ -264,8 +264,8 @@ export class DjAnalysisQueueService implements OnModuleInit {
           .where(eq(djAnalysis.trackId, job.trackId))
           .limit(1);
 
-        if (existing.length > 0 && existing[0].status === 'completed') {
-          this.logger.debug({ trackId: job.trackId }, 'Analysis already exists');
+        if (existing.length > 0 && (existing[0].status === 'completed' || existing[0].status === 'analyzing')) {
+          this.logger.debug({ trackId: job.trackId, status: existing[0].status }, 'Analysis already in progress or completed');
           return null; // Skip processing
         }
 
@@ -428,22 +428,22 @@ export class DjAnalysisQueueService implements OnModuleInit {
     concurrency: number;
     analyzerBackend: string;
   }> {
-    const pending = await this.drizzle.db
-      .select()
+    // Single query with GROUP BY instead of two round trips
+    const statusCounts = await this.drizzle.db
+      .select({ status: djAnalysis.status, value: count() })
       .from(djAnalysis)
-      .where(eq(djAnalysis.status, 'pending'));
+      .where(inArray(djAnalysis.status, ['pending', 'analyzing']))
+      .groupBy(djAnalysis.status);
 
-    const analyzing = await this.drizzle.db
-      .select()
-      .from(djAnalysis)
-      .where(eq(djAnalysis.status, 'analyzing'));
+    const pendingCount = statusCounts.find(r => r.status === 'pending')?.value ?? 0;
+    const analyzingCount = statusCounts.find(r => r.status === 'analyzing')?.value ?? 0;
 
     // Use DB state (survives restarts) — if tracks are pending or analyzing, work is happening
-    const hasWork = pending.length > 0 || analyzing.length > 0;
+    const hasWork = pendingCount > 0 || analyzingCount > 0;
 
     return {
       isRunning: this.isRunning || hasWork,
-      pendingTracks: pending.length + analyzing.length,
+      pendingTracks: pendingCount + analyzingCount,
       processedInSession: this.processedInSession,
       startedAt: this.sessionStartedAt,
       concurrency: this.concurrency,

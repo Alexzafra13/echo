@@ -54,8 +54,8 @@ export const DJ_CONFIG = {
    * Audio Analysis Configuration
    */
   analysis: {
-    /** Timeout for audio analysis in ms (2 minutes) */
-    timeout: 120_000,
+    /** Timeout for audio analysis in ms (5 minutes — accounts for queue depth when multiple analyses run concurrently) */
+    timeout: 300_000,
     /** Timeout for worker startup in ms */
     workerStartupTimeout: 30_000,
     /** Valid BPM range */
@@ -67,8 +67,6 @@ export const DJ_CONFIG = {
       /** BPM values below this are doubled (likely half-time detection) */
       halfTimeThreshold: 60,
     },
-    /** Concurrency for batch analysis */
-    concurrency: 2,
   },
 
   /**
