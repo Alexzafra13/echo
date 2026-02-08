@@ -158,23 +158,44 @@ export function useCrossfadeLogic({
           // Continue animation
           animationFrameRef.current = requestAnimationFrame(animateFade);
         } else {
-          // Crossfade complete
-          clearCrossfade();
+          // Crossfade complete — order matters to prevent race conditions:
+          // 1. Set final volumes
+          // 2. Pause old audio (prevents 'ended' event from firing)
+          // 3. Switch active audio (so even if 'ended' fires, it's from "inactive" → ignored)
+          // 4. THEN clear crossfade state (isCrossfading stays true until switch is done)
+          //
+          // Previously, clearCrossfade() was called first (setting isCrossfading=false),
+          // then a 10ms setTimeout did stopActive+switch. During that gap, the old track's
+          // 'ended' event would fire and be processed by handleEnded (since isCrossfading
+          // was false and the old audio was still "active"), triggering handlePlayNext which
+          // killed the new track via stopInactive(). This caused playback to stop after
+          // every crossfade on mobile.
+          //
+          // Also: we pause() the old audio WITHOUT clearing src ('audio.src = ""').
+          // On mobile, clearing src revokes the element's autoplay permission, causing
+          // future play() calls to fail with NotAllowedError. The src is harmlessly
+          // overwritten when loadOnInactive() prepares the next crossfade.
 
-          // Ensure final volumes are set correctly
+          // Set final volumes
           audioElements.setAudioVolume(activeId, 0);
           audioElements.setAudioVolume(inactiveId, inactiveTargetVolume);
 
-          // Stop the old audio (with a micro-delay to avoid audio glitch)
-          setTimeout(() => {
-            audioElements.stopActive();
-            // Switch active audio
-            audioElements.switchActiveAudio();
-            // Swap the normalization gains to match the new active audio
-            callbacksRef.current.onCrossfadeSwapGains?.();
-            logger.debug('[Crossfade] Crossfade complete, switched to:', audioElements.getActiveAudioId());
-            callbacksRef.current.onCrossfadeComplete?.();
-          }, 10);
+          // Pause old audio immediately (prevents 'ended' from firing)
+          const oldAudio = audioElements.getActiveAudio();
+          if (oldAudio) {
+            oldAudio.pause();
+            oldAudio.currentTime = 0;
+          }
+
+          // Switch active audio BEFORE clearing crossfade state
+          audioElements.switchActiveAudio();
+          callbacksRef.current.onCrossfadeSwapGains?.();
+
+          // NOW safe to clear crossfade state
+          clearCrossfade();
+
+          logger.debug('[Crossfade] Crossfade complete, switched to:', audioElements.getActiveAudioId());
+          callbacksRef.current.onCrossfadeComplete?.();
         }
       };
 
