@@ -27,6 +27,7 @@ describe('playerSettingsStore', () => {
         enabled: false,
         duration: 5,
         smartMode: true,
+        tempoMatch: false,
       });
     });
 
