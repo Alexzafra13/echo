@@ -30,6 +30,8 @@ export interface TrackSource {
   rgTrackPeak?: number | null;
   // Smart crossfade
   outroStart?: number | null;
+  // BPM
+  bpm?: number | null;
 }
 
 /**
@@ -83,6 +85,8 @@ export function toPlayerTrack(source: TrackSource, context?: AlbumContext): Trac
     rgTrackPeak: source.rgTrackPeak ?? undefined,
     // Smart crossfade
     outroStart: source.outroStart ?? undefined,
+    // BPM (for tempo-matched crossfade)
+    bpm: source.bpm ?? undefined,
   };
 }
 

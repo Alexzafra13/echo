@@ -39,6 +39,8 @@ export class TrackMapper {
       rgAlbumPeak: raw.rgAlbumPeak ?? undefined,
       // Smart crossfade
       outroStart: raw.outroStart ?? undefined,
+      // BPM from ID3 tags
+      bpm: raw.bpm ?? undefined,
       // Missing file tracking
       missingAt: raw.missingAt ?? undefined,
       createdAt: raw.createdAt,

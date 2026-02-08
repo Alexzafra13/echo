@@ -30,6 +30,7 @@ export interface DjShuffledTrack {
   rgAlbumGain: number | null;
   rgAlbumPeak: number | null;
   outroStart: number | null;
+  bpm: number | null;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -107,6 +107,10 @@ export class TrackResponseDto {
   @Expose()
   outroStart?: number;
 
+  @ApiPropertyOptional({ description: 'BPM (beats per minute)', example: 120 })
+  @Expose()
+  bpm?: number;
+
   @ApiProperty({ description: 'Archivo falta en disco', example: false })
   @Expose()
   isMissing!: boolean;
@@ -157,6 +161,8 @@ export class TrackResponseDto {
     dto.rgAlbumPeak = data.rgAlbumPeak;
     // Smart crossfade
     dto.outroStart = data.outroStart;
+    // BPM
+    dto.bpm = data.bpm;
     // Missing file status
     dto.isMissing = data.missingAt !== undefined && data.missingAt !== null;
     dto.createdAt = data.createdAt;

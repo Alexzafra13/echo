@@ -44,6 +44,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const setCrossfadeEnabledStore = usePlayerSettingsStore((s) => s.setCrossfadeEnabled);
   const setCrossfadeDurationStore = usePlayerSettingsStore((s) => s.setCrossfadeDuration);
   const setCrossfadeSmartModeStore = usePlayerSettingsStore((s) => s.setCrossfadeSmartMode);
+  const setCrossfadeTempoMatchStore = usePlayerSettingsStore((s) => s.setCrossfadeTempoMatch);
   const setNormalizationEnabledStore = usePlayerSettingsStore((s) => s.setNormalizationEnabled);
   const setNormalizationTargetLufsStore = usePlayerSettingsStore((s) => s.setNormalizationTargetLufs);
   const setNormalizationPreventClippingStore = usePlayerSettingsStore((s) => s.setNormalizationPreventClipping);
@@ -62,6 +63,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // Ref for playNext callback to avoid circular dependencies
   const playNextRef = useRef<(useCrossfade: boolean) => void>(() => {});
+
+  // Ref to track current track's BPM for tempo-matched crossfade.
+  // Used inside playTrack without adding currentTrack to its dependency array.
+  const currentTrackBpmRef = useRef<number | undefined>(undefined);
 
   // Ref to suppress pause events during track transitions on mobile.
   // When loading a new track, audio.load() fires a 'pause' event which sets isPlaying=false.
@@ -94,6 +99,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // Note: userVolume is accessed via ref to avoid re-running effect on volume changes
   const userVolumeRef = useRef(userVolume);
   userVolumeRef.current = userVolume;
+
+  // Keep BPM ref in sync with current track
+  currentTrackBpmRef.current = currentTrack?.bpm;
 
   useEffect(() => {
     const audioA = audioElements.audioRefA.current;
@@ -257,7 +265,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
       // Start crossfade transition. On mobile, playInactive() can fail due to
       // autoplay policy. If crossfade fails, fall back to normal (non-crossfade) playback.
-      const crossfadeStarted = await crossfade.performCrossfade();
+      // Pass BPM values for tempo matching (outgoing track BPM from ref, incoming from track param)
+      const crossfadeStarted = await crossfade.performCrossfade(currentTrackBpmRef.current, track.bpm);
 
       if (!crossfadeStarted) {
         // Crossfade failed - fall back to normal playback so the music doesn't stop
@@ -690,6 +699,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setCrossfadeSmartModeStore(enabled);
   }, [setCrossfadeSmartModeStore]);
 
+  const setCrossfadeTempoMatch = useCallback((enabled: boolean) => {
+    setCrossfadeTempoMatchStore(enabled);
+  }, [setCrossfadeTempoMatchStore]);
+
   // ========== NORMALIZATION SETTINGS ==========
 
   const setNormalizationEnabled = useCallback((enabled: boolean) => {
@@ -778,6 +791,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setCrossfadeEnabled,
       setCrossfadeDuration,
       setCrossfadeSmartMode,
+      setCrossfadeTempoMatch,
 
       // Normalization controls
       setNormalizationEnabled,
@@ -823,6 +837,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setCrossfadeEnabled,
       setCrossfadeDuration,
       setCrossfadeSmartMode,
+      setCrossfadeTempoMatch,
       setNormalizationEnabled,
       setNormalizationTargetLufs,
       setNormalizationPreventClipping,

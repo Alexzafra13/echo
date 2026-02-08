@@ -36,6 +36,7 @@ export function SettingsPage() {
     setCrossfadeEnabled,
     setCrossfadeDuration,
     setCrossfadeSmartMode,
+    setCrossfadeTempoMatch,
     normalization,
     setNormalizationEnabled,
     setNormalizationTargetLufs,
@@ -498,6 +499,21 @@ export function SettingsPage() {
                           checked={crossfade.smartMode}
                           onChange={setCrossfadeSmartMode}
                           aria-label="Fundido inteligente"
+                        />
+                      </div>
+
+                      {/* Tempo Match Toggle */}
+                      <div className={styles.settingsPage__toggleItem}>
+                        <div className={styles.settingsPage__toggleInfo}>
+                          <span className={styles.settingsPage__toggleLabel}>Sincronización de tempo</span>
+                          <p className={styles.settingsPage__toggleDescription}>
+                            Durante el fundido, ajusta progresivamente el tempo de la canción saliente para coincidir con la entrante (estilo DJ)
+                          </p>
+                        </div>
+                        <Switch
+                          checked={crossfade.tempoMatch}
+                          onChange={setCrossfadeTempoMatch}
+                          aria-label="Sincronización de tempo"
                         />
                       </div>
                     </>

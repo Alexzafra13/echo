@@ -10,6 +10,7 @@ export interface CrossfadeSettings {
   enabled: boolean;
   duration: number; // Duration in seconds (1-12)
   smartMode: boolean; // Use track's outroStart for intelligent crossfade timing
+  tempoMatch: boolean; // Gradually adjust outgoing track's tempo to match incoming BPM
 }
 
 export interface NormalizationSettings {
@@ -83,6 +84,7 @@ export interface PlayerContextValue extends PlayerState {
   setCrossfadeEnabled: (enabled: boolean) => void;
   setCrossfadeDuration: (duration: number) => void;
   setCrossfadeSmartMode: (enabled: boolean) => void;
+  setCrossfadeTempoMatch: (enabled: boolean) => void;
 
   // Normalization controls
   setNormalizationEnabled: (enabled: boolean) => void;

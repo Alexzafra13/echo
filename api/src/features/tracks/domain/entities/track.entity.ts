@@ -30,6 +30,8 @@ export interface TrackProps {
   rgAlbumPeak?: number; // Pico máximo del álbum (0-1)
   // Smart crossfade
   outroStart?: number; // Seconds where outro/silence begins (for smart crossfade)
+  // BPM (from ID3 tags or DJ analysis)
+  bpm?: number;
   // Missing file tracking
   missingAt?: Date; // null = present, date = marked as missing
   createdAt: Date;
@@ -174,6 +176,10 @@ export class Track {
 
   get outroStart(): number | undefined {
     return this.props.outroStart;
+  }
+
+  get bpm(): number | undefined {
+    return this.props.bpm;
   }
 
   get missingAt(): Date | undefined {
