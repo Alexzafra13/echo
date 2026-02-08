@@ -60,6 +60,9 @@ export interface Track {
   // Smart crossfade
   outroStart?: number; // Seconds where outro/silence begins (for smart crossfade)
 
+  // BPM (for tempo-matched crossfade)
+  bpm?: number;
+
   // Missing file status (ghost track)
   isMissing?: boolean; // True if the file is missing from disk
 

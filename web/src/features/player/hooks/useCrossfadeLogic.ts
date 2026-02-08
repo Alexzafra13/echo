@@ -95,9 +95,12 @@ export function useCrossfadeLogic({
   /**
    * Perform crossfade transition using requestAnimationFrame
    * Uses equal-power curve for smooth audio transitions without crackling
-   * Now supports LUFS normalization by using separate effective volumes for each track
+   * Supports LUFS normalization and optional tempo matching (DJ-style BPM sync)
+   *
+   * @param currentBpm - BPM of the currently playing (outgoing) track
+   * @param nextBpm - BPM of the incoming track
    */
-  const performCrossfade = useCallback(async () => {
+  const performCrossfade = useCallback(async (currentBpm?: number, nextBpm?: number) => {
     const activeAudio = audioElements.getActiveAudio();
     const inactiveAudio = audioElements.getInactiveAudio();
     const activeId = audioElements.getActiveAudioId();
@@ -135,6 +138,28 @@ export function useCrossfadeLogic({
 
       const fadeDuration = settings.duration * 1000; // Convert to ms
 
+      // Tempo matching: calculate target playbackRate for the outgoing track
+      // Uses browser-native WSOLA (preservesPitch = true by default) for
+      // high-quality pitch-preserving time-stretching at zero CPU cost.
+      // Clamped to ±15% to avoid artifacts on large BPM differences.
+      const MAX_RATE_CHANGE = 0.15;
+      let tempoMatchRate: number | null = null;
+      if (settings.tempoMatch && currentBpm && nextBpm && currentBpm > 0 && nextBpm > 0) {
+        const rawRate = nextBpm / currentBpm;
+        tempoMatchRate = Math.max(1 - MAX_RATE_CHANGE, Math.min(1 + MAX_RATE_CHANGE, rawRate));
+        if (Math.abs(tempoMatchRate - 1) < 0.01) {
+          tempoMatchRate = null; // Skip if BPMs are essentially the same
+        } else {
+          logger.debug('[Crossfade] Tempo match enabled', {
+            currentBpm,
+            nextBpm,
+            targetRate: tempoMatchRate,
+          });
+          // Ensure preservesPitch is enabled (it's true by default but be explicit)
+          activeAudio.preservesPitch = true;
+        }
+      }
+
       // Use requestAnimationFrame for smoother volume transitions
       // This avoids the timing issues of setInterval that cause crackling
       crossfadeStartTimeRef.current = performance.now();
@@ -153,6 +178,12 @@ export function useCrossfadeLogic({
         // Active track fades out from its volume, inactive fades in to its volume
         audioElements.setAudioVolume(activeId, fadeOut * activeTargetVolume);
         audioElements.setAudioVolume(inactiveId, fadeIn * inactiveTargetVolume);
+
+        // Tempo match: gradually adjust outgoing track's playbackRate toward target
+        // Linear interpolation from 1.0 → tempoMatchRate over the crossfade duration
+        if (tempoMatchRate !== null) {
+          activeAudio.playbackRate = 1 + (tempoMatchRate - 1) * progress;
+        }
 
         if (progress < 1) {
           // Continue animation
@@ -183,6 +214,7 @@ export function useCrossfadeLogic({
           // Pause old audio immediately (prevents 'ended' from firing)
           const oldAudio = audioElements.getActiveAudio();
           if (oldAudio) {
+            oldAudio.playbackRate = 1; // Reset tempo match
             oldAudio.pause();
             oldAudio.currentTime = 0;
           }
@@ -208,7 +240,7 @@ export function useCrossfadeLogic({
       clearCrossfade();
       return false;
     }
-  }, [audioElements, settings.duration, clearCrossfade]);
+  }, [audioElements, settings.duration, settings.tempoMatch, clearCrossfade]);
 
   /**
    * Prepare inactive audio for crossfade

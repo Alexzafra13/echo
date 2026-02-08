@@ -19,7 +19,7 @@ import { persist } from 'zustand/middleware';
 import type { CrossfadeSettings, NormalizationSettings, AutoplaySettings } from '../types';
 
 // Current store version - increment when changing the persisted state structure
-const STORE_VERSION = 1;
+const STORE_VERSION = 2;
 
 // Player position preference type
 export type PlayerPreference = 'dynamic' | 'sidebar' | 'footer';
@@ -44,6 +44,7 @@ interface PlayerSettingsState {
   setCrossfadeEnabled: (enabled: boolean) => void;
   setCrossfadeDuration: (duration: number) => void;
   setCrossfadeSmartMode: (enabled: boolean) => void;
+  setCrossfadeTempoMatch: (tempoMatch: boolean) => void;
 
   // Normalization actions
   setNormalizationEnabled: (enabled: boolean) => void;
@@ -59,6 +60,7 @@ const DEFAULT_CROSSFADE: CrossfadeSettings = {
   enabled: false,
   duration: 5,
   smartMode: true, // Use track's outroStart when available for intelligent timing
+  tempoMatch: false, // Gradually match BPM during crossfade (disabled by default)
 };
 
 const DEFAULT_NORMALIZATION: NormalizationSettings = {
@@ -109,6 +111,11 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
           crossfade: { ...state.crossfade, smartMode },
         })),
 
+      setCrossfadeTempoMatch: (tempoMatch) =>
+        set((state) => ({
+          crossfade: { ...state.crossfade, tempoMatch },
+        })),
+
       // Normalization actions
       setNormalizationEnabled: (enabled) =>
         set((state) => ({
@@ -141,8 +148,14 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
         if (version === 0 || !persistedState) {
           return initialState;
         }
-        // Future migrations can be added here:
-        // if (version < 2) { /* migrate v1 to v2 */ }
+        // v1 → v2: add tempoMatch to crossfade settings
+        if (version < 2) {
+          const state = persistedState as Record<string, unknown>;
+          const crossfade = state.crossfade as CrossfadeSettings | undefined;
+          if (crossfade && crossfade.tempoMatch === undefined) {
+            crossfade.tempoMatch = false;
+          }
+        }
         return persistedState as PlayerSettingsState;
       },
 

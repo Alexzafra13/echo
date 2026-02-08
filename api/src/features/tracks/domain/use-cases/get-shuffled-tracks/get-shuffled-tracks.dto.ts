@@ -52,6 +52,8 @@ export interface GetShuffledTracksOutput {
     rgAlbumPeak?: number;
     // Smart crossfade
     outroStart?: number;
+    // BPM
+    bpm?: number;
     createdAt: Date;
     updatedAt: Date;
   }>;

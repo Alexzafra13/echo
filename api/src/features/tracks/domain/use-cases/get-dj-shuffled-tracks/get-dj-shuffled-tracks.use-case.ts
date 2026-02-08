@@ -97,7 +97,7 @@ export class GetDjShuffledTracksUseCase {
     const resultTracks = finalTracks.slice(0, take);
 
     return {
-      data: resultTracks.map((t) => this.mapTrack(t)),
+      data: resultTracks.map((t) => this.mapTrack(t, djDataMap)),
       total,
       seed,
       skip: 0,
@@ -202,7 +202,9 @@ export class GetDjShuffledTracksUseCase {
     };
   }
 
-  private mapTrack(track: Track): DjShuffledTrack {
+  private mapTrack(track: Track, djDataMap?: Map<string, TrackDjData>): DjShuffledTrack {
+    // Prefer DJ analysis BPM (Essentia, more accurate) over ID3 tag BPM
+    const djBpm = djDataMap?.get(track.id)?.bpm;
     return {
       id: track.id,
       title: track.title,
@@ -226,6 +228,7 @@ export class GetDjShuffledTracksUseCase {
       rgAlbumGain: track.rgAlbumGain ?? null,
       rgAlbumPeak: track.rgAlbumPeak ?? null,
       outroStart: track.outroStart ?? null,
+      bpm: djBpm ?? track.bpm ?? null,
       createdAt: track.createdAt,
       updatedAt: track.updatedAt,
     };
