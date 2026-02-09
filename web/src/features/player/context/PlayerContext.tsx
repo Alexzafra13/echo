@@ -135,6 +135,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     repeatMode: queue.repeatMode,
     hasNextTrack: queue.repeatMode === 'all' || queue.currentIndex < queue.queue.length - 1,
     currentTrackOutroStart: currentTrack?.outroStart, // Smart crossfade: use detected outro start
+    onCrossfadeStart: () => {
+      // Tell normalization to stop overriding per-element volumes.
+      // From this point, only the crossfade animation controls audio.volume.
+      normalization.setCrossfading(true);
+    },
+    onCrossfadeCleared: () => {
+      // Crossfade ended (completion, cancel, or error) — let normalization
+      // resume normal volume management.
+      normalization.setCrossfading(false);
+    },
     onCrossfadeTrigger: () => {
       // End current play session before crossfade
       playTracking.endPlaySession(false);

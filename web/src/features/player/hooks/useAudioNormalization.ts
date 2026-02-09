@@ -33,6 +33,10 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   // Legacy: keep currentGainRef for backwards compatibility
   const currentGainRef = useRef<number>(1);
 
+  // Crossfade guard: when true, applyEffectiveVolume is skipped to prevent
+  // resetting the per-element volumes that the crossfade animation controls.
+  const isCrossfadingRef = useRef(false);
+
   // Store reference to audio elements for volume adjustment
   const audioElementsRef = useRef<{
     audioA: HTMLAudioElement | null;
@@ -65,10 +69,24 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   }, []);
 
   /**
+   * Notify normalization that a crossfade is starting or ending.
+   * While crossfading, applyEffectiveVolume is skipped so the crossfade
+   * animation has exclusive control over per-element volumes.
+   */
+  const setCrossfading = useCallback((value: boolean) => {
+    isCrossfadingRef.current = value;
+  }, []);
+
+  /**
    * Apply effective volume (userVolume * normalizationGain) to audio elements
    * Each audio element uses its own gain to support crossfade between tracks with different loudness
    */
   const applyEffectiveVolume = useCallback(() => {
+    // During crossfade, the animation loop (requestAnimationFrame) controls
+    // per-element volumes via setAudioVolume. Resetting them here would
+    // override the fade curves and both tracks would play at full volume.
+    if (isCrossfadingRef.current) return;
+
     const { audioA, audioB, userVolume } = audioElementsRef.current;
 
     if (audioA) {
@@ -254,6 +272,7 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     getEffectiveVolume,
     getGainForAudio,
     swapGains,
+    setCrossfading,
 
     // Legacy API (for compatibility, now no-ops)
     connectAudioElement,
@@ -269,6 +288,7 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     getEffectiveVolume,
     getGainForAudio,
     swapGains,
+    setCrossfading,
     connectAudioElement,
     resumeAudioContext,
     initAudioContext,

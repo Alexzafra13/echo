@@ -541,6 +541,59 @@ describe('useCrossfadeLogic', () => {
     });
   });
 
+  describe('onCrossfadeCleared', () => {
+    it('should call onCrossfadeCleared when clearCrossfade is invoked', async () => {
+      const onCrossfadeCleared = vi.fn();
+
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: defaultSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+          onCrossfadeCleared,
+        })
+      );
+
+      // Start a crossfade
+      await act(async () => {
+        await result.current.performCrossfade();
+      });
+
+      expect(result.current.isCrossfading).toBe(true);
+
+      // Clear it
+      act(() => {
+        result.current.clearCrossfade();
+      });
+
+      expect(onCrossfadeCleared).toHaveBeenCalled();
+    });
+
+    it('should call onCrossfadeCleared even when no crossfade was active', () => {
+      const onCrossfadeCleared = vi.fn();
+
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: defaultSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+          onCrossfadeCleared,
+        })
+      );
+
+      act(() => {
+        result.current.clearCrossfade();
+      });
+
+      // Should still be called — allows callers to safely reset their state
+      expect(onCrossfadeCleared).toHaveBeenCalled();
+    });
+  });
+
   describe('cleanup', () => {
     it('should remove event listeners on unmount', () => {
       const { unmount } = renderHook(() =>
