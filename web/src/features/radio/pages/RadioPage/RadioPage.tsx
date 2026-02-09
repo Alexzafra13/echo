@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Header } from '@shared/components/layout/Header';
+import headerStyles from '@shared/components/layout/Header/Header.module.css';
 import { Sidebar } from '@features/home/components';
 import { Pagination } from '@shared/components/ui';
 import { useGridDimensions } from '@features/home/hooks';
@@ -271,33 +272,35 @@ export default function RadioPage() {
       <Sidebar />
 
       <main className={styles.radioPage__main}>
-        <Header
-          customSearch={
-            <RadioSearchBar
-              onSearch={handleSearch}
-              onFocus={handleSearchFocus}
-              onBlur={handleSearchBlur}
-              placeholder="Buscar emisora por nombre, país o género..."
-            />
-          }
-          customContent={
-            <CountrySelectButton
-              countries={allCountries}
-              selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
-              onClick={countryModal.open}
-            />
-          }
-        />
+        <div className={headerStyles.headerWrapper}>
+          <Header
+            customSearch={
+              <RadioSearchBar
+                onSearch={handleSearch}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
+                placeholder="Buscar emisora por nombre, país o género..."
+              />
+            }
+            customContent={
+              <CountrySelectButton
+                countries={allCountries}
+                selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
+                onClick={countryModal.open}
+              />
+            }
+          />
 
-        {/* Search Results Panel - Expands below header */}
-        <RadioSearchPanel
-          isOpen={isSearchPanelOpen}
-          searchResults={searchResults}
-          isLoading={isSearching}
-          query={searchQuery}
-          onResultSelect={handleResultSelect}
-          onClose={handleCloseSearchPanel}
-        />
+          {/* Search Results Panel - Overlay below header */}
+          <RadioSearchPanel
+            isOpen={isSearchPanelOpen}
+            searchResults={searchResults}
+            isLoading={isSearching}
+            query={searchQuery}
+            onResultSelect={handleResultSelect}
+            onClose={handleCloseSearchPanel}
+          />
+        </div>
 
         <div ref={contentRef} className={styles.radioPage__content}>
           {/* Page Header */}

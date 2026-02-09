@@ -100,8 +100,14 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
   if (!isVisible) return null;
 
   return (
-    <div id="header-search-results" role="listbox" aria-label="Resultados de búsqueda" className={`${styles.searchPanel} ${isClosing ? styles['searchPanel--closing'] : ''}`}>
-      <div className={styles.searchPanel__container}>
+    <>
+      <div
+        className={`${styles.searchPanel__backdrop} ${isClosing ? styles['searchPanel__backdrop--closing'] : ''}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div id="header-search-results" role="listbox" aria-label="Resultados de búsqueda" className={`${styles.searchPanel} ${isClosing ? styles['searchPanel--closing'] : ''}`}>
+        <div className={styles.searchPanel__container}>
         {isLoading ? (
           <div className={styles.searchPanel__loading}>
             <div className={styles.searchPanel__spinner}></div>
@@ -253,5 +259,6 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
         )}
       </div>
     </div>
+    </>
   );
 }
