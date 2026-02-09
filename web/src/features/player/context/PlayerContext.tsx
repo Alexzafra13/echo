@@ -138,6 +138,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     onCrossfadeTrigger: () => {
       // End current play session before crossfade
       playTracking.endPlaySession(false);
+      // Mark as crossfading IMMEDIATELY (synchronously) before the async playTrack call.
+      // Without this, there's a gap: onCrossfadeTrigger → handlePlayNext → playTrack →
+      // await getStreamUrl. If the track ends during that await (e.g., user seeked to
+      // the last few seconds), handleEnded fires and sees isCrossfadingRef=false,
+      // double-advancing the queue and playing the wrong track.
+      crossfade.isCrossfadingRef.current = true;
       // Trigger next track with crossfade
       playNextRef.current(true);
     },
@@ -242,6 +248,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     const streamUrl = await getStreamUrl(track);
     if (!streamUrl) {
       logger.warn('[Player] Cannot play track: stream URL unavailable');
+      // Reset crossfading ref if it was set early by onCrossfadeTrigger
+      crossfade.clearCrossfade();
       return;
     }
 
@@ -373,7 +381,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const seek = useCallback((time: number) => {
     audioElements.seek(time);
     setCurrentTime(time);
-  }, [audioElements]);
+    // Reset crossfade flag so timing check can re-trigger after seek.
+    // Without this, seeking backward after a crossfade trigger point
+    // leaves the flag set, preventing crossfade from ever firing again.
+    crossfade.resetCrossfadeFlag();
+  }, [audioElements, crossfade]);
 
   /**
    * Set volume (applies normalization gain automatically)
@@ -410,6 +422,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setIsPlaying(false);
       setIsAutoplayActive(false);
       setAutoplaySourceArtist(null);
+      // Reset crossfading state if it was set early by onCrossfadeTrigger
+      crossfade.clearCrossfade();
       return false;
     }
 
@@ -438,9 +452,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setIsPlaying(false);
       setIsAutoplayActive(false);
       setAutoplaySourceArtist(null);
+      // Reset crossfading state if it was set early by onCrossfadeTrigger
+      crossfade.clearCrossfade();
       return false;
     }
-  }, [autoplaySettings.enabled, currentTrack, radio.isRadioMode, queue, autoplay, playTrack]);
+  }, [autoplaySettings.enabled, currentTrack, radio.isRadioMode, queue, autoplay, playTrack, crossfade]);
 
   /**
    * Handle playing next track
