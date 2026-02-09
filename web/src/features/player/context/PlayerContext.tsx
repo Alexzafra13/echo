@@ -329,7 +329,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       }
     }
 
-    crossfade.resetCrossfadeFlag();
+    // Note: crossfadeStartedRef is now reset inside clearCrossfade() which runs
+    // when the crossfade completes (finishCrossfade) or when a new track starts
+    // normally (non-crossfade path calls clearCrossfade). No need for a separate
+    // resetCrossfadeFlag() call here, which previously ran while the crossfade
+    // animation was still in progress and caused race conditions.
   }, [getStreamUrl, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization]);
 
   /**
@@ -556,8 +560,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         return;
       }
 
-      // Only handle ended if not in crossfade mode
-      if (crossfade.isCrossfading) return;
+      // Only handle ended if not in crossfade mode.
+      // Use isCrossfadingRef (synchronous) instead of isCrossfading (React state)
+      // to prevent race conditions where the ended event fires before React re-renders.
+      if (crossfade.isCrossfadingRef.current) return;
 
       // Record completed play (not skipped)
       playTracking.endPlaySession(false);
@@ -587,7 +593,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         await handlePlayNext(crossfadeSettings.enabled);
       }
     };
-  }, [audioElements, crossfade.isCrossfading, playTracking, queue, handlePlayNext, autoplaySettings.enabled, currentTrack, radio.isRadioMode, crossfadeSettings.enabled]);
+  }, [audioElements, playTracking, queue, handlePlayNext, autoplaySettings.enabled, currentTrack, radio.isRadioMode, crossfadeSettings.enabled]);
 
   // Stable event listeners - only set up once when audio elements are created.
   // The ref indirection ensures the handler always uses the latest state
