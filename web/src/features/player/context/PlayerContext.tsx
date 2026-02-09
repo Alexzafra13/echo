@@ -118,6 +118,19 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
   }, [audioElements.audioRefA, audioElements.audioRefB, normalization]);
 
+  // Resume AudioContext when page becomes visible again (e.g., screen on, tab switch).
+  // Mobile browsers suspend AudioContext in background; this recovers audio immediately
+  // when the user returns without requiring a new play gesture.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        normalization.resumeAudioContext();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [normalization]);
+
   // ========== QUEUE MANAGEMENT ==========
   const queue = useQueueManagement();
 
