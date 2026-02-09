@@ -6,10 +6,9 @@ import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useRemoteAlbum, useConnectedServers, useStartImport } from '../../hooks';
 import { Button, Portal } from '@shared/components/ui';
-import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer } from '@features/player/context/PlayerContext';
-import { useDropdownMenu, useModal } from '@shared/hooks';
+import { useDropdownMenu, useModal, useDominantColor } from '@shared/hooks';
 import { logger } from '@shared/utils/logger';
 import type { Track } from '@shared/types/track.types';
 import type { RemoteTrack } from '../../types';
@@ -22,7 +21,7 @@ import styles from './SharedAlbumPage.module.css';
 export default function SharedAlbumPage() {
   const { serverId, albumId } = useParams<{ serverId: string; albumId: string }>();
   const [, setLocation] = useLocation();
-  const [dominantColor, setDominantColor] = useState<string>('10, 14, 39');
+  const dominantColor = useDominantColor(album?.coverUrl);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const imageLightboxModal = useModal();
   const [isImporting, setIsImporting] = useState(false);
@@ -129,15 +128,6 @@ export default function SharedAlbumPage() {
       play();
     }
   }, [isPlaying, play, pause]);
-
-  // Extract dominant color from album cover
-  useEffect(() => {
-    if (coverUrl) {
-      extractDominantColor(coverUrl)
-        .then(color => setDominantColor(color))
-        .catch(() => {/* Color extraction failed, use default */});
-    }
-  }, [coverUrl]);
 
   // Load cover dimensions when modal opens
   useEffect(() => {

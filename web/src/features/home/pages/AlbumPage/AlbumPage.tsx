@@ -8,9 +8,8 @@ import { AlbumCoverSelectorModal } from '@features/admin/components/AlbumCoverSe
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { useArtistAlbums } from '@features/artists/hooks';
 import { usePlayer, Track } from '@features/player';
-import { useAlbumMetadataSync, useModal } from '@shared/hooks';
+import { useAlbumMetadataSync, useModal, useDominantColor } from '@shared/hooks';
 import { Button } from '@shared/components/ui';
-import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { toPlayerTracks } from '@shared/utils/track.utils';
 import { getArtistImageUrl, useAlbumCoverMetadata, getAlbumCoverUrl, useArtistImages } from '../../hooks';
@@ -26,7 +25,6 @@ export default function AlbumPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const imageLightboxModal = useModal();
   const infoModal = useModal();
@@ -65,18 +63,7 @@ export default function AlbumPage() {
     : getCoverUrl(album?.coverImage);
 
   // Extract dominant color from album cover
-  useEffect(() => {
-    if (!coverUrl) return;
-
-    let cancelled = false;
-    extractDominantColor(coverUrl)
-      .then(color => {
-        if (!cancelled) setDominantColor(color);
-      })
-      .catch(() => {/* Color extraction failed, use default */});
-
-    return () => { cancelled = true; };
-  }, [coverUrl]);
+  const dominantColor = useDominantColor(coverUrl);
 
   // Preload cover image when URL changes (cache busting handled by coverKey)
   useEffect(() => {

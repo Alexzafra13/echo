@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useParams, Link, useLocation } from 'wouter';
 import { Play, Shuffle, Music, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
@@ -7,11 +6,10 @@ import { TrackList } from '@features/home/components';
 import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist, useDeletePlaylist, useReorderPlaylistTracks } from '../../hooks/usePlaylists';
 import { usePlayer } from '@features/player';
 import { Button } from '@shared/components/ui';
-import { useModal } from '@shared/hooks';
+import { useModal, useDominantColor } from '@shared/hooks';
 import { PlaylistCoverMosaic, PlaylistOptionsMenu, EditPlaylistModal, DeletePlaylistModal } from '../../components';
 import { UpdatePlaylistDto } from '../../types';
 import type { Track as SharedTrack } from '@shared/types/track.types';
-import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { formatDuration } from '@shared/utils/format';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import { toPlayerTracks } from '@shared/utils/track.utils';
@@ -28,7 +26,6 @@ export default function PlaylistDetailPage() {
   const [, setLocation] = useLocation();
   const { playQueue, currentTrack, setShuffle } = usePlayer();
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
-  const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
 
   // Modal state management
   const imageModal = useModal();
@@ -43,22 +40,11 @@ export default function PlaylistDetailPage() {
   const reorderTracksMutation = useReorderPlaylistTracks();
 
   // Extract dominant color from first album cover in playlist
-  useEffect(() => {
-    const tracks = playlistTracks?.tracks || [];
-    const firstAlbumId = tracks.find((track) => track.albumId)?.albumId;
-
-    if (!firstAlbumId) return;
-
-    let cancelled = false;
-    const coverUrl = `/api/albums/${firstAlbumId}/cover`;
-    extractDominantColor(coverUrl)
-      .then((color) => {
-        if (!cancelled) setDominantColor(color);
-      })
-      .catch(() => {/* Color extraction failed, use default */});
-
-    return () => { cancelled = true; };
-  }, [playlistTracks]);
+  const playlistCoverUrl = (() => {
+    const firstAlbumId = (playlistTracks?.tracks || []).find((t) => t.albumId)?.albumId;
+    return firstAlbumId ? `/api/albums/${firstAlbumId}/cover` : undefined;
+  })();
+  const dominantColor = useDominantColor(playlistCoverUrl);
 
   const handlePlayAll = () => {
     const tracks = playlistTracks?.tracks || [];
