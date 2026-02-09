@@ -102,7 +102,13 @@ vi.mock('../hooks/useAudioNormalization', () => ({
     applyGain: vi.fn(),
     applyGainToAudio: vi.fn(),
     getEffectiveVolume: vi.fn().mockReturnValue(0.7),
+    getGainForAudio: vi.fn().mockReturnValue(1),
+    getCurrentGain: vi.fn().mockReturnValue(1),
     swapGains: vi.fn(),
+    connectAudioElement: vi.fn(),
+    resumeAudioContext: vi.fn(),
+    initAudioContext: vi.fn(),
+    calculateGain: vi.fn().mockReturnValue({ gainDb: 0, gainLinear: 1, wasLimited: false }),
   }),
 }));
 
