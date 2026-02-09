@@ -108,28 +108,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     const audioB = audioElements.audioRefB.current;
     if (audioA && audioB) {
       normalization.registerAudioElements(audioA, audioB);
+      // Sync initial volume with normalization hook
       normalization.setUserVolume(userVolumeRef.current);
-      // Initialize Web Audio API graph and connect both audio elements.
-      // This enables GainNode-based normalization (can boost quiet tracks).
-      // Falls back gracefully to volume-based if Web Audio is unavailable.
-      normalization.initAudioContext();
-      normalization.connectAudioElement(audioA, 'A');
-      normalization.connectAudioElement(audioB, 'B');
     }
   }, [audioElements.audioRefA, audioElements.audioRefB, normalization]);
-
-  // Resume AudioContext when page becomes visible again (e.g., screen on, tab switch).
-  // Mobile browsers suspend AudioContext in background; this recovers audio immediately
-  // when the user returns without requiring a new play gesture.
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        normalization.resumeAudioContext();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [normalization]);
 
   // ========== QUEUE MANAGEMENT ==========
   const queue = useQueueManagement();
@@ -263,9 +245,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Play a track with optional crossfade
    */
   const playTrack = useCallback(async (track: Track, withCrossfade: boolean = false) => {
-    // Ensure AudioContext is running (mobile requires user gesture to resume)
-    normalization.resumeAudioContext();
-
     const streamUrl = await getStreamUrl(track);
     if (!streamUrl) {
       logger.warn('[Player] Cannot play track: stream URL unavailable');
@@ -369,7 +348,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Play - either a new track or resume current playback
    */
   const play = useCallback((track?: Track, withCrossfade: boolean = false) => {
-    normalization.resumeAudioContext();
     if (track) {
       playTrack(track, withCrossfade);
     } else if (currentTrack && !radio.isRadioMode) {
@@ -379,7 +357,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Resume radio
       radio.resumeRadio();
     }
-  }, [playTrack, currentTrack, radio, audioElements, normalization]);
+  }, [playTrack, currentTrack, radio, audioElements]);
 
   /**
    * Pause playback
