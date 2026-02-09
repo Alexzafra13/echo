@@ -109,6 +109,29 @@ export function useAudioNormalization(settings: NormalizationSettings) {
       gainB.connect(compressor);
       compressor.connect(ctx.destination);
 
+      // Keep-alive: silent oscillator prevents the OS from suspending AudioContext
+      // when the page goes to background or screen turns off (PWA/mobile).
+      // A running oscillator at gain=0 uses zero CPU but tells the audio system
+      // that the context is still needed.
+      const keepAlive = ctx.createOscillator();
+      const keepAliveGain = ctx.createGain();
+      keepAliveGain.gain.value = 0;
+      keepAlive.connect(keepAliveGain);
+      keepAliveGain.connect(ctx.destination);
+      keepAlive.start();
+
+      // Auto-resume: when the OS suspends AudioContext (screen off, tab background),
+      // immediately attempt to resume. Combined with MediaSession API (which keeps
+      // the audio process alive), this recovers playback without user interaction.
+      ctx.addEventListener('statechange', () => {
+        if (ctx.state === 'suspended') {
+          logger.debug('[Normalization] AudioContext suspended, attempting resume');
+          ctx.resume().catch(() => {
+            logger.warn('[Normalization] Auto-resume failed (may need user gesture)');
+          });
+        }
+      });
+
       logger.debug('[Normalization] Web Audio API graph initialized');
       return ctx;
     } catch (e) {
