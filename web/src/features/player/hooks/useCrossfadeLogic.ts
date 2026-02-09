@@ -177,7 +177,28 @@ export function useCrossfadeLogic({
         await audioElements.playInactive(false);
       }
 
-      const fadeDuration = currentSettings.duration * 1000; // Convert to ms
+      const configuredFadeDuration = currentSettings.duration * 1000; // Convert to ms
+
+      // Cap fade duration to the actual time remaining in the outgoing track.
+      // Critical for smart crossfade: when outroStart is close to track end
+      // (e.g., 2s left), a 10s configured fade would barely reduce the outgoing
+      // volume (100% → ~90%) before the track naturally ends, causing both
+      // tracks to mix at high volume instead of smoothly transitioning.
+      const activeDur = activeAudio.duration;
+      const activeTime = activeAudio.currentTime;
+      const trackRemainingMs = (!isNaN(activeDur) && activeDur > activeTime)
+        ? (activeDur - activeTime) * 1000
+        : configuredFadeDuration;
+      // Minimum 1s to avoid jarring instant cuts
+      const fadeDuration = Math.max(1000, Math.min(configuredFadeDuration, trackRemainingMs));
+
+      if (fadeDuration < configuredFadeDuration) {
+        logger.debug('[Crossfade] Fade duration capped to remaining track time', {
+          configured: configuredFadeDuration,
+          effective: fadeDuration,
+          trackRemaining: trackRemainingMs,
+        });
+      }
 
       // Tempo matching: calculate target playbackRate for the outgoing track
       // Uses browser-native WSOLA (preservesPitch = true by default) for
@@ -351,16 +372,21 @@ export function useCrossfadeLogic({
     // Smart mode: use track's detected outro start time if available
     // This triggers crossfade when the song naturally ends (silence/fade detected)
     if (currentSettings.smartMode && currentTrackOutroStart !== undefined && currentTrackOutroStart > 0) {
-      // Trigger at outroStart (where silence/fade begins)
-      // Only if we haven't already started and track is valid
+      // Use the earlier of outroStart or (duration - crossfadeDuration) as trigger point.
+      // This ensures there's enough time for a meaningful fade even when outroStart
+      // is very close to the track end (e.g., only 2s of silence detected).
+      const normalTriggerPoint = duration - crossfadeDuration;
+      const smartTriggerPoint = Math.min(currentTrackOutroStart, normalTriggerPoint);
+
       if (
-        currentTime >= currentTrackOutroStart &&
+        currentTime >= smartTriggerPoint &&
         !crossfadeStartedRef.current &&
         duration > crossfadeDuration
       ) {
-        logger.debug('[Crossfade] Smart mode: triggering at outroStart', {
+        logger.debug('[Crossfade] Smart mode: triggering crossfade', {
           currentTime,
           outroStart: currentTrackOutroStart,
+          triggerPoint: smartTriggerPoint,
           duration,
         });
         crossfadeStartedRef.current = true;

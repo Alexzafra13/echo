@@ -19,11 +19,23 @@ function createMockAudioElements(): AudioElements {
   const mockAudioA = {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
+    currentTime: 0,
+    duration: 180,
+    preservesPitch: true,
+    playbackRate: 1,
+    pause: vi.fn(),
+    paused: false,
   } as unknown as HTMLAudioElement;
 
   const mockAudioB = {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
+    currentTime: 0,
+    duration: 180,
+    preservesPitch: true,
+    playbackRate: 1,
+    pause: vi.fn(),
+    paused: false,
   } as unknown as HTMLAudioElement;
 
   return {
@@ -692,6 +704,78 @@ describe('useCrossfadeLogic', () => {
       const fadeIn100 = Math.sin(progress100 * Math.PI * 0.5);
       expect(fadeOut100).toBeCloseTo(0);
       expect(fadeIn100).toBeCloseTo(1);
+    });
+  });
+
+  describe('smart mode trigger timing', () => {
+    const smartSettings: CrossfadeSettings = {
+      enabled: true,
+      duration: 5,
+      smartMode: true,
+      tempoMatch: false,
+    };
+
+    it('should trigger earlier when outroStart is too close to track end', () => {
+      // Track: 180s, outroStart at 178s (only 2s of outro), crossfade duration 5s
+      // Without fix: would trigger at 178s, leaving only 2s for a 5s fade
+      // With fix: triggers at 175s (duration - crossfadeDuration), allowing full fade
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(175);
+      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
+
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: smartSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+          currentTrackOutroStart: 178, // Very close to end
+        })
+      );
+
+      // Should trigger at 175 (= 180 - 5), not wait until 178
+      expect(result.current.checkCrossfadeTiming()).toBe(true);
+    });
+
+    it('should use outroStart when it gives enough time for fade', () => {
+      // Track: 180s, outroStart at 150s (30s outro), crossfade 5s
+      // outroStart (150) < normalTrigger (175), so trigger at outroStart
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(150);
+      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
+
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: smartSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+          currentTrackOutroStart: 150,
+        })
+      );
+
+      expect(result.current.checkCrossfadeTiming()).toBe(true);
+    });
+
+    it('should not trigger before the smart trigger point', () => {
+      // Track: 180s, outroStart at 178s, crossfade 5s
+      // smartTriggerPoint = min(178, 175) = 175
+      // At 174s, should NOT trigger yet
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(174);
+      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
+
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: smartSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+          currentTrackOutroStart: 178,
+        })
+      );
+
+      expect(result.current.checkCrossfadeTiming()).toBe(false);
     });
   });
 
