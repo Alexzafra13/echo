@@ -23,6 +23,9 @@ export interface TrackItem {
   rgTrackPeak?: number;
   rgAlbumGain?: number;
   rgAlbumPeak?: number;
+  // Smart crossfade & DJ
+  outroStart?: number;
+  bpm?: number;
   createdAt: Date;
   updatedAt: Date;
 }

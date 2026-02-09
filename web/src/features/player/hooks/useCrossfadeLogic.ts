@@ -111,9 +111,11 @@ export function useCrossfadeLogic({
    * @param nextBpm - BPM of the incoming track
    */
   const performCrossfade = useCallback(async (currentBpm?: number, nextBpm?: number) => {
-    // If a crossfade is already in progress, cancel it first to prevent
-    // two animation loops fighting over the same audio volumes
-    if (isCrossfadingRef.current) {
+    // If a crossfade animation is already running, cancel it first to prevent
+    // two animation loops fighting over the same audio volumes.
+    // Check crossfadeStartTimeRef (set when animation actually starts) instead of
+    // isCrossfadingRef (set early by onCrossfadeTrigger before performCrossfade is called).
+    if (crossfadeStartTimeRef.current !== null) {
       logger.warn('[Crossfade] Already crossfading, cancelling previous');
       clearCrossfade();
     }
@@ -209,9 +211,13 @@ export function useCrossfadeLogic({
         // Guard: if already completed by the other mechanism, bail out
         if (crossfadeStartTimeRef.current === null) return;
 
+        // Re-read effective volume for the incoming track (in case user changed volume mid-crossfade)
+        const getVolFn = getEffectiveVolumeRef.current;
+        const finalInactiveVolume = getVolFn ? getVolFn(inactiveId) : audioElements.volume;
+
         // Set final volumes
         audioElements.setAudioVolume(activeId, 0);
-        audioElements.setAudioVolume(inactiveId, inactiveTargetVolume);
+        audioElements.setAudioVolume(inactiveId, finalInactiveVolume);
 
         // Pause old audio immediately (prevents 'ended' from firing)
         const oldAudio = audioElements.getActiveAudio();

@@ -47,6 +47,24 @@ export class PlaylistTrackResponseDto {
   @ApiPropertyOptional({ example: 1, description: 'Orden en la playlist' })
   playlistOrder?: number;
 
+  @ApiPropertyOptional({ example: -3.5, description: 'ReplayGain track gain en dB' })
+  rgTrackGain?: number;
+
+  @ApiPropertyOptional({ example: 0.95, description: 'ReplayGain track peak (0-1)' })
+  rgTrackPeak?: number;
+
+  @ApiPropertyOptional({ example: -4.2, description: 'ReplayGain album gain en dB' })
+  rgAlbumGain?: number;
+
+  @ApiPropertyOptional({ example: 0.98, description: 'ReplayGain album peak (0-1)' })
+  rgAlbumPeak?: number;
+
+  @ApiPropertyOptional({ example: 234.5, description: 'Seconds where outro/silence begins (smart crossfade)' })
+  outroStart?: number;
+
+  @ApiPropertyOptional({ example: 120, description: 'BPM (beats per minute)' })
+  bpm?: number;
+
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   createdAt!: Date;
 
@@ -71,6 +89,12 @@ export class PlaylistTrackResponseDto {
       artistName: item.artistName,
       albumName: item.albumName,
       playlistOrder: item.playlistOrder,
+      rgTrackGain: item.rgTrackGain,
+      rgTrackPeak: item.rgTrackPeak,
+      rgAlbumGain: item.rgAlbumGain,
+      rgAlbumPeak: item.rgAlbumPeak,
+      outroStart: item.outroStart,
+      bpm: item.bpm,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
     };
