@@ -258,7 +258,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       await radio.stopRadio();
     }
 
-    if (withCrossfade && crossfadeSettings.enabled && isPlaying) {
+    // Use isCrossfadingRef as a synchronous guard: if onCrossfadeTrigger already set it
+    // to true, we MUST take the crossfade path even if `isPlaying` is stale in this closure.
+    // When crossfade settings change, the callback cascade (performCrossfade → crossfade →
+    // playTrack → handlePlayNext → playNextRef) updates asynchronously via useEffect.
+    // During that gap, a stale playTrack with isPlaying=false could take the else branch,
+    // calling clearCrossfade() while both audio elements are already playing.
+    if (withCrossfade && crossfadeSettings.enabled && (isPlaying || crossfade.isCrossfadingRef.current)) {
       // Crossfade: apply gain ONLY to the inactive audio element
       // This prevents the current track from jumping in volume
       const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';

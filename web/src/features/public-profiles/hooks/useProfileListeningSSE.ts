@@ -1,6 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@shared/store/authStore';
+import { useSSE } from '@shared/hooks';
 import { logger } from '@shared/utils/logger';
 
 interface ListeningUpdate {
@@ -22,114 +23,32 @@ export function useProfileListeningSSE(targetUserId: string) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
 
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reconnectAttemptsRef = useRef(0);
+  const apiUrl = import.meta.env.VITE_API_URL || '/api';
+  const canConnect = !!currentUser?.id && currentUser.id !== targetUserId;
+  const url = canConnect
+    ? `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(currentUser!.id)}`
+    : null;
 
-  const connect = useCallback(() => {
-    // Don't connect if viewing own profile or not logged in
-    if (!currentUser?.id || currentUser.id === targetUserId) return;
-
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const url = `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(currentUser.id)}`;
-
-      const eventSource = new EventSource(url);
-
-      eventSource.onopen = () => {
-        logger.debug('[SSE] Connected to profile listening stream');
-        reconnectAttemptsRef.current = 0;
-
-        // Refetch profile data on connection to ensure we have the latest state
-        // This catches any updates that happened while connecting
-        queryClient.invalidateQueries({ queryKey: ['public-profile', targetUserId] });
-      };
-
-      // Handle listening updates
-      eventSource.addEventListener('listening-update', (event: MessageEvent) => {
-        try {
-          const update: ListeningUpdate = JSON.parse(event.data);
-
-          // Only react to updates from the profile we're viewing
-          if (update.userId === targetUserId) {
-            logger.debug('[SSE] Profile listening update:', update);
-
-            // Invalidate the profile query to refetch with new listening state
-            queryClient.invalidateQueries({ queryKey: ['public-profile', targetUserId] });
-          }
-        } catch (err) {
-          logger.error('[SSE] Failed to parse listening update:', err);
+  const events = useMemo(() => ({
+    'listening-update': (event: MessageEvent) => {
+      try {
+        const update: ListeningUpdate = JSON.parse(event.data);
+        if (update.userId === targetUserId) {
+          logger.debug('[SSE] Profile listening update:', update);
+          queryClient.invalidateQueries({ queryKey: ['public-profile', targetUserId] });
         }
-      });
-
-      // Handle connection established
-      eventSource.addEventListener('connected', () => {
-        logger.debug('[SSE] Profile listening stream connected');
-      });
-
-      // Handle keepalive
-      eventSource.addEventListener('keepalive', () => {
-        // Keepalive received
-      });
-
-      // Handle connection errors
-      eventSource.onerror = (err) => {
-        logger.error('[SSE] Connection error:', err);
-        eventSource.close();
-
-        // Exponential backoff for reconnection (max 30 seconds)
-        const backoffDelay = Math.min(
-          1000 * Math.pow(2, reconnectAttemptsRef.current),
-          30000
-        );
-        reconnectAttemptsRef.current += 1;
-
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connect();
-        }, backoffDelay);
-      };
-
-      eventSourceRef.current = eventSource;
-    } catch (err) {
-      logger.error('[SSE] Failed to create EventSource:', err);
-    }
-  }, [currentUser?.id, targetUserId, queryClient]);
-
-  useEffect(() => {
-    if (!currentUser?.id || !targetUserId || currentUser.id === targetUserId) return;
-
-    // Connect to SSE
-    connect();
-
-    // Cleanup on unmount
-    return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
+      } catch (err) {
+        logger.error('[SSE] Failed to parse listening update:', err);
       }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
-      }
-    };
-  }, [currentUser?.id, targetUserId, connect]);
+    },
+  }), [targetUserId, queryClient]);
 
-  // Handle page visibility changes
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        if (eventSourceRef.current) {
-          eventSourceRef.current.close();
-          eventSourceRef.current = null;
-        }
-      } else if (currentUser?.id && targetUserId && currentUser.id !== targetUserId) {
-        connect();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [currentUser?.id, targetUserId, connect]);
+  useSSE({
+    url,
+    label: 'ProfileListening',
+    onOpen: () => {
+      queryClient.invalidateQueries({ queryKey: ['public-profile', targetUserId] });
+    },
+    events,
+  });
 }

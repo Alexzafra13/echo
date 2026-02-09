@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { ToggleSwitch } from '@shared/components/ui';
-import { useAuth, useModal } from '@shared/hooks';
+import { useAuth, useModal, useDominantColor } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { useChangePassword, useUpdateProfile } from '../../hooks';
 import { usePrivacySettings, useUpdatePrivacySettings } from '@features/settings/hooks';
@@ -12,7 +12,6 @@ import { usePrivacySettings, useUpdatePrivacySettings } from '@features/settings
 import { AvatarEditModal } from '../../components/AvatarEditModal';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { formatDate } from '@shared/utils/format';
-import { extractDominantColor } from '@shared/utils/colorExtractor';
 import styles from './ProfilePage.module.css';
 
 /**
@@ -25,7 +24,10 @@ export function ProfilePage() {
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
 
   // Dominant color from avatar for dynamic background
-  const [dominantColor, setDominantColor] = useState<string>('107, 114, 128'); // Default gray
+  const avatarColorUrl = user?.hasAvatar && user?.id
+    ? getUserAvatarUrl(user.id, user.hasAvatar, avatarTimestamp)
+    : undefined;
+  const dominantColor = useDominantColor(avatarColorUrl, '107, 114, 128');
 
   // Avatar modal
   const avatarModal = useModal();
@@ -56,16 +58,6 @@ export function ProfilePage() {
   useEffect(() => {
     setName(user?.name || '');
   }, [user?.name]);
-
-  // Extract dominant color from avatar
-  useEffect(() => {
-    if (user?.hasAvatar && user?.id) {
-      const avatarUrl = getUserAvatarUrl(user.id, user.hasAvatar, avatarTimestamp);
-      extractDominantColor(avatarUrl)
-        .then(color => setDominantColor(color))
-        .catch(() => {/* Color extraction failed, use default */});
-    }
-  }, [user?.hasAvatar, user?.id, avatarTimestamp]);
 
   // Sync privacy settings with server data
   useEffect(() => {

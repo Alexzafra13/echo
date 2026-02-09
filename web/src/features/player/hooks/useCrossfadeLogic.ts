@@ -75,6 +75,15 @@ export function useCrossfadeLogic({
   const getEffectiveVolumeRef = useRef(getEffectiveVolume);
   getEffectiveVolumeRef.current = getEffectiveVolume;
 
+  // Store settings in ref to avoid recreating performCrossfade/checkCrossfadeTiming
+  // when settings change. This prevents a cascade of useCallback recreations:
+  // settings change → performCrossfade recreated → crossfade object new ref →
+  // playTrack recreated → handlePlayNext recreated → playNextRef updated (async).
+  // During that async gap, stale closures can cause the crossfade path to be
+  // skipped in playTrack, calling clearCrossfade() while both audios are playing.
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+
   /**
    * Clear any ongoing crossfade animation
    */
@@ -130,6 +139,10 @@ export function useCrossfadeLogic({
       return false;
     }
 
+    // Read settings from ref to always use the latest values without
+    // needing settings in the useCallback dependency array.
+    const currentSettings = settingsRef.current;
+
     // Get effective volumes for each audio (includes their respective LUFS gains)
     // If getEffectiveVolume is provided, use separate volumes; otherwise fallback to single volume
     const getVolumeForAudio = getEffectiveVolumeRef.current;
@@ -159,7 +172,7 @@ export function useCrossfadeLogic({
         await audioElements.playInactive(false);
       }
 
-      const fadeDuration = settings.duration * 1000; // Convert to ms
+      const fadeDuration = currentSettings.duration * 1000; // Convert to ms
 
       // Tempo matching: calculate target playbackRate for the outgoing track
       // Uses browser-native WSOLA (preservesPitch = true by default) for
@@ -167,7 +180,7 @@ export function useCrossfadeLogic({
       // Clamped to ±15% to avoid artifacts on large BPM differences.
       const MAX_RATE_CHANGE = 0.15;
       let tempoMatchRate: number | null = null;
-      if (settings.tempoMatch && currentBpm && nextBpm && currentBpm > 0 && nextBpm > 0) {
+      if (currentSettings.tempoMatch && currentBpm && nextBpm && currentBpm > 0 && nextBpm > 0) {
         const rawRate = nextBpm / currentBpm;
         tempoMatchRate = Math.max(1 - MAX_RATE_CHANGE, Math.min(1 + MAX_RATE_CHANGE, rawRate));
         if (Math.abs(tempoMatchRate - 1) < 0.01) {
@@ -292,7 +305,7 @@ export function useCrossfadeLogic({
       clearCrossfade();
       return false;
     }
-  }, [audioElements, settings.duration, settings.tempoMatch, clearCrossfade]);
+  }, [audioElements, clearCrossfade]);
 
   /**
    * Prepare inactive audio for crossfade
@@ -310,10 +323,14 @@ export function useCrossfadeLogic({
    * Normal mode: Uses fixed duration before track end
    */
   const checkCrossfadeTiming = useCallback((): boolean => {
+    // Read settings from ref to always use the latest values without
+    // needing settings in the useCallback dependency array.
+    const currentSettings = settingsRef.current;
+
     // Skip if crossfade is disabled, already crossfading, in radio mode, or repeat one.
     // Use isCrossfadingRef (synchronous) instead of isCrossfading (React state) to prevent
     // race conditions where timeupdate fires before React re-renders with the new state.
-    if (!settings.enabled || isCrossfadingRef.current || isRadioMode || repeatMode === 'one') {
+    if (!currentSettings.enabled || isCrossfadingRef.current || isRadioMode || repeatMode === 'one') {
       return false;
     }
 
@@ -324,11 +341,11 @@ export function useCrossfadeLogic({
 
     const duration = audioElements.getDuration();
     const currentTime = audioElements.getCurrentTime();
-    const crossfadeDuration = settings.duration;
+    const crossfadeDuration = currentSettings.duration;
 
     // Smart mode: use track's detected outro start time if available
     // This triggers crossfade when the song naturally ends (silence/fade detected)
-    if (settings.smartMode && currentTrackOutroStart !== undefined && currentTrackOutroStart > 0) {
+    if (currentSettings.smartMode && currentTrackOutroStart !== undefined && currentTrackOutroStart > 0) {
       // Trigger at outroStart (where silence/fade begins)
       // Only if we haven't already started and track is valid
       if (
@@ -364,7 +381,7 @@ export function useCrossfadeLogic({
     }
 
     return false;
-  }, [settings, isRadioMode, repeatMode, hasNextTrack, audioElements, currentTrackOutroStart]);
+  }, [isRadioMode, repeatMode, hasNextTrack, audioElements, currentTrackOutroStart]);
 
   /**
    * Ref-based handler for timeupdate events.
