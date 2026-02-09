@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import type { NormalizationSettings } from '../types';
 import type { Track } from '@shared/types/track.types';
 
@@ -236,7 +236,12 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     // No-op: We no longer connect to Web Audio API
   }, []);
 
-  return {
+  // Memoize the return object to prevent unnecessary re-renders and effect re-runs.
+  // Without this, PlayerContext's registration effect (which depends on `normalization`)
+  // would re-run on every render, calling applyEffectiveVolume() which resets BOTH audio
+  // volumes to their effective values — destroying the crossfade animation that carefully
+  // sets different volumes on each audio element via requestAnimationFrame.
+  return useMemo(() => ({
     // New volume-based API
     registerAudioElements,
     setUserVolume,
@@ -254,5 +259,18 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     connectAudioElement,
     resumeAudioContext,
     initAudioContext,
-  };
+  }), [
+    registerAudioElements,
+    setUserVolume,
+    applyGain,
+    calculateGain,
+    getCurrentGain,
+    applyGainToAudio,
+    getEffectiveVolume,
+    getGainForAudio,
+    swapGains,
+    connectAudioElement,
+    resumeAudioContext,
+    initAudioContext,
+  ]);
 }
