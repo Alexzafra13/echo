@@ -48,6 +48,9 @@ export class GetPlaylistTracksUseCase {
       rgTrackPeak: track.rgTrackPeak,
       rgAlbumGain: track.rgAlbumGain,
       rgAlbumPeak: track.rgAlbumPeak,
+      // Smart crossfade & DJ
+      outroStart: track.outroStart,
+      bpm: track.bpm,
       createdAt: track.createdAt,
       updatedAt: track.updatedAt,
     }));
