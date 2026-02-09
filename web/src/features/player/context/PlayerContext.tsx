@@ -107,11 +107,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     const audioA = audioElements.audioRefA.current;
     const audioB = audioElements.audioRefB.current;
     if (audioA && audioB) {
-      normalization.registerAudioElements(audioA, audioB);
+      // Pass setAudioVolume so normalization routes through Web Audio API GainNodes
+      // when available (required for iOS Safari where element.volume is read-only).
+      normalization.registerAudioElements(audioA, audioB, audioElements.setAudioVolume);
       // Sync initial volume with normalization hook
       normalization.setUserVolume(userVolumeRef.current);
     }
-  }, [audioElements.audioRefA, audioElements.audioRefB, normalization]);
+  }, [audioElements.audioRefA, audioElements.audioRefB, audioElements.setAudioVolume, normalization]);
 
   // ========== QUEUE MANAGEMENT ==========
   const queue = useQueueManagement();
