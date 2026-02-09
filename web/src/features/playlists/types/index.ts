@@ -40,6 +40,11 @@ export interface PlaylistTrack {
   // ReplayGain audio normalization
   rgTrackGain?: number;
   rgTrackPeak?: number;
+  rgAlbumGain?: number;
+  rgAlbumPeak?: number;
+  // Smart crossfade & DJ
+  outroStart?: number;
+  bpm?: number;
 }
 
 export interface CreatePlaylistDto {

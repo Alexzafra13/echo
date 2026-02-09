@@ -28,6 +28,8 @@ export interface TrackSource {
   // Audio normalization (LUFS)
   rgTrackGain?: number | null;
   rgTrackPeak?: number | null;
+  rgAlbumGain?: number | null;
+  rgAlbumPeak?: number | null;
   // Smart crossfade
   outroStart?: number | null;
   // BPM
@@ -83,6 +85,8 @@ export function toPlayerTrack(source: TrackSource, context?: AlbumContext): Trac
     // Audio normalization data (LUFS)
     rgTrackGain: source.rgTrackGain ?? undefined,
     rgTrackPeak: source.rgTrackPeak ?? undefined,
+    rgAlbumGain: source.rgAlbumGain ?? undefined,
+    rgAlbumPeak: source.rgAlbumPeak ?? undefined,
     // Smart crossfade
     outroStart: source.outroStart ?? undefined,
     // BPM (for tempo-matched crossfade)
