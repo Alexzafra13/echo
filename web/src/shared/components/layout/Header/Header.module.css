@@ -13,7 +13,7 @@
 .headerWrapper .header {
   position: relative;
   top: auto;
-  z-index: auto;
+  z-index: 3; /* Above search overlay backdrop (z-index: 1) so header remains clickable */
 }
 
 /* Block: header */

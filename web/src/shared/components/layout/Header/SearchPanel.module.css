@@ -1,11 +1,40 @@
-/* Search Panel - Expands below header with glassmorphism integration */
+/* Search Panel - Overlay mode with glassmorphism */
+
+/* Backdrop scrim - dims the page content behind the search */
+.searchPanel__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.searchPanel__backdrop--closing {
+  animation: fadeOut 0.25s ease-in forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Panel - Positioned as overlay below the header */
 .searchPanel {
-  width: 100%;
-  /* Glassmorphism: semi-transparent background that lets page content bleed through */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  /* Glassmorphism */
   background: linear-gradient(
     180deg,
-    rgba(15, 23, 42, 0.82) 0%,
-    rgba(15, 23, 42, 0.88) 100%
+    rgba(15, 23, 42, 0.88) 0%,
+    rgba(15, 23, 42, 0.92) 100%
   );
   backdrop-filter: blur(24px) saturate(140%);
   -webkit-backdrop-filter: blur(24px) saturate(140%);
@@ -13,51 +42,54 @@
   border-top: 1px solid rgba(237, 104, 66, 0.25);
   border-bottom: 1px solid var(--white-08);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 8px 32px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 var(--white-05);
-  animation: slideDown 0.3s ease-out;
+  animation: panelSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-  position: relative;
 }
 
 /* Light theme override */
 :root[data-theme="light"] .searchPanel {
   background: linear-gradient(
     180deg,
-    rgba(229, 231, 235, 0.85) 0%,
-    rgba(229, 231, 235, 0.92) 100%
+    rgba(229, 231, 235, 0.92) 0%,
+    rgba(229, 231, 235, 0.96) 100%
   );
   border-top: 1px solid rgba(237, 104, 66, 0.2);
   border-bottom: 1px solid rgba(31, 41, 55, 0.1);
   box-shadow:
-    0 8px 32px rgba(31, 41, 55, 0.15),
+    0 8px 32px rgba(31, 41, 55, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-@keyframes slideDown {
+:root[data-theme="light"] .searchPanel__backdrop {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+@keyframes panelSlideDown {
   from {
-    max-height: 0;
     opacity: 0;
+    transform: translateY(-8px);
   }
   to {
-    max-height: 700px;
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@keyframes slideUp {
+@keyframes panelSlideUp {
   from {
-    max-height: 700px;
     opacity: 1;
+    transform: translateY(0);
   }
   to {
-    max-height: 0;
     opacity: 0;
+    transform: translateY(-8px);
   }
 }
 
 .searchPanel--closing {
-  animation: slideUp 0.25s ease-in forwards;
+  animation: panelSlideUp 0.25s ease-in forwards;
 }
 
 .searchPanel__container {
@@ -108,7 +140,7 @@
 
 /* Scrollable results container with fade indicator */
 .searchPanel__results {
-  max-height: 600px;
+  max-height: min(600px, 60vh);
   overflow-y: auto;
   position: relative;
   /* Mask for bottom fade effect */
@@ -120,7 +152,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding-bottom: 24px; /* Extra space for the fade mask */
+  padding-bottom: 24px;
 }
 
 /* Section */
@@ -155,7 +187,6 @@
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  /* Glass effect on items */
   background: var(--white-04);
   border: 1px solid var(--white-06);
   border-radius: 10px;
@@ -333,7 +364,7 @@
   }
 
   .searchPanel__results {
-    max-height: 500px;
+    max-height: min(500px, 55vh);
   }
 }
 
