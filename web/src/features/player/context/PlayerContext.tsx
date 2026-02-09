@@ -462,7 +462,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Handle playing next track
    */
   const handlePlayNext = useCallback(async (useCrossfade: boolean = false) => {
-    if (queue.queue.length === 0) return;
+    if (queue.queue.length === 0) {
+      crossfade.clearCrossfade();
+      return;
+    }
 
     // End current session as skipped if there's an active session
     if (playTracking.hasActiveSession()) {
@@ -484,7 +487,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (nextTrack) {
       playTrack(nextTrack, useCrossfade);
     }
-  }, [queue, playTracking, playTrack, triggerAutoplay]);
+  }, [queue, playTracking, playTrack, triggerAutoplay, crossfade]);
 
   // Update ref for crossfade callback
   useEffect(() => {
@@ -506,7 +509,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
     // If more than 3 seconds played, restart current track
     if (audioElements.getCurrentTime() > 3) {
-      audioElements.seek(0);
+      seek(0);
       return;
     }
 
@@ -521,7 +524,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (prevTrack) {
       playTrack(prevTrack, false);
     }
-  }, [queue, audioElements, playTracking, playTrack]);
+  }, [queue, audioElements, playTracking, playTrack, seek]);
 
   /**
    * Play a queue of tracks starting at index
