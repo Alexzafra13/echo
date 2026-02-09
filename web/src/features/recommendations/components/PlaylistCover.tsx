@@ -19,6 +19,36 @@ interface PlaylistCoverProps {
 const GENRES_WITH_OVERLAY = ['rock'] as const;
 
 /**
+ * Apple Music-inspired gradient backgrounds for genre covers.
+ * Each genre gets a unique, vibrant gradient.
+ */
+const GENRE_GRADIENTS: Record<string, string> = {
+  'rock': 'linear-gradient(150deg, #1a1a2e 0%, #2d4263 55%, #4a6fa5 100%)',
+  'pop': 'linear-gradient(150deg, #c2185b 0%, #e91e63 50%, #f06292 100%)',
+  'alternative': 'linear-gradient(150deg, #004d40 0%, #00796b 50%, #26a69a 100%)',
+  'indie': 'linear-gradient(150deg, #1b5e20 0%, #2e7d32 50%, #4caf50 100%)',
+  'metal': 'linear-gradient(150deg, #1a1a1a 0%, #2c2c2c 50%, #4a4a4a 100%)',
+  'punk': 'linear-gradient(150deg, #b71c1c 0%, #d32f2f 50%, #e57373 100%)',
+  'electronic': 'linear-gradient(150deg, #0d47a1 0%, #1565c0 50%, #42a5f5 100%)',
+  'dance': 'linear-gradient(150deg, #880e4f 0%, #c2185b 50%, #f06292 100%)',
+  'hip hop': 'linear-gradient(150deg, #37474f 0%, #546e7a 50%, #90a4ae 100%)',
+  'jazz': 'linear-gradient(150deg, #bf360c 0%, #e64a19 50%, #ff8a65 100%)',
+  'blues': 'linear-gradient(150deg, #0d47a1 0%, #1976d2 50%, #64b5f6 100%)',
+  'classical': 'linear-gradient(150deg, #4a148c 0%, #7b1fa2 50%, #ba68c8 100%)',
+  'folk': 'linear-gradient(150deg, #33691e 0%, #558b2f 50%, #8bc34a 100%)',
+  'country': 'linear-gradient(150deg, #e65100 0%, #f57c00 50%, #ffb74d 100%)',
+  'reggaeton': 'linear-gradient(150deg, #00695c 0%, #00897b 50%, #4db6ac 100%)',
+  'latin': 'linear-gradient(150deg, #c62828 0%, #ef5350 50%, #ff8a80 100%)',
+  'soul': 'linear-gradient(150deg, #4e342e 0%, #6d4c41 50%, #a1887f 100%)',
+  'funk': 'linear-gradient(150deg, #e65100 0%, #ff9800 50%, #ffcc02 100%)',
+  'r&b': 'linear-gradient(150deg, #311b92 0%, #512da8 50%, #9575cd 100%)',
+  'rap': 'linear-gradient(150deg, #212121 0%, #424242 50%, #757575 100%)',
+  'reggae': 'linear-gradient(150deg, #1b5e20 0%, #388e3c 50%, #66bb6a 100%)',
+  'salsa': 'linear-gradient(150deg, #c62828 0%, #e53935 50%, #ff5252 100%)',
+  'synthpop': 'linear-gradient(150deg, #4a148c 0%, #8e24aa 50%, #ce93d8 100%)',
+};
+
+/**
  * Get overlay image URL for a genre if it exists
  */
 function getGenreOverlayUrl(name: string): string | null {
@@ -29,6 +59,54 @@ function getGenreOverlayUrl(name: string): string | null {
     return `/images/wave_mix_covers/wave_mix_${genreName}.png`;
   }
   return null;
+}
+
+/**
+ * Get the gradient for a genre based on its name
+ */
+function getGenreGradient(displayName: string): string | null {
+  const key = displayName.toLowerCase();
+  return GENRE_GRADIENTS[key] || null;
+}
+
+/**
+ * Inline Echo icon (disc/vinyl from sidebar logo) used as a small badge
+ */
+function EchoBadge({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="555 195 305 325"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle cx="706" cy="353" r="146" stroke="white" strokeWidth="8" />
+      <circle cx="706" cy="353" r="59.5" fill="#E04D28" stroke="#E04D28" />
+      <circle cx="706" cy="353" r="25" fill="#1a1a1a" />
+      <path
+        d="M583.029 380.431C578.101 368.222 576.47 353.779 578.339 338.557C580.208 323.335 585.508 307.899 593.709 293.817C601.91 279.735 612.711 267.526 625.009 258.423C637.307 249.318 650.645 243.657 663.661 241.976"
+        stroke="white"
+        strokeWidth="2"
+      />
+      <path
+        d="M827.373 321.122C832.464 333.205 834.275 347.566 832.583 362.762C830.892 377.956 825.76 393.422 817.701 407.585C809.641 421.748 798.949 434.088 786.718 443.358C774.486 452.629 761.168 458.486 748.124 460.373"
+        stroke="white"
+        strokeWidth="2"
+      />
+      <path
+        opacity="0.7"
+        d="M609.083 380.105C598.609 356.682 598.585 331.75 608.975 309.713C619.37 287.665 639.549 269.877 665.997 259.564"
+        stroke="white"
+        strokeWidth="2"
+      />
+      <path
+        opacity="0.7"
+        d="M805.564 336.372C812.936 356.448 811.485 377.154 801.471 395.195C791.449 413.249 773.396 427.645 750.142 436.008"
+        stroke="white"
+        strokeWidth="2"
+      />
+    </svg>
+  );
 }
 
 /**
@@ -50,8 +128,12 @@ export function PlaylistCover({
   const showImage = coverImageUrl && !imageError && type === 'artist';
   const backgroundColor = coverColor || '#6C5CE7';
 
+  const isGenre = type === 'genre';
+  const genreDisplayName = isGenre ? name.replace(/ Mix$/i, '') : '';
+  const genreGradient = isGenre ? getGenreGradient(genreDisplayName) : null;
+
   // Check for genre overlay image
-  const genreOverlayUrl = type === 'genre' && !overlayError ? getGenreOverlayUrl(name) : null;
+  const genreOverlayUrl = isGenre && !overlayError ? getGenreOverlayUrl(name) : null;
 
   return (
     <div className={`${styles.cover} ${styles[size]} ${className}`}>
@@ -72,19 +154,29 @@ export function PlaylistCover({
         </div>
       ) : (
         <div
-          className={styles.colorCover}
-          style={{ backgroundColor }}
+          className={`${styles.colorCover} ${isGenre ? styles.genreCover : ''}`}
+          style={
+            isGenre && genreGradient
+              ? { background: genreGradient }
+              : { backgroundColor }
+          }
         >
-          {genreOverlayUrl ? (
-            // Genre with custom overlay image
-            <img
-              src={genreOverlayUrl}
-              alt={name}
-              className={styles.genreOverlay}
-              onError={() => setOverlayError(true)}
-            />
+          {isGenre ? (
+            <>
+              {genreOverlayUrl && (
+                <img
+                  src={genreOverlayUrl}
+                  alt={name}
+                  className={styles.genreOverlay}
+                  onError={() => setOverlayError(true)}
+                />
+              )}
+              <EchoBadge className={styles.logoBadge} />
+              <div className={styles.genreName}>
+                {genreDisplayName}
+              </div>
+            </>
           ) : (
-            // Default: Waves icon
             <>
               <div className={styles.iconContainer}>
                 <Waves size={size === 'large' ? 80 : size === 'small' ? 32 : 48} />
