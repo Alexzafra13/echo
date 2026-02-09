@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { updatePlaybackState } from '@shared/services/play-tracking.service';
 import { useAuthStore } from '@shared/store';
+import { logger } from '@shared/utils/logger';
 
 interface UseSocialSyncProps {
   isPlaying: boolean;
@@ -29,8 +30,8 @@ export function useSocialSync({
     updatePlaybackState({
       isPlaying,
       currentTrackId: isPlaying && currentTrackId ? currentTrackId : null,
-    }).catch(() => {
-      // Silently ignore sync failures - non-critical feature
+    }).catch((err) => {
+      logger.debug('[SocialSync] Failed to sync playback state:', err);
     });
   }, [isPlaying, currentTrackId, isRadioMode]);
 }

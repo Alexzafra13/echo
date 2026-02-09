@@ -76,8 +76,8 @@ export class WebSocketService {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
+      reconnectionDelayMax: 30000,
+      reconnectionAttempts: Infinity,
     });
 
     socket.on('error', (error: Error) => {

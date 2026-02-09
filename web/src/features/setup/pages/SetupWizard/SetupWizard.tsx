@@ -262,46 +262,48 @@ export default function SetupWizard() {
               </p>
 
               <form onSubmit={handleSubmit(handleAdminSubmit)} className={styles.form}>
-                <Input
-                  {...register('username')}
-                  type="text"
-                  label="Usuario"
-                  placeholder="admin"
-                  error={errors.username?.message}
-                  leftIcon={<User size={20} />}
-                  autoComplete="username"
-                />
+                <fieldset disabled={isSubmitting} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
+                  <Input
+                    {...register('username')}
+                    type="text"
+                    label="Usuario"
+                    placeholder="admin"
+                    error={errors.username?.message}
+                    leftIcon={<User size={20} />}
+                    autoComplete="username"
+                  />
 
-                <Input
-                  {...register('password')}
-                  type="password"
-                  label="Contraseña"
-                  placeholder="Mínimo 8 caracteres"
-                  error={errors.password?.message}
-                  leftIcon={<Lock size={20} />}
-                  autoComplete="new-password"
-                />
+                  <Input
+                    {...register('password')}
+                    type="password"
+                    label="Contraseña"
+                    placeholder="Mínimo 8 caracteres"
+                    error={errors.password?.message}
+                    leftIcon={<Lock size={20} />}
+                    autoComplete="new-password"
+                  />
 
-                <Input
-                  {...register('confirmPassword')}
-                  type="password"
-                  label="Confirmar contraseña"
-                  placeholder="Repite la contraseña"
-                  error={errors.confirmPassword?.message}
-                  leftIcon={<Lock size={20} />}
-                  autoComplete="new-password"
-                />
+                  <Input
+                    {...register('confirmPassword')}
+                    type="password"
+                    label="Confirmar contraseña"
+                    placeholder="Repite la contraseña"
+                    error={errors.confirmPassword?.message}
+                    leftIcon={<Lock size={20} />}
+                    autoComplete="new-password"
+                  />
 
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  loading={isSubmitting}
-                  rightIcon={<ChevronRight size={20} />}
-                >
-                  Siguiente
-                </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    loading={isSubmitting}
+                    rightIcon={<ChevronRight size={20} />}
+                  >
+                    Siguiente
+                  </Button>
+                </fieldset>
               </form>
             </div>
           )}
