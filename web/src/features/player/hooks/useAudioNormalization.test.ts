@@ -344,6 +344,59 @@ describe('useAudioNormalization', () => {
     });
   });
 
+  describe('setCrossfading', () => {
+    it('should skip applyEffectiveVolume when crossfading', () => {
+      const { result } = renderHook(() => useAudioNormalization(defaultSettings));
+
+      const mockAudioA = document.createElement('audio');
+      const mockAudioB = document.createElement('audio');
+
+      act(() => {
+        result.current.registerAudioElements(mockAudioA, mockAudioB);
+        result.current.setUserVolume(1.0);
+      });
+
+      // Apply gain so both elements have a known volume
+      const track = createTrack({ rgTrackGain: -6.0, rgTrackPeak: 0.5 });
+      act(() => {
+        result.current.applyGain(track);
+      });
+
+      const expectedVolume = mockAudioA.volume; // ~0.501
+
+      // Simulate crossfade: set one element to a different volume
+      mockAudioA.volume = 0.2;
+      mockAudioB.volume = 0.8;
+
+      // Mark as crossfading
+      act(() => {
+        result.current.setCrossfading(true);
+      });
+
+      // Call setUserVolume which internally calls applyEffectiveVolume
+      act(() => {
+        result.current.setUserVolume(1.0);
+      });
+
+      // Volumes should NOT have been reset — crossfade guard prevented it
+      expect(mockAudioA.volume).toBe(0.2);
+      expect(mockAudioB.volume).toBe(0.8);
+
+      // End crossfade
+      act(() => {
+        result.current.setCrossfading(false);
+      });
+
+      // Now setUserVolume should apply effective volume again
+      act(() => {
+        result.current.setUserVolume(1.0);
+      });
+
+      expect(mockAudioA.volume).toBeCloseTo(expectedVolume, 2);
+      expect(mockAudioB.volume).toBeCloseTo(expectedVolume, 2);
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle extreme negative gain values', () => {
       const { result } = renderHook(() => useAudioNormalization(defaultSettings));

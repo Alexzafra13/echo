@@ -22,6 +22,7 @@ interface UseCrossfadeLogicParams {
   onCrossfadeStart?: () => void;
   onCrossfadeComplete?: () => void;
   onCrossfadeTrigger?: () => void; // Called when it's time to start crossfade to next track
+  onCrossfadeCleared?: () => void; // Called whenever crossfade state is cleared (completion, cancel, error)
   // LUFS normalization support
   getEffectiveVolume?: (audioId: 'A' | 'B') => number;
   onCrossfadeSwapGains?: () => void; // Called after audio switch to swap gains
@@ -52,6 +53,7 @@ export function useCrossfadeLogic({
   onCrossfadeStart,
   onCrossfadeComplete,
   onCrossfadeTrigger,
+  onCrossfadeCleared,
   getEffectiveVolume,
   onCrossfadeSwapGains,
 }: UseCrossfadeLogicParams) {
@@ -68,8 +70,8 @@ export function useCrossfadeLogic({
   const crossfadeStartTimeRef = useRef<number | null>(null);
 
   // Store callbacks in ref to avoid stale closures
-  const callbacksRef = useRef({ onCrossfadeStart, onCrossfadeComplete, onCrossfadeTrigger, onCrossfadeSwapGains });
-  callbacksRef.current = { onCrossfadeStart, onCrossfadeComplete, onCrossfadeTrigger, onCrossfadeSwapGains };
+  const callbacksRef = useRef({ onCrossfadeStart, onCrossfadeComplete, onCrossfadeTrigger, onCrossfadeSwapGains, onCrossfadeCleared });
+  callbacksRef.current = { onCrossfadeStart, onCrossfadeComplete, onCrossfadeTrigger, onCrossfadeSwapGains, onCrossfadeCleared };
 
   // Store getEffectiveVolume in ref to avoid stale closures
   const getEffectiveVolumeRef = useRef(getEffectiveVolume);
@@ -102,6 +104,9 @@ export function useCrossfadeLogic({
     crossfadeStartedRef.current = false;
     isCrossfadingRef.current = false;
     setIsCrossfading(false);
+    // Notify listeners (e.g. normalization) that crossfade is no longer active,
+    // so they can resume normal volume management.
+    callbacksRef.current.onCrossfadeCleared?.();
   }, []);
 
   /**
