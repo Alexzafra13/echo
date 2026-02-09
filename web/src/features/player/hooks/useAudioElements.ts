@@ -28,10 +28,6 @@ interface UseAudioElementsOptions {
 /**
  * Hook for managing dual audio elements with crossfade support
  * Provides low-level audio control for both primary (A) and secondary (B) audio elements
- *
- * Volume control uses Web Audio API GainNodes when available (required for iOS Safari
- * where HTMLAudioElement.volume is read-only). Falls back to element.volume on
- * platforms where Web Audio API is not supported.
  */
 export function useAudioElements(options: UseAudioElementsOptions = {}) {
   const { initialVolume = 0.7, callbacks } = options;
@@ -41,12 +37,6 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   const audioRefB = useRef<HTMLAudioElement | null>(null);
   const activeAudioRef = useRef<'A' | 'B'>('A');
 
-  // Web Audio API refs for programmatic volume control (required for iOS Safari)
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const gainNodeARef = useRef<GainNode | null>(null);
-  const gainNodeBRef = useRef<GainNode | null>(null);
-  const webAudioReadyRef = useRef(false);
-
   // Store callbacks in ref to avoid effect re-runs
   const callbacksRef = useRef(callbacks);
   callbacksRef.current = callbacks;
@@ -54,76 +44,12 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   // Volume state (needed for crossfade calculations)
   const [volume, setVolumeState] = useState(initialVolume);
 
-  /**
-   * Initialize Web Audio API for programmatic volume control.
-   * Required on iOS Safari where HTMLAudioElement.volume is read-only (always 1.0).
-   * Must be called during a user gesture (play button) for iOS to allow AudioContext.
-   * Safe to call multiple times — only initializes once, then just resumes if suspended.
-   */
-  const ensureWebAudio = useCallback(async () => {
-    if (webAudioReadyRef.current) {
-      // Already connected — just resume if suspended (e.g., after background/screen off)
-      const ctx = audioContextRef.current;
-      if (ctx && ctx.state === 'suspended') {
-        try {
-          await ctx.resume();
-        } catch {
-          // Will retry on next user gesture
-        }
-      }
-      return;
-    }
-
-    const audioA = audioRefA.current;
-    const audioB = audioRefB.current;
-    if (!audioA || !audioB) return;
-
-    try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!AudioCtx) {
-        logger.warn('[AudioElements] Web Audio API not supported, using element.volume fallback');
-        return;
-      }
-
-      const ctx = new AudioCtx();
-      audioContextRef.current = ctx;
-
-      // Resume if not running (required for user gesture activation on iOS)
-      if (ctx.state === 'suspended') {
-        await ctx.resume();
-      }
-
-      // Create gain nodes for volume control
-      const gainA = ctx.createGain();
-      const gainB = ctx.createGain();
-      // Initialize gains to current element volumes (before we override to 1.0)
-      gainA.gain.value = audioA.volume;
-      gainB.gain.value = audioB.volume;
-      gainNodeARef.current = gainA;
-      gainNodeBRef.current = gainB;
-
-      // Connect: element → MediaElementSource → GainNode → destination
-      // Note: createMediaElementSource can only be called once per element
-      const sourceA = ctx.createMediaElementSource(audioA);
-      const sourceB = ctx.createMediaElementSource(audioB);
-      sourceA.connect(gainA);
-      sourceB.connect(gainB);
-      gainA.connect(ctx.destination);
-      gainB.connect(ctx.destination);
-
-      // Set element volumes to 1.0 — volume is now controlled exclusively by GainNode.
-      // On iOS this is a no-op (already 1.0). On desktop, prevents double-attenuation
-      // since element.volume acts as a pre-gain before the Web Audio graph.
-      audioA.volume = 1;
-      audioB.volume = 1;
-
-      webAudioReadyRef.current = true;
-      logger.debug('[AudioElements] Web Audio API initialized with GainNodes');
-    } catch (error) {
-      logger.warn('[AudioElements] Failed to init Web Audio API, using element.volume fallback:', (error as Error).message);
-      // Fallback: volume control via element.volume (works on desktop/Android, not iOS)
-    }
-  }, []);
+  // Detect if HTMLAudioElement.volume is writable (false on iOS Safari).
+  // On iOS, audio.volume is read-only (always 1.0) because volume is
+  // controlled exclusively by hardware buttons. Crossfade logic uses this
+  // flag to skip volume animation and do a gapless switch instead.
+  // Tested once after audio elements are created (in the init effect).
+  const volumeControlSupportedRef = useRef(true);
 
   /**
    * Get the currently active audio element
@@ -176,36 +102,22 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   }, []);
 
   /**
-   * Set volume on both audio elements.
-   * Uses GainNode when Web Audio API is active (iOS), falls back to element.volume.
+   * Set volume on both audio elements
    */
   const setVolume = useCallback((newVolume: number) => {
-    const gainA = gainNodeARef.current;
-    const gainB = gainNodeBRef.current;
-    if (gainA && gainB) {
-      gainA.gain.value = newVolume;
-      gainB.gain.value = newVolume;
-    } else {
-      const audioA = audioRefA.current;
-      const audioB = audioRefB.current;
-      if (audioA) audioA.volume = newVolume;
-      if (audioB) audioB.volume = newVolume;
-    }
+    const audioA = audioRefA.current;
+    const audioB = audioRefB.current;
+    if (audioA) audioA.volume = newVolume;
+    if (audioB) audioB.volume = newVolume;
     setVolumeState(newVolume);
   }, []);
 
   /**
-   * Set volume on a specific audio element (for crossfade).
-   * Uses GainNode when Web Audio API is active (iOS), falls back to element.volume.
+   * Set volume on a specific audio element (for crossfade)
    */
   const setAudioVolume = useCallback((audioId: 'A' | 'B', newVolume: number) => {
-    const gainNode = audioId === 'A' ? gainNodeARef.current : gainNodeBRef.current;
-    if (gainNode) {
-      gainNode.gain.value = newVolume;
-    } else {
-      const audio = audioId === 'A' ? audioRefA.current : audioRefB.current;
-      if (audio) audio.volume = newVolume;
-    }
+    const audio = audioId === 'A' ? audioRefA.current : audioRefB.current;
+    if (audio) audio.volume = newVolume;
   }, []);
 
   /**
@@ -226,14 +138,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     const audio = getInactiveAudio();
     if (audio) {
       audio.src = src;
-      // Start at volume 0 for crossfade fade-in (use GainNode on iOS)
-      const inactiveId = activeAudioRef.current === 'A' ? 'B' : 'A';
-      const gainNode = inactiveId === 'A' ? gainNodeARef.current : gainNodeBRef.current;
-      if (gainNode) {
-        gainNode.gain.value = 0;
-      } else {
-        audio.volume = 0;
-      }
+      audio.volume = 0; // Start at 0 for crossfade
       audio.load();
     }
   }, [getInactiveAudio]);
@@ -280,16 +185,12 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   }, []);
 
   /**
-   * Play the active audio element, waiting for buffer if needed.
-   * Initializes Web Audio API on first call (requires user gesture on iOS).
+   * Play the active audio element, waiting for buffer if needed
    */
   const playActive = useCallback(async (waitForBuffer: boolean = true) => {
     const audio = getActiveAudio();
     if (audio) {
       try {
-        // Initialize Web Audio API (GainNodes) on first play — must happen during
-        // user gesture for iOS to allow AudioContext creation. Safe to call repeatedly.
-        await ensureWebAudio();
         // Wait for enough buffer to prevent crackling on mobile/PWA
         if (waitForBuffer) {
           await waitForAudioReady(audio);
@@ -300,18 +201,15 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
         throw error;
       }
     }
-  }, [getActiveAudio, waitForAudioReady, ensureWebAudio]);
+  }, [getActiveAudio, waitForAudioReady]);
 
   /**
-   * Play the inactive audio element (for crossfade), waiting for buffer if needed.
-   * Ensures Web Audio API is active (resumes AudioContext if suspended).
+   * Play the inactive audio element (for crossfade), waiting for buffer if needed
    */
   const playInactive = useCallback(async (waitForBuffer: boolean = true) => {
     const audio = getInactiveAudio();
     if (audio) {
       try {
-        // Ensure Web Audio API is active (resume AudioContext if suspended after background)
-        await ensureWebAudio();
         // Wait for enough buffer to prevent crackling during crossfade
         if (waitForBuffer) {
           await waitForAudioReady(audio);
@@ -322,7 +220,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
         throw error;
       }
     }
-  }, [getInactiveAudio, waitForAudioReady, ensureWebAudio]);
+  }, [getInactiveAudio, waitForAudioReady]);
 
   /**
    * Pause the active audio element
@@ -341,28 +239,17 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   }, []);
 
   /**
-   * Fade out an audio element to prevent clicks/pops.
-   * Uses GainNode when Web Audio API is active (iOS), falls back to element.volume.
-   * Returns a promise that resolves when fade is complete.
+   * Fade out an audio element to prevent clicks/pops
+   * Returns a promise that resolves when fade is complete
    */
   const fadeOutAudio = useCallback((audio: HTMLAudioElement, duration: number = 50): Promise<void> => {
     return new Promise((resolve) => {
-      if (!audio || audio.paused) {
+      if (!audio || audio.paused || audio.volume === 0) {
         resolve();
         return;
       }
 
-      // Determine which gain node this audio element uses
-      const gainNode = audio === audioRefA.current ? gainNodeARef.current
-        : audio === audioRefB.current ? gainNodeBRef.current
-        : null;
-
-      const startVolume = gainNode ? gainNode.gain.value : audio.volume;
-      if (startVolume === 0) {
-        resolve();
-        return;
-      }
-
+      const startVolume = audio.volume;
       const startTime = performance.now();
 
       const animateFadeOut = (currentTime: number) => {
@@ -370,21 +257,12 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
         const progress = Math.min(1, elapsed / duration);
 
         // Use exponential curve for quick but smooth fade
-        const vol = startVolume * (1 - progress);
-        if (gainNode) {
-          gainNode.gain.value = vol;
-        } else {
-          audio.volume = vol;
-        }
+        audio.volume = startVolume * (1 - progress);
 
         if (progress < 1) {
           requestAnimationFrame(animateFadeOut);
         } else {
-          if (gainNode) {
-            gainNode.gain.value = 0;
-          } else {
-            audio.volume = 0;
-          }
+          audio.volume = 0;
           resolve();
         }
       };
@@ -493,6 +371,17 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     audioB.volume = initialVolume;
     audioRefB.current = audioB;
 
+    // Detect volume control support using the just-created element.
+    // On iOS Safari, audio.volume is read-only (always 1.0).
+    try {
+      const savedVol = audioA.volume;
+      audioA.volume = 0.5;
+      volumeControlSupportedRef.current = Math.abs(audioA.volume - 0.5) < 0.01;
+      audioA.volume = savedVol; // Restore
+    } catch {
+      volumeControlSupportedRef.current = false;
+    }
+
     // Create event handlers
     const createTimeUpdateHandler = (audio: HTMLAudioElement, audioId: 'A' | 'B') => () => {
       if (activeAudioRef.current === audioId) {
@@ -595,40 +484,8 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
 
       audioRefA.current = null;
       audioRefB.current = null;
-
-      // Cleanup Web Audio API
-      if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => {});
-        audioContextRef.current = null;
-      }
-      gainNodeARef.current = null;
-      gainNodeBRef.current = null;
-      webAudioReadyRef.current = false;
     };
   }, [initialVolume]);
-
-  // Resume AudioContext when page becomes visible again.
-  // On mobile, when the screen turns off or the app goes to background, the AudioContext
-  // may get suspended. Resuming it when the page becomes visible again ensures audio
-  // volume control continues working. MediaSession API (already active) keeps the actual
-  // audio playback alive in the background — this just restores volume control via GainNode.
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        const ctx = audioContextRef.current;
-        if (ctx && ctx.state === 'suspended') {
-          ctx.resume().catch(() => {
-            // Will be retried on next user interaction via ensureWebAudio
-          });
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
 
   return {
     // Refs (for direct access if needed)
@@ -638,6 +495,10 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
 
     // State
     volume,
+
+    // Platform capabilities
+    // false on iOS Safari where audio.volume is read-only (hardware-controlled)
+    volumeControlSupported: volumeControlSupportedRef.current,
 
     // Getters
     getActiveAudio,

@@ -107,13 +107,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     const audioA = audioElements.audioRefA.current;
     const audioB = audioElements.audioRefB.current;
     if (audioA && audioB) {
-      // Pass setAudioVolume so normalization routes through Web Audio API GainNodes
-      // when available (required for iOS Safari where element.volume is read-only).
-      normalization.registerAudioElements(audioA, audioB, audioElements.setAudioVolume);
+      normalization.registerAudioElements(audioA, audioB);
       // Sync initial volume with normalization hook
       normalization.setUserVolume(userVolumeRef.current);
     }
-  }, [audioElements.audioRefA, audioElements.audioRefB, audioElements.setAudioVolume, normalization]);
+  }, [audioElements.audioRefA, audioElements.audioRefB, normalization]);
 
   // ========== QUEUE MANAGEMENT ==========
   const queue = useQueueManagement();
@@ -162,6 +160,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     // LUFS normalization support - use separate effective volumes for each audio
     getEffectiveVolume: normalization.getEffectiveVolume,
     onCrossfadeSwapGains: normalization.swapGains,
+    // Platform capability: false on iOS Safari where audio.volume is read-only
+    volumeControlSupported: audioElements.volumeControlSupported,
   });
 
   // ========== RADIO METADATA ==========
