@@ -1,11 +1,37 @@
-/* Search Panel - Expands below header, pushing content down */
+/* Search Panel - Expands below header with glassmorphism integration */
 .searchPanel {
   width: 100%;
-  background: var(--color-bg-secondary);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 4px 12px var(--black-10);
+  /* Glassmorphism: semi-transparent background that lets page content bleed through */
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.82) 0%,
+    rgba(15, 23, 42, 0.88) 100%
+  );
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  /* Subtle top accent line using primary color */
+  border-top: 1px solid rgba(237, 104, 66, 0.25);
+  border-bottom: 1px solid var(--white-08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 var(--white-05);
   animation: slideDown 0.3s ease-out;
   overflow: hidden;
+  position: relative;
+}
+
+/* Light theme override */
+:root[data-theme="light"] .searchPanel {
+  background: linear-gradient(
+    180deg,
+    rgba(229, 231, 235, 0.85) 0%,
+    rgba(229, 231, 235, 0.92) 100%
+  );
+  border-top: 1px solid rgba(237, 104, 66, 0.2);
+  border-bottom: 1px solid rgba(31, 41, 55, 0.1);
+  box-shadow:
+    0 8px 32px rgba(31, 41, 55, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 @keyframes slideDown {
@@ -54,7 +80,7 @@
 .searchPanel__spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--color-bg-tertiary);
+  border: 3px solid var(--white-08);
   border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -70,7 +96,7 @@
 .searchPanel__header {
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--white-08);
 }
 
 .searchPanel__title {
@@ -80,16 +106,21 @@
   margin: 0;
 }
 
-/* Sections Container */
+/* Scrollable results container with fade indicator */
 .searchPanel__results {
   max-height: 600px;
   overflow-y: auto;
+  position: relative;
+  /* Mask for bottom fade effect */
+  mask-image: linear-gradient(to bottom, black calc(100% - 40px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 40px), transparent 100%);
 }
 
 .searchPanel__sections {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  padding-bottom: 24px; /* Extra space for the fade mask */
 }
 
 /* Section */
@@ -115,48 +146,66 @@
 .searchPanel__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
-/* Item */
+/* Item - Glass card style */
 .searchPanel__item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  background: var(--color-bg-tertiary);
-  border: none;
-  border-radius: 8px;
+  padding: 10px 12px;
+  /* Glass effect on items */
+  background: var(--white-04);
+  border: 1px solid var(--white-06);
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
   width: 100%;
 }
 
 .searchPanel__item:hover {
-  background: var(--color-bg-hover);
-  transform: translateX(4px);
+  background: var(--white-10);
+  border-color: var(--white-12);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .searchPanel__item:active {
-  transform: translateX(2px) scale(0.99);
+  transform: translateY(0) scale(0.99);
+  box-shadow: none;
+}
+
+/* Light theme items */
+:root[data-theme="light"] .searchPanel__item {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+:root[data-theme="light"] .searchPanel__item:hover {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4px 16px rgba(31, 41, 55, 0.1);
 }
 
 .searchPanel__itemImage {
-  width: 56px;
-  height: 56px;
-  border-radius: 6px;
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
-  background: var(--color-bg-primary);
+  background: var(--black-20);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .searchPanel__playlistCover {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .searchPanel__itemInfo {
@@ -165,17 +214,17 @@
 }
 
 .searchPanel__itemName {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin: 0 0 4px 0;
+  margin: 0 0 3px 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .searchPanel__itemMeta {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-text-secondary);
   margin: 0;
   white-space: nowrap;
@@ -204,7 +253,7 @@
 
 /* Scrollbar styling */
 .searchPanel__results::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .searchPanel__results::-webkit-scrollbar-track {
@@ -212,12 +261,12 @@
 }
 
 .searchPanel__results::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
+  background: var(--white-10);
+  border-radius: 3px;
 }
 
 .searchPanel__results::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-tertiary);
+  background: var(--white-20);
 }
 
 /* Responsive */
@@ -228,7 +277,7 @@
 
   .searchPanel__grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 10px;
+    gap: 8px;
   }
 
   .searchPanel__itemImage,
@@ -239,6 +288,11 @@
 }
 
 @media (max-width: 768px) {
+  .searchPanel {
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+  }
+
   .searchPanel__container {
     padding: 16px 20px;
   }
@@ -257,7 +311,7 @@
 
   .searchPanel__grid {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 6px;
   }
 
   .searchPanel__item {
