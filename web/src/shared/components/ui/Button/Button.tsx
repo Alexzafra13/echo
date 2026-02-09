@@ -35,6 +35,7 @@ export default function Button({
         className
       )}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...props}
     >
       {leftIcon && <span className={styles.icon}>{leftIcon}</span>}

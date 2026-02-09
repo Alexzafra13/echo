@@ -10,7 +10,11 @@ import { useLocation } from 'wouter';
 export const useAuth = () => {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const { user, isAuthenticated, accessToken, setAuth, clearAuth } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
 
   // Login mutation
   const loginMutation = useMutation({

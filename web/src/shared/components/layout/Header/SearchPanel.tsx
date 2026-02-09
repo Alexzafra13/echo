@@ -100,7 +100,7 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
   if (!isVisible) return null;
 
   return (
-    <div className={`${styles.searchPanel} ${isClosing ? styles['searchPanel--closing'] : ''}`}>
+    <div id="header-search-results" role="listbox" aria-label="Resultados de búsqueda" className={`${styles.searchPanel} ${isClosing ? styles['searchPanel--closing'] : ''}`}>
       <div className={styles.searchPanel__container}>
         {isLoading ? (
           <div className={styles.searchPanel__loading}>

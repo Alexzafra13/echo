@@ -30,9 +30,11 @@ export function useDjProgressListener() {
   useEffect(() => {
     if (!accessToken) return;
 
+    const abortController = new AbortController();
     const baseUrl = import.meta.env.VITE_API_URL || '/api';
     axios.get(`${baseUrl}/scanner/dj-status`, {
       headers: { Authorization: `Bearer ${accessToken}` },
+      signal: abortController.signal,
     }).then((res) => {
       if (res.data?.isRunning) {
         updateProgress({
@@ -43,8 +45,12 @@ export function useDjProgressListener() {
         });
       }
     }).catch(() => {
-      // Silently ignore — user may not be admin
+      // Silently ignore — user may not be admin or request was aborted
     });
+
+    return () => {
+      abortController.abort();
+    };
   }, [accessToken, updateProgress]);
 
   // Listen for real-time updates via WebSocket

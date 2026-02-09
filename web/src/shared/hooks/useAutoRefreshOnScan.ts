@@ -20,7 +20,8 @@ import WebSocketService from '../services/websocket.service';
  */
 export function useAutoRefreshOnScan() {
   const queryClient = useQueryClient();
-  const { accessToken, isAuthenticated } = useAuthStore();
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
     // Solo conectar si el usuario está autenticado

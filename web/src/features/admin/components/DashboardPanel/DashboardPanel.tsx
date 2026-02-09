@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { LayoutDashboard, TrendingUp, TrendingDown } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@shared/services/api';
 import { formatDuration, formatBytes } from '@shared/utils/format';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
@@ -8,7 +8,6 @@ import { HealthPanel } from './HealthPanel';
 import { ActivityTimelineChart } from './ActivityTimelineChart';
 import { StorageBreakdownChart } from './StorageBreakdownChart';
 import { RecentActivityFeed } from './RecentActivityFeed';
-import { logger } from '@shared/utils/logger';
 import styles from './DashboardPanel.module.css';
 
 interface DashboardStats {
@@ -110,28 +109,19 @@ interface DashboardPanelProps {
  * Vista general del sistema con estadísticas y estado de salud
  */
 export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const queryClient = useQueryClient();
+  const { data: stats, isLoading, error } = useQuery<DashboardStats>({
+    queryKey: ['admin', 'dashboard', 'stats'],
+    queryFn: async () => {
       const response = await apiClient.get('/admin/dashboard/stats');
-      setStats(response.data);
-    } catch (err) {
-      if (import.meta.env.DEV) {
-        logger.error('Error loading dashboard stats:', err);
-      }
-      setError(getApiErrorMessage(err, 'Error al cargar las estadísticas'));
-    } finally {
-      setIsLoading(false);
-    }
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    retry: 1,
+  });
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard', 'stats'] });
   };
 
   if (isLoading) {
@@ -149,8 +139,8 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
     return (
       <div className={styles.container}>
         <div className={styles.error}>
-          <p>{error}</p>
-          <button onClick={loadStats} className={styles.retryButton}>
+          <p>{getApiErrorMessage(error, 'Error al cargar las estadísticas')}</p>
+          <button onClick={handleRefresh} className={styles.retryButton}>
             Reintentar
           </button>
         </div>
@@ -172,7 +162,7 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
             <p className={styles.subtitle}>Vista general del sistema</p>
           </div>
         </div>
-        <button onClick={loadStats} className={styles.refreshButton}>
+        <button onClick={handleRefresh} className={styles.refreshButton}>
           Actualizar
         </button>
       </div>

@@ -34,6 +34,8 @@ export interface ModalProps {
   width?: string;
   /** Optional class name for content */
   className?: string;
+  /** Optional aria-label for the close button (default: "Cerrar") */
+  closeLabel?: string;
 }
 
 export function Modal({
@@ -45,6 +47,7 @@ export function Modal({
   subtitle,
   width,
   className,
+  closeLabel = 'Cerrar',
 }: ModalProps) {
   // Focus trap for accessibility
   const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen);
@@ -114,7 +117,7 @@ export function Modal({
           <button
             className={styles.closeButton}
             onClick={onClose}
-            aria-label="Cerrar modal"
+            aria-label={closeLabel}
             type="button"
           >
             <X size={24} />

@@ -29,6 +29,14 @@ export default function Card({
         bordered && styles.bordered,
         className
       )}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={interactive ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          (e.currentTarget as HTMLElement).click();
+        }
+      } : undefined}
       {...props}
     >
       {children}

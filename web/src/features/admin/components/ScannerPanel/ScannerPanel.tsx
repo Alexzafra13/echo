@@ -22,7 +22,7 @@ export function ScannerPanel() {
 
   const { data: history, isLoading: historyLoading, refetch } = useScannerHistory();
   const { mutate: startScan, isPending: isScanning, data: scanResponse } = useStartScan();
-  const { accessToken } = useAuthStore();
+  const accessToken = useAuthStore((s) => s.accessToken);
 
   // WebSocket para progreso en tiempo real (scan + LUFS + DJ)
   const { progress, isCompleted, isConnected, lufsProgress, djProgress } = useScannerWebSocket(
