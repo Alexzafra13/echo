@@ -31,7 +31,12 @@ export default function LoginPage() {
 
   // Cycle through all backgrounds before repeating (shuffled queue)
   const backgroundImage = useMemo(() => {
-    let queue: string[] = JSON.parse(localStorage.getItem('loginBgQueue') || '[]');
+    let queue: string[] = [];
+    try {
+      queue = JSON.parse(localStorage.getItem('loginBgQueue') || '[]');
+    } catch {
+      localStorage.removeItem('loginBgQueue');
+    }
 
     // If queue is empty, reshuffle all backgrounds
     if (queue.length === 0) {
@@ -85,43 +90,45 @@ export default function LoginPage() {
         {/* Login form */}
         <div className={styles.formCard}>
           <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-            {loginError && (
-              <div className={styles.errorAlert}>
-                <AlertCircle size={20} />
-                <span>
-                  {getApiErrorMessage(loginError, 'Error al iniciar sesión. Verifica tus credenciales.')}
-                </span>
-              </div>
-            )}
+            <fieldset disabled={isLoggingIn} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
+              {loginError && (
+                <div className={styles.errorAlert}>
+                  <AlertCircle size={20} />
+                  <span>
+                    {getApiErrorMessage(loginError, 'Error al iniciar sesión. Verifica tus credenciales.')}
+                  </span>
+                </div>
+              )}
 
-            <Input
-              {...register('username')}
-              type="text"
-              label="Usuario"
-              error={errors.username?.message}
-              leftIcon={<User size={20} />}
-              autoComplete="username"
-            />
+              <Input
+                {...register('username')}
+                type="text"
+                label="Usuario"
+                error={errors.username?.message}
+                leftIcon={<User size={20} />}
+                autoComplete="username"
+              />
 
-            <Input
-              {...register('password')}
-              type="password"
-              label="Contraseña"
-              error={errors.password?.message}
-              leftIcon={<Lock size={20} />}
-              autoComplete="current-password"
-            />
+              <Input
+                {...register('password')}
+                type="password"
+                label="Contraseña"
+                error={errors.password?.message}
+                leftIcon={<Lock size={20} />}
+                autoComplete="current-password"
+              />
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={isLoggingIn}
-              rightIcon={<ArrowRight size={20} />}
-            >
-              Iniciar Sesión
-            </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={isLoggingIn}
+                rightIcon={<ArrowRight size={20} />}
+              >
+                Iniciar Sesión
+              </Button>
+            </fieldset>
           </form>
         </div>
       </div>

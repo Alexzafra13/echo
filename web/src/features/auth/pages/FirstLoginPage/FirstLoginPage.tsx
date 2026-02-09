@@ -154,86 +154,88 @@ export default function FirstLoginPage() {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-            {/* Username (opcional) */}
-            <div className={styles.formGroup}>
-              <Input
-                {...register('username')}
-                type="text"
-                label="Nombre de Usuario (opcional)"
-                error={errors.username?.message}
-                autoComplete="username"
-              />
-              <p className={styles.hint}>
-                Deje vacío para mantener: <strong>{user?.username}</strong>
-              </p>
-            </div>
+            <fieldset disabled={isSubmitting} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
+              {/* Username (opcional) */}
+              <div className={styles.formGroup}>
+                <Input
+                  {...register('username')}
+                  type="text"
+                  label="Nombre de Usuario (opcional)"
+                  error={errors.username?.message}
+                  autoComplete="username"
+                />
+                <p className={styles.hint}>
+                  Deje vacío para mantener: <strong>{user?.username}</strong>
+                </p>
+              </div>
 
-            {/* Nueva contraseña */}
-            <div className={styles.formGroup}>
-              <Input
-                {...register('newPassword')}
-                type="password"
-                label="Nueva Contraseña"
-                error={errors.newPassword?.message}
-                autoComplete="new-password"
-              />
-            </div>
+              {/* Nueva contraseña */}
+              <div className={styles.formGroup}>
+                <Input
+                  {...register('newPassword')}
+                  type="password"
+                  label="Nueva Contraseña"
+                  error={errors.newPassword?.message}
+                  autoComplete="new-password"
+                />
+              </div>
 
-            {/* Confirmar contraseña */}
-            <div className={styles.formGroup}>
-              <Input
-                {...register('confirmPassword')}
-                type="password"
-                label="Confirmar Contraseña"
-                error={errors.confirmPassword?.message}
-                autoComplete="new-password"
-              />
-            </div>
+              {/* Confirmar contraseña */}
+              <div className={styles.formGroup}>
+                <Input
+                  {...register('confirmPassword')}
+                  type="password"
+                  label="Confirmar Contraseña"
+                  error={errors.confirmPassword?.message}
+                  autoComplete="new-password"
+                />
+              </div>
 
-            {/* Requisitos de contraseña */}
-            <div className={styles.requirements}>
-              <p className={styles.requirementsTitle}>Requisitos de contraseña:</p>
-              <ul className={styles.requirementsList}>
-                {requirements.map((req, index) => (
-                  <li
-                    key={index}
-                    className={`${styles.requirement} ${req.met ? styles.requirementMet : ''}`}
-                  >
-                    {req.met ? (
-                      <Check size={16} className={styles.requirementIcon} />
-                    ) : (
-                      <X size={16} className={styles.requirementIcon} />
-                    )}
-                    <span>{req.label}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              {/* Requisitos de contraseña */}
+              <div className={styles.requirements}>
+                <p className={styles.requirementsTitle}>Requisitos de contraseña:</p>
+                <ul className={styles.requirementsList}>
+                  {requirements.map((req, index) => (
+                    <li
+                      key={index}
+                      className={`${styles.requirement} ${req.met ? styles.requirementMet : ''}`}
+                    >
+                      {req.met ? (
+                        <Check size={16} className={styles.requirementIcon} />
+                      ) : (
+                        <X size={16} className={styles.requirementIcon} />
+                      )}
+                      <span>{req.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-            {/* Botones */}
-            <div className={styles.actions}>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                fullWidth
-                loading={isSubmitting}
-                rightIcon={<ArrowRight size={20} />}
-              >
-                Continuar a Echo
-              </Button>
+              {/* Botones */}
+              <div className={styles.actions}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  loading={isSubmitting}
+                  rightIcon={<ArrowRight size={20} />}
+                >
+                  Continuar a Echo
+                </Button>
 
-              <Button
-                type="button"
-                variant="ghost"
-                size="md"
-                fullWidth
-                onClick={handleLogout}
-                disabled={isSubmitting}
-              >
-                Cerrar Sesión
-              </Button>
-            </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="md"
+                  fullWidth
+                  onClick={handleLogout}
+                  disabled={isSubmitting}
+                >
+                  Cerrar Sesión
+                </Button>
+              </div>
+            </fieldset>
           </form>
         </div>
 

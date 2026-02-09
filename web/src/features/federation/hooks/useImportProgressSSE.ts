@@ -52,7 +52,7 @@ export function useImportProgressSSE() {
     const baseUrl = import.meta.env.VITE_API_URL || '';
     const sseUrl = `${baseUrl}/api/federation/import/progress/stream?token=${encodeURIComponent(token)}`;
 
-    logger.debug('[SSE] Connecting to import progress stream:', sseUrl);
+    logger.debug('[SSE] Connecting to import progress stream');
 
     const eventSource = new EventSource(sseUrl);
     globalEventSource = eventSource;

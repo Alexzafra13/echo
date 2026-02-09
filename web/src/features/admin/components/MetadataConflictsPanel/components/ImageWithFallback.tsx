@@ -43,7 +43,7 @@ export function ImageWithFallback({
 
   return (
     <div className={className}>
-      <img src={src} alt={alt} onError={() => setHasError(true)} />
+      <img src={src} alt={alt} onError={() => setHasError(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
     </div>
   );
 }
