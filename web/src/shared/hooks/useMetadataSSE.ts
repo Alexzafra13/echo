@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useAuth } from './useAuth';
 import { logger } from '@shared/utils/logger';
 
@@ -31,7 +31,8 @@ export interface CacheInvalidationEvent {
 // Shared EventSource instance (singleton per token)
 let sharedEventSource: EventSource | null = null;
 let sharedToken: string | null = null;
-let connectionCount = 0;
+// Use a Set of subscriber IDs instead of a counter to avoid race conditions
+const subscribers = new Set<string>();
 
 /**
  * useMetadataSSE
@@ -48,6 +49,7 @@ export function useMetadataSSE(): EventSource | null {
   const { token, isAuthenticated } = useAuth();
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
   const mountedRef = useRef(true);
+  const subscriberId = useId();
 
   useEffect(() => {
     mountedRef.current = true;
@@ -57,7 +59,7 @@ export function useMetadataSSE(): EventSource | null {
       return;
     }
 
-    connectionCount++;
+    subscribers.add(subscriberId);
 
     // Reuse existing connection if token matches
     if (sharedEventSource && sharedToken === token && sharedEventSource.readyState !== EventSource.CLOSED) {
@@ -97,15 +99,14 @@ export function useMetadataSSE(): EventSource | null {
 
     return () => {
       mountedRef.current = false;
-      connectionCount--;
-      if (connectionCount <= 0) {
+      subscribers.delete(subscriberId);
+      if (subscribers.size === 0) {
         sharedEventSource?.close();
         sharedEventSource = null;
         sharedToken = null;
-        connectionCount = 0;
       }
     };
-  }, [token, isAuthenticated]);
+  }, [token, isAuthenticated, subscriberId]);
 
   // Close on logout
   useEffect(() => {
@@ -113,7 +114,7 @@ export function useMetadataSSE(): EventSource | null {
       sharedEventSource.close();
       sharedEventSource = null;
       sharedToken = null;
-      connectionCount = 0;
+      subscribers.clear();
       setEventSource(null);
     }
   }, [isAuthenticated]);

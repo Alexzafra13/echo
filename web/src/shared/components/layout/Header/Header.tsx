@@ -127,7 +127,7 @@ export function Header({
               ref={searchRef}
             >
               <div className={styles.header__searchWrapper}>
-                <Search size={20} className={styles.header__searchIcon} />
+                <Search size={20} className={styles.header__searchIcon} aria-hidden="true" />
                 <input
                   type="text"
                   placeholder="Busca Artistas, Canciones, Álbumes..."
@@ -137,6 +137,11 @@ export function Header({
                   onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
                   className={styles.header__searchInput}
                   autoComplete="off"
+                  role="combobox"
+                  aria-expanded={showResults && debouncedQuery.length > 0}
+                  aria-controls="header-search-results"
+                  aria-autocomplete="list"
+                  aria-label="Buscar artistas, canciones y álbumes"
                 />
               </div>
 

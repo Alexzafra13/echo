@@ -19,7 +19,7 @@ export function ErrorFallback({ error, errorInfo, onReset }: ErrorFallbackProps)
   };
 
   return (
-    <div className="error-fallback">
+    <div className="error-fallback" role="alert">
       <div className="error-fallback__container">
         <div className="error-fallback__icon">⚠️</div>
 

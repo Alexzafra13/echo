@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, ChangeEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, ChangeEvent } from 'react';
 
 export interface FileUploadOptions {
   maxSize?: number; // en bytes, default 10MB
@@ -64,6 +64,16 @@ export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadRet
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const readerRef = useRef<FileReader | null>(null);
+
+  // Abort any in-progress FileReader on unmount
+  useEffect(() => {
+    return () => {
+      if (readerRef.current && readerRef.current.readyState === FileReader.LOADING) {
+        readerRef.current.abort();
+      }
+    };
+  }, []);
 
   const handleFileSelect = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -91,8 +101,14 @@ export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadRet
 
       setSelectedFile(file);
 
+      // Abort previous reader if still loading
+      if (readerRef.current && readerRef.current.readyState === FileReader.LOADING) {
+        readerRef.current.abort();
+      }
+
       // Crear preview
       const reader = new FileReader();
+      readerRef.current = reader;
       reader.onloadend = () => {
         setPreviewUrl(reader.result as string);
       };

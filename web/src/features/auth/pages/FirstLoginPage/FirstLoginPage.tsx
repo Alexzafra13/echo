@@ -49,7 +49,7 @@ type FirstLoginFormData = z.infer<typeof firstLoginSchema>;
  */
 export default function FirstLoginPage() {
   const { user, logout } = useAuth();
-  const { updateUser } = useAuthStore();
+  const updateUser = useAuthStore((s) => s.updateUser);
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

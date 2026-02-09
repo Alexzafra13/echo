@@ -221,7 +221,7 @@
 }
 
 .playlistCard__name {
-  font-size: 15px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
@@ -231,7 +231,7 @@
 }
 
 .playlistCard__description {
-  font-size: 13px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
   margin: 0;
   overflow: hidden;
@@ -243,7 +243,7 @@
 }
 
 .playlistCard__meta {
-  font-size: 13px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
   margin: 0;
 }
