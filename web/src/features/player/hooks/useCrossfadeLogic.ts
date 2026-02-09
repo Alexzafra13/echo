@@ -56,6 +56,12 @@ export function useCrossfadeLogic({
   onCrossfadeSwapGains,
 }: UseCrossfadeLogicParams) {
   const [isCrossfading, setIsCrossfading] = useState(false);
+  // Synchronous ref mirrors isCrossfading state to prevent race conditions.
+  // React state updates are async (batched), so between setIsCrossfading(true) and the
+  // next render, timeupdate events can fire and re-trigger checkCrossfadeTiming with
+  // the stale isCrossfading=false closure. This ref provides an immediate, synchronous
+  // guard that prevents double-crossfade triggers.
+  const isCrossfadingRef = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
   const crossfadeTimeoutRef = useRef<number | null>(null);
   const crossfadeStartedRef = useRef(false);
@@ -82,6 +88,10 @@ export function useCrossfadeLogic({
       crossfadeTimeoutRef.current = null;
     }
     crossfadeStartTimeRef.current = null;
+    // Reset both refs: allow next crossfade timing check to trigger for the new track,
+    // and mark crossfade as no longer in progress (synchronously, before React re-renders)
+    crossfadeStartedRef.current = false;
+    isCrossfadingRef.current = false;
     setIsCrossfading(false);
   }, []);
 
@@ -101,6 +111,13 @@ export function useCrossfadeLogic({
    * @param nextBpm - BPM of the incoming track
    */
   const performCrossfade = useCallback(async (currentBpm?: number, nextBpm?: number) => {
+    // If a crossfade is already in progress, cancel it first to prevent
+    // two animation loops fighting over the same audio volumes
+    if (isCrossfadingRef.current) {
+      logger.warn('[Crossfade] Already crossfading, cancelling previous');
+      clearCrossfade();
+    }
+
     const activeAudio = audioElements.getActiveAudio();
     const inactiveAudio = audioElements.getInactiveAudio();
     const activeId = audioElements.getActiveAudioId();
@@ -123,6 +140,10 @@ export function useCrossfadeLogic({
       activeVolume: activeTargetVolume,
       inactiveVolume: inactiveTargetVolume,
     });
+    // Set ref synchronously BEFORE React state to prevent race conditions.
+    // timeupdate events can fire between setIsCrossfading and the next render,
+    // and checkCrossfadeTiming needs to see the updated value immediately.
+    isCrossfadingRef.current = true;
     setIsCrossfading(true);
     callbacksRef.current.onCrossfadeStart?.();
 
@@ -221,10 +242,17 @@ export function useCrossfadeLogic({
         // Use equal-power curve for perceptually smooth fade
         const { fadeOut, fadeIn } = equalPowerFade(progress);
 
+        // Re-read effective volumes each frame to handle user volume changes mid-crossfade.
+        // If the user moves the volume slider during crossfade, the new volume is reflected
+        // in the next frame rather than being overridden by the captured values.
+        const getVolFn = getEffectiveVolumeRef.current;
+        const activeVol = getVolFn ? getVolFn(activeId) : audioElements.volume;
+        const inactiveVol = getVolFn ? getVolFn(inactiveId) : audioElements.volume;
+
         // Apply volumes with each track's own effective volume (includes LUFS gain)
         // Active track fades out from its volume, inactive fades in to its volume
-        audioElements.setAudioVolume(activeId, fadeOut * activeTargetVolume);
-        audioElements.setAudioVolume(inactiveId, fadeIn * inactiveTargetVolume);
+        audioElements.setAudioVolume(activeId, fadeOut * activeVol);
+        audioElements.setAudioVolume(inactiveId, fadeIn * inactiveVol);
 
         // Tempo match: gradually adjust outgoing track's playbackRate toward target
         // Linear interpolation from 1.0 → tempoMatchRate over the crossfade duration
@@ -276,8 +304,10 @@ export function useCrossfadeLogic({
    * Normal mode: Uses fixed duration before track end
    */
   const checkCrossfadeTiming = useCallback((): boolean => {
-    // Skip if crossfade is disabled, already crossfading, in radio mode, or repeat one
-    if (!settings.enabled || isCrossfading || isRadioMode || repeatMode === 'one') {
+    // Skip if crossfade is disabled, already crossfading, in radio mode, or repeat one.
+    // Use isCrossfadingRef (synchronous) instead of isCrossfading (React state) to prevent
+    // race conditions where timeupdate fires before React re-renders with the new state.
+    if (!settings.enabled || isCrossfadingRef.current || isRadioMode || repeatMode === 'one') {
       return false;
     }
 
@@ -328,7 +358,7 @@ export function useCrossfadeLogic({
     }
 
     return false;
-  }, [settings, isCrossfading, isRadioMode, repeatMode, hasNextTrack, audioElements, currentTrackOutroStart]);
+  }, [settings, isRadioMode, repeatMode, hasNextTrack, audioElements, currentTrackOutroStart]);
 
   /**
    * Ref-based handler for timeupdate events.
@@ -382,6 +412,9 @@ export function useCrossfadeLogic({
   return {
     // State
     isCrossfading,
+    // Synchronous ref for checking crossfade state without React render delays.
+    // Use this in event handlers where the React state might not have updated yet.
+    isCrossfadingRef,
 
     // Actions
     performCrossfade,
