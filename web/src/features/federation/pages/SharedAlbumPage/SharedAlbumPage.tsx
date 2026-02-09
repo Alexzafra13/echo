@@ -21,7 +21,6 @@ import styles from './SharedAlbumPage.module.css';
 export default function SharedAlbumPage() {
   const { serverId, albumId } = useParams<{ serverId: string; albumId: string }>();
   const [, setLocation] = useLocation();
-  const dominantColor = useDominantColor(album?.coverUrl);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const imageLightboxModal = useModal();
   const [isImporting, setIsImporting] = useState(false);
@@ -29,6 +28,7 @@ export default function SharedAlbumPage() {
   const [importError, setImportError] = useState<string | null>(null);
 
   const { data: album, isLoading, error } = useRemoteAlbum(serverId, albumId);
+  const dominantColor = useDominantColor(album?.coverUrl);
   const { data: servers } = useConnectedServers();
   const startImport = useStartImport();
   const { playQueue, currentTrack, isPlaying, play, pause, setShuffle } = usePlayer();
