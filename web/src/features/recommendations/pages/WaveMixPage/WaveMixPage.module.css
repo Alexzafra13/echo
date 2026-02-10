@@ -453,8 +453,8 @@
 
   /* Fixed width for carousel items */
   .waveMixPage__grid > * {
-    flex: 0 0 140px;
-    min-width: 140px;
+    flex: 0 0 160px;
+    min-width: 160px;
     scroll-snap-align: start;
   }
 
@@ -525,8 +525,8 @@
   }
 
   .waveMixPage__grid > * {
-    flex: 0 0 120px;
-    min-width: 120px;
+    flex: 0 0 150px;
+    min-width: 150px;
   }
 
   .playlistCard__name {
