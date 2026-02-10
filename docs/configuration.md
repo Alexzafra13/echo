@@ -28,9 +28,9 @@ CORS_ORIGINS=https://music.tudominio.com
 |----------|---------|-------------|
 | `ECHO_PORT` | `4567` | Puerto externo |
 | `POSTGRES_USER` | `echo` | Usuario PostgreSQL |
-| `POSTGRES_PASSWORD` | `echo_music_server` | Contraseña PostgreSQL |
+| `POSTGRES_PASSWORD` | auto-generado | Contraseña PostgreSQL |
 | `POSTGRES_DB` | `echo` | Nombre de la BD |
-| `REDIS_PASSWORD` | `echo_music_server` | Contraseña Redis |
+| `REDIS_PASSWORD` | auto-generado | Contraseña Redis |
 | `DATA_PATH` | `/app/data` | Ruta datos internos |
 | `CORS_ORIGINS` | auto-detectado | Orígenes CORS permitidos |
 
@@ -41,11 +41,11 @@ Se genera automáticamente con `pnpm quickstart`:
 ```bash
 NODE_ENV=development
 PORT=3000
-DATABASE_URL=postgresql://echo:echo_local@localhost:5432/echo
+DATABASE_URL=postgresql://music_user:music_password@localhost:5432/music_db
 JWT_SECRET=<auto-generado>
 JWT_REFRESH_SECRET=<auto-generado>
 REDIS_HOST=localhost
-REDIS_PASSWORD=echo_local
+REDIS_PASSWORD=dev_redis_password
 ```
 
 ## Volúmenes
