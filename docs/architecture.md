@@ -4,25 +4,25 @@
 
 ```mermaid
 graph TB
-    Client[Web Browser / PWA]
+    Client["Web Browser - PWA"]
 
     subgraph Docker["Docker Compose"]
         subgraph Echo["Echo Container"]
-            Fastify[Fastify HTTP Server]
-            NestJS[NestJS Application]
-            WS[Socket.IO WebSocket]
-            BullWorker[BullMQ Workers]
+            Fastify["Fastify HTTP Server"]
+            NestJS["NestJS Application"]
+            WSock["Socket.IO WebSocket"]
+            BullWorker["BullMQ Workers"]
         end
-        PG[(PostgreSQL 16)]
-        Redis[(Redis 7)]
+        PG[("PostgreSQL 16")]
+        RD[("Redis 7")]
     end
 
-    Client <-->|HTTP / REST| Fastify
-    Client <-->|WebSocket| WS
+    Client -->|REST API| Fastify
+    Client -->|WebSocket| WSock
     NestJS -->|Drizzle ORM| PG
-    NestJS -->|ioredis| Redis
-    BullWorker -->|Job Queue| Redis
-    BullWorker -->|Read/Write| PG
+    NestJS -->|ioredis| RD
+    BullWorker -->|Job Queue| RD
+    BullWorker -->|Read Write| PG
 ```
 
 ## Request Flow
@@ -42,23 +42,23 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     C->>F: GET /api/albums/:id
-    F->>G: ThrottlerGuard (300 req/min)
-    G->>G: JwtAuthGuard (verify token)
+    F->>G: ThrottlerGuard
+    G->>G: JwtAuthGuard
     G->>CT: AlbumsController.getAlbum()
     CT->>UC: GetAlbumUseCase.execute()
     UC->>CR: albumRepository.findById(id)
 
-    CR->>RD: GET album:{id}
+    CR->>RD: GET album:id
     alt Cache Hit
         RD-->>CR: cached data
         CR-->>UC: Album entity
     else Cache Miss
         RD-->>CR: null
         CR->>DR: findById(id)
-        DR->>DB: SELECT ... FROM albums JOIN artists
+        DR->>DB: SELECT albums JOIN artists
         DB-->>DR: row
         DR-->>CR: Album entity
-        CR->>RD: SETEX album:{id} (TTL 1h)
+        CR->>RD: SETEX album:id TTL 1h
     end
 
     UC-->>CT: AlbumResponseDto
@@ -71,22 +71,22 @@ Each feature module follows domain-driven layers:
 
 ```mermaid
 graph LR
-    subgraph Presentation
-        Controller[Controller]
-        DTO[DTOs]
-        Gateway[WebSocket Gateway]
+    subgraph P["Presentation"]
+        Controller["Controller"]
+        DTO["DTOs"]
+        Gateway["WebSocket Gateway"]
     end
 
-    subgraph Domain
-        UseCase[Use Cases]
-        Entity[Entities]
-        Port[Ports / Interfaces]
+    subgraph D["Domain"]
+        UseCase["Use Cases"]
+        Entity["Entities"]
+        Port["Ports - Interfaces"]
     end
 
-    subgraph Infrastructure
-        Repo[Repository Impl]
-        Mapper[Mappers]
-        ExtService[External Services]
+    subgraph I["Infrastructure"]
+        Repo["Repository Impl"]
+        Mapper["Mappers"]
+        ExtService["External Services"]
     end
 
     Controller --> UseCase
@@ -114,18 +114,18 @@ Cache-aside pattern with Redis:
 
 ```mermaid
 graph TD
-    UC[Use Case] --> CR[CachedAlbumRepository]
+    UC["Use Case"] --> CR["CachedAlbumRepository"]
 
-    CR --> Check{Redis Cache?}
-    Check -->|Hit| Return[Return Entity]
-    Check -->|Miss| DR[DrizzleAlbumRepository]
-    DR --> DB[(PostgreSQL)]
-    DB --> Store[Store in Redis with TTL]
+    CR --> Check{"Redis Cache?"}
+    Check -->|Hit| Return["Return Entity"]
+    Check -->|Miss| DR["DrizzleAlbumRepository"]
+    DR --> DB[("PostgreSQL")]
+    DB --> Store["Store in Redis with TTL"]
     Store --> Return
 
-    Write[Write Operation] --> DR2[DrizzleRepository.update]
-    DR2 --> Invalidate[Invalidate Cache Keys]
-    Invalidate --> RD2[(Redis DEL pattern)]
+    Write["Write Operation"] --> DR2["DrizzleRepository.update"]
+    DR2 --> Invalidate["Invalidate Cache Keys"]
+    Invalidate --> RD2[("Redis DEL pattern")]
 ```
 
 **TTLs:**
@@ -135,7 +135,7 @@ graph TD
 | Single entity (album, artist) | 1 hour | Rarely changes |
 | Search results | 1 min | Must stay fresh |
 | Counts | 30 min | Approximate is fine |
-| Recent / top played | 5 min | Changes with user activity |
+| Recent and top played | 5 min | Changes with user activity |
 
 ## Background Jobs
 
@@ -153,19 +153,19 @@ sequenceDiagram
 
     Admin->>API: POST /scanner/start
     API->>Q: Add job to queue
-    API-->>Admin: 202 Accepted (scanId)
+    API-->>Admin: 202 Accepted scanId
 
     Q->>W: Pick up job
     W->>FS: Scan directories
     loop Each audio file
-        W->>W: Extract metadata (music-metadata)
-        W->>DB: Upsert track/album/artist
-        W->>WS: Emit scan:progress
+        W->>W: Extract metadata
+        W->>DB: Upsert track album artist
+        W->>WS: Emit scan progress
         WS-->>Admin: Real-time progress
     end
     W->>Q: Queue LUFS analysis
     W->>Q: Queue DJ analysis
-    W->>WS: Emit scan:completed
+    W->>WS: Emit scan completed
 ```
 
 **Job queues:**
@@ -183,22 +183,22 @@ Real-time communication via Socket.IO:
 
 ```mermaid
 graph LR
-    subgraph Server
-        SG[ScannerGateway<br>/scanner namespace]
-        SSE1[SSE /social/listening/stream]
-        SSE2[SSE /radio/metadata/stream]
+    subgraph S["Server"]
+        SG["ScannerGateway"]
+        SSE1["SSE social listening"]
+        SSE2["SSE radio metadata"]
     end
 
-    subgraph Client
-        SC[Scanner UI]
-        SP[Social Feed]
-        RP[Radio Player]
+    subgraph CL["Client"]
+        SC["Scanner UI"]
+        SP["Social Feed"]
+        RP["Radio Player"]
     end
 
-    SG -->|scan:progress| SC
-    SG -->|scan:completed| SC
-    SG -->|lufs:progress| SC
-    SG -->|library:change| SC
+    SG -->|"scan:progress"| SC
+    SG -->|"scan:completed"| SC
+    SG -->|"lufs:progress"| SC
+    SG -->|"library:change"| SC
     SSE1 -->|listening updates| SP
     SSE2 -->|ICY metadata| RP
 ```
@@ -207,36 +207,36 @@ graph LR
 
 ```mermaid
 graph TD
-    App[AppModule]
+    App["AppModule"]
 
-    subgraph Global Infrastructure
-        Drizzle[DrizzleModule]
-        Cache[CacheModule / Redis]
-        Queue[QueueModule / BullMQ]
-        WS[WebSocketModule]
+    subgraph GI["Global Infrastructure"]
+        Drizzle["DrizzleModule"]
+        Cache["CacheModule"]
+        Queue["QueueModule"]
+        WSM["WebSocketModule"]
     end
 
-    subgraph Features
-        Auth[AuthModule]
-        Albums[AlbumsModule]
-        Artists[ArtistsModule]
-        Tracks[TracksModule]
-        Scanner[ScannerModule]
-        Streaming[StreamingModule]
-        Playlists[PlaylistsModule]
-        Social[SocialModule]
-        Recs[RecommendationsModule]
-        ExtMeta[ExternalMetadataModule]
+    subgraph FT["Features"]
+        Auth["AuthModule"]
+        Albums["AlbumsModule"]
+        Artists["ArtistsModule"]
+        Tracks["TracksModule"]
+        Scanner["ScannerModule"]
+        Streaming["StreamingModule"]
+        Playlists["PlaylistsModule"]
+        Social["SocialModule"]
+        Recs["RecommendationsModule"]
+        ExtMeta["ExternalMetadataModule"]
     end
 
-    App --> Global Infrastructure
-    App --> Features
+    App --> GI
+    App --> FT
 
     Auth --> Drizzle
     Albums --> Drizzle
     Albums --> Cache
     Scanner --> Queue
-    Scanner --> WS
+    Scanner --> WSM
     Scanner --> Albums
     Streaming --> Tracks
     Recs --> Tracks
@@ -250,26 +250,26 @@ graph TD
 
 ```mermaid
 graph TB
-    Internet((Internet))
+    Internet(("Internet"))
 
-    subgraph Reverse Proxy
-        RP[Caddy / Nginx / Traefik]
+    subgraph RP["Reverse Proxy"]
+        Proxy["Caddy, Nginx, or Traefik"]
     end
 
-    subgraph Docker Compose
-        Echo[Echo :4567]
-        PG[PostgreSQL :5432]
-        Redis[Redis :6379]
+    subgraph DC["Docker Compose"]
+        Echo["Echo :4567"]
+        PG["PostgreSQL :5432"]
+        Redis["Redis :6379"]
     end
 
-    subgraph Volumes
-        Data[./data<br>covers, metadata, secrets]
-        PGData[postgres_data]
-        Music[/music :ro<br>your library]
+    subgraph Vol["Volumes"]
+        Data["./data"]
+        PGData["postgres_data"]
+        Music["/music read-only"]
     end
 
-    Internet -->|HTTPS 443| RP
-    RP -->|HTTP 4567| Echo
+    Internet -->|HTTPS 443| Proxy
+    Proxy -->|HTTP 4567| Echo
     Echo --- PG
     Echo --- Redis
     Echo --- Data
