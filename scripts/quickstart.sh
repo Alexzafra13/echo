@@ -73,11 +73,16 @@ echo -e "  ${GREEN}✓${NC} Contenedores iniciados"
 
 # Esperar a que estén listos
 echo -e "  → Esperando a que PostgreSQL esté listo..."
-sleep 3
-until docker exec echo-postgres-dev pg_isready -U music_user &> /dev/null; do
+until docker exec echo-postgres-dev pg_isready -U music_user -d music_db &> /dev/null; do
     sleep 1
 done
 echo -e "  ${GREEN}✓${NC} PostgreSQL listo"
+
+echo -e "  → Esperando a que Redis esté listo..."
+until docker exec echo-redis-dev redis-cli --pass dev_redis_password ping 2>/dev/null | grep -q PONG; do
+    sleep 1
+done
+echo -e "  ${GREEN}✓${NC} Redis listo"
 echo ""
 
 # Generar .env y crear carpetas
