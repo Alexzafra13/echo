@@ -3,7 +3,6 @@
   flex-direction: column;
   gap: var(--space-2);
   width: 100%;
-  --input-label-bg: var(--color-slate-800, #1e293b);
 }
 
 /* Wave group container */
@@ -79,7 +78,7 @@
   transform: translateY(-50%);
   left: var(--space-3);
   font-size: var(--text-sm);
-  background: var(--input-label-bg);
+  background: transparent;
   padding: 0 var(--space-2);
 }
 
@@ -230,7 +229,7 @@
   transform: translateY(-50%);
   left: var(--space-3);
   font-size: var(--text-sm);
-  background: var(--input-label-bg);
+  background: transparent;
   padding: 0 var(--space-2);
 }
 

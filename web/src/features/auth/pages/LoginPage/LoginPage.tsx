@@ -90,7 +90,7 @@ export default function LoginPage() {
         {/* Login form */}
         <div className={styles.formCard}>
           <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-            <fieldset disabled={isLoggingIn} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
+            <fieldset disabled={isLoggingIn} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {loginError && (
                 <div className={styles.errorAlert}>
                   <AlertCircle size={20} />
