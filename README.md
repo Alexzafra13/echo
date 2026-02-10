@@ -77,6 +77,7 @@ Open **http://localhost:4567** and create your admin account.
 | [Configuration](docs/configuration.md) | Environment variables, volumes, and ports |
 | [Reverse Proxy](docs/reverse-proxy.md) | HTTPS setup with Caddy, Nginx, Traefik, or Cloudflare Tunnel |
 | [Backups](docs/backup.md) | Backup, restore, and server migration |
+| [Architecture](docs/architecture.md) | System diagrams, request flow, and caching strategy |
 | [Development](docs/development.md) | Local setup, commands, and project structure |
 
 ## Tech Stack
