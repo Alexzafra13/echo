@@ -62,11 +62,28 @@ function getGenreOverlayUrl(name: string): string | null {
 }
 
 /**
- * Get the gradient for a genre based on its name
+ * Get the gradient for a genre based on its name.
+ * Uses keyword matching for compound genre names
+ * (e.g., "Alternative Rock" matches "rock", "Rock Pop" matches "pop").
  */
-function getGenreGradient(displayName: string): string | null {
+function getGenreGradient(displayName: string): string {
   const key = displayName.toLowerCase();
-  return GENRE_GRADIENTS[key] || null;
+
+  // Exact match first
+  if (GENRE_GRADIENTS[key]) return GENRE_GRADIENTS[key];
+
+  // Keyword matching: find the first gradient key contained in the genre name
+  for (const [gradientKey, gradient] of Object.entries(GENRE_GRADIENTS)) {
+    if (key.includes(gradientKey)) return gradient;
+  }
+
+  // Hash-based fallback: generate a vibrant gradient from the genre name
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = key.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = ((hash % 360) + 360) % 360;
+  return `linear-gradient(150deg, hsl(${hue}, 55%, 20%) 0%, hsl(${hue}, 50%, 35%) 50%, hsl(${hue}, 45%, 50%) 100%)`;
 }
 
 /**
@@ -130,7 +147,7 @@ export function PlaylistCover({
 
   const isGenre = type === 'genre';
   const genreDisplayName = isGenre ? name.replace(/ Mix$/i, '') : '';
-  const genreGradient = isGenre ? getGenreGradient(genreDisplayName) : null;
+  const genreGradient = isGenre ? getGenreGradient(genreDisplayName) : undefined;
 
   // Check for genre overlay image
   const genreOverlayUrl = isGenre && !overlayError ? getGenreOverlayUrl(name) : null;
@@ -154,9 +171,9 @@ export function PlaylistCover({
         </div>
       ) : (
         <div
-          className={`${styles.colorCover} ${isGenre ? styles.genreCover : ''}`}
+          className={`${styles.colorCover} ${(isGenre || type === 'artist') ? styles.genreCover : ''}`}
           style={
-            isGenre && genreGradient
+            genreGradient
               ? { background: genreGradient }
               : { backgroundColor }
           }
@@ -175,6 +192,15 @@ export function PlaylistCover({
               <div className={styles.genreName}>
                 {genreDisplayName}
               </div>
+            </>
+          ) : type === 'artist' ? (
+            <>
+              <EchoBadge className={styles.logoBadge} />
+              {artistName && (
+                <div className={styles.genreName}>
+                  {artistName}
+                </div>
+              )}
             </>
           ) : (
             <>
