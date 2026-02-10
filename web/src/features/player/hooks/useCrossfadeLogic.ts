@@ -185,27 +185,44 @@ export function useCrossfadeLogic({
       }
 
       // On iOS Safari, audio.volume is read-only (always 1.0, hardware-controlled).
-      // Volume-based crossfade is impossible — instead, do a gapless switch:
-      // the new track is already playing, so just pause the old one immediately.
+      // Volume-based crossfade is impossible — instead, do an overlap transition:
+      // both tracks play simultaneously for the configured duration, then the old
+      // track is paused. This sounds like a natural mix rather than an abrupt cut.
       if (!volumeControlSupportedRef.current) {
-        logger.debug('[Crossfade] Volume control not supported (iOS), performing gapless switch');
+        const configuredFadeDuration = currentSettings.duration * 1000;
+        const activeDur = activeAudio.duration;
+        const activeTime = activeAudio.currentTime;
+        const trackRemainingMs = (!isNaN(activeDur) && activeDur > activeTime)
+          ? (activeDur - activeTime) * 1000
+          : configuredFadeDuration;
+        const overlapDuration = Math.max(1000, Math.min(configuredFadeDuration, trackRemainingMs));
+
+        logger.debug('[Crossfade] Volume control not supported (iOS), overlap transition', {
+          overlapDuration,
+        });
 
         crossfadeStartTimeRef.current = performance.now();
 
-        // Pause old audio immediately
-        activeAudio.playbackRate = 1;
-        activeAudio.pause();
-        activeAudio.currentTime = 0;
+        // Let both tracks play together, then finish after the overlap period
+        crossfadeTimeoutRef.current = window.setTimeout(() => {
+          if (crossfadeStartTimeRef.current === null) return;
 
-        // Switch active audio
-        audioElements.switchActiveAudio();
-        callbacksRef.current.onCrossfadeSwapGains?.();
+          // Pause old audio
+          activeAudio.playbackRate = 1;
+          activeAudio.pause();
+          activeAudio.currentTime = 0;
 
-        // Clear crossfade state
-        clearCrossfade();
+          // Switch active audio
+          audioElements.switchActiveAudio();
+          callbacksRef.current.onCrossfadeSwapGains?.();
 
-        logger.debug('[Crossfade] Gapless switch complete, now playing:', audioElements.getActiveAudioId());
-        callbacksRef.current.onCrossfadeComplete?.();
+          // Clear crossfade state
+          clearCrossfade();
+
+          logger.debug('[Crossfade] Overlap transition complete, now playing:', audioElements.getActiveAudioId());
+          callbacksRef.current.onCrossfadeComplete?.();
+        }, overlapDuration);
+
         return true;
       }
 
