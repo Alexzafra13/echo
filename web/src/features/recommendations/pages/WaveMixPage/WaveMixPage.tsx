@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Waves, RefreshCw, Sparkles, Search, X, Calendar } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
@@ -17,6 +18,13 @@ import styles from './WaveMixPage.module.css';
 export function WaveMixPage() {
   const [, setLocation] = useLocation();
   const user = useAuthStore((state) => state.user);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const {
     playlists,
@@ -36,7 +44,8 @@ export function WaveMixPage() {
     maxRows: 2,
     headerHeight: 450,
   });
-  const neededItems = Math.max(gridItems, 12);
+  // On mobile use minimum 12 for horizontal scroll; on desktop use exact grid count
+  const neededItems = isMobile ? Math.max(gridItems, 12) : gridItems;
 
   const getPlaceholdersCount = (itemsCount: number): number => {
     if (columns <= 0) return 0;
