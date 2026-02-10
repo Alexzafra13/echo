@@ -416,7 +416,7 @@
   .playlistsGrid > *,
   .radiosGrid > * {
     flex-shrink: 0;
-    width: 140px;
+    width: 160px;
     scroll-snap-align: start;
   }
 
@@ -484,7 +484,7 @@
 
   .playlistsGrid > *,
   .radiosGrid > * {
-    width: 130px;
+    width: 150px;
   }
 
   .playlistCard__title {
