@@ -1,32 +1,32 @@
 # Reverse Proxy
 
-Configuración para exponer Echo con HTTPS en internet.
+HTTPS configuration to expose Echo on the internet.
 
-> **Nota:** El reverse proxy es **opcional**. Echo funciona directamente en `http://localhost:4567` para uso local/LAN.
+> **Note:** A reverse proxy is **optional**. Echo works directly at `http://localhost:4567` for local/LAN use.
 
-## Requisitos
+## Requirements
 
-Echo necesita que el reverse proxy soporte:
-- **WebSocket** (para sincronización en tiempo real)
-- **Headers X-Forwarded-*** (para detectar HTTPS)
+Echo needs the reverse proxy to support:
+- **WebSocket** (for real-time sync)
+- **X-Forwarded-\* headers** (for HTTPS detection)
 
-## Caddy (más simple)
+## Caddy (simplest)
 
-SSL automático, configuración mínima.
+Automatic SSL, minimal configuration.
 
-### Instalación
+### Install
 ```bash
 # Debian/Ubuntu
 sudo apt install caddy
 
-# O con Docker
+# Or with Docker
 docker run -d -p 80:80 -p 443:443 -v caddy_data:/data caddy
 ```
 
-### Configuración
+### Configure
 ```bash
 # /etc/caddy/Caddyfile
-music.tudominio.com {
+music.yourdomain.com {
     reverse_proxy localhost:4567
 }
 ```
@@ -39,44 +39,44 @@ sudo systemctl reload caddy
 
 ## Nginx
 
-Más control, configuración manual de SSL.
+More control, manual SSL setup.
 
-### Instalación
+### Install
 ```bash
 sudo apt install nginx certbot python3-certbot-nginx
 ```
 
-### Configuración
+### Configure
 
 ```bash
-# Copiar configuración de ejemplo
+# Copy example config
 sudo cp nginx/echo.conf /etc/nginx/sites-available/echo
 sudo ln -s /etc/nginx/sites-available/echo /etc/nginx/sites-enabled/
 
-# Editar dominio
+# Edit domain
 sudo nano /etc/nginx/sites-available/echo
-# Cambiar music.tudominio.com por tu dominio
+# Replace music.yourdomain.com with your domain
 ```
 
-### Obtener certificado SSL
+### Get SSL certificate
 ```bash
-sudo certbot --nginx -d music.tudominio.com
+sudo certbot --nginx -d music.yourdomain.com
 ```
 
-### Reiniciar
+### Reload
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
 <details>
-<summary><b>nginx/echo.conf completo</b></summary>
+<summary><b>Full nginx/echo.conf</b></summary>
 
 ```nginx
 # HTTP -> HTTPS Redirect
 server {
     listen 80;
     listen [::]:80;
-    server_name music.tudominio.com;
+    server_name music.yourdomain.com;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -91,11 +91,11 @@ server {
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name music.tudominio.com;
+    server_name music.yourdomain.com;
 
     # SSL (Let's Encrypt)
-    ssl_certificate /etc/letsencrypt/live/music.tudominio.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/music.tudominio.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/music.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/music.yourdomain.com/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
 
     # Security headers
@@ -105,7 +105,7 @@ server {
 
     client_max_body_size 100M;
 
-    # Proxy a Echo
+    # Proxy to Echo
     location / {
         proxy_pass http://localhost:4567;
         proxy_http_version 1.1;
@@ -130,9 +130,9 @@ server {
 
 ## Traefik
 
-Ideal si ya usas Traefik con otros servicios Docker.
+Ideal if you already use Traefik with other Docker services.
 
-### docker-compose.yml con Traefik
+### docker-compose.yml with Traefik
 
 ```yaml
 services:
@@ -140,14 +140,14 @@ services:
     image: ghcr.io/alexzafra13/echo:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.echo.rule=Host(`music.tudominio.com`)"
+      - "traefik.http.routers.echo.rule=Host(`music.yourdomain.com`)"
       - "traefik.http.routers.echo.tls=true"
       - "traefik.http.routers.echo.tls.certresolver=letsencrypt"
       - "traefik.http.services.echo.loadbalancer.server.port=4567"
     networks:
       - traefik
       - echo-network
-    # ... resto de la configuración
+    # ... rest of your configuration
 
 networks:
   traefik:
@@ -159,56 +159,56 @@ networks:
 
 ## Cloudflare Tunnel
 
-Sin abrir puertos, SSL incluido.
+No open ports needed, SSL included.
 
 ```bash
-# Instalar cloudflared
+# Install cloudflared
 curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
 chmod +x cloudflared
 sudo mv cloudflared /usr/local/bin/
 
-# Autenticar
+# Authenticate
 cloudflared tunnel login
 
-# Crear túnel
+# Create tunnel
 cloudflared tunnel create echo
 
-# Configurar
+# Configure
 cat > ~/.cloudflared/config.yml << EOF
 tunnel: echo
 credentials-file: /root/.cloudflared/<tunnel-id>.json
 ingress:
-  - hostname: music.tudominio.com
+  - hostname: music.yourdomain.com
     service: http://localhost:4567
   - service: http_status:404
 EOF
 
-# Ejecutar
+# Run
 cloudflared tunnel run echo
 ```
 
 ---
 
-## Verificar configuración
+## Verify Setup
 
-Después de configurar el reverse proxy:
+After configuring the reverse proxy:
 
 ```bash
-# Verificar HTTPS
-curl -I https://music.tudominio.com
+# Verify HTTPS
+curl -I https://music.yourdomain.com
 
-# Verificar WebSocket
-curl -I -H "Upgrade: websocket" -H "Connection: Upgrade" https://music.tudominio.com
+# Verify WebSocket
+curl -I -H "Upgrade: websocket" -H "Connection: Upgrade" https://music.yourdomain.com
 
-# Verificar headers
-curl -s -D - https://music.tudominio.com -o /dev/null | grep -i strict
+# Verify headers
+curl -s -D - https://music.yourdomain.com -o /dev/null | grep -i strict
 ```
 
-## Solución de problemas
+## Troubleshooting
 
-| Problema | Causa | Solución |
-|----------|-------|----------|
-| WebSocket no conecta | Falta proxy de upgrade | Añadir headers `Upgrade` y `Connection` |
-| Mixed Content (HTTP/HTTPS) | Radio HTTP en página HTTPS | Echo lo maneja automáticamente con proxy interno |
-| 502 Bad Gateway | Echo no está corriendo | `docker compose logs echo` |
-| Certificado inválido | Dominio no apunta al servidor | Verificar DNS |
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| WebSocket won't connect | Missing upgrade proxy | Add `Upgrade` and `Connection` headers |
+| Mixed Content (HTTP/HTTPS) | HTTP radio on HTTPS page | Echo handles this automatically with internal proxy |
+| 502 Bad Gateway | Echo is not running | `docker compose logs echo` |
+| Invalid certificate | Domain not pointing to server | Check DNS records |

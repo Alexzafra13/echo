@@ -1,12 +1,12 @@
-# Desarrollo
+# Development
 
-## Requisitos
+## Requirements
 
 - Node.js >= 22
 - pnpm >= 10
 - Docker
 
-## Setup inicial
+## Initial Setup
 
 ```bash
 git clone https://github.com/Alexzafra13/echo.git
@@ -14,138 +14,138 @@ cd echo
 pnpm quickstart
 ```
 
-El script:
-1. Verifica Node.js >= 22, pnpm, Docker
-2. Instala dependencias
-3. Levanta PostgreSQL + Redis
-4. Genera `api/.env` con JWT secrets
-5. Aplica migraciones
+The script:
+1. Verifies Node.js >= 22, pnpm, Docker
+2. Installs dependencies
+3. Starts PostgreSQL + Redis
+4. Generates `api/.env` with JWT secrets
+5. Runs database migrations
 
-## Desarrollo
+## Running
 
 ```bash
 pnpm dev:all    # Frontend (5173) + Backend (3000)
 ```
 
-## Comandos
+## Commands
 
-### Monorepo (raíz)
+### Monorepo (root)
 
-| Comando | Descripción |
+| Command | Description |
 |---------|-------------|
-| `pnpm quickstart` | Setup inicial completo |
+| `pnpm quickstart` | Full initial setup |
 | `pnpm dev:all` | Frontend + Backend |
-| `pnpm dev` | Solo backend |
-| `pnpm build` | Build producción |
-| `pnpm docker:dev` | Levantar DB + Redis |
-| `pnpm docker:dev:down` | Parar DB + Redis |
-| `pnpm db:reset` | Reset base de datos |
-| `pnpm db:migrate` | Aplicar migraciones |
-| `pnpm clean` | Limpiar node_modules |
+| `pnpm dev` | Backend only |
+| `pnpm build` | Production build |
+| `pnpm docker:dev` | Start DB + Redis |
+| `pnpm docker:dev:down` | Stop DB + Redis |
+| `pnpm db:reset` | Reset database |
+| `pnpm db:migrate` | Run migrations |
+| `pnpm clean` | Remove node_modules |
 
-### Server
+### Backend (api/)
 
-| Comando | Descripción |
+| Command | Description |
 |---------|-------------|
-| `pnpm dev` | Desarrollo con hot-reload |
-| `pnpm build` | Build producción |
-| `pnpm start` | Ejecutar build |
-| `pnpm db:studio` | Abrir Drizzle Studio |
-| `pnpm db:push` | Sincronizar schema |
-| `pnpm test` | Ejecutar tests |
+| `pnpm dev` | Dev with hot-reload |
+| `pnpm build` | Production build |
+| `pnpm start` | Run build |
+| `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm db:push` | Sync schema |
+| `pnpm test` | Run tests |
 | `pnpm lint` | Linter |
 
-### Frontend
+### Frontend (web/)
 
-| Comando | Descripción |
+| Command | Description |
 |---------|-------------|
-| `pnpm dev` | Desarrollo con hot-reload |
-| `pnpm build` | Build producción |
-| `pnpm preview` | Preview del build |
-| `pnpm test` | Ejecutar tests |
+| `pnpm dev` | Dev with hot-reload |
+| `pnpm build` | Production build |
+| `pnpm preview` | Preview build |
+| `pnpm test` | Run tests |
 | `pnpm lint` | Linter |
 
-## URLs desarrollo
+## Development URLs
 
-| Servicio | URL |
-|----------|-----|
+| Service | URL |
+|---------|-----|
 | Frontend | http://localhost:5173 |
 | Backend | http://localhost:3000 |
 | Swagger | http://localhost:3000/api/docs |
 | Drizzle Studio | `pnpm db:studio` |
 
-## Estructura
+## Project Structure
 
 ```
 echo/
 ├── web/                      # React + Vite
 │   └── src/
-│       ├── app/              # Rutas y providers
-│       ├── features/         # Módulos por funcionalidad
-│       └── shared/           # Componentes y utils compartidos
+│       ├── app/              # Routing and providers
+│       ├── features/         # Feature modules
+│       └── shared/           # Shared components and utils
 ├── api/                      # NestJS + Fastify
 │   └── src/
-│       ├── features/         # Módulos por funcionalidad
+│       ├── features/         # Feature modules
 │       ├── infrastructure/   # DB, cache, websocket
 │       └── shared/           # Guards, decorators, utils
-├── nginx/                    # Config de ejemplo para producción
-├── docs/                     # Documentación
-├── docker-compose.yml        # Producción
-└── docker-compose.dev.yml    # Solo DB/Redis para desarrollo
+├── nginx/                    # Production proxy config
+├── docs/                     # Documentation
+├── docker-compose.yml        # Production
+└── docker-compose.dev.yml    # DB/Redis for development
 ```
 
-## Stack técnico
+## Tech Stack
 
 ### Backend
 - **Framework:** NestJS + Fastify
 - **ORM:** Drizzle ORM
-- **Base de datos:** PostgreSQL 16
-- **Caché:** Redis 7
+- **Database:** PostgreSQL 16
+- **Cache:** Redis 7
 - **Auth:** JWT (access + refresh tokens)
-- **Validación:** class-validator
+- **Validation:** class-validator
 - **Docs:** Swagger/OpenAPI
 
 ### Frontend
 - **Framework:** React 18
 - **Build:** Vite
-- **Estado:** Zustand
+- **State:** Zustand
 - **Data fetching:** TanStack Query
-- **Rutas:** Wouter
+- **Routing:** Wouter
 - **WebSocket:** Socket.io
 
-## Producción local
+## Local Production Build
 
 ```bash
-pnpm docker:build   # Construir imagen
-pnpm docker:up      # Ejecutar
-pnpm docker:logs    # Ver logs
-pnpm docker:down    # Parar
+pnpm docker:build   # Build image
+pnpm docker:up      # Run
+pnpm docker:logs    # View logs
+pnpm docker:down    # Stop
 ```
 
-Disponible en http://localhost:4567
+Available at http://localhost:4567
 
 ## Tests
 
 ```bash
 # Backend
 cd api && pnpm test
-pnpm test:cov       # Con cobertura
+pnpm test:cov       # With coverage
 
 # Frontend
 cd web && pnpm test
-pnpm test:ui        # Con UI
+pnpm test:ui        # With UI
 ```
 
-## Migraciones de BD
+## Database Migrations
 
 ```bash
-# Crear migración después de cambiar schema
+# Generate migration after schema changes
 cd api
 pnpm db:generate
 
-# Aplicar migraciones
+# Apply migrations
 pnpm db:migrate
 
-# Push directo (desarrollo)
+# Direct push (development only)
 pnpm db:push
 ```

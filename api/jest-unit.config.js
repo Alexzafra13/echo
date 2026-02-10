@@ -64,9 +64,7 @@ module.exports = {
     '^@infrastructure/(.*)$': '<rootDir>/infrastructure/$1',
     '^@features/(.*)$': '<rootDir>/features/$1',
     '^test/(.*)$': '<rootDir>/../test/$1',
-    // Prisma 7: generated client is in src/generated/prisma
-    '^(\\.\\./)+generated/prisma$': '<rootDir>/generated/prisma',
-    // Mock para music-metadata (módulo ES puro)
+    // Mock for music-metadata (pure ES module)
     '^music-metadata$': '<rootDir>/../test/__mocks__/music-metadata.ts',
   },
 

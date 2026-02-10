@@ -1,95 +1,95 @@
 # Backups
 
-## Estructura de datos
+## Data Structure
 
 ```
 echo/
-├── data/                    # Configuración y metadatos
-│   ├── setup.json          # Estado setup wizard
+├── data/                    # Configuration and metadata
+│   ├── setup.json          # Setup wizard state
 │   ├── secrets.env         # JWT secrets
-│   ├── metadata/           # Imágenes artistas/álbumes
-│   ├── covers/             # Carátulas
-│   └── uploads/            # Subidas usuarios
-└── postgres_data (volume)   # Base de datos
+│   ├── metadata/           # Artist/album images
+│   ├── covers/             # Cover art
+│   └── uploads/            # User uploads
+└── postgres_data (volume)   # Database
 ```
 
-## Qué hacer backup
+## What to Back Up
 
-| Componente | Criticidad | Contenido |
-|------------|------------|-----------|
-| PostgreSQL | Alta | Usuarios, playlists, ratings, historial |
-| `./data/` | Media | Covers, metadatos, configuración |
-| Redis | Baja | Solo caché (se regenera) |
+| Component | Priority | Contents |
+|-----------|----------|----------|
+| PostgreSQL | High | Users, playlists, ratings, play history |
+| `./data/` | Medium | Covers, metadata, configuration |
+| Redis | Low | Cache only (regenerated automatically) |
 
-## Backup manual
+## Manual Backup
 
-### Base de datos
+### Database
 ```bash
-# Exportar
+# Export
 docker exec echo-postgres pg_dump -U echo echo > backup.sql
 
-# Restaurar
+# Restore
 cat backup.sql | docker exec -i echo-postgres psql -U echo echo
 ```
 
-### Carpeta data
+### Data folder
 ```bash
-# Exportar
+# Export
 tar czf data-backup.tar.gz ./data
 
-# Restaurar
+# Restore
 tar xzf data-backup.tar.gz
 ```
 
-## Backup automático (cron)
+## Automated Backup (cron)
 
 ```bash
-# Editar crontab
+# Edit crontab
 crontab -e
 
-# Backup diario a las 3am
-0 3 * * * cd /ruta/echo && docker exec echo-postgres pg_dump -U echo echo > backups/db-$(date +\%Y\%m\%d).sql
+# Daily backup at 3am
+0 3 * * * cd /path/to/echo && docker exec echo-postgres pg_dump -U echo echo > backups/db-$(date +\%Y\%m\%d).sql
 ```
 
-## Datos seguros
+## Safe Operations
 
-Operaciones que **mantienen** los datos:
+Operations that **keep** your data:
 - `docker compose restart`
-- `docker compose down` (sin `-v`)
+- `docker compose down` (without `-v`)
 - `docker compose up --build`
-- Actualizar imagen
+- Updating the image
 
-Operaciones que **borran** datos:
+Operations that **delete** data:
 - `docker compose down -v`
 - `docker volume rm postgres_data`
 - `docker volume prune`
 
-## Restaurar backup
+## Restore a Backup
 
 ```bash
-# 1. Parar servicios
+# 1. Stop services
 docker compose down
 
-# 2. Restaurar base de datos
+# 2. Restore database
 docker compose up -d postgres
 cat backup.sql | docker exec -i echo-postgres psql -U echo echo
 
-# 3. Restaurar data
+# 3. Restore data
 tar xzf data-backup.tar.gz
 
-# 4. Reiniciar todo
+# 4. Restart everything
 docker compose up -d
 ```
 
-## Migrar a otro servidor
+## Migrate to Another Server
 
 ```bash
-# Servidor origen
+# Source server
 docker exec echo-postgres pg_dump -U echo echo > backup.sql
 tar czf data.tar.gz ./data
-scp backup.sql data.tar.gz usuario@nuevo-servidor:/ruta/echo/
+scp backup.sql data.tar.gz user@new-server:/path/to/echo/
 
-# Servidor destino
+# Destination server
 docker compose up -d postgres
 cat backup.sql | docker exec -i echo-postgres psql -U echo echo
 tar xzf data.tar.gz

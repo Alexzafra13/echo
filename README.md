@@ -57,6 +57,19 @@ docker compose up -d
 
 Open **http://localhost:4567** and create your admin account.
 
+## Screenshots
+
+<!-- Add your own screenshots here -->
+<!-- Recommended: 2-3 images showing player, library, and admin -->
+<!--
+<p align="center">
+  <img src="docs/screenshots/player.png" alt="Player" width="700" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/library.png" alt="Library" width="700" />
+</p>
+-->
+
 ## Documentation
 
 | Guide | Description |
