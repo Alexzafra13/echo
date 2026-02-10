@@ -26,6 +26,8 @@ interface UseCrossfadeLogicParams {
   // LUFS normalization support
   getEffectiveVolume?: (audioId: 'A' | 'B') => number;
   onCrossfadeSwapGains?: () => void; // Called after audio switch to swap gains
+  // Platform capability: false on iOS Safari where audio.volume is read-only
+  volumeControlSupported?: boolean;
 }
 
 /**
@@ -56,6 +58,7 @@ export function useCrossfadeLogic({
   onCrossfadeCleared,
   getEffectiveVolume,
   onCrossfadeSwapGains,
+  volumeControlSupported = true,
 }: UseCrossfadeLogicParams) {
   const [isCrossfading, setIsCrossfading] = useState(false);
   // Synchronous ref mirrors isCrossfading state to prevent race conditions.
@@ -76,6 +79,10 @@ export function useCrossfadeLogic({
   // Store getEffectiveVolume in ref to avoid stale closures
   const getEffectiveVolumeRef = useRef(getEffectiveVolume);
   getEffectiveVolumeRef.current = getEffectiveVolume;
+
+  // Store volumeControlSupported in ref (same reason as settings - avoid callback cascade)
+  const volumeControlSupportedRef = useRef(volumeControlSupported);
+  volumeControlSupportedRef.current = volumeControlSupported;
 
   // Store settings in ref to avoid recreating performCrossfade/checkCrossfadeTiming
   // when settings change. This prevents a cascade of useCallback recreations:
@@ -175,6 +182,31 @@ export function useCrossfadeLogic({
       } catch (playError) {
         logger.warn('[Crossfade] playInactive failed, retrying:', (playError as Error).message);
         await audioElements.playInactive(false);
+      }
+
+      // On iOS Safari, audio.volume is read-only (always 1.0, hardware-controlled).
+      // Volume-based crossfade is impossible — instead, do a gapless switch:
+      // the new track is already playing, so just pause the old one immediately.
+      if (!volumeControlSupportedRef.current) {
+        logger.debug('[Crossfade] Volume control not supported (iOS), performing gapless switch');
+
+        crossfadeStartTimeRef.current = performance.now();
+
+        // Pause old audio immediately
+        activeAudio.playbackRate = 1;
+        activeAudio.pause();
+        activeAudio.currentTime = 0;
+
+        // Switch active audio
+        audioElements.switchActiveAudio();
+        callbacksRef.current.onCrossfadeSwapGains?.();
+
+        // Clear crossfade state
+        clearCrossfade();
+
+        logger.debug('[Crossfade] Gapless switch complete, now playing:', audioElements.getActiveAudioId());
+        callbacksRef.current.onCrossfadeComplete?.();
+        return true;
       }
 
       const configuredFadeDuration = currentSettings.duration * 1000; // Convert to ms

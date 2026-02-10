@@ -17,11 +17,10 @@ interface GainCalculation {
  * Implementa normalización estilo Apple Music:
  * - Ajusta el volumen del elemento de audio directamente
  * - Respeta los peaks para evitar clipping (si preventClipping está activado)
- * - Uses Web Audio API GainNodes via volumeSetter for iOS Safari compatibility
- *   (HTMLAudioElement.volume is read-only on iOS)
+ * - NO usa Web Audio API (compatible con reproducción en segundo plano móvil)
  *
  * Arquitectura:
- * volume = userVolume * normalizationGain (applied via GainNode or element.volume fallback)
+ * HTMLAudioElement.volume = userVolume * normalizationGain
  *
  * Crossfade support:
  * - Separate gains for audioA and audioB to handle crossfade transitions
@@ -43,48 +42,21 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     audioA: HTMLAudioElement | null;
     audioB: HTMLAudioElement | null;
     userVolume: number;
-    // Volume setter that goes through Web Audio API GainNodes when available.
-    // Falls back to direct element.volume when null (e.g., in tests or when
-    // Web Audio API is not supported).
-    volumeSetter: ((audioId: 'A' | 'B', volume: number) => void) | null;
   }>({
     audioA: null,
     audioB: null,
     userVolume: 0.7,
-    volumeSetter: null,
   });
 
   /**
-   * Internal helper to set volume on a specific audio element.
-   * Routes through Web Audio API GainNode when available (iOS Safari),
-   * falls back to direct element.volume assignment.
-   */
-  const setVolumeForAudio = useCallback((audioId: 'A' | 'B', volume: number) => {
-    const setter = audioElementsRef.current.volumeSetter;
-    if (setter) {
-      setter(audioId, volume);
-    } else {
-      const audio = audioId === 'A'
-        ? audioElementsRef.current.audioA
-        : audioElementsRef.current.audioB;
-      if (audio) audio.volume = volume;
-    }
-  }, []);
-
-  /**
-   * Register audio elements for volume-based normalization.
-   * @param volumeSetter - Optional setter that routes volume through Web Audio API GainNodes.
-   *   When provided, all volume changes go through GainNodes (required for iOS Safari).
-   *   When omitted, falls back to direct element.volume (works on desktop/Android).
+   * Register audio elements for volume-based normalization
    */
   const registerAudioElements = useCallback((
     audioA: HTMLAudioElement | null,
-    audioB: HTMLAudioElement | null,
-    volumeSetter?: (audioId: 'A' | 'B', volume: number) => void
+    audioB: HTMLAudioElement | null
   ) => {
     audioElementsRef.current.audioA = audioA;
     audioElementsRef.current.audioB = audioB;
-    audioElementsRef.current.volumeSetter = volumeSetter ?? null;
   }, []);
 
   /**
@@ -106,9 +78,8 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   }, []);
 
   /**
-   * Apply effective volume (userVolume * normalizationGain) to audio elements.
-   * Routes through Web Audio API GainNodes when available (iOS Safari compatibility).
-   * Each audio element uses its own gain to support crossfade between tracks with different loudness.
+   * Apply effective volume (userVolume * normalizationGain) to audio elements
+   * Each audio element uses its own gain to support crossfade between tracks with different loudness
    */
   const applyEffectiveVolume = useCallback(() => {
     // During crossfade, the animation loop (requestAnimationFrame) controls
@@ -116,14 +87,17 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     // override the fade curves and both tracks would play at full volume.
     if (isCrossfadingRef.current) return;
 
-    const { userVolume } = audioElementsRef.current;
+    const { audioA, audioB, userVolume } = audioElementsRef.current;
 
-    const effectiveVolumeA = Math.min(1, userVolume * gainARef.current);
-    setVolumeForAudio('A', effectiveVolumeA);
-
-    const effectiveVolumeB = Math.min(1, userVolume * gainBRef.current);
-    setVolumeForAudio('B', effectiveVolumeB);
-  }, [setVolumeForAudio]);
+    if (audioA) {
+      const effectiveVolumeA = Math.min(1, userVolume * gainARef.current);
+      audioA.volume = effectiveVolumeA;
+    }
+    if (audioB) {
+      const effectiveVolumeB = Math.min(1, userVolume * gainBRef.current);
+      audioB.volume = effectiveVolumeB;
+    }
+  }, []);
 
   /**
    * Get effective volume for a specific audio element (for crossfade calculations)
@@ -229,22 +203,25 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   }, [calculateGain, applyEffectiveVolume]);
 
   /**
-   * Apply gain only to a specific audio element (for crossfade).
-   * Does not affect the other audio element's gain.
-   * Routes through Web Audio API GainNodes when available (iOS Safari compatibility).
+   * Apply gain only to a specific audio element (for crossfade)
+   * Does not affect the other audio element's gain
    */
   const applyGainToAudio = useCallback((track: Track | null, audioId: 'A' | 'B') => {
     const { gainLinear } = calculateGain(track);
-    const { userVolume } = audioElementsRef.current;
+    const { audioA, audioB, userVolume } = audioElementsRef.current;
 
     if (audioId === 'A') {
       gainARef.current = gainLinear;
+      if (audioA) {
+        audioA.volume = Math.min(1, userVolume * gainLinear);
+      }
     } else {
       gainBRef.current = gainLinear;
+      if (audioB) {
+        audioB.volume = Math.min(1, userVolume * gainLinear);
+      }
     }
-
-    setVolumeForAudio(audioId, Math.min(1, userVolume * gainLinear));
-  }, [calculateGain, setVolumeForAudio]);
+  }, [calculateGain]);
 
   /**
    * Swap gains between audio elements (call after crossfade completes and audio is switched)
@@ -263,18 +240,18 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     return currentGainRef.current;
   }, []);
 
-  // Legacy methods for compatibility (no-ops — Web Audio API is now managed in useAudioElements)
+  // Legacy methods for compatibility (no-ops now)
   const resumeAudioContext = useCallback(async () => {
-    // No-op: AudioContext is managed by useAudioElements.ensureWebAudio()
+    // No-op: We no longer use AudioContext
   }, []);
 
   const initAudioContext = useCallback(() => {
-    // No-op: AudioContext is managed by useAudioElements.ensureWebAudio()
+    // No-op: We no longer use AudioContext
     return null;
   }, []);
 
   const connectAudioElement = useCallback((_audioElement: HTMLAudioElement, _audioId: 'A' | 'B') => {
-    // No-op: Audio elements are connected to GainNodes in useAudioElements
+    // No-op: We no longer connect to Web Audio API
   }, []);
 
   // Memoize the return object to prevent unnecessary re-renders and effect re-runs.
