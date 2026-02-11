@@ -1,5 +1,6 @@
 export interface GetPlaylistTracksInput {
   playlistId: string;
+  requesterId?: string;
 }
 
 export interface TrackItem {

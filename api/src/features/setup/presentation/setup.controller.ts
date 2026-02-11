@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -13,6 +14,7 @@ import {
   ApiResponse,
   ApiBody,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { IsString, MinLength } from 'class-validator';
 import { SetupService } from '../application/setup.service';
@@ -39,15 +41,30 @@ class BrowseDirectoriesDto {
 }
 
 // Setup wizard (estilo Jellyfin). Todos los endpoints son @Public() pero solo funcionan si setup no está completado.
+// SECURITY: Cada endpoint mutador verifica que el setup no esté completado para prevenir uso post-setup.
 @ApiTags('setup')
 @Controller('setup')
 @Public()
+@Throttle({ default: { limit: 10, ttl: 60000 } })
 export class SetupController {
   constructor(
     @InjectPinoLogger(SetupController.name)
     private readonly logger: PinoLogger,
     private readonly setupService: SetupService,
   ) {}
+
+  /**
+   * SECURITY: Verifica que el setup no esté completado antes de permitir operaciones mutadoras.
+   * Previene que atacantes creen cuentas admin o cambien la configuración post-setup.
+   */
+  private async ensureSetupNotCompleted(): Promise<void> {
+    const status = await this.setupService.getStatus();
+    if (!status.needsSetup) {
+      throw new ForbiddenException(
+        'Setup already completed. These endpoints are disabled after initial configuration.',
+      );
+    }
+  }
 
   @Get('status')
   @ApiOperation({
@@ -92,6 +109,7 @@ export class SetupController {
   @ApiResponse({ status: 201, description: 'Admin account created successfully' })
   @ApiResponse({ status: 400, description: 'Setup already completed or validation error' })
   async createAdmin(@Body() dto: CreateAdminDto) {
+    await this.ensureSetupNotCompleted();
     await this.setupService.createAdmin(dto.username, dto.password);
 
     this.logger.info(`Admin account created via setup wizard: ${dto.username}`);
@@ -133,6 +151,7 @@ export class SetupController {
   })
   @ApiResponse({ status: 400, description: 'Setup already completed or invalid path' })
   async configureLibrary(@Body() dto: ConfigureLibraryDto) {
+    await this.ensureSetupNotCompleted();
     const result = await this.setupService.configureMusicLibrary(dto.path);
 
     this.logger.info(`Music library validation: ${dto.path} - ${result.valid ? 'valid' : 'invalid'}`);
@@ -181,6 +200,7 @@ export class SetupController {
     },
   })
   async browseDirectories(@Body() dto: BrowseDirectoriesDto) {
+    await this.ensureSetupNotCompleted();
     return this.setupService.browseDirectories(dto.path);
   }
 
@@ -203,6 +223,7 @@ export class SetupController {
   })
   @ApiResponse({ status: 400, description: 'Setup requirements not met' })
   async completeSetup() {
+    await this.ensureSetupNotCompleted();
     const result = await this.setupService.completeSetup();
 
     this.logger.info('Setup wizard completed');

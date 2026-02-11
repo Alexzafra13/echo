@@ -253,8 +253,14 @@ export class PlaylistsController {
     type: PlaylistTracksResponseDto,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
-  async getPlaylistTracks(@Param('id', ParseUUIDPipe) id: string): Promise<PlaylistTracksResponseDto> {
-    const result = await this.getPlaylistTracksUseCase.execute({ playlistId: id });
+  async getPlaylistTracks(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: RequestWithUser,
+  ): Promise<PlaylistTracksResponseDto> {
+    const result = await this.getPlaylistTracksUseCase.execute({
+      playlistId: id,
+      requesterId: req.user.id,
+    });
     return PlaylistTracksResponseDto.fromDomain(result);
   }
 

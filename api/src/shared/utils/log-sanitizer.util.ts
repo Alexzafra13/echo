@@ -6,11 +6,17 @@
 // Fields that should be completely redacted
 const SENSITIVE_FIELDS = new Set([
   'password',
+  'passwordhash',
   'token',
   'accesstoken',
   'refreshtoken',
+  'streamtoken',
+  'stream_token',
+  'xstreamtoken',
   'authorization',
   'secret',
+  'jwtsecret',
+  'jwtrefreshsecret',
   'apikey',
   'api_key',
   'key',
@@ -19,6 +25,7 @@ const SENSITIVE_FIELDS = new Set([
   'private',
   'privatekey',
   'private_key',
+  'cookie',
 ]);
 
 // Fields that should be partially redacted (show first/last few chars)
