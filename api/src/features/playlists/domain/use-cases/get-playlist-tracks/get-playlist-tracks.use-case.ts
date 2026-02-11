@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, ForbiddenException } from '@nestjs/common';
 import { NotFoundError, ValidationError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { GetPlaylistTracksInput, GetPlaylistTracksOutput, TrackItem } from './get-playlist-tracks.dto';
@@ -22,7 +22,12 @@ export class GetPlaylistTracksUseCase {
       throw new NotFoundError('Playlist', input.playlistId);
     }
 
-    // 3. Obtener tracks de la playlist
+    // 3. Verificar acceso: solo el owner o playlists públicas
+    if (!playlist.public && input.requesterId && playlist.ownerId !== input.requesterId) {
+      throw new ForbiddenException('You do not have access to this playlist');
+    }
+
+    // 4. Obtener tracks de la playlist
     const tracks = await this.playlistRepository.getPlaylistTracks(input.playlistId);
 
     // 4. Mapear a output

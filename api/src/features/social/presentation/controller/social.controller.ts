@@ -11,10 +11,12 @@ import {
   Sse,
   Req,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { FastifyRequest } from 'fastify';
 import { Observable } from 'rxjs';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { Public } from '@shared/decorators/public.decorator';
+import { SecuritySecretsService } from '@config/security-secrets.service';
 import {
   SendFriendRequestUseCase,
   AcceptFriendRequestUseCase,
@@ -58,6 +60,8 @@ export class SocialController {
     private readonly getFriendsActivityUseCase: GetFriendsActivityUseCase,
     private readonly searchUsersUseCase: SearchUsersUseCase,
     private readonly listeningNowService: ListeningNowService,
+    private readonly jwtService: JwtService,
+    private readonly secretsService: SecuritySecretsService,
   ) {}
 
   // ============================================
@@ -191,72 +195,100 @@ export class SocialController {
   // SSE: Real-time Listening Now Updates
   // ============================================
 
-  // SSE: EventSource no soporta headers, por eso es @Public() con userId en query
+  // SSE: Listening now stream.
+  // SECURITY: Requiere token JWT via query param (EventSource no soporta headers).
+  // Se valida que el userId del query coincida con el del token para prevenir espionaje.
   @Sse('listening/stream')
   @Public()
   streamListeningNow(
     @Query('userId') userId: string,
+    @Query('token') token: string,
     @Req() request: FastifyRequest,
   ): Observable<MessageEvent> {
     return new Observable((subscriber) => {
-      // First, get the user's friend IDs
-      let friendIds: string[] = [];
-
-      // Fetch friend IDs immediately and refresh periodically
-      const refreshFriends = async () => {
+      const validateAndStart = async () => {
         try {
-          const friends = await this.getFriendsUseCase.execute(userId);
-          friendIds = friends.map(f => f.id);
-        } catch (error) {
-          // Ignore errors, keep using cached friendIds
+          if (!token) {
+            subscriber.error(new Error('Authentication required: token query parameter missing'));
+            return;
+          }
+
+          // Verificar token JWT usando los servicios inyectados por NestJS DI
+          const payload = await this.jwtService.verifyAsync(token, {
+            secret: this.secretsService.jwtSecret,
+          });
+          const authenticatedUserId = payload.sub;
+
+          // SECURITY: Verificar que el userId del query coincide con el del token
+          if (userId !== authenticatedUserId) {
+            subscriber.error(new Error('Forbidden: userId does not match authenticated user'));
+            return;
+          }
+
+          // Autenticación exitosa, proceder con el stream
+          this.startListeningStream(userId, subscriber, request);
+        } catch {
+          subscriber.error(new Error('Invalid or expired token'));
         }
       };
 
-      // Initial fetch
-      refreshFriends();
+      validateAndStart();
+    });
+  }
 
-      // Refresh friend list every 5 minutes
-      const friendsRefreshInterval = setInterval(refreshFriends, 5 * 60 * 1000);
+  private startListeningStream(
+    userId: string,
+    subscriber: import('rxjs').Subscriber<MessageEvent>,
+    request: FastifyRequest,
+  ): void {
+    let friendIds: string[] = [];
 
-      // Subscribe to listening now updates
-      const handleUpdate = (update: ListeningNowUpdate) => {
-        // Only forward updates from friends
-        if (friendIds.includes(update.userId)) {
-          subscriber.next({
-            type: 'listening-update',
-            data: {
-              userId: update.userId,
-              isPlaying: update.isPlaying,
-              currentTrackId: update.currentTrackId,
-              timestamp: update.timestamp.toISOString(),
-            },
-          } as MessageEvent);
-        }
-      };
+    const refreshFriends = async () => {
+      try {
+        const friends = await this.getFriendsUseCase.execute(userId);
+        friendIds = friends.map(f => f.id);
+      } catch {
+        // Ignore errors, keep using cached friendIds
+      }
+    };
 
-      const unsubscribe = this.listeningNowService.subscribe(handleUpdate);
+    refreshFriends();
 
-      // Send keepalive every 30 seconds
-      const keepaliveInterval = setInterval(() => {
+    const friendsRefreshInterval = setInterval(refreshFriends, 5 * 60 * 1000);
+
+    const handleUpdate = (update: ListeningNowUpdate) => {
+      if (friendIds.includes(update.userId)) {
         subscriber.next({
-          type: 'keepalive',
-          data: { timestamp: Date.now() },
+          type: 'listening-update',
+          data: {
+            userId: update.userId,
+            isPlaying: update.isPlaying,
+            currentTrackId: update.currentTrackId,
+            timestamp: update.timestamp.toISOString(),
+          },
         } as MessageEvent);
-      }, 30000);
+      }
+    };
 
-      // Send initial "connected" event
+    const unsubscribe = this.listeningNowService.subscribe(handleUpdate);
+
+    const keepaliveInterval = setInterval(() => {
       subscriber.next({
-        type: 'connected',
-        data: { userId, timestamp: Date.now() },
+        type: 'keepalive',
+        data: { timestamp: Date.now() },
       } as MessageEvent);
+    }, 30000);
 
-      // Cleanup on client disconnect
-      request.raw.on('close', () => {
-        unsubscribe();
-        clearInterval(keepaliveInterval);
-        clearInterval(friendsRefreshInterval);
-        subscriber.complete();
-      });
+    subscriber.next({
+      type: 'connected',
+      data: { userId, timestamp: Date.now() },
+    } as MessageEvent);
+
+    request.raw.on('close', () => {
+      unsubscribe();
+      clearInterval(keepaliveInterval);
+      clearInterval(friendsRefreshInterval);
+      subscriber.complete();
     });
   }
 }

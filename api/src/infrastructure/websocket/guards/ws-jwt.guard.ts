@@ -46,15 +46,20 @@ export class WsJwtGuard implements CanActivate {
         secret: this.secretsService.jwtSecret,
       });
 
+      // Verificar que el usuario no tenga pendiente un cambio de contraseña
+      if (payload.mustChangePassword) {
+        throw new WsException('Password change required before using WebSocket features');
+      }
+
       // Adjuntar usuario al socket para acceso posterior
       client.data.user = payload;
       client.data.userId = payload.sub;
 
-      this.logger.debug(`✅ User ${payload.sub} authenticated via WebSocket`);
+      this.logger.debug(`User ${payload.sub} authenticated via WebSocket`);
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.warn(`❌ WebSocket authentication failed: ${errorMessage}`);
+      this.logger.warn(`WebSocket authentication failed: ${errorMessage}`);
       // Si ya es una WsException, relanzarla directamente
       if (error instanceof WsException) {
         throw error;

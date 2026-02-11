@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { CurrentUser } from '@shared/decorators';
 import { JwtUser } from '@shared/types/request.types';
+import { parsePaginationParams } from '@shared/utils';
 import {
   CreateUserUseCase,
   ListUsersUseCase,
@@ -123,9 +124,13 @@ export class AdminController {
     @Query('skip') skip?: string,
     @Query('take') take?: string,
   ): Promise<ListUsersResponseDto> {
+    const pagination = parsePaginationParams(skip, take, {
+      defaultTake: 20,
+      maxTake: 100,
+    });
     const result = await this.listUsersUseCase.execute({
-      skip: skip ? parseInt(skip, 10) : undefined,
-      take: take ? parseInt(take, 10) : undefined,
+      skip: pagination.skip,
+      take: pagination.take,
     });
 
     return ListUsersResponseDto.fromDomain(result);

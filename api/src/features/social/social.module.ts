@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { SecuritySecretsService } from '@config/security-secrets.service';
 import { SOCIAL_REPOSITORY } from './domain/ports';
 import { DrizzleSocialRepository } from './infrastructure/persistence/social.repository';
 import {
@@ -18,8 +20,18 @@ import { SocialController } from './presentation/controller/social.controller';
  * SocialModule
  * Handles friendships, listening status, and activity feed
  * DrizzleService is provided globally via DrizzleModule
+ * JwtModule needed for SSE endpoint authentication (EventSource can't use headers)
  */
 @Module({
+  imports: [
+    JwtModule.registerAsync({
+      useFactory: async (secretsService: SecuritySecretsService) => ({
+        secret: secretsService.jwtSecret,
+        signOptions: { expiresIn: '15m' },
+      }),
+      inject: [SecuritySecretsService],
+    }),
+  ],
   controllers: [SocialController],
   providers: [
     {

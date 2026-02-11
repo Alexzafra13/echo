@@ -7,8 +7,7 @@ function validateStatus(status: string): DjAnalysisStatus {
   if (VALID_STATUSES.includes(status as DjAnalysisStatus)) {
     return status as DjAnalysisStatus;
   }
-  // Log warning and default to 'pending' for invalid values
-  console.warn(`Invalid DJ analysis status: "${status}", defaulting to "pending"`);
+  // Default to 'pending' for invalid values (static context, cannot inject logger)
   return 'pending';
 }
 

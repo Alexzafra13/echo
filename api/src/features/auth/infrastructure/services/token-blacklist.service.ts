@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { RedisService } from '@infrastructure/cache/redis.service';
 
@@ -57,16 +58,11 @@ export class TokenBlacklistService {
   }
 
   /**
-   * Genera la clave de Redis para un token
-   * Usa un hash simple del token para reducir el tamaño de la clave
+   * Genera la clave de Redis para un token.
+   * Usa SHA-256 del token completo para evitar colisiones.
    */
   private getKey(tokenOrJti: string): string {
-    // Si es un token completo, usar solo los últimos 32 caracteres (signature)
-    // Esto es suficientemente único y ahorra memoria
-    const identifier = tokenOrJti.length > 32
-      ? tokenOrJti.slice(-32)
-      : tokenOrJti;
-
-    return `${this.PREFIX}${identifier}`;
+    const hash = createHash('sha256').update(tokenOrJti).digest('hex');
+    return `${this.PREFIX}${hash}`;
   }
 }
