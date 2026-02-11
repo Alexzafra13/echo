@@ -22,10 +22,11 @@ export interface ListeningUpdate {
 export function useListeningNowSSE() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   const apiUrl = import.meta.env.VITE_API_URL || '/api';
-  const url = user?.id
-    ? `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(user.id)}`
+  const url = user?.id && accessToken
+    ? `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(user.id)}&token=${encodeURIComponent(accessToken)}`
     : null;
 
   const events = useMemo(() => ({

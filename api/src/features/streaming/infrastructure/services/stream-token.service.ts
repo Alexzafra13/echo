@@ -4,9 +4,10 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { streamTokens, users } from '@infrastructure/database/schema';
 import { randomBytes } from 'crypto';
 
-// Stream token expiration: 8 hours
-// Shorter than JWT for security since tokens may be passed in query params (visible in logs)
-const STREAM_TOKEN_EXPIRY_HOURS = 8;
+// Stream token expiration: 24 hours
+// Self-hosted context: convenience matters - users streaming their own library
+// shouldn't need to re-authenticate frequently. Token is tied to a single user.
+const STREAM_TOKEN_EXPIRY_HOURS = 24;
 
 @Injectable()
 export class StreamTokenService {

@@ -22,11 +22,12 @@ interface ListeningUpdate {
 export function useProfileListeningSSE(targetUserId: string) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   const apiUrl = import.meta.env.VITE_API_URL || '/api';
-  const canConnect = !!currentUser?.id && currentUser.id !== targetUserId;
+  const canConnect = !!currentUser?.id && currentUser.id !== targetUserId && !!accessToken;
   const url = canConnect
-    ? `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(currentUser!.id)}`
+    ? `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(currentUser!.id)}&token=${encodeURIComponent(accessToken!)}`
     : null;
 
   const events = useMemo(() => ({

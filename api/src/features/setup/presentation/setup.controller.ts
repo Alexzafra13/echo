@@ -45,7 +45,7 @@ class BrowseDirectoriesDto {
 @ApiTags('setup')
 @Controller('setup')
 @Public()
-@Throttle({ default: { limit: 10, ttl: 60000 } })
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 export class SetupController {
   constructor(
     @InjectPinoLogger(SetupController.name)
