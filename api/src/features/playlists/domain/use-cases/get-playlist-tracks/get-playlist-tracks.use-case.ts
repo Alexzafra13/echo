@@ -11,26 +11,21 @@ export class GetPlaylistTracksUseCase {
   ) {}
 
   async execute(input: GetPlaylistTracksInput): Promise<GetPlaylistTracksOutput> {
-    // 1. Validar input
     if (!input.playlistId || input.playlistId.trim() === '') {
       throw new ValidationError('Playlist ID is required');
     }
 
-    // 2. Verificar que la playlist existe
     const playlist = await this.playlistRepository.findById(input.playlistId);
     if (!playlist) {
       throw new NotFoundError('Playlist', input.playlistId);
     }
 
-    // 3. Verificar acceso: solo el owner o playlists públicas
+    // Verificar acceso: solo el owner o playlists públicas
     if (!playlist.public && input.requesterId && playlist.ownerId !== input.requesterId) {
       throw new ForbiddenException('You do not have access to this playlist');
     }
 
-    // 4. Obtener tracks de la playlist
     const tracks = await this.playlistRepository.getPlaylistTracks(input.playlistId);
-
-    // 4. Mapear a output
     const items: TrackItem[] = tracks.map((track) => ({
       id: track.id,
       title: track.title,
@@ -38,7 +33,7 @@ export class GetPlaylistTracksUseCase {
       discNumber: track.discNumber,
       year: track.year,
       duration: track.duration ?? 0,
-      // Ensure size is always a valid BigInt to prevent JSON serialization errors
+      // Prevenir errores de serialización JSON con BigInt
       size: track.size !== null && track.size !== undefined ? track.size : Number(0),
       path: track.path,
       albumId: track.albumId,
@@ -48,12 +43,12 @@ export class GetPlaylistTracksUseCase {
       artistName: track.artistName,
       albumName: track.albumName,
       playlistOrder: track.playlistOrder,
-      // Audio normalization data (LUFS/ReplayGain)
+      // Normalización de audio (LUFS/ReplayGain)
       rgTrackGain: track.rgTrackGain,
       rgTrackPeak: track.rgTrackPeak,
       rgAlbumGain: track.rgAlbumGain,
       rgAlbumPeak: track.rgAlbumPeak,
-      // Smart crossfade & DJ
+      // Crossfade y DJ
       outroStart: track.outroStart,
       bpm: track.bpm,
       createdAt: track.createdAt,

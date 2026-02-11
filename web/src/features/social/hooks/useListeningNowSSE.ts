@@ -12,13 +12,7 @@ export interface ListeningUpdate {
   timestamp: string;
 }
 
-/**
- * Hook for real-time "listening now" updates via Server-Sent Events
- *
- * When a friend starts/stops playing music, this hook receives the update
- * instantly and invalidates the relevant React Query caches to trigger
- * a refetch of the listening friends data.
- */
+// SSE en tiempo real para actualizaciones de "escuchando ahora" de amigos
 export function useListeningNowSSE() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);

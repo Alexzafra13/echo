@@ -1,9 +1,6 @@
-/**
- * Sanitizes objects for logging by redacting sensitive fields.
- * Prevents accidental exposure of tokens, passwords, and other sensitive data in logs.
- */
+// Sanitiza objetos para logging, redactando campos sensibles.
 
-// Fields that should be completely redacted
+// Campos que se redactan completamente
 const SENSITIVE_FIELDS = new Set([
   'password',
   'passwordhash',
@@ -28,32 +25,23 @@ const SENSITIVE_FIELDS = new Set([
   'cookie',
 ]);
 
-// Fields that should be partially redacted (show first/last few chars)
+// Campos que se redactan parcialmente (primeros/últimos caracteres)
 const PARTIAL_REDACT_FIELDS = new Set([
   'email',
   'username',
   'user',
 ]);
 
-/**
- * Check if a field name is sensitive (case-insensitive)
- */
 function isSensitiveField(fieldName: string): boolean {
   const normalized = fieldName.toLowerCase().replace(/[-_]/g, '');
   return SENSITIVE_FIELDS.has(normalized);
 }
 
-/**
- * Check if a field should be partially redacted
- */
 function isPartialRedactField(fieldName: string): boolean {
   const normalized = fieldName.toLowerCase().replace(/[-_]/g, '');
   return PARTIAL_REDACT_FIELDS.has(normalized);
 }
 
-/**
- * Partially redact a value (show first 2 and last 2 chars)
- */
 function partialRedact(value: string): string {
   if (value.length <= 6) {
     return '[REDACTED]';
@@ -61,9 +49,6 @@ function partialRedact(value: string): string {
   return `${value.slice(0, 2)}***${value.slice(-2)}`;
 }
 
-/**
- * Sanitize a single value based on its field name
- */
 function sanitizeValue(key: string, value: unknown): unknown {
   if (value === null || value === undefined) {
     return value;
@@ -76,7 +61,6 @@ function sanitizeValue(key: string, value: unknown): unknown {
     if (isPartialRedactField(key)) {
       return partialRedact(value);
     }
-    // Truncate very long strings to prevent log bloating
     if (value.length > 200) {
       return `${value.slice(0, 200)}...[truncated]`;
     }
@@ -85,9 +69,6 @@ function sanitizeValue(key: string, value: unknown): unknown {
   return value;
 }
 
-/**
- * Recursively sanitize an object for logging
- */
 export function sanitizeForLog<T extends Record<string, unknown>>(obj: T): T {
   if (!obj || typeof obj !== 'object') {
     return obj;
@@ -112,10 +93,6 @@ export function sanitizeForLog<T extends Record<string, unknown>>(obj: T): T {
   return sanitized as T;
 }
 
-/**
- * Sanitize URL query parameters
- * Used by the Pino request serializer
- */
 export function sanitizeQueryParams(query: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
   if (!query) {
     return query;
@@ -123,10 +100,6 @@ export function sanitizeQueryParams(query: Record<string, unknown> | undefined):
   return sanitizeForLog(query);
 }
 
-/**
- * Sanitize URL params (route parameters)
- * Generally these are just IDs, but sanitize just in case
- */
 export function sanitizeParams(params: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
   if (!params) {
     return params;

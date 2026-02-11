@@ -73,9 +73,7 @@ export class StreamingController implements OnModuleDestroy {
       this.activeStreams.delete(stream);
     };
 
-    // Configurar timeout para prevenir conexiones zombie
-    // Si el cliente no lee datos en 30 minutos, cerrar la conexión
-    // Nota: setTimeout puede no existir en mocks de tests
+    // Timeout para prevenir conexiones zombie
     if (typeof res.setTimeout === 'function') {
       res.setTimeout(STREAM_TIMEOUT_MS, () => {
         this.logger.warn(
@@ -107,10 +105,10 @@ export class StreamingController implements OnModuleDestroy {
       }
     });
 
-    // Handle destination (response) errors - e.g., client disconnects abruptly
+    // Manejar desconexión abrupta del cliente
     res.on('error', (error) => {
       cleanup();
-      // Only log if it's not a normal client disconnect
+      // Solo loguear si no es una desconexion normal
       if ((error as NodeJS.ErrnoException).code !== 'ECONNRESET') {
         this.logger.warn(
           {
@@ -125,7 +123,7 @@ export class StreamingController implements OnModuleDestroy {
       }
     });
 
-    // Handle client disconnect (close without error)
+    // Desconexión normal del cliente
     res.on('close', () => {
       cleanup();
       if (!stream.destroyed) {
@@ -173,16 +171,13 @@ export class StreamingController implements OnModuleDestroy {
     @Param('id', ParseUUIDPipe) trackId: string,
     @Res() res: FastifyReply,
   ): Promise<void> {
-    // 1. Obtener metadata del track
     const metadata = await this.streamTrackUseCase.execute({ trackId });
 
-    // 2. Configurar headers
     res.header('Content-Type', metadata.mimeType);
     res.header('Content-Length', metadata.fileSize.toString());
     res.header('Accept-Ranges', 'bytes');
     res.header('Cache-Control', 'public, max-age=31536000'); // 1 año
 
-    // 3. Enviar solo headers (sin body)
     res.status(HttpStatus.OK).send();
   }
 
@@ -231,7 +226,7 @@ export class StreamingController implements OnModuleDestroy {
     const { filePath, fileSize, mimeType } = metadata;
 
     if (range) {
-      // Manejar partial content (Range request)
+      // Partial content (Range request)
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
@@ -256,7 +251,7 @@ export class StreamingController implements OnModuleDestroy {
       const stream = this.createManagedStream(filePath, trackId, res.raw, { start, end });
       stream.pipe(res.raw);
     } else {
-      // Enviar archivo completo
+      // Archivo completo
       res.raw.writeHead(HttpStatus.OK, {
         'Content-Type': mimeType,
         'Content-Length': fileSize.toString(),

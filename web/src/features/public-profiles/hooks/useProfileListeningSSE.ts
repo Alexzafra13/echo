@@ -11,14 +11,7 @@ interface ListeningUpdate {
   timestamp: string;
 }
 
-/**
- * Hook for real-time "listening now" updates for a specific user profile
- *
- * Connects to SSE and invalidates the profile query when the target user
- * starts/stops playing music.
- *
- * @param targetUserId - The user ID of the profile being viewed
- */
+// SSE en tiempo real para estado de reproducción en perfil público
 export function useProfileListeningSSE(targetUserId: string) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);

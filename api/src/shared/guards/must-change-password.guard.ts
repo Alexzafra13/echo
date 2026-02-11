@@ -6,15 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-/**
- * MustChangePasswordGuard - Bloquea acceso si usuario debe cambiar contraseña
- * 
- * Flujo:
- * 1. Verifica si el usuario está autenticado
- * 2. Verifica si tiene mustChangePassword = true
- * 3. Si es true, solo permite acceder a rutas marcadas con @AllowChangePassword
- * 4. Bloquea todo lo demás con 403
- */
+// Bloquea acceso si mustChangePassword=true. Permite rutas con @AllowChangePassword.
 @Injectable()
 export class MustChangePasswordGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
@@ -23,30 +15,26 @@ export class MustChangePasswordGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    // Si no hay usuario autenticado, dejar pasar
-    // (JwtAuthGuard se encargará de bloquearlo)
+    // Sin usuario autenticado → JwtAuthGuard se encarga
     if (!user) {
       return true;
     }
 
-    // Verificar si la ruta está marcada como permitida
     const allowChangePassword = this.reflector.getAllAndOverride<boolean>(
       'allowChangePassword',
       [context.getHandler(), context.getClass()],
     );
 
-    // Si la ruta está permitida, dejar pasar
     if (allowChangePassword) {
       return true;
     }
 
-    // Si debe cambiar contraseña, bloquear con mensaje claro
     if (user.mustChangePassword) {
       throw new ForbiddenException({
         statusCode: 403,
         message: 'You must change your password before accessing the system',
         error: 'MustChangePassword',
-        mustChangePassword: true, // Flag para el frontend
+        mustChangePassword: true,
       });
     }
 

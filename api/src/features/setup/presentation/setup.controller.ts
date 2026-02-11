@@ -40,8 +40,7 @@ class BrowseDirectoriesDto {
   path!: string;
 }
 
-// Setup wizard (estilo Jellyfin). Todos los endpoints son @Public() pero solo funcionan si setup no está completado.
-// SECURITY: Cada endpoint mutador verifica que el setup no esté completado para prevenir uso post-setup.
+// Setup wizard. Endpoints públicos que se bloquean tras completar la configuración inicial.
 @ApiTags('setup')
 @Controller('setup')
 @Public()
@@ -53,10 +52,7 @@ export class SetupController {
     private readonly setupService: SetupService,
   ) {}
 
-  /**
-   * SECURITY: Verifica que el setup no esté completado antes de permitir operaciones mutadoras.
-   * Previene que atacantes creen cuentas admin o cambien la configuración post-setup.
-   */
+  // Bloquea operaciones si el setup ya fue completado
   private async ensureSetupNotCompleted(): Promise<void> {
     const status = await this.setupService.getStatus();
     if (!status.needsSetup) {

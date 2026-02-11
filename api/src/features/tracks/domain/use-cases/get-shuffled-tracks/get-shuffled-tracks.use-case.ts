@@ -15,12 +15,10 @@ export class GetShuffledTracksUseCase {
   ) {}
 
   async execute(input: GetShuffledTracksInput = {}): Promise<GetShuffledTracksOutput> {
-    // Generar seed si no se proporciona (para primera petición)
     const seed = input.seed ?? Math.random();
     const skip = Math.max(0, input.skip ?? 0);
     const take = Math.min(MAX_TAKE, Math.max(1, input.take ?? DEFAULT_TAKE));
 
-    // Obtener tracks paginados con orden determinístico
     const [tracks, total] = await Promise.all([
       this.trackRepository.findShuffledPaginated(seed, skip, take),
       this.trackRepository.count(),
@@ -44,7 +42,7 @@ export class GetShuffledTracksUseCase {
       artistName: track.artistName,
       albumArtistName: track.albumArtistName,
       compilation: track.compilation,
-      // Audio normalization data (LUFS/ReplayGain)
+      // Normalización de audio (LUFS/ReplayGain)
       rgTrackGain: track.rgTrackGain,
       rgTrackPeak: track.rgTrackPeak,
       rgAlbumGain: track.rgAlbumGain,

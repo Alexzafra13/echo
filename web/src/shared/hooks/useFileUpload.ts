@@ -27,32 +27,7 @@ export interface UseFileUploadReturn extends FileUploadState, FileUploadActions 
 const DEFAULT_MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const DEFAULT_ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-/**
- * Hook para manejar la selección y validación de archivos para upload
- *
- * @param options - Opciones de configuración
- * @returns Estado y acciones para el manejo de archivos
- *
- * @example
- * ```tsx
- * const {
- *   selectedFile,
- *   previewUrl,
- *   error,
- *   handleFileSelect,
- *   clearSelection,
- *   fileInputRef
- * } = useFileUpload({ maxSize: 5 * 1024 * 1024 });
- *
- * return (
- *   <input
- *     ref={fileInputRef}
- *     type="file"
- *     onChange={handleFileSelect}
- *   />
- * );
- * ```
- */
+// Selección y validación de archivos con preview
 export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadReturn {
   const {
     maxSize = DEFAULT_MAX_SIZE,
@@ -66,7 +41,6 @@ export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadRet
   const fileInputRef = useRef<HTMLInputElement>(null);
   const readerRef = useRef<FileReader | null>(null);
 
-  // Abort any in-progress FileReader on unmount
   useEffect(() => {
     return () => {
       if (readerRef.current && readerRef.current.readyState === FileReader.LOADING) {
@@ -82,7 +56,6 @@ export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadRet
 
       setError(null);
 
-      // Validar tipo de archivo
       if (!allowedTypes.includes(file.type)) {
         const errorMsg = 'Tipo de archivo no permitido. Use JPEG, PNG o WebP.';
         setError(errorMsg);
@@ -90,7 +63,6 @@ export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadRet
         return;
       }
 
-      // Validar tamaño
       if (file.size > maxSize) {
         const maxSizeMB = Math.round(maxSize / (1024 * 1024));
         const errorMsg = `El archivo excede el tamaño máximo de ${maxSizeMB}MB.`;
@@ -101,12 +73,10 @@ export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadRet
 
       setSelectedFile(file);
 
-      // Abort previous reader if still loading
       if (readerRef.current && readerRef.current.readyState === FileReader.LOADING) {
         readerRef.current.abort();
       }
 
-      // Crear preview
       const reader = new FileReader();
       readerRef.current = reader;
       reader.onloadend = () => {
@@ -136,17 +106,14 @@ export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadRet
   }, [clearSelection]);
 
   return {
-    // Estado
     selectedFile,
     previewUrl,
     error,
     isValid: selectedFile !== null && error === null,
-    // Acciones
     handleFileSelect,
     clearSelection,
     setError,
     resetInput,
-    // Ref
     fileInputRef,
   };
 }

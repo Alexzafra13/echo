@@ -1,11 +1,6 @@
 import { networkInterfaces } from 'os';
 
-/**
- * Auto-detect CORS origins based on environment
- * Development: Vite dev server
- * Production: Auto-detect network IPs
- */
-// Default port: 3000 for development, should be set via PORT env var in production (Docker uses 4567)
+// Puerto por defecto: 3000 en dev, configurable via PORT (Docker usa 4567)
 const DEFAULT_PORT = '3000';
 
 function getDefaultCorsOrigins(): string {
@@ -15,8 +10,7 @@ function getDefaultCorsOrigins(): string {
     return 'http://localhost:5173';
   }
 
-  // SECURITY: En producción se recomienda configurar CORS_ORIGINS explícitamente.
-  // Auto-detección solo como fallback.
+  // En producción se recomienda configurar CORS_ORIGINS explícitamente
   const port = process.env.PORT || DEFAULT_PORT;
   const ifaces = networkInterfaces();
   const origins: string[] = [`http://localhost:${port}`];

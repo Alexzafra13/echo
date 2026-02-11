@@ -2,39 +2,14 @@ import { useEffect, useRef, useCallback } from 'react';
 import { logger } from '@shared/utils/logger';
 
 interface UseSSEOptions {
-  /** SSE endpoint URL. Pass null/undefined to disable the connection. */
   url: string | null | undefined;
-  /** Named event handlers: eventName → handler(event) */
   events?: Record<string, (event: MessageEvent) => void>;
-  /** Called when connection opens successfully */
   onOpen?: () => void;
-  /** Called when connection state changes (true = connected, false = disconnected) */
   onConnectionChange?: (connected: boolean) => void;
-  /** Debug label for log messages */
   label?: string;
 }
 
-/**
- * Generic SSE (Server-Sent Events) hook with:
- * - Automatic exponential backoff reconnection (max 30s)
- * - Page visibility handling (disconnect on hidden, reconnect on visible)
- * - Cleanup on unmount
- *
- * @example
- * ```tsx
- * useSSE({
- *   url: userId ? `/api/social/listening/stream?userId=${userId}` : null,
- *   label: 'ListeningNow',
- *   onOpen: () => queryClient.invalidateQueries({ queryKey: ['listening'] }),
- *   events: {
- *     'listening-update': (event) => {
- *       const data = JSON.parse(event.data);
- *       queryClient.invalidateQueries({ queryKey: ['listening'] });
- *     },
- *   },
- * });
- * ```
- */
+// Hook genérico SSE con reconexión exponencial y manejo de visibilidad
 export function useSSE({
   url,
   events,
@@ -46,7 +21,7 @@ export function useSSE({
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
 
-  // Use refs for callbacks to avoid reconnecting when handlers change
+  // Refs para evitar reconexiones cuando cambian los handlers
   const onOpenRef = useRef(onOpen);
   onOpenRef.current = onOpen;
   const eventsRef = useRef(events);
@@ -57,7 +32,6 @@ export function useSSE({
   const connect = useCallback(() => {
     if (!url) return;
 
-    // Close any existing connection first
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -73,7 +47,6 @@ export function useSSE({
         onConnectionChangeRef.current?.(true);
       };
 
-      // Register named event handlers via refs so they always call the latest version
       const currentEvents = eventsRef.current;
       if (currentEvents) {
         for (const eventName of Object.keys(currentEvents)) {
@@ -92,7 +65,6 @@ export function useSSE({
         es.close();
         onConnectionChangeRef.current?.(false);
 
-        // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s, 30s, ...
         const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
         reconnectAttemptsRef.current += 1;
         reconnectTimeoutRef.current = setTimeout(connect, delay);
@@ -104,7 +76,6 @@ export function useSSE({
     }
   }, [url, label]);
 
-  // Connect when URL is set, cleanup when it changes or on unmount
   useEffect(() => {
     if (!url) {
       if (eventSourceRef.current) {
@@ -129,7 +100,7 @@ export function useSSE({
     };
   }, [url, connect]);
 
-  // Pause on tab hidden, resume on tab visible
+  // Pausar en tab oculto, reconectar al volver
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
