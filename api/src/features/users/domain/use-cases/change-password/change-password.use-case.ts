@@ -25,19 +25,14 @@ export class ChangePasswordUseCase {
   ) {}
 
   async execute(input: ChangePasswordInput): Promise<void> {
-    // 1. Validar nueva contraseña usando Password Value Object
-    // Esto asegura que cumpla con todos los requisitos de seguridad:
-    // - Mínimo 8 caracteres
-    // - Al menos 1 mayúscula, 1 minúscula, 1 número, 1 carácter especial
     const validatedPassword = new Password(input.newPassword);
 
-    // 2. Buscar usuario
     const user = await this.userRepository.findById(input.userId);
     if (!user) {
       throw new NotFoundError('User', input.userId);
     }
 
-    // 3. Verificar contraseña actual (solo si NO es primer login)
+    // En primer login no se requiere contraseña actual
     if (!user.mustChangePassword) {
       if (!input.currentPassword) {
         throw new ValidationError('Current password is required');
@@ -51,7 +46,6 @@ export class ChangePasswordUseCase {
         throw new UnauthorizedError('Current password is incorrect');
       }
 
-      // Verificar que nueva contraseña sea diferente
       const isSamePassword = await this.passwordService.compare(
         validatedPassword.getValue(),
         user.passwordHash,
@@ -61,20 +55,15 @@ export class ChangePasswordUseCase {
       }
     }
 
-    // 4. Hash de nueva contraseña
     const newPasswordHash = await this.passwordService.hash(validatedPassword.getValue());
-
-    // 6. Actualizar contraseña
     await this.userRepository.updatePassword(user.id, newPasswordHash);
 
-    // 7. Si era primer login, quitar el flag
     if (user.mustChangePassword) {
       await this.userRepository.updatePartial(user.id, {
         mustChangePassword: false,
       });
     }
 
-    // 8. Log password change
     await this.logService.info(
       LogCategory.AUTH,
       `Password changed: ${user.username}`,

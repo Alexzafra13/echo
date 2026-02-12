@@ -25,12 +25,10 @@ export class CreateUserUseCase {
   ) {}
 
   async execute(input: CreateUserInput): Promise<CreateUserOutput> {
-    // 1. Validar entrada
     if (!input.username || input.username.length < 3) {
       throw new ValidationError('Username must be at least 3 characters');
     }
 
-    // 2. Verificar que username no exista
     const existingUserByUsername = await this.userRepository.findByUsername(
       input.username,
     );
@@ -38,11 +36,9 @@ export class CreateUserUseCase {
       throw new ConflictError('Username already exists');
     }
 
-    // 3. Generar contraseña temporal de 6 dígitos
     const temporaryPassword = PasswordUtil.generateTemporaryPassword();
     const passwordHash = await this.passwordService.hash(temporaryPassword);
 
-    // 4. Crear usuario
     const user = User.create({
       username: input.username,
       passwordHash,
@@ -52,15 +48,14 @@ export class CreateUserUseCase {
       mustChangePassword: true, // DEBE cambiar en primer login
     });
 
-    // 5. Persistir
     const savedUser = await this.userRepository.create(user);
 
-    // 6. Create automatic friendship between admin and new user
+    // Amistad automática entre admin y nuevo usuario
     if (input.adminId) {
       try {
         await this.socialRepository.createDirectFriendship(input.adminId, savedUser.id);
       } catch (error) {
-        // Log error but don't fail user creation if friendship fails
+        // No fallar la creacion del usuario si la amistad falla
         await this.logService.warning(
           LogCategory.AUTH,
           `Failed to create automatic friendship for new user: ${savedUser.username}`,
@@ -69,7 +64,6 @@ export class CreateUserUseCase {
       }
     }
 
-    // 7. Log user creation
     await this.logService.info(
       LogCategory.AUTH,
       `User created by admin: ${savedUser.username}`,
@@ -81,7 +75,6 @@ export class CreateUserUseCase {
       },
     );
 
-    // 8. Retornar credenciales
     return {
       user: {
         id: savedUser.id,

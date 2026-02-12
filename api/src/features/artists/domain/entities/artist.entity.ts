@@ -1,8 +1,5 @@
 import { generateUuid } from '@shared/utils';
 
-/**
- * ArtistProps - Propiedades del artista
- */
 export interface ArtistProps {
   id: string;
   name: string;
@@ -21,14 +18,6 @@ export interface ArtistProps {
   updatedAt: Date;
 }
 
-/**
- * Artist - Entidad de dominio para artistas
- *
- * Responsabilidades:
- * - Encapsular datos del artista
- * - Validar reglas de negocio
- * - Exponer información mediante getters
- */
 export class Artist {
   private props: ArtistProps;
 
@@ -36,9 +25,6 @@ export class Artist {
     this.props = props;
   }
 
-  /**
-   * Crea un nuevo artista (factory method)
-   */
   static create(
     props: Omit<ArtistProps, 'id' | 'createdAt' | 'updatedAt'>,
   ): Artist {
@@ -50,14 +36,10 @@ export class Artist {
     });
   }
 
-  /**
-   * Reconstituye un artista existente desde persistencia
-   */
   static reconstruct(props: ArtistProps): Artist {
     return new Artist(props);
   }
 
-  // Getters
   get id(): string {
     return this.props.id;
   }
@@ -118,9 +100,6 @@ export class Artist {
     return this.props.updatedAt;
   }
 
-  /**
-   * Convierte la entidad a objeto plano (para persistencia)
-   */
   toPrimitives(): ArtistProps {
     return { ...this.props };
   }

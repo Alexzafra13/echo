@@ -1,18 +1,17 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { StreamTokenService } from './stream-token.service';
 
+// Limpia stream tokens expirados cada hora
 @Injectable()
 export class StreamTokenCleanupService {
-  constructor(@InjectPinoLogger(StreamTokenCleanupService.name)
+  constructor(
+    @InjectPinoLogger(StreamTokenCleanupService.name)
     private readonly logger: PinoLogger,
-    private readonly streamTokenService: StreamTokenService) {}
+    private readonly streamTokenService: StreamTokenService,
+  ) {}
 
-  /**
-   * Cleanup expired stream tokens every hour
-   * Runs at minute 0 of every hour (e.g., 00:00, 01:00, 02:00...)
-   */
   @Cron(CronExpression.EVERY_HOUR)
   async handleCleanup() {
     try {

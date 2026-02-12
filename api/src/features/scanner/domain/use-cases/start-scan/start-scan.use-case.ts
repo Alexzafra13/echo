@@ -7,23 +7,12 @@ import {
 import { StartScanInput, StartScanOutput } from './start-scan.dto';
 import { ScannerError } from '@shared/errors';
 
-// Inyectamos el servicio de procesamiento como dependencia externa
 export interface IScanProcessor {
   enqueueScan(scanId: string, options?: any): Promise<void>;
 }
 
 export const SCAN_PROCESSOR = 'IScanProcessor';
 
-/**
- * StartScanUseCase - Inicia un nuevo escaneo de la librería
- *
- * Responsabilidades:
- * - Crear un nuevo registro de escaneo
- * - Encolar el trabajo de escaneo en BullMQ
- * - Retornar la información del escaneo iniciado
- *
- * Nota: El procesamiento real se hace en background con BullMQ
- */
 @Injectable()
 export class StartScanUseCase {
   constructor(
@@ -34,13 +23,11 @@ export class StartScanUseCase {
   ) {}
 
   async execute(input: StartScanInput = {}): Promise<StartScanOutput> {
-    // 1. Verificar si hay un escaneo en progreso
     const runningScan = await this.scannerRepository.findByStatus('running');
     if (runningScan.length > 0) {
       throw new ScannerError('SCAN_ALREADY_RUNNING');
     }
 
-    // 2. Crear nueva entidad de escaneo
     const scan = LibraryScan.create({
       status: 'pending',
       startedAt: new Date(),
@@ -49,17 +36,14 @@ export class StartScanUseCase {
       tracksDeleted: 0,
     });
 
-    // 3. Guardar en BD
     const savedScan = await this.scannerRepository.create(scan);
 
-    // 4. Encolar trabajo en BullMQ
     await this.scanProcessor.enqueueScan(savedScan.id, {
       path: input.path,
       recursive: input.recursive,
       pruneDeleted: input.pruneDeleted,
     });
 
-    // 5. Retornar información
     return {
       id: savedScan.id,
       status: savedScan.status,

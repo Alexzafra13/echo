@@ -16,13 +16,11 @@ export class DeleteUserUseCase {
   ) {}
 
   async execute(input: DeleteUserInput): Promise<DeleteUserOutput> {
-    // 1. Verificar que el usuario existe
     const user = await this.userRepository.findById(input.userId);
     if (!user) {
       throw new NotFoundError('User not found');
     }
 
-    // 2. Verificar si es el system admin (primer admin creado)
     const allUsers = await this.userRepository.findAll(0, 1000);
     const adminUsers = allUsers.filter(u => u.isAdmin);
     const systemAdmin = adminUsers.length > 0
@@ -33,12 +31,11 @@ export class DeleteUserUseCase {
 
     const isSystemAdmin = systemAdmin ? user.id === systemAdmin.id : false;
 
-    // 3. No permitir eliminar al system admin
+    // No se puede eliminar al system admin
     if (isSystemAdmin) {
       throw new ValidationError('Cannot delete system administrator');
     }
 
-    // 4. Prevenir eliminación del usuario actual si es el único admin
     if (user.isAdmin) {
       const adminCount = allUsers.filter(u => u.isAdmin && u.isActive).length;
 
@@ -47,12 +44,11 @@ export class DeleteUserUseCase {
       }
     }
 
-    // 5. Desactivar usuario (soft delete)
+    // Soft delete: solo desactiva, no elimina datos
     await this.userRepository.updatePartial(input.userId, {
       isActive: false,
     });
 
-    // 6. Log user deletion
     await this.logService.info(
       LogCategory.AUTH,
       `User deactivated by admin: ${user.username}`,

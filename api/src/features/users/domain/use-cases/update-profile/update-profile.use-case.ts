@@ -11,13 +11,11 @@ export class UpdateProfileUseCase {
   ) {}
 
   async execute(input: UpdateProfileInput): Promise<UpdateProfileOutput> {
-    // 1. Verificar que usuario existe
     const user = await this.userRepository.findById(input.userId);
     if (!user) {
       throw new NotFoundError('User', input.userId);
     }
 
-    // 2. Actualizar perfil
     const updatedUser = await this.userRepository.updatePartial(input.userId, {
       name: input.name,
     });

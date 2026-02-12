@@ -11,22 +11,16 @@ interface ListeningUpdate {
   timestamp: string;
 }
 
-/**
- * Hook for real-time "listening now" updates for a specific user profile
- *
- * Connects to SSE and invalidates the profile query when the target user
- * starts/stops playing music.
- *
- * @param targetUserId - The user ID of the profile being viewed
- */
+// SSE en tiempo real para estado de reproducción en perfil público
 export function useProfileListeningSSE(targetUserId: string) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   const apiUrl = import.meta.env.VITE_API_URL || '/api';
-  const canConnect = !!currentUser?.id && currentUser.id !== targetUserId;
+  const canConnect = !!currentUser?.id && currentUser.id !== targetUserId && !!accessToken;
   const url = canConnect
-    ? `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(currentUser!.id)}`
+    ? `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(currentUser!.id)}&token=${encodeURIComponent(accessToken!)}`
     : null;
 
   const events = useMemo(() => ({

@@ -12,20 +12,15 @@ export interface ListeningUpdate {
   timestamp: string;
 }
 
-/**
- * Hook for real-time "listening now" updates via Server-Sent Events
- *
- * When a friend starts/stops playing music, this hook receives the update
- * instantly and invalidates the relevant React Query caches to trigger
- * a refetch of the listening friends data.
- */
+// SSE en tiempo real para actualizaciones de "escuchando ahora" de amigos
 export function useListeningNowSSE() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   const apiUrl = import.meta.env.VITE_API_URL || '/api';
-  const url = user?.id
-    ? `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(user.id)}`
+  const url = user?.id && accessToken
+    ? `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(user.id)}&token=${encodeURIComponent(accessToken)}`
     : null;
 
   const events = useMemo(() => ({

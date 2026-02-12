@@ -1,14 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-/**
- * Focus Trap Hook
- *
- * Traps focus within a container element for accessibility.
- * Essential for modals, dialogs, and dropdown menus.
- *
- * @param isActive - Whether the focus trap is active
- * @returns ref to attach to the container element
- */
+// Atrapa el foco dentro de un contenedor para accesibilidad (modales, diálogos)
 export function useFocusTrap<T extends HTMLElement>(isActive: boolean) {
   const containerRef = useRef<T>(null);
   const previousActiveElement = useRef<Element | null>(null);
@@ -27,19 +19,16 @@ export function useFocusTrap<T extends HTMLElement>(isActive: boolean) {
 
     return Array.from(
       containerRef.current.querySelectorAll<HTMLElement>(focusableSelectors)
-    ).filter((el) => el.offsetParent !== null); // Filter out hidden elements
+    ).filter((el) => el.offsetParent !== null);
   }, []);
 
   useEffect(() => {
     if (!isActive) return;
 
-    // Store the previously focused element
     previousActiveElement.current = document.activeElement;
 
-    // Focus the first focusable element in the container
     const focusableElements = getFocusableElements();
     if (focusableElements.length > 0) {
-      // Small delay to ensure the modal is fully rendered
       requestAnimationFrame(() => {
         focusableElements[0].focus();
       });
@@ -54,12 +43,10 @@ export function useFocusTrap<T extends HTMLElement>(isActive: boolean) {
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
 
-      // If shift + tab and focus is on first element, move to last
       if (e.shiftKey && document.activeElement === firstElement) {
         e.preventDefault();
         lastElement.focus();
       }
-      // If tab and focus is on last element, move to first
       else if (!e.shiftKey && document.activeElement === lastElement) {
         e.preventDefault();
         firstElement.focus();
@@ -71,7 +58,6 @@ export function useFocusTrap<T extends HTMLElement>(isActive: boolean) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
 
-      // Restore focus to the previously focused element
       if (previousActiveElement.current instanceof HTMLElement) {
         previousActiveElement.current.focus();
       }

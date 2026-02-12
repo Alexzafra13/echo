@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react';
 
-/**
- * Hook para detectar cuando el usuario llega al final de la página
- * y convertir el player en mini-player en el sidebar
- *
- * @param threshold Píxeles desde el bottom para considerar "final de página" (default: 120px para el player height)
- * @returns boolean indicando si el mini-player debe estar activo
- */
+// Activa mini-player cuando el usuario llega al final de la página
 export function usePageEndDetection(threshold: number = 120) {
   const [isMiniMode, setIsMiniMode] = useState(false);
 
@@ -14,9 +8,7 @@ export function usePageEndDetection(threshold: number = 120) {
     let ticking = false;
     let currentScrollContainer: HTMLElement | null = null;
 
-    // Buscar el contenedor scrolleable correcto
     const findScrollContainer = () => {
-      // Buscar elementos con clase que termina en __content y tiene overflow-y: auto
       const contentElements = document.querySelectorAll('[class*="__content"]');
 
       for (const element of contentElements) {
@@ -35,7 +27,6 @@ export function usePageEndDetection(threshold: number = 120) {
     const handleScroll = (_e?: Event) => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          // Re-detectar el contenedor en cada scroll por si cambió de página
           const scrollContainer = findScrollContainer();
 
           let scrollHeight: number;
@@ -43,25 +34,20 @@ export function usePageEndDetection(threshold: number = 120) {
           let clientHeight: number;
 
           if (scrollContainer) {
-            // Usar el contenedor scrolleable específico de la página
             scrollHeight = scrollContainer.scrollHeight;
             scrollTop = scrollContainer.scrollTop;
             clientHeight = scrollContainer.clientHeight;
           } else {
-            // Fallback a window scroll (para páginas legacy)
             scrollHeight = document.documentElement.scrollHeight;
             scrollTop = window.scrollY || document.documentElement.scrollTop;
             clientHeight = window.innerHeight;
           }
 
-          // Verificar si hay scroll REAL disponible
-          // El contenido debe ser al menos 200px más alto que el viewport
-          // para evitar activación en páginas con poco contenido
+          // Evitar activación en páginas con poco contenido
           const minScrollRequired = 200;
           const hasRealScroll = scrollHeight > clientHeight + minScrollRequired;
 
           if (!hasRealScroll) {
-            // Si no hay scroll suficiente, nunca activar mini mode
             if (isMiniMode) {
               setIsMiniMode(false);
             }
@@ -69,11 +55,9 @@ export function usePageEndDetection(threshold: number = 120) {
             return;
           }
 
-          // Distancia desde el bottom
           const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
 
-          // Si estamos a menos de threshold píxeles del bottom, activar mini mode
-          // Si estamos a más de threshold + 100px, desactivar (hysteresis para evitar flickering)
+          // Histéresis de 100px para evitar flickering
           if (distanceFromBottom <= threshold && !isMiniMode) {
             setIsMiniMode(true);
           } else if (distanceFromBottom > threshold + 100 && isMiniMode) {
@@ -87,17 +71,13 @@ export function usePageEndDetection(threshold: number = 120) {
       }
     };
 
-    // Setup: encontrar el contenedor inicial y añadir listeners
     const setupListeners = () => {
-      // Limpiar listener anterior si existe
       if (currentScrollContainer) {
         currentScrollContainer.removeEventListener('scroll', handleScroll);
       }
 
-      // Buscar nuevo contenedor
       currentScrollContainer = findScrollContainer();
 
-      // Añadir listener al nuevo contenedor o window
       if (currentScrollContainer) {
         currentScrollContainer.addEventListener('scroll', handleScroll, { passive: true });
       } else {
@@ -107,23 +87,19 @@ export function usePageEndDetection(threshold: number = 120) {
 
     setupListeners();
 
-    // También escuchar cambios de tamaño por si el contenido cambia dinámicamente
     window.addEventListener('resize', handleScroll, { passive: true });
 
-    // MutationObserver para detectar cuando cambia el DOM (cambio de página)
+    // MutationObserver para reconfigurar al cambiar de página
     const observer = new MutationObserver(() => {
-      // Re-configurar listeners cuando cambia el DOM
       setupListeners();
       handleScroll();
     });
 
-    // Observar cambios en el body (cuando se monta/desmonta contenido de páginas)
     observer.observe(document.body, {
       childList: true,
       subtree: true,
     });
 
-    // Check inicial
     handleScroll();
 
     return () => {
