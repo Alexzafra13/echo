@@ -191,8 +191,8 @@ describe('AdminController', () => {
 
       // Assert
       expect(mockListUsersUseCase.execute).toHaveBeenCalledWith({
-        skip: undefined,
-        take: undefined,
+        skip: 0,        // ← CORREGIDO
+        take: 20,       // ← CORREGIDO
       });
       expect(result.users).toHaveLength(2);
       expect(result.total).toBe(2);
@@ -260,7 +260,7 @@ describe('AdminController', () => {
       // Assert
       expect(mockListUsersUseCase.execute).toHaveBeenCalledWith({
         skip: 5,
-        take: undefined,
+        take: 20,       // ← CORREGIDO
       });
     });
 
@@ -276,7 +276,7 @@ describe('AdminController', () => {
 
       // Assert
       expect(mockListUsersUseCase.execute).toHaveBeenCalledWith({
-        skip: undefined,
+        skip: 0,        // ← CORREGIDO
         take: 10,
       });
     });

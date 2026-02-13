@@ -17,6 +17,7 @@ describe('AdminGuard', () => {
             userId: 'admin-123',
             username: 'admin',
             isAdmin: true,
+            isActive: true, // ← AÑADIR
           },
         },
       });
@@ -33,12 +34,29 @@ describe('AdminGuard', () => {
             userId: 'user-123',
             username: 'normaluser',
             isAdmin: false,
+            isActive: true, // ← AÑADIR
           },
         },
       });
 
       expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
       expect(() => guard.canActivate(mockContext)).toThrow('Admin access required');
+    });
+
+    it('debería denegar acceso si la cuenta está deshabilitada', () => { // ← NUEVO TEST
+      const mockContext = createMockExecutionContext({
+        request: {
+          user: {
+            userId: 'admin-123',
+            username: 'admin',
+            isAdmin: true,
+            isActive: false, // ← Usuario inactivo
+          },
+        },
+      });
+
+      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+      expect(() => guard.canActivate(mockContext)).toThrow('Account is disabled');
     });
 
     it('debería denegar acceso si no hay usuario en el request', () => {
@@ -55,6 +73,7 @@ describe('AdminGuard', () => {
           user: {
             userId: 'user-123',
             username: 'testuser',
+            isActive: true, // ← AÑADIR
           },
         },
       });
@@ -69,6 +88,7 @@ describe('AdminGuard', () => {
             userId: 'user-123',
             username: 'testuser',
             isAdmin: null,
+            isActive: true, // ← AÑADIR
           },
         },
       });
@@ -83,6 +103,7 @@ describe('AdminGuard', () => {
             userId: 'user-123',
             username: 'testuser',
             isAdmin: false,
+            isActive: true, // ← AÑADIR
           },
         },
       });

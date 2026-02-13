@@ -125,26 +125,29 @@ describe('MaintenanceController', () => {
     });
   });
 
-  describe('getStoragePaths', () => {
-    it('should return configured storage paths', async () => {
-      configService.get.mockImplementation((key: string, defaultValue: string) => {
-        if (key === 'DATA_PATH') return '/app/data';
-        if (key === 'MUSIC_LIBRARY_PATH') return '/music';
-        return defaultValue;
-      });
-
-      storageService.getBasePath.mockResolvedValue('/app/data/metadata');
-
-      const result = await controller.getStoragePaths();
-
-      expect(result.dataPath).toBe('/app/data');
-      expect(result.musicPath).toBe('/music');
-      expect(result.metadataPath).toBe('/app/data/metadata');
-      expect(result.albumCoversPath).toBe('/app/data/metadata/albums');
-      expect(result.artistImagesPath).toBe('/app/data/metadata/artists');
-      expect(result.isReadOnlyMusic).toBe(true);
+describe('getStoragePaths', () => {
+  it('should return configured storage paths', async () => {
+    configService.get.mockImplementation((key: string) => {  
+      if (key === 'DATA_PATH') return '/app/data';
+      if (key === 'MUSIC_LIBRARY_PATH') return '/music';
+      return undefined;  
     });
+
+    storageService.getBasePath.mockResolvedValue('/app/data/metadata');
+
+    const result = await controller.getStoragePaths();
+
+    // Normalizar rutas para Windows (reemplazar \ por /)
+    const normalize = (path: string) => path.replace(/\\/g, '/');
+
+    expect(result.dataPath).toBe('/app/data');
+    expect(result.musicPath).toBe('/music');
+    expect(result.metadataPath).toBe('/app/data/metadata');
+    expect(normalize(result.albumCoversPath)).toBe('/app/data/metadata/albums');
+    expect(normalize(result.artistImagesPath)).toBe('/app/data/metadata/artists');
+    expect(result.isReadOnlyMusic).toBe(true);
   });
+});
 
   // ============================================
   // Cleanup endpoints
@@ -427,29 +430,29 @@ describe('MaintenanceController', () => {
   // Enrichment queue endpoints
   // ============================================
 
-  describe('getEnrichmentQueueStats', () => {
-    it('should return queue statistics', async () => {
-      const mockStats = {
-        isRunning: true,
-        pendingArtists: 50,
-        pendingAlbums: 200,
-        totalPending: 250,
-        processedInSession: 100,
-        currentItem: 'Artist Name',
-        startedAt: new Date().toISOString(),
-        estimatedTimeRemaining: '2h 30m',
-      };
+describe('getEnrichmentQueueStats', () => {
+  it('should return queue statistics', async () => {
+    const mockStats = {
+      isRunning: true,
+      pendingArtists: 50,
+      pendingAlbums: 200,
+      totalPending: 250,
+      processedInSession: 100,
+      currentItem: 'Artist Name',
+      startedAt: new Date(),
+      estimatedTimeRemaining: '2h 30m',
+    };
 
-      enrichmentQueue.getQueueStats.mockResolvedValue(mockStats);
+    enrichmentQueue.getQueueStats.mockResolvedValue(mockStats);
 
-      const result = await controller.getEnrichmentQueueStats();
+    const result = await controller.getEnrichmentQueueStats();
 
-      expect(result.isRunning).toBe(true);
-      expect(result.pendingArtists).toBe(50);
-      expect(result.pendingAlbums).toBe(200);
-      expect(result.currentItem).toBe('Artist Name');
-    });
+    expect(result.isRunning).toBe(true);
+    expect(result.pendingArtists).toBe(50);
+    expect(result.pendingAlbums).toBe(200);
+    expect(result.currentItem).toBe('Artist Name');
   });
+});
 
   describe('startEnrichmentQueue', () => {
     it('should start the enrichment queue', async () => {

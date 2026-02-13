@@ -298,11 +298,12 @@ describe('PlaylistsController', () => {
       });
 
       // Act
-      const result = await controller.getPlaylistTracks('playlist-1');
+      const result = await controller.getPlaylistTracks('playlist-1', mockRequestWithUser as any); 
 
       // Assert
       expect(getPlaylistTracksUseCase.execute).toHaveBeenCalledWith({
         playlistId: 'playlist-1',
+        requesterId: 'user-1', 
       });
       expect(result.tracks).toHaveLength(1);
     });
