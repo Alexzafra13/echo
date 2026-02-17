@@ -66,7 +66,7 @@
   width: 48px;
   height: 48px;
   border: 4px solid var(--white-10);
-  border-top-color: var(--color-primary, #ff6b6b);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -79,7 +79,7 @@
 
 .albumsPage__retryButton {
   padding: 12px 24px;
-  background: var(--color-primary, #ff6b6b);
+  background: var(--color-primary);
   border: none;
   border-radius: 24px;
   color: white;
@@ -245,7 +245,7 @@
 .albumsPage__searchInput:focus {
   outline: none;
   background: var(--white-08);
-  border-color: var(--color-primary, #ff6b6b);
+  border-color: var(--color-primary);
 }
 
 .albumsPage__searchClearButton {

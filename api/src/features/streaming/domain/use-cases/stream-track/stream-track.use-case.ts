@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, ForbiddenException } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { NotFoundError } from '@shared/errors';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
@@ -15,6 +15,25 @@ export class StreamTrackUseCase {
     @Inject(TRACK_REPOSITORY)
     private readonly trackRepository: ITrackRepository,
   ) {}
+
+  /**
+   * Validates that the resolved file path is within the allowed data directory.
+   * Prevents path traversal attacks if database is compromised.
+   */
+  private validateFilePath(filePath: string): string {
+    const resolved = path.resolve(filePath);
+    const dataPath = path.resolve(process.env.DATA_PATH || '/app/data');
+
+    if (!resolved.startsWith(dataPath + path.sep) && resolved !== dataPath) {
+      this.logger.error(
+        { filePath, resolved, dataPath },
+        'Path traversal attempt detected - file path outside data directory',
+      );
+      throw new ForbiddenException('Invalid file path');
+    }
+
+    return resolved;
+  }
 
   async execute(input: StreamTrackInput): Promise<StreamTrackOutput> {
     if (!input.trackId || input.trackId.trim() === '') {
@@ -33,25 +52,27 @@ export class StreamTrackUseCase {
       throw new NotFoundError('Track', `${input.trackId} has no file path`);
     }
 
-    if (!fs.existsSync(filePath)) {
-      this.logger.error({ trackId: input.trackId, filePath }, 'Audio file not found');
-      throw new NotFoundError('Audio file', filePath);
+    const safePath = this.validateFilePath(filePath);
+
+    if (!fs.existsSync(safePath)) {
+      this.logger.error({ trackId: input.trackId, filePath: safePath }, 'Audio file not found');
+      throw new NotFoundError('Audio file', safePath);
     }
 
-    const stats = fs.statSync(filePath);
+    const stats = fs.statSync(safePath);
 
     if (!stats.isFile()) {
-      this.logger.error({ trackId: input.trackId, filePath }, 'Path is not a file');
-      throw new NotFoundError('File', filePath);
+      this.logger.error({ trackId: input.trackId, filePath: safePath }, 'Path is not a file');
+      throw new NotFoundError('File', safePath);
     }
 
-    const mimeType = getAudioMimeType(path.extname(filePath));
+    const mimeType = getAudioMimeType(path.extname(safePath));
 
-    const fileName = path.basename(filePath);
+    const fileName = path.basename(safePath);
 
     return {
       trackId: track.id,
-      filePath,
+      filePath: safePath,
       fileName,
       fileSize: stats.size,
       mimeType,

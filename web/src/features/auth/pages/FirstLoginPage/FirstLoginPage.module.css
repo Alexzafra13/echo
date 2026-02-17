@@ -78,14 +78,14 @@
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
   border-radius: 8px;
   margin-bottom: 24px;
 }
 
 .infoIcon {
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -105,7 +105,7 @@
   background: rgba(220, 38, 38, 0.1);
   border: 1px solid rgba(220, 38, 38, 0.3);
   border-radius: 8px;
-  color: #ff6b6b;
+  color: var(--color-error);
   margin-bottom: 24px;
   font-size: 14px;
 }
@@ -135,7 +135,7 @@
 }
 
 .required {
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
 }
 
 .hint {

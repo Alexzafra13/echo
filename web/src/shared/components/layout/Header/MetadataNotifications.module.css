@@ -241,21 +241,21 @@
 
 /* Item no leído */
 .notifications__item--unread {
-  background: rgba(255, 107, 107, 0.05);
+  background: var(--primary-05);
 }
 
 .notifications__item--unread:hover {
-  background: rgba(255, 107, 107, 0.1);
+  background: var(--primary-10);
 }
 
 /* Item de error (alertas críticas del sistema) */
 .notifications__item--error {
-  background: rgba(239, 68, 68, 0.08);
+  background: var(--error-08);
   border-left: 3px solid var(--color-error);
 }
 
 .notifications__item--error:hover {
-  background: rgba(239, 68, 68, 0.12);
+  background: var(--error-12);
 }
 
 .notifications__item--error .notifications__itemIcon {
@@ -265,17 +265,17 @@
 
 /* Item de solicitud de amistad */
 .notifications__item--friendRequest {
-  background: rgba(59, 130, 246, 0.05);
+  background: var(--info-05);
   cursor: pointer;
 }
 
 .notifications__item--friendRequest:hover {
-  background: rgba(59, 130, 246, 0.1);
+  background: var(--info-10);
 }
 
 .notifications__itemIcon--friendRequest {
   color: var(--color-info, #3b82f6);
-  background: rgba(59, 130, 246, 0.15);
+  background: var(--info-15);
 }
 
 /* Icon del item */

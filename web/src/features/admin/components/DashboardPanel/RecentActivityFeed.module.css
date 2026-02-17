@@ -58,9 +58,9 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: rgba(255, 107, 107, 0.1);
+  background: var(--primary-10);
   border-radius: 8px;
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   padding-top: 10px;
   flex-shrink: 0;
 }

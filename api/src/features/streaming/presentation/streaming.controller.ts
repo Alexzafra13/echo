@@ -30,7 +30,7 @@ import * as fs from 'fs';
 import { ReadStream } from 'fs';
 import { ServerResponse } from 'http';
 
-const STREAM_TIMEOUT_MS = 10 * 60 * 1000;
+const STREAM_TIMEOUT_MS = parseInt(process.env.STREAM_TIMEOUT_MS || '600000', 10); // Default: 10 minutes
 
 @ApiTags('streaming')
 @Controller('tracks')

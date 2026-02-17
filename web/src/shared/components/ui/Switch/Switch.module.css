@@ -43,8 +43,8 @@
 }
 
 .switchInput:checked + .switchSlider {
-  background-color: rgba(255, 107, 107, 0.3);
-  border-color: rgba(255, 107, 107, 0.5);
+  background-color: var(--primary-30);
+  border-color: var(--primary-50);
 }
 
 .switchInput:checked + .switchSlider:before {

@@ -1,54 +1,10 @@
-import { IsOptional, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { AlbumResponseDto } from './album.response.dto';
+import { PaginationQueryDto, LimitQueryDto } from '@shared/dtos/pagination-query.dto';
 
-/**
- * DTO para query params de paginación de álbumes
- */
-export class AlbumsPaginationQueryDto {
-  @ApiPropertyOptional({
-    description: 'Número de página (empieza en 1)',
-    example: 1,
-    minimum: 1,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number = 1;
-
-  @ApiPropertyOptional({
-    description: 'Cantidad de álbumes por página',
-    example: 20,
-    minimum: 1,
-    maximum: 100,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20;
-}
-
-/**
- * DTO para query params de límite simple (sin paginación)
- */
-export class AlbumsLimitQueryDto {
-  @ApiPropertyOptional({
-    description: 'Cantidad máxima de álbumes a retornar',
-    example: 20,
-    minimum: 1,
-    maximum: 100,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20;
-}
+// Reutilizar DTOs compartidos en vez de duplicar
+export { PaginationQueryDto as AlbumsPaginationQueryDto };
+export { LimitQueryDto as AlbumsLimitQueryDto };
 
 /**
  * DTO para respuesta de álbumes con paginación completa

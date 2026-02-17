@@ -55,8 +55,8 @@
   width: 56px;
   height: 56px;
   border-radius: var(--radius-lg);
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -206,8 +206,8 @@
 }
 
 .settingsPage__toggleInput:checked + .settingsPage__toggleSlider {
-  background-color: rgba(255, 107, 107, 0.3);
-  border-color: rgba(255, 107, 107, 0.5);
+  background-color: var(--primary-30);
+  border-color: var(--primary-50);
 }
 
 .settingsPage__toggleInput:checked + .settingsPage__toggleSlider:before {
@@ -279,8 +279,8 @@
 /* Save Button */
 .settingsPage__saveButton {
   padding: var(--space-3) var(--space-6);
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
   border-radius: var(--radius-base);
   color: var(--color-primary);
   font-size: var(--text-sm);
@@ -291,8 +291,8 @@
 }
 
 .settingsPage__saveButton:hover:not(:disabled) {
-  background: rgba(255, 107, 107, 0.15);
-  border-color: rgba(255, 107, 107, 0.5);
+  background: var(--primary-15);
+  border-color: var(--primary-50);
 }
 
 .settingsPage__saveButton:disabled {
@@ -374,12 +374,12 @@
   background: var(--color-primary);
   cursor: pointer;
   transition: all var(--transition-base);
-  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 2px 6px var(--primary-30);
 }
 
 .settingsPage__slider::-webkit-slider-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 2px 8px var(--primary-40);
 }
 
 .settingsPage__slider::-moz-range-thumb {
@@ -390,7 +390,7 @@
   cursor: pointer;
   border: none;
   transition: all var(--transition-base);
-  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 2px 6px var(--primary-30);
 }
 
 .settingsPage__slider::-moz-range-track {
@@ -584,14 +584,14 @@
 }
 
 .settingsPage__themeOption--active {
-  background: rgba(255, 107, 107, 0.08);
-  border-color: rgba(255, 107, 107, 0.5);
+  background: var(--primary-10);
+  border-color: var(--primary-50);
   color: var(--color-primary);
 }
 
 .settingsPage__themeOption--active:hover {
-  background: rgba(255, 107, 107, 0.12);
-  border-color: rgba(255, 107, 107, 0.6);
+  background: var(--primary-10);
+  border-color: var(--primary-50);
 }
 
 .settingsPage__themeOptionLabel {
@@ -607,7 +607,7 @@
 }
 
 .settingsPage__themeOption--active .settingsPage__themeOptionDesc {
-  color: rgba(255, 107, 107, 0.7);
+  color: var(--color-primary);
 }
 
 .settingsPage__themeNote {

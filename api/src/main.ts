@@ -28,9 +28,10 @@ async function bootstrap() {
   const logger = app.get(Logger);
   app.useLogger(logger);
 
+  const maxFileSize = parseInt(process.env.MAX_UPLOAD_SIZE || '10485760', 10); // Default: 10MB
   await app.register(require('@fastify/multipart'), {
     limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB
+      fileSize: maxFileSize,
     },
   });
 

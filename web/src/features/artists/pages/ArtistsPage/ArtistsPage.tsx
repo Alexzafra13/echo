@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { Users } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
+import { SearchInput, EmptyState, ErrorState } from '@shared/components/ui';
 import { Sidebar } from '@features/home/components';
 import { ArtistCard } from '../../components';
 import { useArtists } from '../../hooks';
 import { useArtistMetadataSync } from '@shared/hooks';
-import { Search, X } from 'lucide-react';
 import styles from './ArtistsPage.module.css';
 
 /**
@@ -51,27 +52,11 @@ export default function ArtistsPage() {
         <Header
           customSearch={
             <div className={styles.artistsPage__searchForm}>
-              <div className={styles.artistsPage__searchWrapper}>
-                <Search size={20} className={styles.artistsPage__searchIcon} />
-                <input
-                  type="text"
-                  placeholder="Buscar artistas..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={styles.artistsPage__searchInput}
-                  autoComplete="off"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className={styles.artistsPage__searchClearButton}
-                    aria-label="Limpiar búsqueda"
-                  >
-                    <X size={18} />
-                  </button>
-                )}
-              </div>
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Buscar artistas..."
+              />
             </div>
           }
         />
@@ -94,18 +79,18 @@ export default function ArtistsPage() {
 
           {/* Error State */}
           {error && (
-            <div className={styles.artistsPage__error}>
-              Error al cargar artistas
-            </div>
+            <ErrorState message="Error al cargar artistas" />
           )}
 
           {/* Artists List */}
           {!isLoading && !error && (
             <div className={styles.artistsPage__list}>
               {alphabetGroups.length === 0 ? (
-                <div className={styles.artistsPage__empty}>
-                  {searchQuery ? 'No se encontraron artistas' : 'No hay artistas en tu biblioteca'}
-                </div>
+                <EmptyState
+                  icon={<Users size={48} />}
+                  title={searchQuery ? 'No se encontraron artistas' : 'No hay artistas en tu biblioteca'}
+                  description={searchQuery ? 'Prueba con otro término de búsqueda' : undefined}
+                />
               ) : (
                 alphabetGroups.map(letter => (
                   <div key={letter} className={styles.artistsPage__group}>

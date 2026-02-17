@@ -58,10 +58,10 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
   border-radius: 8px;
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -69,8 +69,8 @@
 }
 
 .refreshButton:hover:not(:disabled) {
-  background: rgba(255, 107, 107, 0.15);
-  border-color: rgba(255, 107, 107, 0.5);
+  background: var(--primary-15);
+  border-color: var(--primary-50);
 }
 
 .refreshButton:disabled {
@@ -125,7 +125,7 @@
 
 .statIcon {
   flex-shrink: 0;
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
 }
 
 .statCardWarning .statIcon {
@@ -181,7 +181,7 @@
 }
 
 .actionIcon {
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -284,7 +284,7 @@
 
 .pathIcon {
   flex-shrink: 0;
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   opacity: 0.8;
 }
 

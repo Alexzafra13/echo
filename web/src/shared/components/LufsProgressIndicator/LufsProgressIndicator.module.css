@@ -18,7 +18,7 @@
 }
 
 .iconRunning {
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   flex-shrink: 0;
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -56,7 +56,7 @@
 
 .progressFill {
   height: 100%;
-  background: var(--color-primary, #ff6b6b);
+  background: var(--color-primary);
   border-radius: 2px;
   transition: width 0.5s ease-out;
 }

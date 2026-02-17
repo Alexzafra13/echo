@@ -5,8 +5,8 @@
   right: 0;
   bottom: 0;
   background-color: var(--black-80);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(var(--blur-base));
+  -webkit-backdrop-filter: blur(var(--blur-base));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,7 +36,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: var(--space-5) var(--space-6);
   background: var(--white-02);
   border-bottom: 1px solid var(--white-08);
 }
@@ -46,7 +46,7 @@
   align-items: center;
   gap: var(--space-4);
   flex: 1;
-  min-width: 0; /* Allow text truncation */
+  min-width: 0;
 }
 
 .modalIcon {
@@ -56,15 +56,15 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.15) 0%, rgba(237, 104, 66, 0.08) 100%);
-  border: 1px solid rgba(237, 104, 66, 0.2);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--primary-15) 0%, var(--primary-10) 100%);
+  border: 1px solid var(--primary-20);
   color: var(--color-primary);
 }
 
 .modalTitleWrapper {
   flex: 1;
-  min-width: 0; /* Allow text truncation */
+  min-width: 0;
 }
 
 .modalTitle {
@@ -75,7 +75,7 @@
 }
 
 .modalSubtitle {
-  margin: 4px 0 0 0;
+  margin: var(--space-1) 0 0 0;
   font-size: var(--text-sm);
   font-weight: var(--font-normal);
   color: var(--text-secondary);
@@ -86,12 +86,12 @@
   border: 1px solid var(--white-08);
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 8px;
-  border-radius: 10px;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .closeButton:hover {
@@ -106,14 +106,14 @@
 }
 
 .modalBody {
-  padding: 24px;
+  padding: var(--space-6);
   overflow-y: auto;
   flex: 1;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
 
-/* Animations */
+/* Animations - reference global keyframes */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -137,9 +137,9 @@
 /* Mobile responsive */
 @media (max-width: 768px) {
   .modalOverlay {
-    padding: 16px;
-    padding-top: max(16px, env(safe-area-inset-top, 16px));
-    padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    padding: var(--space-4);
+    padding-top: max(var(--space-4), env(safe-area-inset-top, 16px));
+    padding-bottom: max(var(--space-4), env(safe-area-inset-bottom, 16px));
     align-items: center;
   }
 
@@ -147,18 +147,18 @@
     width: 100%;
     max-width: 100%;
     max-height: calc(100vh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-    border-radius: 16px;
+    border-radius: var(--radius-xl);
     animation: slideUp 0.3s ease-out;
   }
 
   .modalHeader {
-    padding: 16px 20px;
+    padding: var(--space-4) var(--space-5);
     flex-shrink: 0;
   }
 
   .modalBody {
-    padding: 20px;
-    padding-bottom: 24px;
+    padding: var(--space-5);
+    padding-bottom: var(--space-6);
     overflow-y: auto;
     flex: 1;
     min-height: 0;
@@ -178,7 +178,6 @@
   }
 
   .closeButton {
-    padding: 6px;
+    padding: var(--space-2);
   }
 }
-
