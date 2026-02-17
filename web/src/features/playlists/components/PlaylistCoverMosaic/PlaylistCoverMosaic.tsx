@@ -3,16 +3,10 @@ import { Music } from 'lucide-react';
 import styles from './PlaylistCoverMosaic.module.css';
 
 interface PlaylistCoverMosaicProps {
-  /** Array of unique album IDs in the playlist */
   albumIds: string[];
-  /** Playlist name for alt text */
   playlistName: string;
 }
 
-/**
- * SingleCoverImage - Image component with fallback placeholder
- * Avoids innerHTML to prevent XSS vulnerabilities
- */
 function SingleCoverImage({ albumId, playlistName }: { albumId: string; playlistName: string }) {
   const [hasError, setHasError] = useState(false);
 
@@ -34,9 +28,6 @@ function SingleCoverImage({ albumId, playlistName }: { albumId: string; playlist
   );
 }
 
-/**
- * GridCoverImage - Grid image component with fallback placeholder
- */
 function GridCoverImage({ albumId, alt }: { albumId: string; alt: string }) {
   const [hasError, setHasError] = useState(false);
 
@@ -58,15 +49,9 @@ function GridCoverImage({ albumId, alt }: { albumId: string; alt: string }) {
   );
 }
 
-/**
- * PlaylistCoverMosaic Component
- * Displays a mosaic of up to 4 album covers from the playlist, like Spotify
- */
 export function PlaylistCoverMosaic({ albumIds, playlistName }: PlaylistCoverMosaicProps) {
-  // Get unique album IDs and take only first 4
   const uniqueAlbumIds = Array.from(new Set(albumIds)).filter(id => id).slice(0, 4);
 
-  // If no albums, show placeholder
   if (uniqueAlbumIds.length === 0) {
     return (
       <div className={styles.mosaic}>
@@ -77,7 +62,6 @@ export function PlaylistCoverMosaic({ albumIds, playlistName }: PlaylistCoverMos
     );
   }
 
-  // If only 1 album, show single cover
   if (uniqueAlbumIds.length === 1) {
     return (
       <div className={styles.mosaic}>
@@ -86,8 +70,6 @@ export function PlaylistCoverMosaic({ albumIds, playlistName }: PlaylistCoverMos
     );
   }
 
-  // For 2, 3, or 4 albums, show grid
-  // Determine the grid class based on count
   const gridClass = uniqueAlbumIds.length >= 4 ? 'mosaic__grid_4' : `mosaic__grid_${uniqueAlbumIds.length}`;
 
   return (

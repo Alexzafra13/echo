@@ -35,9 +35,6 @@ export interface ApplyAlbumCoverResponse {
 }
 
 export const albumCoversApi = {
-  /**
-   * Buscar todas las carátulas disponibles para un álbum
-   */
   async searchCovers(albumId: string): Promise<SearchAlbumCoversResponse> {
     const response = await apiClient.get<SearchAlbumCoversResponse>(
       `/admin/metadata/album/${albumId}/covers/search`,
@@ -45,9 +42,6 @@ export const albumCoversApi = {
     return response.data;
   },
 
-  /**
-   * Aplicar una carátula seleccionada
-   */
   async applyCover(request: ApplyAlbumCoverRequest): Promise<ApplyAlbumCoverResponse> {
     const response = await apiClient.post<ApplyAlbumCoverResponse>(
       '/admin/metadata/album/covers/apply',

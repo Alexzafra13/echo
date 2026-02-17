@@ -9,14 +9,6 @@ import {
   ScanHistoryItem,
 } from './get-scans-history.dto';
 
-/**
- * GetScansHistoryUseCase - Obtiene el historial de escaneos
- *
- * Responsabilidades:
- * - Obtener lista paginada de escaneos
- * - Calcular metadatos de paginación
- * - Retornar historial completo
- */
 @Injectable()
 export class GetScansHistoryUseCase {
   constructor(
@@ -27,18 +19,15 @@ export class GetScansHistoryUseCase {
   async execute(
     input: GetScansHistoryInput = {},
   ): Promise<GetScansHistoryOutput> {
-    // 1. Configurar paginación
     const page = input.page || 1;
     const limit = input.limit || 20;
     const skip = (page - 1) * limit;
 
-    // 2. Obtener escaneos y total
     const [scans, total] = await Promise.all([
       this.scannerRepository.findAll(skip, limit),
       this.scannerRepository.count(),
     ]);
 
-    // 3. Mapear a DTOs
     const scanItems: ScanHistoryItem[] = scans.map((scan) => ({
       id: scan.id,
       status: scan.status,
@@ -52,10 +41,8 @@ export class GetScansHistoryUseCase {
       errorMessage: scan.errorMessage,
     }));
 
-    // 4. Calcular total de páginas
     const totalPages = Math.ceil(total / limit);
 
-    // 5. Retornar
     return {
       scans: scanItems,
       total,

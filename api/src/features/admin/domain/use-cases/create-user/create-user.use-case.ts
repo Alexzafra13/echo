@@ -45,17 +45,15 @@ export class CreateUserUseCase {
       name: input.name,
       isActive: true,
       isAdmin: input.isAdmin || false,
-      mustChangePassword: true, // DEBE cambiar en primer login
+      mustChangePassword: true,
     });
 
     const savedUser = await this.userRepository.create(user);
 
-    // Amistad automática entre admin y nuevo usuario
     if (input.adminId) {
       try {
         await this.socialRepository.createDirectFriendship(input.adminId, savedUser.id);
       } catch (error) {
-        // No fallar la creacion del usuario si la amistad falla
         await this.logService.warning(
           LogCategory.AUTH,
           `Failed to create automatic friendship for new user: ${savedUser.username}`,
@@ -82,7 +80,7 @@ export class CreateUserUseCase {
         name: savedUser.name,
         isAdmin: savedUser.isAdmin,
       },
-      temporaryPassword, // Admin debe enviar esto al usuario
+      temporaryPassword,
     };
   }
 }

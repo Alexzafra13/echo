@@ -13,20 +13,17 @@ export class ChangeThemeUseCase {
   ) {}
 
   async execute(input: ChangeThemeInput): Promise<void> {
-    // 1. Validar tema
     if (!this.VALID_THEMES.includes(input.theme)) {
       throw new ValidationError(
         `Invalid theme. Must be one of: ${this.VALID_THEMES.join(', ')}`,
       );
     }
 
-    // 2. Verificar que usuario existe
     const user = await this.userRepository.findById(input.userId);
     if (!user) {
       throw new NotFoundError('User', input.userId);
     }
 
-    // 3. Actualizar tema
     await this.userRepository.updatePartial(input.userId, {
       theme: input.theme,
     });

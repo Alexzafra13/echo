@@ -1,8 +1,4 @@
-/**
- * Convert ISO 3166-1 country code to flag emoji
- * @param countryCode - Two-letter country code (e.g., 'ES', 'US')
- * @returns Flag emoji for the country
- */
+// Convierte código ISO 3166-1 a emoji de bandera
 export function getCountryFlag(countryCode: string): string {
   if (!countryCode || countryCode.length !== 2) {
     return '🏴';
@@ -16,15 +12,9 @@ export function getCountryFlag(countryCode: string): string {
   return String.fromCodePoint(...codePoints);
 }
 
-/**
- * Get country name from code (fallback for unknown countries)
- * @param countryCode - Two-letter country code
- * @returns Country name or code if unknown
- */
 export function getCountryName(countryCode: string, apiCountryName?: string): string {
   if (apiCountryName) return apiCountryName;
 
-  // Fallback map for common countries
   const countryNames: Record<string, string> = {
     ES: 'España',
     US: 'Estados Unidos',

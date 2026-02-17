@@ -15,8 +15,8 @@ import {
 
 @Module({
   imports: [
-    AuthModule, // Para importar USER_REPOSITORY, PASSWORD_SERVICE
-    ExternalMetadataModule, // Para importar StorageService
+    AuthModule,
+    ExternalMetadataModule,
   ],
   controllers: [UsersController],
   providers: [

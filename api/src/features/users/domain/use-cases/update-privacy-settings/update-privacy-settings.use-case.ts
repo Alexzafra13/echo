@@ -11,13 +11,11 @@ export class UpdatePrivacySettingsUseCase {
   ) {}
 
   async execute(input: UpdatePrivacySettingsInput): Promise<UpdatePrivacySettingsOutput> {
-    // 1. Verify user exists
     const user = await this.userRepository.findById(input.userId);
     if (!user) {
       throw new NotFoundError('User', input.userId);
     }
 
-    // 2. Build update object with only provided fields
     const updateData: Record<string, any> = {};
 
     if (input.isPublicProfile !== undefined) {
@@ -39,7 +37,6 @@ export class UpdatePrivacySettingsUseCase {
       updateData.bio = input.bio;
     }
 
-    // 3. Update user if there are changes
     let updatedUser = user;
     if (Object.keys(updateData).length > 0) {
       updatedUser = await this.userRepository.updatePartial(input.userId, updateData);

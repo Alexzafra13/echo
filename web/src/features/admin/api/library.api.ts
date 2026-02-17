@@ -30,25 +30,16 @@ export interface UpdateLibraryResult {
   fileCount?: number;
 }
 
-/**
- * Get current library configuration
- */
 export async function getLibraryConfig(): Promise<LibraryConfig> {
   const { data } = await apiClient.get<LibraryConfig>('/admin/library');
   return data;
 }
 
-/**
- * Update library path
- */
 export async function updateLibraryPath(path: string): Promise<UpdateLibraryResult> {
   const { data } = await apiClient.put<UpdateLibraryResult>('/admin/library', { path });
   return data;
 }
 
-/**
- * Browse directories
- */
 export async function browseDirectories(path: string): Promise<BrowseResult> {
   const { data } = await apiClient.post<BrowseResult>('/admin/library/browse', { path });
   return data;

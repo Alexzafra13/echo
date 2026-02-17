@@ -1,33 +1,12 @@
-/**
- * Domain types for Federation module
- * These types represent the domain concepts independent of infrastructure
- */
-
-// ============================================
-// Federation Permissions
-// ============================================
-
 export interface FederationPermissions {
   canBrowse: boolean;
   canStream: boolean;
   canDownload: boolean;
 }
 
-// ============================================
-// Import Status
-// ============================================
-
 export type ImportStatus = 'pending' | 'downloading' | 'completed' | 'failed' | 'cancelled';
 
-// ============================================
-// Mutual Federation Status
-// ============================================
-
 export type MutualFederationStatus = 'none' | 'pending' | 'approved' | 'rejected';
-
-// ============================================
-// Connected Server
-// ============================================
 
 export interface ConnectedServer {
   id: string;
@@ -64,10 +43,6 @@ export interface NewConnectedServer {
   lastSyncAt?: Date | null;
 }
 
-// ============================================
-// Federation Token (Invitation codes)
-// ============================================
-
 export interface FederationToken {
   id: string;
   createdByUserId: string;
@@ -90,10 +65,6 @@ export interface NewFederationToken {
   expiresAt: Date;
   maxUses?: number;
 }
-
-// ============================================
-// Federation Access Token
-// ============================================
 
 export interface FederationAccessToken {
   id: string;
@@ -122,10 +93,6 @@ export interface NewFederationAccessToken {
   mutualInvitationToken?: string | null;
   mutualStatus?: MutualFederationStatus;
 }
-
-// ============================================
-// Album Import Queue
-// ============================================
 
 export interface AlbumImportQueue {
   id: string;

@@ -9,23 +9,9 @@ import styles from './AlbumGrid.module.css';
 interface ExtendedAlbumGridProps extends AlbumGridProps {
   showViewAll?: boolean;
   viewAllPath?: string;
-  /** Mobile layout: 'carousel' (horizontal scroll) or 'grid' (keep grid). Default: 'carousel' */
   mobileLayout?: 'carousel' | 'grid';
 }
 
-/**
- * AlbumGrid Component
- * Displays a grid of albums with a title
- *
- * @example
- * <AlbumGrid
- *   title="Recently Added"
- *   albums={recentAlbums}
- *   showViewAll={true}
- *   viewAllPath="/albums"
- *   mobileLayout="carousel" // or "grid" to keep grid on mobile
- * />
- */
 export function AlbumGrid({
   title,
   albums,
@@ -42,13 +28,11 @@ export function AlbumGrid({
 
   const handlePlayClick = async (albumId: string) => {
     try {
-      // Find the album to get its cover image
       const album = albums.find(a => a.id === albumId);
       const coverImage = album?.coverImage;
 
       const tracks = await albumsService.getAlbumTracks(albumId);
       if (tracks && tracks.length > 0) {
-        // Map tracks to include cover image and artist info for the player
         const tracksWithCover = tracks.map(track => ({
           id: track.id,
           title: track.title,
@@ -58,7 +42,6 @@ export function AlbumGrid({
           duration: track.duration || 0,
           coverImage: coverImage,
           trackNumber: track.trackNumber,
-          // Audio normalization data (LUFS)
           rgTrackGain: track.rgTrackGain,
           rgTrackPeak: track.rgTrackPeak,
         }));

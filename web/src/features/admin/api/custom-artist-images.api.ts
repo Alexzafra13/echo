@@ -56,9 +56,6 @@ export interface DeleteCustomImageResponse {
 }
 
 export const customArtistImagesApi = {
-  /**
-   * List all custom images for an artist
-   */
   async listImages(artistId: string): Promise<ListCustomImagesResponse> {
     const response = await apiClient.get<ListCustomImagesResponse>(
       `/admin/metadata/artist/custom-images/${artistId}`,
@@ -66,9 +63,6 @@ export const customArtistImagesApi = {
     return response.data;
   },
 
-  /**
-   * Upload a custom image for an artist
-   */
   async uploadImage(request: UploadCustomImageRequest): Promise<UploadCustomImageResponse> {
     const formData = new FormData();
     formData.append('file', request.file);
@@ -86,9 +80,6 @@ export const customArtistImagesApi = {
     return response.data;
   },
 
-  /**
-   * Apply (activate) a custom image
-   */
   async applyImage(request: ApplyCustomImageRequest): Promise<ApplyCustomImageResponse> {
     const response = await apiClient.post<ApplyCustomImageResponse>(
       `/admin/metadata/artist/custom-images/${request.artistId}/apply/${request.customImageId}`,
@@ -96,9 +87,6 @@ export const customArtistImagesApi = {
     return response.data;
   },
 
-  /**
-   * Delete a custom image
-   */
   async deleteImage(request: DeleteCustomImageRequest): Promise<DeleteCustomImageResponse> {
     const response = await apiClient.delete<DeleteCustomImageResponse>(
       `/admin/metadata/artist/custom-images/${request.artistId}/${request.customImageId}`,

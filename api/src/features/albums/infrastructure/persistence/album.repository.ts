@@ -60,7 +60,6 @@ export class DrizzleAlbumRepository
   }
 
   async search(name: string, skip: number, take: number): Promise<Album[]> {
-    // Use ILIKE for case-insensitive search with escaped wildcards
     const searchPattern = createSearchPattern(name);
 
     const result = await this.drizzle.db
@@ -155,7 +154,7 @@ export class DrizzleAlbumRepository
       .leftJoin(artists, eq(albums.artistId, artists.id))
       .where(inArray(albums.id, ids));
 
-    // Maintain play count order
+    // Preserva el orden por cantidad de reproducciones
     const albumMap = new Map(result.map((r) => [r.album.id, r]));
     const orderedAlbums = ids
       .map((id) => albumMap.get(id))
@@ -242,7 +241,7 @@ export class DrizzleAlbumRepository
       .leftJoin(artists, eq(albums.artistId, artists.id))
       .where(inArray(albums.id, ids));
 
-    // Maintain play order
+    // Preserva el orden por fecha de reproducción
     const albumMap = new Map(result.map((r) => [r.album.id, r]));
     const orderedAlbums = ids
       .map((id) => albumMap.get(id))
@@ -256,10 +255,8 @@ export class DrizzleAlbumRepository
     );
   }
 
-  /**
-   * @deprecated Favorites functionality has been removed (likes/dislikes system deprecated)
-   * Returns empty array for backwards compatibility
-   */
+  // @deprecated - funcionalidad de favoritos eliminada
+
   async findFavorites(_userId: string, _skip: number, _take: number): Promise<Album[]> {
     return [];
   }
@@ -309,7 +306,7 @@ export class DrizzleAlbumRepository
       'description',
     ]);
 
-    // Convert releaseDate to string format if present (Drizzle date type expects string)
+    // Drizzle espera releaseDate como string
     const dbUpdateData = {
       ...updateData,
       updatedAt: new Date(),

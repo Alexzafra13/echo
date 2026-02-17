@@ -21,10 +21,6 @@ interface CreatePlaylistModalProps {
   isLoading?: boolean;
 }
 
-/**
- * CreatePlaylistModal Component
- * Modal for creating a new playlist with at least one song
- */
 export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: CreatePlaylistModalProps) {
   const [name, setName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,10 +29,8 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [error, setError] = useState('');
 
-  // Search tracks
   const { data: searchResults, isLoading: searchLoading } = useTrackSearch(searchQuery, { take: 8 });
 
-  // Load recently played on mount
   useEffect(() => {
     const loadRecent = async () => {
       try {
@@ -104,13 +98,11 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
 
   const canCreate = name.trim().length > 0 && selectedTracks.length > 0;
 
-  // Filter out already selected from recent
   const filteredRecent = recentTracks.filter(r => !isTrackSelected(r.trackId));
 
   return (
     <Modal isOpen={true} onClose={onClose} title="Nueva Playlist">
       <form onSubmit={handleSubmit} className={styles.form}>
-        {/* Name field */}
         <div className={styles.inputGroup}>
           <label className={styles.label}>Nombre de la playlist</label>
           <input
@@ -127,7 +119,6 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
           />
         </div>
 
-        {/* Song search */}
         <div className={styles.inputGroup}>
           <label className={styles.label}>Buscar canciones</label>
           <div className={styles.searchInputWrapper}>
@@ -152,7 +143,6 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
           </div>
         </div>
 
-        {/* Search results */}
         {searchQuery.length >= 2 && (
           <div className={styles.trackSection}>
             <span className={styles.sectionLabel}>Resultados de búsqueda</span>
@@ -181,7 +171,6 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
           </div>
         )}
 
-        {/* Recently played suggestions (only show if not searching) */}
         {searchQuery.length < 2 && (
           <div className={styles.trackSection}>
             <span className={styles.sectionLabel}>Sugerencias (escuchadas recientemente)</span>
@@ -211,7 +200,6 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
           </div>
         )}
 
-        {/* Selected tracks */}
         {selectedTracks.length > 0 && (
           <div className={styles.selectedSection}>
             <span className={styles.sectionLabel}>
@@ -259,10 +247,8 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
           </div>
         )}
 
-        {/* Error message */}
         {error && <div className={styles.error}>{error}</div>}
 
-        {/* Actions */}
         <div className={styles.actions}>
           <Button
             type="button"
@@ -285,7 +271,6 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
   );
 }
 
-// Track item sub-component
 interface TrackItemProps {
   track: Track | RecentlyPlayed;
   isSelected: boolean;
@@ -293,12 +278,10 @@ interface TrackItemProps {
 }
 
 function TrackItem({ track, isSelected, onToggle }: TrackItemProps) {
-  // Guard against invalid data
   if (!track || typeof track !== 'object') {
     return null;
   }
 
-  // Check if this is a RecentlyPlayed (has trackId) or Track (has id directly)
   const isRecentlyPlayed = 'trackId' in track;
   const trackData = isRecentlyPlayed && (track as RecentlyPlayed).track
     ? (track as RecentlyPlayed).track!

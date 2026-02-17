@@ -1,8 +1,5 @@
 import type { Country } from '../components/CountrySelect/CountrySelect';
 
-/**
- * Lista de países populares para el selector rápido de radio
- */
 export const POPULAR_COUNTRIES: Country[] = [
   { code: 'ES', name: 'España', flag: '🇪🇸' },
   { code: 'US', name: 'Estados Unidos', flag: '🇺🇸' },

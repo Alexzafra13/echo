@@ -16,11 +16,6 @@ interface GenreSelectModalProps {
   onChange: (genreId: string) => void;
 }
 
-/**
- * GenreSelectModal Component
- * Modal for selecting a music genre to filter radio stations
- * Better UX than tabs for many genres - doesn't clutter the UI
- */
 export function GenreSelectModal({
   isOpen,
   onClose,
@@ -42,7 +37,6 @@ export function GenreSelectModal({
     onClose();
   };
 
-  // Filter genres by search query
   const filteredGenres = searchQuery
     ? genres.filter(g =>
         g.label.toLowerCase().includes(searchQuery.toLowerCase())
@@ -52,7 +46,6 @@ export function GenreSelectModal({
   return (
     <div className={styles.modal__overlay} onClick={handleClose}>
       <div className={styles.modal__content} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
         <div className={styles.modal__header}>
           <h2 className={styles.modal__title}>
             <Music2 size={20} />
@@ -67,7 +60,6 @@ export function GenreSelectModal({
           </button>
         </div>
 
-        {/* Search bar */}
         <div className={styles.modal__search}>
           <Search size={16} />
           <input
@@ -88,7 +80,6 @@ export function GenreSelectModal({
           )}
         </div>
 
-        {/* Content */}
         <div className={styles.modal__body}>
           <div className={styles.modal__grid}>
             {filteredGenres.map(genre => (
@@ -104,7 +95,6 @@ export function GenreSelectModal({
             ))}
           </div>
 
-          {/* No results */}
           {searchQuery && filteredGenres.length === 0 && (
             <div className={styles.modal__empty}>
               <p>No se encontraron géneros</p>

@@ -5,7 +5,6 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { JwtUser } from '@shared/types/request.types';
 
-// Tokens para streaming de audio (30 días de duración)
 @ApiTags('streaming')
 @ApiBearerAuth('JWT-auth')
 @Controller('stream-token')
@@ -58,7 +57,6 @@ export class StreamTokenController {
   async getCurrentToken(@CurrentUser() user: JwtUser) {
     const tokenData = await this.streamTokenService.getUserToken(user.id);
     if (!tokenData) {
-      // If no token exists, generate one
       return this.streamTokenService.generateToken(user.id);
     }
     return tokenData;

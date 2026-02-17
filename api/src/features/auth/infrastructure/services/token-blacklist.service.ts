@@ -3,8 +3,7 @@ import { createHash } from 'crypto';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { RedisService } from '@infrastructure/cache/redis.service';
 
-// Blacklist de tokens JWT en Redis. Permite invalidar tokens al hacer logout.
-// Los tokens se auto-eliminan de Redis al expirar (TTL).
+// Blacklist de tokens JWT en Redis con auto-eliminación por TTL
 @Injectable()
 export class TokenBlacklistService {
   private readonly PREFIX = 'token:blacklist:';
@@ -37,7 +36,7 @@ export class TokenBlacklistService {
     return result !== null;
   }
 
-  // SHA-256 del token completo para evitar colisiones
+  // Genera hash SHA-256 del token como clave
   private getKey(tokenOrJti: string): string {
     const hash = createHash('sha256').update(tokenOrJti).digest('hex');
     return `${this.PREFIX}${hash}`;

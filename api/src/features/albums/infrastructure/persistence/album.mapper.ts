@@ -1,30 +1,17 @@
 import { Album as AlbumDb } from '@infrastructure/database/schema/albums';
 import { Album } from '../../domain/entities/album.entity';
 
-/**
- * Album with optional artist relation from Drizzle query
- * Artist can be full ArtistDb object or just { name: string } for partial queries
- */
 type AlbumWithRelations = AlbumDb & {
   artist?: { name: string } | null;
 };
 
-/**
- * AlbumMapper - Convierte entre capas
- *
- * Drizzle Album ↔ Domain Album
- */
 export class AlbumMapper {
-  /**
-   * Convierte Drizzle Album a Domain Album
-   * Se usa cuando traes datos de BD
-   */
   static toDomain(raw: AlbumWithRelations): Album {
     return Album.reconstruct({
       id: raw.id,
       name: raw.name,
       artistId: raw.artistId || undefined,
-      artistName: raw.artist?.name || undefined, // Extract artist name from relation
+      artistName: raw.artist?.name || undefined,
       albumArtistId: raw.albumArtistId || undefined,
       coverArtPath: raw.coverArtPath || undefined,
       year: raw.year || undefined,
@@ -39,13 +26,8 @@ export class AlbumMapper {
     });
   }
 
-  /**
-   * Convierte Domain Album a formato Drizzle
-   * Se usa cuando guardas en BD
-   */
   static toPersistence(album: Album) {
     const primitives = album.toPrimitives();
-    // Convert Date to ISO string for Drizzle date column
     const releaseDate = primitives.releaseDate
       ? (primitives.releaseDate instanceof Date
           ? primitives.releaseDate.toISOString().split('T')[0]
@@ -69,9 +51,6 @@ export class AlbumMapper {
     };
   }
 
-  /**
-   * Convierte Array de Drizzle Albums a Domain Albums
-   */
   static toDomainArray(raw: AlbumWithRelations[]): Album[] {
     return raw.map((item) => this.toDomain(item));
   }

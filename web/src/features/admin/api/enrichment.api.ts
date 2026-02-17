@@ -61,9 +61,6 @@ export interface EnrichmentStats {
 }
 
 export const enrichmentApi = {
-  /**
-   * Obtener historial de enriquecimientos con filtros
-   */
   async listEnrichmentLogs(
     filters?: ListEnrichmentLogsFilters,
   ): Promise<ListEnrichmentLogsResponse> {
@@ -74,9 +71,6 @@ export const enrichmentApi = {
     return response.data;
   },
 
-  /**
-   * Obtener estadísticas de enriquecimientos
-   */
   async getEnrichmentStats(
     period?: 'today' | 'week' | 'month' | 'all',
   ): Promise<EnrichmentStats> {

@@ -2,14 +2,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMetadataSSE, ArtistImagesUpdatedEvent } from './useMetadataSSE';
 
-/**
- * useArtistMetadataSync
- *
- * Automatically synchronizes artist metadata when updates occur via SSE.
- * Listens to `artist:images:updated` events and invalidates relevant React Query caches.
- *
- * @param artistId - Optional artist ID to listen for specific artist updates only
- */
+// Sincroniza metadatos de artista via SSE e invalida caches de React Query
 export function useArtistMetadataSync(artistId?: string) {
   const queryClient = useQueryClient();
   const eventSource = useMetadataSSE();

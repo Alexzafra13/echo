@@ -11,57 +11,30 @@ import { logger } from '@shared/utils/logger';
 import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
 import styles from './HeroSection.module.css';
 
-/**
- * HeroSection Component
- * Displays the featured album or artist playlist with large cover, background, play button, and navigation
- * Uses Fanart.tv images when available (background and logo) with fallback to album/playlist cover
- * Automatically enriches artist metadata if not already available
- *
- * @example
- * <HeroSection
- *   item={{ type: 'album', data: featuredAlbum }}
- *   onPlay={() => playAlbum(album.id)}
- *   onNext={() => nextFeatured()}
- *   onPrevious={() => previousFeatured()}
- * />
- */
 export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionProps) {
   const [, setLocation] = useLocation();
   const { playQueue } = usePlayer();
 
-  // Determine if we're showing an album or playlist
   const isAlbum = isHeroAlbum(item);
   const isPlaylist = isHeroPlaylist(item);
 
-  // Extract data based on type
   const album = isAlbum ? item.data : null;
   const playlist = isPlaylist ? item.data : null;
 
-  // For playlists, we need the artistId from metadata
   const artistId = isAlbum
     ? album!.artistId
     : playlist?.metadata.artistId || '';
 
-  // Real-time synchronization via WebSocket for artist and album metadata
   useArtistMetadataSync(artistId);
   useAlbumMetadataSync(isAlbum ? album!.id : '', artistId);
 
-  // Fetch artist data for timestamp
   const { data: artist } = useArtist(artistId);
-
-  // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(artistId);
-
-  // Fetch album tracks (only for albums)
   const { data: albumTracks } = useAlbumTracks(isAlbum ? album!.id : '');
 
-  // Check if artist has any hero images (background or logo)
   const hasHeroImages = artistImages?.images.background?.exists || artistImages?.images.logo?.exists;
-
-  // Auto-enrich artist if they don't have hero images yet
   useAutoEnrichArtist(artistId, hasHeroImages);
 
-  // Convert API tracks to Player tracks
   const convertAlbumToPlayerTracks = (apiTracks: any[]): Track[] => {
     if (!album) return [];
     return apiTracks.map(track => ({
@@ -72,13 +45,11 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
       albumName: album.title,
       duration: track.duration || 0,
       coverImage: album.coverImage,
-      // Audio normalization data (LUFS)
       rgTrackGain: track.rgTrackGain,
       rgTrackPeak: track.rgTrackPeak,
     }));
   };
 
-  // Convert playlist tracks to Player tracks
   const convertPlaylistToPlayerTracks = (): Track[] => {
     if (!playlist || !playlist.tracks) return [];
     return playlist.tracks
@@ -91,7 +62,6 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
         albumName: st.track!.albumName,
         duration: st.track!.duration || 0,
         coverImage: st.track!.albumId ? `/api/albums/${st.track!.albumId}/cover` : undefined,
-        // Audio normalization data (LUFS)
         rgTrackGain: st.track!.rgTrackGain,
         rgTrackPeak: st.track!.rgTrackPeak,
       }));
@@ -125,7 +95,6 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
     if (isAlbum) {
       setLocation(`/album/${album!.id}`);
     } else if (isPlaylist) {
-      // Store playlist in sessionStorage and navigate to detail
       safeSessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
       safeSessionStorage.setItem('playlistReturnPath', '/');
       setLocation(`/wave-mix/${playlist!.id}`);
@@ -138,15 +107,12 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
     }
   };
 
-  // Determine cover URL
   const coverUrl = isAlbum
     ? getCoverUrl(album!.coverImage)
     : playlist?.coverImageUrl || '';
 
-  // Timestamp for cache busting
   const artistTimestamp = artist?.externalInfoUpdatedAt || artist?.updatedAt;
 
-  // Use Fanart.tv background if available, fallback to cover
   const hasBackground = artistImages?.images.background?.exists;
   const backgroundUrl = hasBackground
     ? getArtistImageUrl(artistId, 'background', artistTimestamp)
@@ -154,11 +120,9 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
       ? (album!.backgroundImage || coverUrl)
       : coverUrl;
 
-  // Check if artist logo is available
   const hasLogo = artistImages?.images.logo?.exists;
   const logoUrl = hasLogo ? getArtistImageUrl(artistId, 'logo', artistTimestamp) : null;
 
-  // Determine display values
   const title = isAlbum ? album!.title : playlist!.name;
   const artistName = isAlbum ? album!.artist : playlist!.metadata.artistName || '';
   const subtitle = isAlbum
@@ -169,7 +133,6 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
 
   return (
     <section className={styles.heroSection}>
-      {/* Background Image with blur effect */}
       <div
         key={backgroundUrl}
         className={styles.heroSection__background}
@@ -179,7 +142,6 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
         }}
       />
 
-      {/* Navigation Buttons */}
       <button
         className={styles.heroSection__navButton}
         onClick={handlePrevious}
@@ -197,7 +159,6 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
       </button>
 
       <div className={styles.heroSection__content}>
-        {/* Cover - Clickable */}
         <button
           onClick={handleCoverClick}
           className={styles.heroSection__albumCoverButton}
@@ -211,9 +172,7 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
           />
         </button>
 
-        {/* Info */}
         <div className={styles.heroSection__info}>
-          {/* Artist name or logo - Clickable (only if we have artistId) */}
           {artistId && (
             <button
               onClick={handleArtistClick}
@@ -258,7 +217,6 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
           </button>
         </div>
 
-        {/* Optional: Album Art (side image) - only for albums */}
         {isAlbum && album!.albumArt && (
           <img
             src={album!.albumArt}

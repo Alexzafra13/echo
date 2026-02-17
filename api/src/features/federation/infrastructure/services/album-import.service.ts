@@ -12,9 +12,6 @@ import { IFederationRepository, FEDERATION_REPOSITORY } from '../../domain/ports
 import { AlbumImportQueue, ConnectedServer } from '../../domain/types';
 import { ImportProgressService } from './import-progress.service';
 
-/**
- * Metadata for album export from remote server
- */
 export interface ExportedAlbumMetadata {
   album: {
     id: string;
@@ -60,36 +57,30 @@ export interface ExportedTrackMetadata {
   comment: string | null;
   lyrics: string | null;
   bpm: number | null;
-  // ReplayGain/LUFS
   rgAlbumGain: number | null;
   rgAlbumPeak: number | null;
   rgTrackGain: number | null;
   rgTrackPeak: number | null;
   lufsAnalyzed: boolean;
-  // MusicBrainz
   mbzTrackId: string | null;
   mbzAlbumId: string | null;
   mbzArtistId: string | null;
   mbzAlbumArtistId: string | null;
   mbzReleaseTrackId: string | null;
   catalogNum: string | null;
-  // File info
   filename: string;
   streamUrl: string;
 }
 
-/**
- * Progress event emitted during import
- */
 export interface AlbumImportProgressEvent {
   importId: string;
   userId: string;
   albumName: string;
   artistName: string;
-  serverId: string; // Connected server ID (for cover proxy)
-  remoteAlbumId: string; // Remote album ID (for cover proxy)
+  serverId: string;
+  remoteAlbumId: string;
   status: 'downloading' | 'completed' | 'failed';
-  progress: number; // 0-100
+  progress: number;
   currentTrack: number;
   totalTracks: number;
   downloadedSize: number;
@@ -97,16 +88,6 @@ export interface AlbumImportProgressEvent {
   error?: string;
 }
 
-/**
- * AlbumImportService - Service for importing albums from federated servers
- *
- * Responsibilities:
- * - Fetch album metadata from remote server
- * - Download track files to local music library
- * - Create artist/album/track records in database
- * - Preserve LUFS/ReplayGain data to skip re-analysis
- * - Emit progress events via WebSocket
- */
 @Injectable()
 export class AlbumImportService {
   constructor(
@@ -118,18 +99,13 @@ export class AlbumImportService {
     private readonly importProgressService: ImportProgressService,
   ) {}
 
-  /**
-   * Start importing an album from a connected server
-   */
   async startImport(
     userId: string,
     server: ConnectedServer,
     remoteAlbumId: string,
   ): Promise<AlbumImportQueue> {
-    // 1. Get album metadata from remote server
     const metadata = await this.fetchAlbumMetadata(server, remoteAlbumId);
 
-    // 2. Check for duplicate - album with same name and artist already exists
     const existingAlbum = await this.checkForDuplicateAlbum(
       metadata.album.name,
       metadata.album.artistName,
@@ -145,7 +121,6 @@ export class AlbumImportService {
       );
     }
 
-    // 3. Check for existing pending import of the same album from same server
     const existingImport = await this.checkForPendingImport(
       userId,
       server.id,
@@ -162,7 +137,6 @@ export class AlbumImportService {
       );
     }
 
-    // 4. Create import queue entry
     const importEntry = await this.repository.createAlbumImport({
       userId,
       connectedServerId: server.id,
@@ -182,7 +156,6 @@ export class AlbumImportService {
       'Album import queued',
     );
 
-    // 3. Start import process in background
     this.processImport(importEntry.id, server, metadata).catch((error) => {
       this.logger.error(
         { importId: importEntry.id, error: error instanceof Error ? error.message : error },
@@ -193,23 +166,14 @@ export class AlbumImportService {
     return importEntry;
   }
 
-  /**
-   * Get import status
-   */
   async getImportStatus(importId: string): Promise<AlbumImportQueue | null> {
     return this.repository.findAlbumImportById(importId);
   }
 
-  /**
-   * Get all imports for a user
-   */
   async getUserImports(userId: string): Promise<AlbumImportQueue[]> {
     return this.repository.findAlbumImportsByUserId(userId);
   }
 
-  /**
-   * Cancel a pending import
-   */
   async cancelImport(importId: string): Promise<boolean> {
     const importEntry = await this.repository.findAlbumImportById(importId);
     if (!importEntry || importEntry.status !== 'pending') {
@@ -220,13 +184,6 @@ export class AlbumImportService {
     return true;
   }
 
-  // ============================================
-  // Private methods
-  // ============================================
-
-  /**
-   * Check if an album with the same name and artist already exists
-   */
   private async checkForDuplicateAlbum(
     albumName: string,
     artistName: string,
@@ -246,9 +203,6 @@ export class AlbumImportService {
     return existing ?? null;
   }
 
-  /**
-   * Check if there's already a pending/downloading import for this album
-   */
   private async checkForPendingImport(
     userId: string,
     serverId: string,
@@ -266,15 +220,9 @@ export class AlbumImportService {
     return pendingImport ?? null;
   }
 
-  /** Timeout for metadata requests (30 seconds) */
   private static readonly METADATA_TIMEOUT = 30000;
-
-  /** Timeout for file downloads (5 minutes) */
   private static readonly DOWNLOAD_TIMEOUT = 300000;
 
-  /**
-   * Fetch album metadata from remote server
-   */
   private async fetchAlbumMetadata(
     server: ConnectedServer,
     albumId: string,
@@ -319,7 +267,6 @@ export class AlbumImportService {
       if (error instanceof Error && error.message.startsWith('Failed to fetch album metadata')) {
         throw error;
       }
-      // Network error or other fetch failure - extract more details
       const errorMessage = this.getNetworkErrorMessage(error, url);
       this.logger.error(
         { serverId: server.id, albumId, error: errorMessage, cause: (error as any)?.cause?.code },
@@ -331,9 +278,6 @@ export class AlbumImportService {
     }
   }
 
-  /**
-   * Extract meaningful error message from network errors
-   */
   private getNetworkErrorMessage(error: unknown, url: string): string {
     if (!(error instanceof Error)) {
       return 'Unknown network error';
@@ -370,9 +314,6 @@ export class AlbumImportService {
     return error.message;
   }
 
-  /**
-   * Process the album import (runs in background)
-   */
   private async processImport(
     importId: string,
     server: ConnectedServer,
@@ -384,22 +325,19 @@ export class AlbumImportService {
     }
 
     try {
-      // Update status to downloading
       await this.repository.updateAlbumImportStatus(importId, 'downloading');
       this.emitProgress(importEntry, 'downloading', 0, 0);
 
-      // 1. Get music library path
       const musicPath = await this.getMusicLibraryPath();
       if (!musicPath) {
         throw new Error('Music library path not configured');
       }
 
-      // 2. Create folder structure: /music/{Artist}/{Album}/
       const artistFolder = this.sanitizeFolderName(metadata.album.artistName);
       const albumFolder = this.sanitizeFolderName(metadata.album.name);
       const albumPath = path.join(musicPath, artistFolder, albumFolder);
 
-      // Validate resolved path is within the music library (prevent path traversal)
+      // Prevenir path traversal
       const resolvedAlbumPath = path.resolve(albumPath);
       const resolvedMusicPath = path.resolve(musicPath);
       if (!resolvedAlbumPath.startsWith(resolvedMusicPath + path.sep)) {
@@ -413,18 +351,13 @@ export class AlbumImportService {
         'Created album folder',
       );
 
-      // 3. Find or create artist
       const artistId = await this.findOrCreateArtist(metadata.album.artistName);
-
-      // 4. Create album record
       const albumId = await this.createAlbumRecord(metadata.album, artistId, albumPath);
 
-      // 5. Download cover if available
       if (metadata.album.hasCover && metadata.album.coverUrl) {
         await this.downloadCover(server, metadata.album.coverUrl, albumPath, albumId);
       }
 
-      // 6. Download tracks one by one
       let downloadedTracks = 0;
       let downloadedSize = 0;
 
@@ -441,7 +374,6 @@ export class AlbumImportService {
         downloadedTracks++;
         downloadedSize += track.size || 0;
 
-        // Update progress
         const progress = Math.round((downloadedTracks / metadata.tracks.length) * 100);
         await this.repository.updateAlbumImport(importId, {
           progress,
@@ -462,7 +394,6 @@ export class AlbumImportService {
         );
       }
 
-      // 7. Mark as completed
       await this.repository.updateAlbumImportStatus(importId, 'completed');
       this.emitProgress(
         { ...importEntry, progress: 100, downloadedTracks, downloadedSize },
@@ -489,9 +420,6 @@ export class AlbumImportService {
     }
   }
 
-  /**
-   * Get music library path from settings
-   */
   private async getMusicLibraryPath(): Promise<string | null> {
     const [setting] = await this.drizzle.db
       .select({ value: settings.value })
@@ -502,11 +430,7 @@ export class AlbumImportService {
     return setting?.value || null;
   }
 
-  /**
-   * Find existing artist or create new one
-   */
   private async findOrCreateArtist(artistName: string): Promise<string> {
-    // Try to find existing artist
     const [existing] = await this.drizzle.db
       .select({ id: artists.id })
       .from(artists)
@@ -517,7 +441,6 @@ export class AlbumImportService {
       return existing.id;
     }
 
-    // Create new artist
     const [newArtist] = await this.drizzle.db
       .insert(artists)
       .values({
@@ -529,9 +452,6 @@ export class AlbumImportService {
     return newArtist.id;
   }
 
-  /**
-   * Create album record in database
-   */
   private async createAlbumRecord(
     albumMeta: ExportedAlbumMetadata['album'],
     artistId: string,
@@ -564,9 +484,6 @@ export class AlbumImportService {
     return newAlbum.id;
   }
 
-  /**
-   * Download cover image from remote server
-   */
   private async downloadCover(
     server: ConnectedServer,
     coverUrl: string,
@@ -593,11 +510,9 @@ export class AlbumImportService {
       const coverPath = path.join(albumPath, 'cover.jpg');
       const fileStream = fsSync.createWriteStream(coverPath);
 
-      // Node 18+ compatibility
       const body = response.body as unknown as Readable;
       await pipeline(body, fileStream);
 
-      // Update album with cover path
       await this.drizzle.db
         .update(albums)
         .set({ coverArtPath: coverPath })
@@ -617,9 +532,6 @@ export class AlbumImportService {
     }
   }
 
-  /**
-   * Download a single track from remote server
-   */
   private async downloadTrack(
     server: ConnectedServer,
     trackMeta: ExportedTrackMetadata,
@@ -628,21 +540,19 @@ export class AlbumImportService {
     artistId: string,
     albumMeta: ExportedAlbumMetadata['album'],
   ): Promise<string> {
-    // Build filename: "01 - Title.flac"
     const trackNum = String(trackMeta.trackNumber || 0).padStart(2, '0');
     const safeTitle = this.sanitizeFileName(trackMeta.title);
     const extension = this.sanitizeExtension(trackMeta.suffix || 'mp3');
     const filename = `${trackNum} - ${safeTitle}.${extension}`;
     const trackPath = path.join(albumPath, filename);
 
-    // Validate resolved path is within the album directory (prevent path traversal)
+    // Prevenir path traversal
     const resolvedPath = path.resolve(trackPath);
     const resolvedAlbumPath = path.resolve(albumPath);
     if (!resolvedPath.startsWith(resolvedAlbumPath + path.sep)) {
       throw new Error(`Path traversal detected for track "${trackMeta.title}"`);
     }
 
-    // Download the track file with timeout
     const streamUrl = `${server.baseUrl}${trackMeta.streamUrl}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), AlbumImportService.DOWNLOAD_TIMEOUT);
@@ -676,7 +586,6 @@ export class AlbumImportService {
       clearTimeout(timeoutId);
     }
 
-    // Create track record with all metadata including LUFS/ReplayGain
     await this.drizzle.db.insert(tracks).values({
       title: trackMeta.title,
       albumId,
@@ -701,13 +610,12 @@ export class AlbumImportService {
       lyrics: trackMeta.lyrics,
       bpm: trackMeta.bpm,
       path: trackPath,
-      // ReplayGain/LUFS - preserve from source server!
+      // Preservar ReplayGain/LUFS del servidor origen para evitar re-análisis
       rgAlbumGain: trackMeta.rgAlbumGain,
       rgAlbumPeak: trackMeta.rgAlbumPeak,
       rgTrackGain: trackMeta.rgTrackGain,
       rgTrackPeak: trackMeta.rgTrackPeak,
-      lufsAnalyzedAt: trackMeta.lufsAnalyzed ? new Date() : null, // Mark as analyzed if source had it
-      // MusicBrainz IDs
+      lufsAnalyzedAt: trackMeta.lufsAnalyzed ? new Date() : null,
       mbzTrackId: trackMeta.mbzTrackId,
       mbzAlbumId: trackMeta.mbzAlbumId,
       mbzArtistId: trackMeta.mbzArtistId,
@@ -719,9 +627,6 @@ export class AlbumImportService {
     return trackPath;
   }
 
-  /**
-   * Emit progress event via WebSocket gateway and SSE
-   */
   private emitProgress(
     importEntry: AlbumImportQueue,
     status: 'downloading' | 'completed' | 'failed',
@@ -748,19 +653,14 @@ export class AlbumImportService {
     this.importProgressService.emit(event);
   }
 
-  /**
-   * Sanitize folder name for filesystem
-   * Prevents path traversal by removing dangerous characters and patterns
-   */
   private sanitizeFolderName(name: string): string {
     let sanitized = name
-      .replace(/[<>:"/\\|?*]/g, '') // Remove invalid chars
-      .replace(/\.\./g, '') // Remove path traversal sequences
-      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/[<>:"/\\|?*]/g, '')
+      .replace(/\.\./g, '')
+      .replace(/\s+/g, ' ')
       .trim()
       .substring(0, 100); // Limit length
 
-    // Prevent folder names that are only dots (e.g. ".", "..")
     if (/^\.+$/.test(sanitized) || sanitized.length === 0) {
       sanitized = 'Unknown';
     }
@@ -768,14 +668,10 @@ export class AlbumImportService {
     return sanitized;
   }
 
-  /**
-   * Sanitize file name for filesystem
-   * Prevents path traversal by removing dangerous characters and patterns
-   */
   private sanitizeFileName(name: string): string {
     let sanitized = name
       .replace(/[<>:"/\\|?*]/g, '')
-      .replace(/\.\./g, '') // Remove path traversal sequences
+      .replace(/\.\./g, '')
       .replace(/\s+/g, ' ')
       .trim()
       .substring(0, 200);
@@ -787,9 +683,6 @@ export class AlbumImportService {
     return sanitized;
   }
 
-  /**
-   * Sanitize file extension - only allow alphanumeric characters
-   */
   private sanitizeExtension(ext: string): string {
     return ext.replace(/[^a-zA-Z0-9]/g, '').substring(0, 10) || 'mp3';
   }

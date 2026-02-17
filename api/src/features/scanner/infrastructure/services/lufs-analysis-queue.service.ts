@@ -9,28 +9,10 @@ import { LufsAnalyzerService } from './lufs-analyzer.service';
 import { ScannerGateway } from '../gateways/scanner.gateway';
 import * as os from 'os';
 
-/**
- * Queue names for LUFS analysis processing
- */
 const LUFS_QUEUE = 'lufs-analysis-queue';
 const LUFS_JOB = 'analyze-track';
 
-/**
- * Auto-detect optimal concurrency based on system resources.
- *
- * LUFS analysis spawns one FFmpeg process per track (~30-50MB each).
- * Using half the cores keeps responsiveness while maximizing throughput.
- * The other half is shared with the app, DB, Redis, and DJ analysis.
- *
- * Override with LUFS_CONCURRENCY env var if needed.
- *
- * Results by server size:
- *   1-2 cores  → 1 worker
- *   4 cores    → 2 workers
- *   8 cores    → 4 workers
- *  16 cores    → 8 workers
- *  32 cores    → 12 workers (capped)
- */
+// Concurrencia óptima: mitad de cores, limitado por RAM, tope en 12
 function getOptimalConcurrency(): number {
   const envConcurrency = parseInt(process.env.LUFS_CONCURRENCY || '', 10);
   if (envConcurrency > 0) {
@@ -40,13 +22,8 @@ function getOptimalConcurrency(): number {
   const cpuCores = os.cpus().length;
   const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
 
-  // Use half the cores — FFmpeg processes are lightweight (~30-50MB each)
   const byCpu = Math.max(1, Math.floor(cpuCores / 2));
-
-  // Reserve 2GB for system, ~50MB per FFmpeg process
   const byMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.05));
-
-  // Cap at 12 — beyond this disk I/O becomes the bottleneck
   return Math.min(byCpu, byMemory, 12);
 }
 
@@ -65,26 +42,14 @@ export interface LufsQueueStats {
   estimatedTimeRemaining: string | null;
 }
 
-/**
- * LufsAnalysisQueueService
- *
- * Handles background LUFS analysis for tracks without ReplayGain data.
- * Uses BullMQ for reliable job processing with parallel workers.
- *
- * Flow:
- * 1. After scan completes, startLufsAnalysisQueue() is called
- * 2. Service enqueues ALL pending tracks at once
- * 3. BullMQ processes them in parallel (CONCURRENCY workers)
- * 4. Much faster than sequential processing
- */
+// Análisis LUFS en background con BullMQ y workers paralelos
 @Injectable()
 export class LufsAnalysisQueueService implements OnModuleInit {
-  // Session stats
   private isRunning = false;
   private processedInSession = 0;
   private totalToProcess = 0;
   private sessionStartedAt: Date | null = null;
-  private averageProcessingTime = 4000; // FFmpeg analysis ~4 seconds per track
+  private averageProcessingTime = 4000;
   private readonly concurrency: number;
 
   constructor(
@@ -97,13 +62,11 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     @InjectPinoLogger(LufsAnalysisQueueService.name)
     private readonly logger: PinoLogger,
   ) {
-    // Read concurrency from env, or auto-detect based on hardware
     const envConcurrency = this.configService.get<number>('LUFS_CONCURRENCY');
     this.concurrency = envConcurrency ?? getOptimalConcurrency();
   }
 
   async onModuleInit() {
-    // Register the job processor with concurrency for parallel processing
     this.bullmq.registerProcessor(
       LUFS_QUEUE,
       async (job) => {
@@ -119,15 +82,8 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     );
   }
 
-  /**
-   * Start the LUFS analysis queue after a scan completes
-   *
-   * This method can be called multiple times:
-   * - If queue is not running, starts a new session
-   * - If queue is running, adds any new pending tracks to the existing queue
-   */
+  // Inicia o agrega tracks a la cola de análisis LUFS
   async startLufsAnalysisQueue(): Promise<{ started: boolean; pending: number; message: string }> {
-    // Check if FFmpeg is available
     const ffmpegAvailable = await this.lufsAnalyzer.isFFmpegAvailable();
     if (!ffmpegAvailable) {
       return {
@@ -137,7 +93,6 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       };
     }
 
-    // Get all pending tracks (lufsAnalyzedAt = null means never analyzed)
     const pendingTracks = await this.drizzle.db
       .select({
         id: tracks.id,
@@ -155,7 +110,6 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       };
     }
 
-    // If queue is already running, add new tracks to the existing queue
     if (this.isRunning) {
       const newTracks = pendingTracks.length;
       this.totalToProcess += newTracks;
@@ -164,10 +118,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         `🎚️ Adding ${newTracks} new tracks to running LUFS queue (total: ${this.totalToProcess})`
       );
 
-      // Enqueue the new tracks
       await this.enqueueTracksInBatches(pendingTracks);
-
-      // Emit updated progress
       this.emitProgress();
 
       return {
@@ -177,7 +128,6 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       };
     }
 
-    // Initialize new session
     this.isRunning = true;
     this.processedInSession = 0;
     this.totalToProcess = pendingTracks.length;
@@ -187,14 +137,12 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       `🎚️ Starting LUFS analysis queue: ${pendingTracks.length} tracks (${this.concurrency} parallel workers)`
     );
 
-    // Enqueue ALL tracks at once - BullMQ will handle parallelism
     await this.enqueueTracksInBatches(pendingTracks);
 
     const estimatedTime = this.formatDuration(
       (pendingTracks.length / this.concurrency) * this.averageProcessingTime
     );
 
-    // Emit initial progress via WebSocket
     this.emitProgress();
 
     return {
@@ -204,9 +152,6 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     };
   }
 
-  /**
-   * Enqueue tracks in batches to avoid memory issues with large libraries
-   */
   private async enqueueTracksInBatches(
     tracksToEnqueue: Array<{ id: string; title: string; path: string }>
   ): Promise<void> {
@@ -235,17 +180,11 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     }
   }
 
-  /**
-   * Stop the LUFS analysis queue
-   */
   async stopLufsAnalysisQueue(): Promise<void> {
     this.isRunning = false;
     this.logger.info('⏹️ LUFS analysis queue stopped');
   }
 
-  /**
-   * Get current queue statistics
-   */
   async getQueueStats(): Promise<LufsQueueStats> {
     const pendingResult = await this.drizzle.db
       .select({ count: sql<number>`count(*)::int` })
@@ -254,7 +193,6 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
     const pendingTracks = pendingResult[0]?.count ?? 0;
 
-    // Calculate estimated time remaining (with parallel processing)
     let estimatedTimeRemaining: string | null = null;
     if (this.isRunning && pendingTracks > 0) {
       const totalMs = (pendingTracks / this.concurrency) * this.averageProcessingTime;
@@ -265,20 +203,13 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       isRunning: this.isRunning,
       pendingTracks,
       processedInSession: this.processedInSession,
-      currentTrack: null, // With parallel processing, multiple tracks are being processed
+      currentTrack: null,
       startedAt: this.sessionStartedAt,
       estimatedTimeRemaining,
     };
   }
 
-  /**
-   * Process a single LUFS analysis job
-   *
-   * Logic:
-   * - Always set lufsAnalyzedAt to mark as processed (won't retry)
-   * - If analysis succeeds: save gain/peak values
-   * - If analysis fails: leave gain/peak as null (distinguishable from 0dB real gain)
-   */
+  // Marca siempre lufsAnalyzedAt; si falla, deja gain/peak en null
   private async processLufsJob(job: LufsAnalysisJob): Promise<void> {
     const startTime = Date.now();
     const now = new Date();
@@ -287,8 +218,6 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       const result = await this.lufsAnalyzer.analyzeFile(job.filePath);
 
       if (result) {
-        // Success: save track LUFS data + outroStart for smart crossfade + mark as analyzed
-        // Note: Album gain/peak will be calculated later in calculateAlbumGains()
         await this.drizzle.db
           .update(tracks)
           .set({
@@ -305,8 +234,6 @@ export class LufsAnalysisQueueService implements OnModuleInit {
           `✅ ${job.trackTitle}: gain=${result.trackGain.toFixed(2)}dB, peak=${result.trackPeak.toFixed(3)}${outroInfo}`
         );
       } else {
-        // Analysis returned no data: mark as analyzed but leave values null
-        // This distinguishes "couldn't analyze" from "0dB real gain"
         await this.drizzle.db
           .update(tracks)
           .set({

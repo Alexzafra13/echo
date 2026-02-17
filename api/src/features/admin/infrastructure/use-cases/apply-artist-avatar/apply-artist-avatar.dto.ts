@@ -3,7 +3,7 @@ export interface ApplyArtistAvatarInput {
   avatarUrl: string;
   provider: string;
   type: 'profile' | 'background' | 'banner' | 'logo';
-  replaceLocal?: boolean; // Optional: clear local image reference (default: true)
+  replaceLocal?: boolean;
 }
 
 export interface ApplyArtistAvatarOutput {

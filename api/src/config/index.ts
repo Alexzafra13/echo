@@ -1,14 +1,3 @@
-/**
- * Central configuration exports
- *
- * All configuration files are exported from here for convenient imports.
- *
- * @example
- * ```typescript
- * import { appConfig, databaseConfig, cacheConfig } from '@config';
- * ```
- */
-
 export { appConfig } from './app.config';
 export { databaseConfig } from './database.config';
 export { cacheConfig } from './cache.config';

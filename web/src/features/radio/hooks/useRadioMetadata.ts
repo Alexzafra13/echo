@@ -16,12 +16,7 @@ interface UseRadioMetadataOptions {
   isPlaying: boolean;
 }
 
-/**
- * Hook for streaming real-time ICY metadata from radio stations
- * Uses Server-Sent Events (SSE) for efficient one-way communication
- * Only connects when radio is actively playing
- * Automatically reconnects on errors with exponential backoff
- */
+// Streaming de metadatos ICY en tiempo real vía SSE
 export function useRadioMetadata({
   stationUuid,
   streamUrl,
@@ -36,7 +31,6 @@ export function useRadioMetadata({
     ? `${apiUrl}/radio/metadata/stream?stationUuid=${encodeURIComponent(stationUuid)}&streamUrl=${encodeURIComponent(streamUrl)}`
     : null;
 
-  // Reset metadata when station/stream changes or stops playing
   useEffect(() => {
     setMetadata(null);
   }, [stationUuid, streamUrl, isPlaying]);
@@ -53,7 +47,7 @@ export function useRadioMetadata({
       try {
         setError(JSON.parse(event.data).message);
       } catch {
-        // Ignore parse errors for error events
+        // Ignorar errores de parseo en eventos de error
       }
     },
   }), []);

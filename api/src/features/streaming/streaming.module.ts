@@ -9,23 +9,6 @@ import { StreamTokenService } from './infrastructure/services/stream-token.servi
 import { StreamTokenCleanupService } from './infrastructure/services/stream-token-cleanup.service';
 import { DownloadService } from './infrastructure/services/download.service';
 
-/**
- * StreamingModule - Módulo de streaming de audio
- *
- * Estructura:
- * - Domain Layer: Use cases para preparar streaming, servicio de tokens
- * - Presentation Layer: Controllers con soporte HTTP Range requests
- *
- * Responsabilidades:
- * - Streamear archivos de audio con soporte para ranges
- * - Proporcionar metadata de archivos
- * - Manejar descarga de archivos (tracks y álbumes como ZIP)
- * - Gestionar tokens de streaming para autenticación
- *
- * Dependencias:
- * - TracksModule: Para acceder al repositorio de tracks
- * - DrizzleService: Global via DrizzleModule
- */
 @Module({
   imports: [TracksModule],
   controllers: [StreamingController, StreamTokenController, DownloadController],

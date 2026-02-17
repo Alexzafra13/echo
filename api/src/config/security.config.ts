@@ -1,9 +1,3 @@
-/**
- * Security Configuration
- *
- * JWT secrets are auto-generated if not provided.
- * Other security settings use sensible defaults.
- */
 export const securityConfig = {
   jwt_secret: process.env.JWT_SECRET,
   jwt_expiration: '24h',

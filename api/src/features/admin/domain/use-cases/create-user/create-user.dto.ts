@@ -2,7 +2,7 @@ export interface CreateUserInput {
   username: string;
   name?: string;
   isAdmin?: boolean;
-  adminId?: string; // ID of the admin performing the action (for audit logging)
+  adminId?: string;
 }
 
 export interface CreateUserOutput {

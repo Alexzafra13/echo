@@ -11,8 +11,8 @@ import {
 
 @Injectable()
 export class ActivityStatsService {
-  private readonly CACHE_TTL_SHORT = 120; // 2 minutes
-  private readonly CACHE_TTL_RECENT = 60; // 1 minute
+  private readonly CACHE_TTL_SHORT = 120;
+  private readonly CACHE_TTL_RECENT = 60;
 
   constructor(
     private readonly drizzle: DrizzleService,
@@ -123,7 +123,6 @@ export class ActivityStatsService {
 
     const activities: RecentActivity[] = [];
 
-    // Get recent scans
     const recentScans = await this.drizzle.db
       .select()
       .from(libraryScans)
@@ -141,7 +140,6 @@ export class ActivityStatsService {
       });
     });
 
-    // Get recent enrichments
     const recentEnrichments = await this.drizzle.db
       .select()
       .from(enrichmentLogs)
@@ -163,7 +161,6 @@ export class ActivityStatsService {
       });
     });
 
-    // Get recent user logins
     const recentLogins = await this.drizzle.db
       .select()
       .from(users)
@@ -184,7 +181,6 @@ export class ActivityStatsService {
       }
     });
 
-    // Sort and limit
     const result = activities
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, 10);

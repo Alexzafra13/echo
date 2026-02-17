@@ -9,10 +9,6 @@ interface RadioSearchBarProps {
   placeholder?: string;
 }
 
-/**
- * RadioSearchBar Component
- * Search input for radio stations - results shown in expandable panel below header
- */
 export function RadioSearchBar({
   onSearch,
   onFocus,
@@ -21,7 +17,6 @@ export function RadioSearchBar({
 }: RadioSearchBarProps) {
   const [query, setQuery] = useState('');
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       onSearch(query);

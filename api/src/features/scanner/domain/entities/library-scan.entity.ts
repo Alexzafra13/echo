@@ -1,12 +1,3 @@
-/**
- * LibraryScan Entity - Representa un escaneo de la librería musical
- *
- * Propósito:
- * - Entidad del dominio que representa un proceso de escaneo
- * - Contiene la lógica de negocio del escaneo
- * - Rastrea el progreso y resultados del escaneo
- */
-
 export type ScanStatus = 'pending' | 'running' | 'completed' | 'failed';
 
 export interface LibraryScanProps {
@@ -34,7 +25,6 @@ export class LibraryScan {
     return new LibraryScan(props);
   }
 
-  // Getters
   get id(): string {
     return this.props.id;
   }
@@ -67,7 +57,6 @@ export class LibraryScan {
     return this.props.errorMessage;
   }
 
-  // Métodos de negocio
   isRunning(): boolean {
     return this.status === 'running';
   }

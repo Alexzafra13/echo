@@ -18,14 +18,12 @@ export interface UserProps {
   avatarUpdatedAt?: Date;
   lastLoginAt?: Date;
   lastAccessAt?: Date;
-  // Profile privacy settings
   isPublicProfile: boolean;
   showTopTracks: boolean;
   showTopArtists: boolean;
   showTopAlbums: boolean;
   showPlaylists: boolean;
   bio?: string;
-  // Home page customization
   homeSections: HomeSectionConfig[];
   createdAt: Date;
   updatedAt: Date;
@@ -71,8 +69,6 @@ export class User {
   static reconstruct(props: UserProps): User {
     return new User(props);
   }
-
-  // ============ GETTERS ============
 
   get id(): string {
     return this.props.id;

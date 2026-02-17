@@ -1,56 +1,37 @@
 import { generateUuid } from '@shared/utils';
 
-/**
- * Interfaz que define la estructura de propiedades de RadioStation
- */
 export interface RadioStationProps {
   id: string;
-  userId: string; // Usuario propietario del favorito
-  stationUuid?: string; // UUID de Radio Browser API (null si es custom)
+  userId: string;
+  stationUuid?: string;
   name: string;
-  url: string; // Stream URL
-  urlResolved?: string; // URL final después de redirects
+  url: string;
+  urlResolved?: string;
   homepage?: string;
-  favicon?: string; // Logo de la emisora
+  favicon?: string;
   country?: string;
   countryCode?: string;
   state?: string;
   language?: string;
-  tags?: string; // Géneros separados por coma: "rock,pop,top40"
-  codec?: string; // "MP3", "AAC"
-  bitrate?: number; // kbps
+  tags?: string;
+  codec?: string;
+  bitrate?: number;
   votes?: number;
   clickCount?: number;
-  lastCheckOk?: boolean; // Si está online
-  source: 'radio-browser' | 'custom'; // Origen de la emisora
+  lastCheckOk?: boolean;
+  source: 'radio-browser' | 'custom';
   isFavorite: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-/**
- * RadioStation Entity - Representa una emisora de radio en el dominio
- *
- * Responsabilidades:
- * - Encapsular las propiedades de una emisora
- * - Proporcionar getters para acceder a los datos
- * - Crear nuevas emisoras con factory method
- * - Convertir a primitivos (para mapear a BD o DTOs)
- */
 export class RadioStation {
   private props: RadioStationProps;
 
-  /**
-   * Constructor privado - no llamar directamente
-   * Usar RadioStation.create() o RadioStation.createFromAPI() en su lugar
-   */
   constructor(props: RadioStationProps) {
     this.props = props;
   }
 
-  /**
-   * Factory method para crear una emisora personalizada (custom)
-   */
   static createCustom(
     props: Omit<
       RadioStationProps,
@@ -67,15 +48,12 @@ export class RadioStation {
       id: generateUuid(),
       source: 'custom',
       stationUuid: undefined,
-      isFavorite: true, // Custom stations are favorites by default
+      isFavorite: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
   }
 
-  /**
-   * Factory method para crear emisora desde Radio Browser API
-   */
   static createFromAPI(
     userId: string,
     apiData: {
@@ -123,14 +101,9 @@ export class RadioStation {
     });
   }
 
-  /**
-   * Factory method para reconstruir una RadioStation desde BD
-   */
   static reconstruct(props: RadioStationProps): RadioStation {
     return new RadioStation(props);
   }
-
-  // ============ GETTERS (Solo lectura) ============
 
   get id(): string {
     return this.props.id;
@@ -220,28 +193,15 @@ export class RadioStation {
     return this.props.updatedAt;
   }
 
-  // ============ MÉTODOS ============
-
-  /**
-   * Marcar/desmarcar como favorita
-   */
   toggleFavorite(): void {
     this.props.isFavorite = !this.props.isFavorite;
     this.props.updatedAt = new Date();
   }
 
-  /**
-   * Obtener tags como array
-   */
   getTagsArray(): string[] {
     return this.props.tags ? this.props.tags.split(',').map((t) => t.trim()) : [];
   }
 
-  // ============ MÉTODOS DE CONVERSIÓN ============
-
-  /**
-   * Retorna todas las propiedades de la emisora como un objeto plano
-   */
   toPrimitives(): RadioStationProps {
     return { ...this.props };
   }

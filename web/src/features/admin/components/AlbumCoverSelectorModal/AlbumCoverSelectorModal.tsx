@@ -17,10 +17,6 @@ interface AlbumCoverSelectorModalProps {
   onSuccess?: () => void;
 }
 
-/**
- * AlbumCoverSelectorModal Component
- * Modal para buscar y seleccionar carátulas de álbum de múltiples proveedores
- */
 type TabType = 'providers' | 'upload';
 
 export function AlbumCoverSelectorModal({
@@ -41,10 +37,8 @@ export function AlbumCoverSelectorModal({
   const covers = data?.covers || [];
   const albumInfo = data?.albumInfo;
 
-  // Get unique providers for filter
   const providers = Array.from(new Set(covers.map((c) => c.provider)));
 
-  // Filter covers by provider
   const filteredCovers = providerFilter
     ? covers.filter((c) => c.provider === providerFilter)
     : covers;
@@ -61,22 +55,17 @@ export function AlbumCoverSelectorModal({
       },
       {
         onSuccess: async () => {
-          // FALLBACK: Force manual refetch in case WebSocket fails
-          // This ensures the UI updates even if the WebSocket event doesn't arrive
-
-          // Immediate refetch of album
+          // Refetch manual por si falla el WebSocket
           await queryClient.refetchQueries({
             queryKey: ['albums', albumId],
             type: 'active'
           });
 
-          // Also refetch albums list
           await queryClient.refetchQueries({
             queryKey: ['albums'],
             type: 'active'
           });
 
-          // If album has artistId, refetch artist too (album covers appear on artist pages)
           if (albumInfo?.artistId) {
             await queryClient.refetchQueries({
               queryKey: ['artists', albumInfo.artistId],
@@ -84,7 +73,7 @@ export function AlbumCoverSelectorModal({
             });
           }
 
-          // Delayed refetch to ensure backend has fully processed the image
+          // Refetch retrasado para asegurar procesamiento del backend
           setTimeout(() => {
             queryClient.refetchQueries({
               queryKey: ['albums', albumId],
@@ -108,7 +97,6 @@ export function AlbumCoverSelectorModal({
   return (
     <div className={styles.modal} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
         <div className={styles.header}>
           <div>
             <h2 className={styles.title}>Seleccionar carátula</h2>
@@ -121,7 +109,6 @@ export function AlbumCoverSelectorModal({
           </button>
         </div>
 
-        {/* Tabs */}
         <div className={styles.tabs}>
           <button
             className={`${styles.tab} ${activeTab === 'providers' ? styles.tabActive : ''}`}
@@ -139,7 +126,6 @@ export function AlbumCoverSelectorModal({
           </button>
         </div>
 
-        {/* Body */}
         <div className={styles.body}>
           {activeTab === 'providers' ? (
             isLoading ? (
@@ -163,7 +149,6 @@ export function AlbumCoverSelectorModal({
               </div>
             ) : (
               <>
-                {/* Filter */}
                 {providers.length > 1 && (
                   <div className={styles.filterSection}>
                     <label className={styles.filterLabel}>Proveedor:</label>
@@ -186,7 +171,6 @@ export function AlbumCoverSelectorModal({
                   </div>
                 )}
 
-                {/* Gallery */}
                 <div className={styles.gallery}>
                   {filteredCovers.map((cover, index) => (
                     <div
@@ -228,7 +212,6 @@ export function AlbumCoverSelectorModal({
               </>
             )
           ) : (
-            /* Upload Tab */
             <AlbumCoverUploadTab
               albumId={albumId}
               onSuccess={() => {
@@ -239,7 +222,6 @@ export function AlbumCoverSelectorModal({
           )}
         </div>
 
-        {/* Error message */}
         {applyError && activeTab === 'providers' && (
           <div className={styles.errorMessage}>
             <AlertCircle size={16} />
@@ -247,7 +229,6 @@ export function AlbumCoverSelectorModal({
           </div>
         )}
 
-        {/* Footer - Only show for providers tab */}
         {activeTab === 'providers' && !isLoading && !error && covers.length > 0 && (
           <div className={styles.footer}>
             <Button variant="secondary" onClick={onClose} disabled={isApplying}>

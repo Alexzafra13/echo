@@ -13,16 +13,12 @@ import styles from './ArtistAvatarSelectorModal.module.css';
 interface ArtistAvatarSelectorModalProps {
   artistId: string;
   artistName: string;
-  defaultType?: AvatarImageType; // Pre-select image type
-  allowedTypes?: AvatarImageType[]; // Restrict which types can be selected
+  defaultType?: AvatarImageType;
+  allowedTypes?: AvatarImageType[];
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-/**
- * ArtistAvatarSelectorModal Component
- * Modal para buscar y seleccionar imágenes de artista de múltiples proveedores
- */
 type TabType = 'providers' | 'upload';
 
 export function ArtistAvatarSelectorModal({
@@ -36,7 +32,7 @@ export function ArtistAvatarSelectorModal({
   const [activeTab, setActiveTab] = useState<TabType>('providers');
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarOption | null>(null);
   const [providerFilter, setProviderFilter] = useState<string>('');
-  const [typeFilter, setTypeFilter] = useState<string>(defaultType || ''); // Use defaultType if provided
+  const [typeFilter, setTypeFilter] = useState<string>(defaultType || '');
   const [applyError, setApplyError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
@@ -46,18 +42,14 @@ export function ArtistAvatarSelectorModal({
   const avatars = data?.avatars || [];
   const artistInfo = data?.artistInfo;
 
-  // Get unique providers and types for filters
   const providers = Array.from(new Set(avatars.map((a) => a.provider)));
   const allTypes = Array.from(new Set(avatars.map((a) => a.type).filter(Boolean)));
 
-  // Filter types based on allowedTypes prop (if provided)
   const types = allowedTypes
     ? allTypes.filter((type): type is AvatarImageType => type !== undefined && allowedTypes.includes(type))
     : allTypes;
 
-  // Filter avatars
   const filteredAvatars = avatars.filter((a) => {
-    // Filter by allowed types (if specified)
     if (allowedTypes && a.type && !allowedTypes.includes(a.type)) return false;
     if (providerFilter && a.provider !== providerFilter) return false;
     if (typeFilter && a.type !== typeFilter) return false;
@@ -77,22 +69,18 @@ export function ArtistAvatarSelectorModal({
       },
       {
         onSuccess: async () => {
-          // FALLBACK: Force manual refetch in case WebSocket fails
-          // This ensures the UI updates even if the WebSocket event doesn't arrive
-
-          // Immediate refetch
+          // Refetch manual por si falla el WebSocket
           await queryClient.refetchQueries({
             queryKey: ['artists', artistId],
             type: 'active'
           });
 
-          // Refetch artist images
           await queryClient.refetchQueries({
             queryKey: ['artist-images', artistId],
             type: 'active'
           });
 
-          // Delayed refetch to ensure backend has fully processed the image
+          // Refetch retrasado para asegurar procesamiento del backend
           setTimeout(() => {
             queryClient.refetchQueries({
               queryKey: ['artists', artistId],
@@ -136,7 +124,6 @@ export function ArtistAvatarSelectorModal({
   return (
     <div className={styles.modal} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
         <div className={styles.header}>
           <div>
             <h2 className={styles.title}>Seleccionar imagen de artista</h2>
@@ -147,7 +134,6 @@ export function ArtistAvatarSelectorModal({
           </button>
         </div>
 
-        {/* Tabs */}
         <div className={styles.tabs}>
           <button
             className={`${styles.tab} ${activeTab === 'providers' ? styles.tabActive : ''}`}
@@ -165,7 +151,6 @@ export function ArtistAvatarSelectorModal({
           </button>
         </div>
 
-        {/* Body */}
         <div className={styles.body}>
           {activeTab === 'providers' ? (
             isLoading ? (
@@ -189,9 +174,7 @@ export function ArtistAvatarSelectorModal({
             </div>
           ) : (
             <>
-              {/* Filters */}
               <div className={styles.filterSection}>
-                {/* Type Filter */}
                 {types.length > 1 && (
                   <div className={styles.filterGroup}>
                     <label className={styles.filterLabel}>Tipo:</label>
@@ -214,7 +197,6 @@ export function ArtistAvatarSelectorModal({
                   </div>
                 )}
 
-                {/* Provider Filter */}
                 {providers.length > 1 && (
                   <div className={styles.filterGroup}>
                     <label className={styles.filterLabel}>Proveedor:</label>
@@ -237,7 +219,6 @@ export function ArtistAvatarSelectorModal({
                 )}
               </div>
 
-              {/* Gallery */}
               <div className={styles.gallery}>
                 {filteredAvatars.map((avatar, index) => (
                   <div
@@ -286,7 +267,6 @@ export function ArtistAvatarSelectorModal({
             </>
           )
           ) : (
-            /* Upload Tab */
             <FileUploadSection
               artistId={artistId}
               imageType={defaultType || (allowedTypes && allowedTypes[0]) || 'profile'}
@@ -298,7 +278,6 @@ export function ArtistAvatarSelectorModal({
           )}
         </div>
 
-        {/* Error message */}
         {applyError && activeTab === 'providers' && (
           <div className={styles.errorMessage}>
             <AlertCircle size={16} />
@@ -306,7 +285,6 @@ export function ArtistAvatarSelectorModal({
           </div>
         )}
 
-        {/* Footer - Only show for providers tab */}
         {activeTab === 'providers' && !isLoading && !error && avatars.length > 0 && (
           <div className={styles.footer}>
             <Button variant="secondary" onClick={onClose} disabled={isApplying}>

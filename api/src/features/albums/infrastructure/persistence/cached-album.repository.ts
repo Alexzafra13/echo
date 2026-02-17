@@ -7,30 +7,11 @@ import { IAlbumRepository } from '../../domain/ports/album-repository.port';
 import { DrizzleAlbumRepository } from './album.repository';
 import { cacheConfig } from '@config/cache.config';
 
-/**
- * CachedAlbumRepository - Implements Cache-Aside pattern for Album entities.
- *
- * Extends BaseCachedRepository for common operations and adds album-specific
- * caching for methods like findByArtistId, findRecent, findMostPlayed, etc.
- *
- * Cache Strategy:
- * - Single albums: 1 hour TTL (configurable via CACHE_ALBUM_TTL)
- * - Search results: 1 minute TTL (frequent changes)
- * - Recent/Most played lists: 5-10 minutes (balance freshness vs performance)
- * - Count: 30 minutes (slow to change)
- *
- * Non-cached operations:
- * - findAll (too many pagination combinations)
- * - findAlphabetically (fast with index)
- * - findRecentlyPlayed (user-specific, changes frequently)
- * - findFavorites (user-specific, changes on like/unlike)
- */
 @Injectable()
 export class CachedAlbumRepository
   extends BaseCachedRepository<Album, IAlbumRepository>
   implements IAlbumRepository
 {
-  // Additional TTLs for album-specific caches (from centralized config)
   private readonly RECENT_TTL = cacheConfig.ttl.recent;
   private readonly MOST_PLAYED_TTL = cacheConfig.ttl.mostPlayed;
   private readonly COUNT_TTL = cacheConfig.ttl.count;
@@ -56,11 +37,6 @@ export class CachedAlbumRepository
     );
   }
 
-  // ==================== ALBUM-SPECIFIC CACHED METHODS ====================
-
-  /**
-   * Find albums by artist ID with caching.
-   */
   async findByArtistId(
     artistId: string,
     skip: number,
@@ -76,9 +52,6 @@ export class CachedAlbumRepository
     );
   }
 
-  /**
-   * Find recent albums with caching.
-   */
   async findRecent(take: number): Promise<Album[]> {
     const cacheKey = `${this.config.listKeyPrefix}recent:${take}`;
 
@@ -90,9 +63,6 @@ export class CachedAlbumRepository
     );
   }
 
-  /**
-   * Find most played albums with caching.
-   */
   async findMostPlayed(take: number): Promise<Album[]> {
     const cacheKey = `${this.config.listKeyPrefix}most-played:${take}`;
 
@@ -104,9 +74,6 @@ export class CachedAlbumRepository
     );
   }
 
-  /**
-   * Count albums with caching.
-   */
   override async count(): Promise<number> {
     const cacheKey = `${this.config.listKeyPrefix}count`;
 
@@ -121,9 +88,6 @@ export class CachedAlbumRepository
     return count;
   }
 
-  /**
-   * Count albums by artist ID with caching.
-   */
   async countByArtistId(artistId: string): Promise<number> {
     const cacheKey = `${this.config.listKeyPrefix}count:artist:${artistId}`;
 
@@ -138,36 +102,22 @@ export class CachedAlbumRepository
     return count;
   }
 
-  // ==================== NON-CACHED METHODS (DELEGATED) ====================
-
-  /**
-   * Find albums alphabetically.
-   * Not cached - fast with database index.
-   */
+  // Sin caché - rápido con índice de BD
   async findAlphabetically(skip: number, take: number): Promise<Album[]> {
     return this.baseRepository.findAlphabetically(skip, take);
   }
 
-  /**
-   * Find albums sorted by artist name.
-   * Not cached - fast with database index.
-   */
+  // Sin caché - rápido con índice de BD
   async findByArtistName(skip: number, take: number): Promise<Album[]> {
     return this.baseRepository.findByArtistName(skip, take);
   }
 
-  /**
-   * Find recently played albums for a user.
-   * Not cached - user-specific and changes frequently.
-   */
+  // Sin caché - específico por usuario y cambia frecuentemente
   async findRecentlyPlayed(userId: string, take: number): Promise<Album[]> {
     return this.baseRepository.findRecentlyPlayed(userId, take);
   }
 
-  /**
-   * Find favorite albums for a user.
-   * Not cached - user-specific and changes on like/unlike.
-   */
+  // Sin caché - específico por usuario
   async findFavorites(
     userId: string,
     skip: number,
@@ -176,20 +126,12 @@ export class CachedAlbumRepository
     return this.baseRepository.findFavorites(userId, skip, take);
   }
 
-  // ==================== OVERRIDE WRITE OPERATIONS FOR EXTENDED INVALIDATION ====================
-
-  /**
-   * Create album and invalidate all related caches.
-   */
   override async create(album: Album): Promise<Album> {
     const created = await this.baseRepository.create(album);
     await this.invalidateListCaches();
     return created;
   }
 
-  /**
-   * Update album and invalidate all related caches.
-   */
   override async update(
     id: string,
     album: Partial<Album>,
@@ -204,9 +146,6 @@ export class CachedAlbumRepository
     return updated;
   }
 
-  /**
-   * Delete album and invalidate all related caches.
-   */
   override async delete(id: string): Promise<boolean> {
     const deleted = await this.baseRepository.delete(id);
 
@@ -218,12 +157,6 @@ export class CachedAlbumRepository
     return deleted;
   }
 
-  // ==================== PUBLIC CACHE INVALIDATION ====================
-
-  /**
-   * Invalidate all album-related list caches (lists, searches, etc.)
-   * This is exposed publicly for use by other services (e.g., scanner).
-   */
   async invalidateListCaches(): Promise<void> {
     await Promise.all([
       this.invalidatePattern(`${this.config.keyPrefix}*`),

@@ -11,19 +11,13 @@ interface AlbumInfoModalProps {
   onClose: () => void;
 }
 
-/**
- * AlbumInfoModal Component
- * Displays detailed information about an album
- */
 export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalProps) {
   const coverUrl = getCoverUrl(album.coverImage);
 
-  // Calculate total size and duration from tracks
   const totalSize = tracks.reduce((acc, track) => {
     const rawSize = track.size;
     const size = typeof rawSize === 'string' ? parseInt(rawSize, 10) : (rawSize || 0);
 
-    // Safety check for NaN or Infinity
     if (!isFinite(size)) {
       if (import.meta.env.DEV) {
         logger.warn('Invalid track size:', size, 'for track:', track.title);
@@ -35,21 +29,18 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
   }, 0);
   const totalDuration = tracks.reduce((acc, track) => acc + (track.duration || 0), 0);
 
-  // Get unique formats from tracks
   const formats = [...new Set(tracks.map(t => t.suffix?.toUpperCase()).filter(Boolean))];
 
-  // Get album normalization data from first track that has it
   const trackWithAlbumGain = tracks.find(t => t.rgAlbumGain !== undefined && t.rgAlbumGain !== null);
   const albumGain = trackWithAlbumGain?.rgAlbumGain;
   const albumPeak = trackWithAlbumGain?.rgAlbumPeak;
 
-  // Count analyzed tracks
   const analyzedTracks = tracks.filter(t => t.rgTrackGain !== undefined && t.rgTrackGain !== null).length;
 
   return (
     <div className={styles.albumInfoModal} onClick={onClose}>
       <div className={styles.albumInfoModal__content} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
+
         <div className={styles.albumInfoModal__header}>
           <h2 className={styles.albumInfoModal__title}>Información del álbum</h2>
           <button
@@ -61,7 +52,7 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
           </button>
         </div>
 
-        {/* Cover and basic info */}
+
         <div className={styles.albumInfoModal__hero}>
           <div className={styles.albumInfoModal__cover}>
             <img
@@ -81,9 +72,9 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
           </div>
         </div>
 
-        {/* Info sections */}
+
         <div className={styles.albumInfoModal__sections}>
-          {/* Basic info */}
+
           <div className={styles.albumInfoModal__section}>
             <h4 className={styles.albumInfoModal__sectionTitle}>Información general</h4>
             <div className={styles.albumInfoModal__infoGrid}>
@@ -126,7 +117,7 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
             </div>
           </div>
 
-          {/* Technical info */}
+
           <div className={styles.albumInfoModal__section}>
             <h4 className={styles.albumInfoModal__sectionTitle}>Información técnica</h4>
             <div className={styles.albumInfoModal__infoGrid}>
@@ -165,7 +156,7 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
             </div>
           </div>
 
-          {/* Audio normalization info */}
+
           <div className={styles.albumInfoModal__section}>
             <h4 className={styles.albumInfoModal__sectionTitle}>Normalización de audio</h4>
             <div className={styles.albumInfoModal__infoGrid}>

@@ -1,13 +1,7 @@
-/**
- * GetTopPlayedAlbumsInput - Datos de entrada para obtener álbumes más reproducidos
- */
 export interface GetTopPlayedAlbumsInput {
   take?: number;
 }
 
-/**
- * AlbumOutput - Datos de un álbum en la respuesta
- */
 export interface AlbumOutput {
   id: string;
   name: string;
@@ -26,7 +20,4 @@ export interface AlbumOutput {
   updatedAt: Date;
 }
 
-/**
- * GetTopPlayedAlbumsOutput - Datos de salida de álbumes más reproducidos
- */
 export type GetTopPlayedAlbumsOutput = AlbumOutput[];

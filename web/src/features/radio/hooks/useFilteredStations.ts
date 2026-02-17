@@ -21,41 +21,33 @@ interface UseFilteredStationsReturn {
   isLoading: boolean;
 }
 
-/**
- * Hook that handles radio station filtering logic
- * Encapsulates all the query combinations for different filter/country states
- */
+// Encapsula las combinaciones de queries según filtro/país activo
 export function useFilteredStations({
   filter,
   country,
   stationsPerView,
   favoriteStations,
 }: UseFilteredStationsOptions): UseFilteredStationsReturn {
-  // Determine filter types
   const isAllCountries = country === 'ALL';
   const isTopFilter = filter === 'top';
   const isAllFilter = filter === 'all';
   const isFavoritesFilter = filter === 'favorites';
   const isGenreFilter = !isTopFilter && !isAllFilter && !isFavoritesFilter;
 
-  // 1. Top stations global
   const { data: topVotedStations = [], isLoading: loadingTopVoted } = useTopVotedStations(
     isAllCountries && isTopFilter ? stationsPerView : 0
   );
 
-  // 2. Top stations by country
   const { data: countryTopStations = [], isLoading: loadingCountryTop } = useStationsByCountry(
     !isAllCountries && isTopFilter ? country : '',
     stationsPerView
   );
 
-  // 3. All stations from country
   const { data: allCountryStations = [], isLoading: loadingAllCountry } = useStationsByCountry(
     !isAllCountries && isAllFilter ? country : '',
     10000
   );
 
-  // 4. All stations worldwide
   const { data: allWorldStations = [], isLoading: loadingAllWorld } = useSearchStations(
     {
       limit: 10000,
@@ -67,7 +59,6 @@ export function useFilteredStations({
     isAllCountries && isAllFilter
   );
 
-  // 5. Genre + country filter
   const { data: genreCountryStations = [], isLoading: loadingGenreCountry } = useSearchStations(
     {
       tag: isGenreFilter ? filter : undefined,
@@ -81,13 +72,11 @@ export function useFilteredStations({
     isGenreFilter && !isAllCountries
   );
 
-  // 6. Genre global filter
   const { data: genreGlobalStations = [], isLoading: loadingGenreGlobal } = useStationsByTag(
     isGenreFilter && isAllCountries ? filter : '',
     10000
   );
 
-  // Select the appropriate stations list
   const stations = useMemo(() => {
     if (isFavoritesFilter) return favoriteStations;
     if (isAllCountries && isTopFilter) return topVotedStations;
@@ -112,7 +101,6 @@ export function useFilteredStations({
     favoriteStations,
   ]);
 
-  // Combined loading state
   const isLoading =
     loadingTopVoted ||
     loadingCountryTop ||

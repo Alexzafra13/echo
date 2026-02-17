@@ -1,13 +1,7 @@
-/**
- * GetRecentAlbumsInput - Datos de entrada para obtener álbumes recientes
- */
 export interface GetRecentAlbumsInput {
   take?: number;
 }
 
-/**
- * AlbumOutput - Datos de un álbum en la respuesta
- */
 export interface AlbumOutput {
   id: string;
   name: string;
@@ -26,7 +20,4 @@ export interface AlbumOutput {
   updatedAt: Date;
 }
 
-/**
- * GetRecentAlbumsOutput - Datos de salida de álbumes recientes
- */
 export type GetRecentAlbumsOutput = AlbumOutput[];

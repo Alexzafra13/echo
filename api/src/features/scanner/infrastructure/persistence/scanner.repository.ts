@@ -6,16 +6,10 @@ import { LibraryScan } from '../../domain/entities/library-scan.entity';
 import { IScannerRepository } from '../../domain/ports/scanner-repository.port';
 import { ScannerMapper } from './scanner.mapper';
 
-/**
- * DrizzleScannerRepository - Implementation of IScannerRepository with Drizzle
- */
 @Injectable()
 export class DrizzleScannerRepository implements IScannerRepository {
   constructor(private readonly drizzle: DrizzleService) {}
 
-  /**
-   * Find scan by ID
-   */
   async findById(id: string): Promise<LibraryScan | null> {
     const result = await this.drizzle.db
       .select()
@@ -26,9 +20,6 @@ export class DrizzleScannerRepository implements IScannerRepository {
     return result[0] ? ScannerMapper.toDomain(result[0]) : null;
   }
 
-  /**
-   * Get all scans with pagination
-   */
   async findAll(skip: number, take: number): Promise<LibraryScan[]> {
     const result = await this.drizzle.db
       .select()
@@ -40,9 +31,6 @@ export class DrizzleScannerRepository implements IScannerRepository {
     return ScannerMapper.toDomainArray(result);
   }
 
-  /**
-   * Get the most recent scan
-   */
   async findLatest(): Promise<LibraryScan | null> {
     const result = await this.drizzle.db
       .select()
@@ -53,9 +41,6 @@ export class DrizzleScannerRepository implements IScannerRepository {
     return result[0] ? ScannerMapper.toDomain(result[0]) : null;
   }
 
-  /**
-   * Get scans by status
-   */
   async findByStatus(status: string): Promise<LibraryScan[]> {
     const result = await this.drizzle.db
       .select()
@@ -66,9 +51,6 @@ export class DrizzleScannerRepository implements IScannerRepository {
     return ScannerMapper.toDomainArray(result);
   }
 
-  /**
-   * Create new scan
-   */
   async create(scan: LibraryScan): Promise<LibraryScan> {
     const persistenceData = ScannerMapper.toPersistence(scan);
 
@@ -80,9 +62,6 @@ export class DrizzleScannerRepository implements IScannerRepository {
     return ScannerMapper.toDomain(result[0]);
   }
 
-  /**
-   * Update scan
-   */
   async update(
     id: string,
     data: Partial<LibraryScan>,
@@ -115,9 +94,6 @@ export class DrizzleScannerRepository implements IScannerRepository {
     }
   }
 
-  /**
-   * Count total scans
-   */
   async count(): Promise<number> {
     const result = await this.drizzle.db
       .select({ count: count() })

@@ -3,7 +3,6 @@ import { usePlayerSettingsStore } from './playerSettingsStore';
 
 describe('playerSettingsStore', () => {
   beforeEach(() => {
-    // Reset store to initial state before each test
     const store = usePlayerSettingsStore.getState();
     store.setPlayerPreference('dynamic');
     store.setCrossfadeEnabled(false);

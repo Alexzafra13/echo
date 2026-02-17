@@ -36,7 +36,6 @@ export class UserResponseDto {
     dto.id = data.id;
     dto.username = data.username;
     dto.name = data.name;
-    // avatarUrl will be constructed in the controller or by a helper
     dto.avatarUrl = data.id ? `/api/images/users/${data.id}/avatar` : undefined;
     return dto;
   }

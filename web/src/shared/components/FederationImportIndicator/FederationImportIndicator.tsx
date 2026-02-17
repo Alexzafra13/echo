@@ -5,11 +5,6 @@ import styles from './FederationImportIndicator.module.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
-/**
- * FederationImportIndicator Component
- * Shows federation album import progress in the header
- * Only visible when there are active imports
- */
 export function FederationImportIndicator() {
   const { activeImports, hasActiveImports } = useImportProgressSSE();
   const [imageError, setImageError] = useState(false);
@@ -17,23 +12,21 @@ export function FederationImportIndicator() {
   const [isLeaving, setIsLeaving] = useState(false);
   const previousImportRef = useRef(activeImports[0]);
 
-  // Handle visibility with fade animation
+  // Controla visibilidad con animacion de fade
   useEffect(() => {
     if (hasActiveImports) {
       setIsVisible(true);
       setIsLeaving(false);
-      // Reset image error when import changes
       if (activeImports[0]?.importId !== previousImportRef.current?.importId) {
         setImageError(false);
       }
       previousImportRef.current = activeImports[0];
     } else if (isVisible) {
-      // Start fade out animation
       setIsLeaving(true);
       const timer = setTimeout(() => {
         setIsVisible(false);
         setIsLeaving(false);
-      }, 500); // Match CSS animation duration
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [hasActiveImports, activeImports, isVisible]);
@@ -42,14 +35,12 @@ export function FederationImportIndicator() {
     return null;
   }
 
-  // Get the most recent/active import to display (or the last one during fade out)
   const currentImport = activeImports[0] || previousImportRef.current;
   if (!currentImport) return null;
 
   const { albumName, artistName, status, progress, currentTrack, totalTracks, serverId, remoteAlbumId } =
     currentImport;
 
-  // Construct cover URL using the federation proxy endpoint
   const coverUrl = serverId && remoteAlbumId
     ? `${API_BASE}/api/federation/servers/${serverId}/albums/${remoteAlbumId}/cover`
     : null;

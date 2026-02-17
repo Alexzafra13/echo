@@ -15,11 +15,6 @@ interface CountrySelectProps {
   userCountryCode?: string;
 }
 
-/**
- * CountrySelect Component
- * Dropdown select for choosing a country to filter radio stations
- * Includes "Todo el mundo" option and auto-detected user country
- */
 export function CountrySelect({
   countries,
   selectedCountry,

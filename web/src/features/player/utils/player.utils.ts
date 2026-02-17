@@ -1,9 +1,6 @@
 import type { Track } from '@shared/types/track.types';
 import type { RadioStation } from '@shared/types/radio.types';
 
-/**
- * Información de visualización para el reproductor
- */
 export interface PlayerDisplayInfo {
   title: string;
   artist: string;
@@ -13,22 +10,13 @@ export interface PlayerDisplayInfo {
   artistId?: string;
 }
 
-/**
- * Extrae la información de visualización para el reproductor
- * Funciona tanto para tracks como para estaciones de radio
- *
- * @param isRadioMode - Si está en modo radio
- * @param currentRadioStation - Estación de radio actual
- * @param currentTrack - Track actual
- * @returns Información formateada para mostrar
- */
+// Extrae info de visualización para tracks o estaciones de radio
 export function getPlayerDisplayInfo(
   isRadioMode: boolean,
   currentRadioStation: RadioStation | null,
   currentTrack: Track | null
 ): PlayerDisplayInfo {
   if (isRadioMode && currentRadioStation) {
-    // Handle tags safely - can be null, empty string, or valid string
     const firstTag = currentRadioStation.tags && typeof currentRadioStation.tags === 'string' && currentRadioStation.tags.trim()
       ? currentRadioStation.tags.split(',')[0]
       : null;

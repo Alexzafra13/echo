@@ -33,19 +33,15 @@ import { logger } from '@shared/utils/logger';
 import styles from './RadioPage.module.css';
 
 export default function RadioPage() {
-  // Player context
   const { playRadio, currentRadioStation, isPlaying, isRadioMode, radioMetadata } = usePlayer();
 
-  // Ref for content to control scroll
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Calculate grid dimensions for 3 rows
   const { itemsPerPage: stationsPerView } = useGridDimensions({
     maxRows: 3,
-    headerHeight: 180, // Search bar + filters height
+    headerHeight: 180,
   });
 
-  // State
   const { data: userCountry } = useUserCountry();
   const { data: apiCountries = [] } = useRadioCountries();
   const [selectedCountry, setSelectedCountry] = useState<string>('');
@@ -54,19 +50,16 @@ export default function RadioPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
 
-  // Modal state management
   const countryModal = useModal();
   const genreModal = useModal();
 
-  // Transform API countries to Country format
   const allCountries: Country[] = useMemo(() => {
     if (apiCountries.length === 0) {
-      // Fallback to popular countries if API fails
       return POPULAR_COUNTRIES;
     }
 
     return apiCountries
-      .filter(country => country.stationcount > 0) // Only countries with stations
+      .filter(country => country.stationcount > 0)
       .map(country => ({
         code: country.iso_3166_1,
         name: getCountryName(country.iso_3166_1, country.name),
@@ -75,18 +68,15 @@ export default function RadioPage() {
       }));
   }, [apiCountries]);
 
-  // Favorites
   const { data: favoriteStations = [] } = useFavoriteStations();
   const saveFavoriteMutation = useSaveFavoriteFromApi();
   const deleteFavoriteMutation = useDeleteFavoriteStation();
 
-  // Dynamic genres list - add Favorites if user has any
+  // Agrega "Favoritas" dinámicamente si el usuario tiene estaciones guardadas
   const availableGenres = useMemo(() => {
     const genres = [...GENRES];
 
-    // Add "Favoritas" option if user has favorite stations
     if (favoriteStations.length > 0) {
-      // Insert after "Todas" (index 1)
       genres.splice(2, 0, {
         id: 'favorites',
         label: `Favoritas (${favoriteStations.length})`,
@@ -97,24 +87,21 @@ export default function RadioPage() {
     return genres;
   }, [favoriteStations.length]);
 
-  // Initialize selected country when user country is detected
   useEffect(() => {
     if (userCountry?.countryCode && !selectedCountry) {
       setSelectedCountry(userCountry.countryCode);
     }
   }, [userCountry, selectedCountry]);
 
-  // Auto-select Favorites filter on initial page load (only once)
+  // Selecciona "Favoritas" automáticamente en la primera carga si existen
   const hasInitializedFilter = useRef(false);
   useEffect(() => {
-    // Only run once when favorites data is first loaded
     if (!hasInitializedFilter.current && favoriteStations.length > 0) {
       hasInitializedFilter.current = true;
       setActiveFilter('favorites');
     }
   }, [favoriteStations.length]);
 
-  // Block content scroll when search panel is open
   useEffect(() => {
     if (contentRef.current) {
       if (isSearchPanelOpen) {
@@ -125,11 +112,10 @@ export default function RadioPage() {
     }
   }, [isSearchPanelOpen]);
 
-  // Search stations query (trae todos los resultados, pagina localmente)
   const { data: searchResults = [], isLoading: isSearching } = useSearchStations(
     {
       name: searchQuery,
-      limit: 10000, // Traer todas las emisoras que coincidan
+      limit: 10000,
       order: 'bitrate',
       reverse: true,
       hidebroken: true,
@@ -138,13 +124,11 @@ export default function RadioPage() {
     searchQuery.length >= 2
   );
 
-  // Filter type flags for UI display
   const isAllCountries = selectedCountry === 'ALL';
   const isTopFilter = activeFilter === 'top';
   const isAllFilter = activeFilter === 'all';
   const isFavoritesFilter = activeFilter === 'favorites';
 
-  // Use the filtered stations hook
   const { stations, isLoading } = useFilteredStations({
     filter: activeFilter,
     country: selectedCountry,
@@ -152,18 +136,15 @@ export default function RadioPage() {
     favoriteStations,
   });
 
-  // Paginate stations (3 rows per page, dynamic based on screen size)
-  // Top filter doesn't paginate (shows only 1 full page), others do
+  // Top no pagina (muestra solo 1 página), los demás sí
   const shouldPaginate = !isTopFilter;
   const totalPages = shouldPaginate ? Math.ceil(stations.length / stationsPerView) : 1;
   const paginatedStations = shouldPaginate
     ? stations.slice((currentPage - 1) * stationsPerView, currentPage * stationsPerView)
     : stations;
 
-  // Handlers
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
-    // Open panel when query has 2+ characters
     setIsSearchPanelOpen(query.length >= 2);
   }, []);
 
@@ -174,13 +155,12 @@ export default function RadioPage() {
   }, [searchQuery]);
 
   const handleSearchBlur = useCallback(() => {
-    // Panel will auto-close when query is cleared or user clicks result
   }, []);
 
   const handleResultSelect = useCallback((station: RadioStation | RadioBrowserStation) => {
     playRadio(station);
     setIsSearchPanelOpen(false);
-    setSearchQuery(''); // Clear search
+    setSearchQuery('');
   }, [playRadio]);
 
   const handleCloseSearchPanel = useCallback(() => {
@@ -189,12 +169,12 @@ export default function RadioPage() {
 
   const handleCountryChange = useCallback((countryCode: string) => {
     setSelectedCountry(countryCode);
-    setCurrentPage(1); // Reset pagination
+    setCurrentPage(1);
   }, []);
 
   const handleFilterChange = useCallback((filterId: string) => {
     setActiveFilter(filterId);
-    setCurrentPage(1); // Reset pagination
+    setCurrentPage(1);
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
@@ -202,15 +182,12 @@ export default function RadioPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Play station handler
   const handlePlayStation = useCallback((station: RadioBrowserStation | RadioStation) => {
     playRadio(station);
   }, [playRadio]);
 
-  // Toggle favorite handler
   const handleToggleFavorite = useCallback(async (station: RadioBrowserStation | RadioStation) => {
     try {
-      // Get stationUuid - handle both RadioBrowserStation and RadioStation
       const stationUuid = 'stationuuid' in station ? station.stationuuid : station.stationUuid;
 
       const isInFavorites = favoriteStations.some(
@@ -225,11 +202,9 @@ export default function RadioPage() {
           await deleteFavoriteMutation.mutateAsync(favoriteStation.id);
         }
       } else {
-        // Only RadioBrowserStation can be added as favorite
         if ('stationuuid' in station) {
           const dto = radioService.convertToSaveDto(station);
           await saveFavoriteMutation.mutateAsync(dto);
-          // Don't auto-switch to favorites - let user stay on current view
         }
       }
     } catch (error) {
@@ -239,7 +214,6 @@ export default function RadioPage() {
     }
   }, [favoriteStations, saveFavoriteMutation, deleteFavoriteMutation]);
 
-  // Helper: Check if station is playing
   const isStationPlaying = useCallback((station: RadioBrowserStation | RadioStation) => {
     if (!isRadioMode || !currentRadioStation) return false;
     const stationUuid = 'stationuuid' in station ? station.stationuuid : station.stationUuid;
@@ -249,19 +223,16 @@ export default function RadioPage() {
     return isPlaying && stationUuid === currentUuid;
   }, [isRadioMode, currentRadioStation, isPlaying]);
 
-  // Helper: Check if station is favorite
   const isStationFavorite = useCallback((station: RadioBrowserStation | RadioStation) => {
     const stationUuid = 'stationuuid' in station ? station.stationuuid : station.stationUuid;
     return favoriteStations.some((fav) => fav.stationUuid === stationUuid);
   }, [favoriteStations]);
 
-  // Get country name for display
   const selectedCountryName = useMemo(() => {
     const country = allCountries.find(c => c.code === selectedCountry);
     return country?.name || 'tu país';
   }, [selectedCountry, allCountries]);
 
-  // Get filter label for display
   const activeFilterLabel = useMemo(() => {
     const filter = availableGenres.find(f => f.id === activeFilter);
     return filter?.label || '';
@@ -291,7 +262,6 @@ export default function RadioPage() {
             }
           />
 
-          {/* Search Results Panel - Overlay below header */}
           <RadioSearchPanel
             isOpen={isSearchPanelOpen}
             searchResults={searchResults}
@@ -303,7 +273,6 @@ export default function RadioPage() {
         </div>
 
         <div ref={contentRef} className={styles.radioPage__content}>
-          {/* Page Header */}
           <div className={styles.radioPage__pageHeader}>
             <h1 className={styles.radioPage__pageTitle}>Radio</h1>
             <p className={styles.radioPage__pageSubtitle}>
@@ -311,7 +280,6 @@ export default function RadioPage() {
             </p>
           </div>
 
-          {/* Genre selector button */}
           <div className={styles.radioPage__filters}>
             <button
               className={styles.radioPage__genreButton}
@@ -323,7 +291,6 @@ export default function RadioPage() {
             </button>
           </div>
 
-          {/* Main stations grid */}
           <div className={styles.radioPage__section}>
             <h2 className={styles.radioPage__title}>
               <Radio size={24} />
@@ -340,7 +307,6 @@ export default function RadioPage() {
               )}
             </h2>
 
-            {/* Top Pagination - Mobile Only */}
             {!isLoading && paginatedStations.length > 0 && totalPages > 1 && (
               <div className={styles.radioPage__paginationTop}>
                 <Pagination
@@ -360,7 +326,6 @@ export default function RadioPage() {
               <div className={styles.radioPage__gridWrapper}>
                 <div className={styles.radioPage__grid}>
                   {paginatedStations.map((station) => {
-                    // Get unique key - handle both RadioBrowserStation and RadioStation
                     const key = 'stationuuid' in station
                       ? station.stationuuid
                       : (station.id || station.stationUuid || station.url);
@@ -379,7 +344,6 @@ export default function RadioPage() {
                   })}
                 </div>
 
-                {/* Pagination */}
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
@@ -400,7 +364,6 @@ export default function RadioPage() {
         </div>
       </main>
 
-      {/* Country Selection Modal */}
       <CountrySelectModal
         isOpen={countryModal.isOpen}
         onClose={countryModal.close}
@@ -410,7 +373,6 @@ export default function RadioPage() {
         userCountryCode={userCountry?.countryCode}
       />
 
-      {/* Genre Selection Modal */}
       <GenreSelectModal
         isOpen={genreModal.isOpen}
         onClose={genreModal.close}

@@ -98,9 +98,6 @@ export interface DeleteCustomImageResponse {
 }
 
 export const artistAvatarsApi = {
-  /**
-   * Buscar todas las imágenes disponibles para un artista
-   */
   async searchAvatars(artistId: string): Promise<SearchArtistAvatarsResponse> {
     const response = await apiClient.get<SearchArtistAvatarsResponse>(
       `/admin/metadata/artist/${artistId}/avatars/search`,
@@ -108,9 +105,6 @@ export const artistAvatarsApi = {
     return response.data;
   },
 
-  /**
-   * Aplicar una imagen seleccionada
-   */
   async applyAvatar(request: ApplyArtistAvatarRequest): Promise<ApplyArtistAvatarResponse> {
     const response = await apiClient.post<ApplyArtistAvatarResponse>(
       '/admin/metadata/artist/avatars/apply',
@@ -119,9 +113,6 @@ export const artistAvatarsApi = {
     return response.data;
   },
 
-  /**
-   * Actualizar la posición del fondo de un artista
-   */
   async updateBackgroundPosition(
     request: UpdateBackgroundPositionRequest,
   ): Promise<UpdateBackgroundPositionResponse> {
@@ -132,9 +123,6 @@ export const artistAvatarsApi = {
     return response.data;
   },
 
-  /**
-   * Subir una imagen personalizada desde el PC
-   */
   async uploadCustomImage(request: UploadCustomImageRequest): Promise<UploadCustomImageResponse> {
     const formData = new FormData();
     formData.append('file', request.file);
@@ -152,9 +140,6 @@ export const artistAvatarsApi = {
     return response.data;
   },
 
-  /**
-   * Listar todas las imágenes personalizadas de un artista
-   */
   async listCustomImages(artistId: string): Promise<ListCustomImagesResponse> {
     const response = await apiClient.get<ListCustomImagesResponse>(
       `/admin/metadata/artist/custom-images/${artistId}`,
@@ -162,9 +147,6 @@ export const artistAvatarsApi = {
     return response.data;
   },
 
-  /**
-   * Aplicar (activar) una imagen personalizada
-   */
   async applyCustomImage(request: ApplyCustomImageRequest): Promise<ApplyCustomImageResponse> {
     const response = await apiClient.post<ApplyCustomImageResponse>(
       `/admin/metadata/artist/custom-images/${request.artistId}/apply/${request.customImageId}`,
@@ -172,9 +154,6 @@ export const artistAvatarsApi = {
     return response.data;
   },
 
-  /**
-   * Eliminar una imagen personalizada
-   */
   async deleteCustomImage(request: DeleteCustomImageRequest): Promise<DeleteCustomImageResponse> {
     const response = await apiClient.delete<DeleteCustomImageResponse>(
       `/admin/metadata/artist/custom-images/${request.artistId}/${request.customImageId}`,

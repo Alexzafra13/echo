@@ -7,10 +7,7 @@ interface CountryInfo {
   countryName: string;
 }
 
-/**
- * Hook para detectar el país del usuario usando su IP
- * Usa ipapi.co que es gratuito y no requiere API key
- */
+// Detecta el país del usuario vía IP usando ipapi.co
 export function useUserCountry() {
   return useQuery({
     queryKey: ['user-country'],

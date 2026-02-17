@@ -20,7 +20,6 @@ import { DownloadService } from '../infrastructure/services/download.service';
 import { StreamTokenGuard } from './guards';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
 
-// Descarga de álbumes como ZIP (usa StreamToken en query params para navegador)
 @ApiTags('downloads')
 @Controller('albums')
 @UseGuards(StreamTokenGuard)
@@ -65,27 +64,20 @@ export class DownloadController {
   ): Promise<void> {
     this.logger.info({ albumId }, 'Starting album download');
 
-    // 1. Get album info
     const albumInfo = await this.downloadService.getAlbumDownloadInfo(albumId);
-
-    // 2. Calculate estimated size
     const estimatedSize = await this.downloadService.calculateAlbumSize(albumInfo);
 
-    // 3. Sanitize filename for Content-Disposition
     const fileName = `${albumInfo.artistName} - ${albumInfo.albumName}.zip`
       .replace(/[<>:"/\\|?*]/g, '_')
       .slice(0, 200);
 
-    // 4. Set headers
     res.raw.writeHead(200, {
       'Content-Type': 'application/zip',
       'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
       'Transfer-Encoding': 'chunked',
-      // Estimated size (ZIP with no compression will be similar to sum of files)
       'X-Estimated-Size': estimatedSize.toString(),
     });
 
-    // 5. Stream ZIP to response
     try {
       await this.downloadService.streamAlbumAsZip(albumInfo, res.raw);
     } catch (error) {
@@ -93,7 +85,6 @@ export class DownloadController {
         { error: error instanceof Error ? error.message : error, albumId },
         'Error streaming album ZIP',
       );
-      // Response might already be partially sent, so we can't change status
       if (!res.raw.writableEnded) {
         res.raw.end();
       }

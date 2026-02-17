@@ -2,15 +2,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMetadataSSE, AlbumCoverUpdatedEvent } from './useMetadataSSE';
 
-/**
- * useAlbumMetadataSync
- *
- * Automatically synchronizes album metadata when updates occur via SSE.
- * Listens to `album:cover:updated` events and invalidates relevant React Query caches.
- *
- * @param albumId - Optional album ID to listen for specific album updates only
- * @param artistId - Optional artist ID to also invalidate artist queries
- */
+// Sincroniza metadatos de álbum via SSE e invalida caches de React Query
 export function useAlbumMetadataSync(albumId?: string, artistId?: string) {
   const queryClient = useQueryClient();
   const eventSource = useMetadataSSE();

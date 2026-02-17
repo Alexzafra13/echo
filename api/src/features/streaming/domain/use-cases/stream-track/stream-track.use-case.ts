@@ -7,15 +7,6 @@ import { StreamTrackInput, StreamTrackOutput } from './stream-track.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 
-/**
- * StreamTrackUseCase - Preparar streaming de un track
- *
- * Responsabilidades:
- * - Validar que el track existe
- * - Verificar que el archivo existe en el filesystem
- * - Obtener metadatos del archivo (tamaño, tipo MIME)
- * - Retornar información necesaria para streaming
- */
 @Injectable()
 export class StreamTrackUseCase {
   constructor(
@@ -26,32 +17,27 @@ export class StreamTrackUseCase {
   ) {}
 
   async execute(input: StreamTrackInput): Promise<StreamTrackOutput> {
-    // 1. Validar trackId
     if (!input.trackId || input.trackId.trim() === '') {
       throw new NotFoundError('Track', 'ID is required');
     }
 
-    // 2. Buscar track en BD
     const track = await this.trackRepository.findById(input.trackId);
 
     if (!track) {
       throw new NotFoundError('Track', input.trackId);
     }
 
-    // 3. Obtener path del archivo
     const filePath = track.path;
 
     if (!filePath) {
       throw new NotFoundError('Track', `${input.trackId} has no file path`);
     }
 
-    // 4. Verificar que el archivo existe
     if (!fs.existsSync(filePath)) {
       this.logger.error({ trackId: input.trackId, filePath }, 'Audio file not found');
       throw new NotFoundError('Audio file', filePath);
     }
 
-    // 5. Obtener stats del archivo
     const stats = fs.statSync(filePath);
 
     if (!stats.isFile()) {
@@ -59,13 +45,10 @@ export class StreamTrackUseCase {
       throw new NotFoundError('File', filePath);
     }
 
-    // 6. Detectar MIME type basado en extensión usando utilidad compartida
     const mimeType = getAudioMimeType(path.extname(filePath));
 
-    // 7. Obtener nombre del archivo
     const fileName = path.basename(filePath);
 
-    // 8. Retornar
     return {
       trackId: track.id,
       filePath,

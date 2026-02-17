@@ -26,11 +26,10 @@ import {
   LibraryChangeDto,
 } from '../../presentation/dtos/scanner-events.dto';
 
-// Eventos de escaneo en tiempo real (requiere JWT, control solo admin)
 @WebSocketGateway({
   namespace: 'scanner',
   cors: {
-    origin: '*', // Configured in WebSocketAdapter based on CORS_ORIGINS env var
+    origin: '*',
     credentials: true,
   },
   transports: ['websocket', 'polling'],
@@ -46,7 +45,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
   @WebSocketServer()
   server!: Server;
-  // Store latest progress for each active scan (for late subscribers)
+  // Caché de progreso para suscriptores tardíos
   private scanProgress = new Map<string, ScanProgressDto>();
 
   afterInit(server: Server) {
@@ -57,12 +56,10 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     const userId = client.data?.userId || 'anonymous';
     this.logger.info(`✅ Client connected to scanner namespace: ${client.id} (User: ${userId})`);
 
-    // Send current LUFS progress if there's an active analysis
     if (this.lufsProgress) {
       client.emit('lufs:progress', this.lufsProgress);
     }
 
-    // Send current DJ progress if there's an active analysis
     if (this.djProgress) {
       client.emit('dj:progress', this.djProgress);
     }
@@ -80,19 +77,15 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   ): Promise<void> {
     const room = `scan:${dto.scanId}`;
 
-    // Unirse al room del scan
     await client.join(room);
 
     this.logger.debug(`Client ${client.id} subscribed to scan ${dto.scanId}`);
 
-    // Enviar confirmación
     client.emit('scanner:subscribed', {
       scanId: dto.scanId,
       message: 'Successfully subscribed to scan events',
     });
 
-    // Si hay progreso guardado para este scan, enviarlo inmediatamente
-    // Esto ayuda a clientes que se suscriben tarde (race condition)
     const currentProgress = this.scanProgress.get(dto.scanId);
     if (currentProgress) {
       client.emit('scan:progress', currentProgress);
@@ -108,12 +101,10 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   ): Promise<void> {
     const room = `scan:${dto.scanId}`;
 
-    // Salir del room
     await client.leave(room);
 
     this.logger.debug(`Client ${client.id} unsubscribed from scan ${dto.scanId}`);
 
-    // Enviar confirmación
     client.emit('scanner:unsubscribed', {
       scanId: dto.scanId,
       message: 'Successfully unsubscribed from scan events',
@@ -126,7 +117,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     @ConnectedSocket() client: Socket,
     @MessageBody() dto: PauseScanDto,
   ): Promise<void> {
-    // SEGURIDAD: Verificar que el usuario es admin
     if (!client.data.user?.isAdmin) {
       throw new WsException('Unauthorized: Admin access required');
     }
@@ -147,7 +137,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     @ConnectedSocket() client: Socket,
     @MessageBody() dto: CancelScanDto,
   ): Promise<void> {
-    // SEGURIDAD: Verificar que el usuario es admin
     if (!client.data.user?.isAdmin) {
       throw new WsException('Unauthorized: Admin access required');
     }
@@ -169,7 +158,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     @ConnectedSocket() client: Socket,
     @MessageBody() dto: ResumeScanDto,
   ): Promise<void> {
-    // SEGURIDAD: Verificar que el usuario es admin
     if (!client.data.user?.isAdmin) {
       throw new WsException('Unauthorized: Admin access required');
     }
@@ -184,21 +172,15 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     });
   }
 
-  // Store latest LUFS progress for late subscribers
   private lufsProgress: LufsProgressDto | null = null;
-  // Store latest DJ progress for late subscribers
   private djProgress: DjProgressDto | null = null;
 
   emitProgress(data: ScanProgressDto): void {
     const room = `scan:${data.scanId}`;
 
-    // Store latest progress for late subscribers
     this.scanProgress.set(data.scanId, data);
-
-    // Emit to specific room (for subscribed clients)
     this.server.to(room).emit('scan:progress', data);
-
-    // ALSO emit broadcast to all clients (for race condition mitigation)
+    // Broadcast global para mitigar race conditions de suscripción
     this.server.emit('scan:progress', data);
 
     this.logger.debug(`Emitted progress for scan ${data.scanId}: ${data.progress}%`);
@@ -207,10 +189,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   emitError(data: ScanErrorDto): void {
     const room = `scan:${data.scanId}`;
 
-    // Emit to specific room (for subscribed clients)
     this.server.to(room).emit('scan:error', data);
-
-    // ALSO emit broadcast to all clients
     this.server.emit('scan:error', data);
 
     this.logger.warn(`Emitted error for scan ${data.scanId}: ${data.error}`);
@@ -219,23 +198,15 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   emitCompleted(data: ScanCompletedDto): void {
     const room = `scan:${data.scanId}`;
 
-    // Clean up stored progress for this scan
     this.scanProgress.delete(data.scanId);
-
-    // Emitir al room específico (para clientes suscritos a este scan)
     this.server.to(room).emit('scan:completed', data);
-
-    // TAMBIÉN emitir a todos los clientes del namespace (para auto-refresh global)
     this.server.emit('scan:completed', data);
 
     this.logger.info(`Emitted completed for scan ${data.scanId} (to room and broadcast)`);
   }
 
   emitLufsProgress(data: LufsProgressDto): void {
-    // Store latest progress for late subscribers
     this.lufsProgress = data.isRunning ? data : null;
-
-    // Broadcast to all clients
     this.server.emit('lufs:progress', data);
 
     this.logger.debug(
@@ -248,10 +219,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   }
 
   emitDjProgress(data: DjProgressDto): void {
-    // Store latest progress for late subscribers
     this.djProgress = data.isRunning ? data : null;
-
-    // Broadcast to all clients
     this.server.emit('dj:progress', data);
 
     this.logger.debug(
@@ -268,7 +236,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   }
 
   emitLibraryChange(data: LibraryChangeDto): void {
-    // Broadcast to all connected clients
     this.server.emit('library:change', data);
     this.logger.info(`📢 Library change: ${data.type} - ${data.trackTitle || data.trackId || 'unknown'}`);
   }

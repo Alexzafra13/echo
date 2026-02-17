@@ -4,9 +4,6 @@ import { IFederationRepository, FEDERATION_REPOSITORY } from '../../domain/ports
 import { ConnectedServer } from '../../domain/types';
 import { FederationTokenService } from '../../domain/services/federation-token.service';
 
-/**
- * DTOs for remote server responses
- */
 export interface RemoteServerInfo {
   name: string;
   version: string;
@@ -70,10 +67,6 @@ export class RemoteServerService {
     private readonly tokenService: FederationTokenService,
   ) {}
 
-  /**
-   * Connect to a remote server using an invitation token
-   * @param requestMutual - If true, generates an invitation token and sends it to request mutual federation
-   */
   async connectToServer(
     userId: string,
     serverUrl: string,
@@ -82,16 +75,13 @@ export class RemoteServerService {
     localServerUrl?: string,
     requestMutual = false,
   ): Promise<ConnectedServer> {
-    // Normalize URL
     const normalizedUrl = this.normalizeUrl(serverUrl);
 
-    // Check if already connected
     const existing = await this.repository.findConnectedServerByUrl(userId, normalizedUrl);
     if (existing) {
       throw new HttpException('Already connected to this server', HttpStatus.CONFLICT);
     }
 
-    // If requesting mutual federation, we need a local server URL
     if (requestMutual && !localServerUrl) {
       throw new HttpException(
         'Local server URL is required for mutual federation',
@@ -99,7 +89,6 @@ export class RemoteServerService {
       );
     }
 
-    // Generate a mutual invitation token if requested
     let mutualInvitationToken: string | undefined;
     if (requestMutual && localServerUrl) {
       const token = await this.tokenService.generateInvitationToken(
@@ -111,7 +100,6 @@ export class RemoteServerService {
       mutualInvitationToken = token.token;
     }
 
-    // Try to connect to the remote server
     try {
       const response = await this.makeRequest<{
         accessToken: string;
@@ -127,8 +115,6 @@ export class RemoteServerService {
         }),
       });
 
-      // Create connected server record
-      // Mark as online since we just successfully connected
       const now = new Date();
       const connectedServer = await this.repository.createConnectedServer({
         userId,
@@ -162,9 +148,6 @@ export class RemoteServerService {
     }
   }
 
-  /**
-   * Get library from a connected server
-   */
   async getRemoteLibrary(
     server: ConnectedServer,
     page = 1,
@@ -176,7 +159,6 @@ export class RemoteServerService {
         `/api/federation/library?page=${page}&limit=${limit}`,
       );
 
-      // Update server stats
       await this.repository.updateConnectedServer(server.id, {
         remoteAlbumCount: response.totalAlbums,
         remoteTrackCount: response.totalTracks,
@@ -193,9 +175,6 @@ export class RemoteServerService {
     }
   }
 
-  /**
-   * Get albums from a connected server
-   */
   async getRemoteAlbums(
     server: ConnectedServer,
     page = 1,
@@ -221,9 +200,6 @@ export class RemoteServerService {
     }
   }
 
-  /**
-   * Get a specific album from a connected server
-   */
   async getRemoteAlbum(
     server: ConnectedServer,
     albumId: string,
@@ -239,10 +215,6 @@ export class RemoteServerService {
     }
   }
 
-  /**
-   * Get album cover from a connected server
-   * Returns the image buffer and content type
-   */
   async getRemoteAlbumCover(
     server: ConnectedServer,
     albumId: string,
@@ -255,10 +227,8 @@ export class RemoteServerService {
         'Fetching remote album cover',
       );
 
-      // Validate URL before making request
       this.validateUrl(url);
 
-      // Create AbortController for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), RemoteServerService.REQUEST_TIMEOUT);
 
@@ -306,10 +276,6 @@ export class RemoteServerService {
     }
   }
 
-  /**
-   * Stream a track from a connected server (proxy)
-   * Returns the response stream and headers for piping to the client
-   */
   async streamRemoteTrack(
     server: ConnectedServer,
     trackId: string,
@@ -349,7 +315,6 @@ export class RemoteServerService {
           throw new Error(`HTTP ${response.status}`);
         }
 
-        // Extract relevant headers for the response
         const responseHeaders: Record<string, string> = {};
         const headersToCopy = [
           'content-type',
@@ -366,7 +331,6 @@ export class RemoteServerService {
           }
         }
 
-        // Convert Response body to Node.js ReadableStream
         const { Readable } = await import('stream');
         const nodeStream = Readable.fromWeb(response.body as any);
 
@@ -387,9 +351,6 @@ export class RemoteServerService {
     }
   }
 
-  /**
-   * Check if a server is reachable and update its online status
-   */
   async pingServer(server: ConnectedServer): Promise<boolean> {
     const now = new Date();
     try {
@@ -398,7 +359,6 @@ export class RemoteServerService {
         '/api/federation/ping',
       );
 
-      // Server is online - update status
       await this.repository.updateConnectedServer(server.id, {
         isOnline: true,
         lastOnlineAt: now,
@@ -409,7 +369,6 @@ export class RemoteServerService {
 
       return true;
     } catch (error) {
-      // Server is offline - update status
       await this.repository.updateConnectedServer(server.id, {
         isOnline: false,
         lastCheckedAt: now,
@@ -421,26 +380,18 @@ export class RemoteServerService {
     }
   }
 
-  /**
-   * Check health of all servers for a user
-   */
   async checkAllServersHealth(userId: string): Promise<ConnectedServer[]> {
     const servers = await this.repository.findConnectedServersByUserId(userId);
 
-    // Ping all servers in parallel
     await Promise.all(
       servers.map(async (server) => {
         await this.pingServer(server);
       }),
     );
 
-    // Return updated servers
     return this.repository.findConnectedServersByUserId(userId);
   }
 
-  /**
-   * Sync server stats (album count, track count, etc.)
-   */
   async syncServerStats(server: ConnectedServer): Promise<ConnectedServer> {
     try {
       const info = await this.makeAuthenticatedRequest<RemoteServerInfo>(
@@ -462,40 +413,25 @@ export class RemoteServerService {
     }
   }
 
-  /**
-   * Disconnect from a server
-   */
   async disconnectFromServer(serverId: string): Promise<boolean> {
     const server = await this.repository.findConnectedServerById(serverId);
     if (!server) {
       return false;
     }
 
-    // Try to notify the remote server (best effort)
     try {
       await this.makeAuthenticatedRequest(
         server,
         '/api/federation/disconnect',
         { method: 'POST' },
       );
-    } catch {
-      // Ignore errors, we're disconnecting anyway
-    }
+    } catch {}
 
     return this.repository.deleteConnectedServer(serverId);
   }
 
-  // ============================================
-  // Private helpers
-  // ============================================
-
-  /** Default timeout for HTTP requests (30 seconds) */
   private static readonly REQUEST_TIMEOUT = 30000;
 
-  /**
-   * Extract a meaningful error message from network/fetch errors
-   * Node.js Fetch API errors are often generic, this helps provide more context
-   */
   private getNetworkErrorMessage(error: unknown, url: string): string {
     if (!(error instanceof Error)) {
       return 'Unknown network error';
@@ -504,7 +440,6 @@ export class RemoteServerService {
     const message = error.message.toLowerCase();
     const cause = (error as any).cause;
 
-    // Check for specific error codes in the cause
     if (cause?.code) {
       switch (cause.code) {
         case 'ECONNREFUSED':
@@ -531,9 +466,7 @@ export class RemoteServerService {
       }
     }
 
-    // Check for common error patterns in the message
     if (message.includes('fetch failed')) {
-      // Try to extract more info from cause
       if (cause?.message) {
         return `Network error: ${cause.message}`;
       }
@@ -557,29 +490,21 @@ export class RemoteServerService {
 
   private normalizeUrl(url: string): string {
     let normalized = url.trim();
-    // Remove trailing slash
     if (normalized.endsWith('/')) {
       normalized = normalized.slice(0, -1);
     }
-    // Add protocol if missing
     if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
       normalized = `https://${normalized}`;
     }
     return normalized;
   }
 
-  /**
-   * Validate that a URL is well-formed and safe
-   * Throws an error if the URL is invalid
-   */
   private validateUrl(url: string): void {
     try {
       const parsed = new URL(url);
-      // Only allow http and https protocols
       if (!['http:', 'https:'].includes(parsed.protocol)) {
         throw new Error(`Invalid protocol: ${parsed.protocol}`);
       }
-      // Block localhost and private IPs in production (basic check)
       const hostname = parsed.hostname.toLowerCase();
       if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
         this.logger.warn({ hostname }, 'Allowing localhost connection (development mode)');
@@ -599,10 +524,8 @@ export class RemoteServerService {
   ): Promise<T> {
     const url = `${baseUrl}${path}`;
 
-    // Validate URL before making request
     this.validateUrl(url);
 
-    // Create AbortController for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), RemoteServerService.REQUEST_TIMEOUT);
 
@@ -630,7 +553,6 @@ export class RemoteServerService {
           HttpStatus.GATEWAY_TIMEOUT,
         );
       }
-      // Provide more detailed error message for network failures
       const errorMessage = this.getNetworkErrorMessage(error, url);
       this.logger.debug(
         { url, originalError: error instanceof Error ? error.message : error, cause: (error as any)?.cause },

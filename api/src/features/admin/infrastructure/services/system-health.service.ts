@@ -8,7 +8,7 @@ import { SystemHealth, StorageBreakdown } from '../../domain/use-cases/get-dashb
 
 @Injectable()
 export class SystemHealthService {
-  private readonly MAX_STORAGE_MB = 5120; // 5GB default limit
+  private readonly MAX_STORAGE_MB = 5120;
 
   constructor(
     private readonly drizzle: DrizzleService,
@@ -96,7 +96,7 @@ export class SystemHealthService {
     return {
       lastfm: lastfmKey ? 'healthy' : 'down',
       fanart: fanartKey ? 'healthy' : 'down',
-      musicbrainz: 'healthy', // No key required
+      musicbrainz: 'healthy',
     };
   }
 

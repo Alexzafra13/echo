@@ -220,24 +220,19 @@ export class UsersController {
     @Req() request: FastifyRequest & { file: () => Promise<MultipartFile> },
     @CurrentUser() user: JwtUser,
   ) {
-    // Fastify multipart - get uploaded file
     const data = await request.file();
 
     if (!data) {
       throw new BadRequestException('No se subió ningún archivo');
     }
 
-    // Validate file size (5MB max for avatars)
     const MAX_SIZE = 5 * 1024 * 1024;
-
-    // Convert stream to buffer
     const buffer = await data.toBuffer();
 
     if (buffer.length > MAX_SIZE) {
       throw new BadRequestException('El archivo excede el tamaño máximo de 5MB');
     }
 
-    // Validate MIME type
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedMimeTypes.includes(data.mimetype)) {
       throw new BadRequestException(

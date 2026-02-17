@@ -31,7 +31,6 @@ export class DeleteUserUseCase {
 
     const isSystemAdmin = systemAdmin ? user.id === systemAdmin.id : false;
 
-    // No se puede eliminar al system admin
     if (isSystemAdmin) {
       throw new ValidationError('Cannot delete system administrator');
     }
@@ -44,7 +43,7 @@ export class DeleteUserUseCase {
       }
     }
 
-    // Soft delete: solo desactiva, no elimina datos
+    // Soft delete: desactiva sin eliminar datos
     await this.userRepository.updatePartial(input.userId, {
       isActive: false,
     });

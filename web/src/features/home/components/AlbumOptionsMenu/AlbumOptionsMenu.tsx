@@ -10,11 +10,6 @@ interface AlbumOptionsMenuProps {
   onChangeCover?: () => void;
 }
 
-/**
- * AlbumOptionsMenu Component
- * Displays a dropdown menu with album options (3 dots menu)
- * Uses Portal to render dropdown outside parent hierarchy to avoid overflow issues
- */
 export function AlbumOptionsMenu({
   onShowInfo,
   onAddToPlaylist,

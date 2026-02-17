@@ -12,27 +12,10 @@ import { CachedAlbumRepository } from './infrastructure/persistence/cached-album
 import { ALBUM_REPOSITORY } from './domain/ports/album-repository.port';
 import { CoverArtService } from '@shared/services';
 
-/**
- * AlbumsModule - Módulo de gestión de álbumes
- *
- * Estructura:
- * - Domain Layer: Use cases, entities, ports
- * - Infrastructure Layer: Repository (con cache), mapper
- * - Presentation Layer: Controller, DTOs
- *
- * Cache:
- * - Usa CachedAlbumRepository (Decorator Pattern)
- * - Transparente para el dominio (usa misma interfaz IAlbumRepository)
- */
-
 @Module({
-  imports: [
-    CacheModule, // Para RedisService
-    TracksModule, // Para acceder al repositorio de tracks
-  ],
+  imports: [CacheModule, TracksModule],
   controllers: [AlbumsController],
   providers: [
-    // Use Cases
     GetAlbumUseCase,
     GetAlbumsUseCase,
     SearchAlbumsUseCase,
@@ -45,15 +28,9 @@ import { CoverArtService } from '@shared/services';
     GetAlbumsByArtistUseCase,
     GetRecentlyPlayedAlbumsUseCase,
     GetFavoriteAlbumsUseCase,
-
-    // Repositories
-    DrizzleAlbumRepository, // Base repository (sin cache)
-    CachedAlbumRepository, // Wrapper con cache
-
-    // Services
+    DrizzleAlbumRepository,
+    CachedAlbumRepository,
     CoverArtService,
-
-    // Repository with cache (Decorator Pattern)
     {
       provide: ALBUM_REPOSITORY,
       useClass: CachedAlbumRepository,

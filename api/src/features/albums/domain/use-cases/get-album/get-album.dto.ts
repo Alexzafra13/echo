@@ -1,13 +1,7 @@
-/**
- * GetAlbumInput - Datos de entrada para obtener UN álbum por ID
- */
 export interface GetAlbumInput {
   id: string;
 }
 
-/**
- * GetAlbumOutput - Datos de salida de un álbum individual
- */
 export interface GetAlbumOutput {
   id: string;
   name: string;

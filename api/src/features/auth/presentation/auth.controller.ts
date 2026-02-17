@@ -114,10 +114,7 @@ export class AuthController {
     description: 'No autenticado o token inválido',
   })
   async logout(@CurrentUser() user: JwtUser): Promise<{ message: string }> {
-    // Verificar que tenemos el token raw y exp para invalidar
     if (!user.rawToken || !user.tokenExp) {
-      // Si no tenemos el token (edge case), igual retornamos success
-      // El cliente debería eliminar el token de su lado
       return { message: 'Logged out successfully' };
     }
 
@@ -131,7 +128,6 @@ export class AuthController {
     return { message: 'Logged out successfully' };
   }
 
-  // Consulta BD para datos actualizados (avatar, etc.)
   @Get('me')
   @AllowChangePassword()
   @HttpCode(HttpStatus.OK)

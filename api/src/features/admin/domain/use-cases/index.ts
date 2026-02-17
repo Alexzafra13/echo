@@ -5,6 +5,6 @@ export { DeleteUserUseCase, type DeleteUserInput, type DeleteUserOutput } from '
 export { ResetUserPasswordUseCase, type ResetUserPasswordInput, type ResetUserPasswordOutput } from './reset-user-password';
 export { PermanentlyDeleteUserUseCase, type PermanentlyDeleteUserInput, type PermanentlyDeleteUserOutput } from './permanently-delete-user';
 export { GetDashboardStatsUseCase, type GetDashboardStatsInput, type GetDashboardStatsOutput } from './get-dashboard-stats';
-// Moved to infrastructure - re-export for backwards compatibility
+// Re-export por compatibilidad
 export { ListEnrichmentLogsUseCase, type ListEnrichmentLogsInput, type ListEnrichmentLogsOutput } from '../../infrastructure/use-cases/list-enrichment-logs';
 export { GetEnrichmentStatsUseCase, type GetEnrichmentStatsInput, type GetEnrichmentStatsOutput } from '../../infrastructure/use-cases/get-enrichment-stats';

@@ -10,10 +10,6 @@ interface DeletePlaylistModalProps {
   isLoading?: boolean;
 }
 
-/**
- * DeletePlaylistModal Component
- * Modal for confirming playlist deletion
- */
 export function DeletePlaylistModal({
   playlistName,
   onClose,
@@ -25,7 +21,6 @@ export function DeletePlaylistModal({
       await onConfirm();
       onClose();
     } catch (error) {
-      // Error is handled by parent component
       logger.error('Error in delete confirmation:', error);
     }
   };
