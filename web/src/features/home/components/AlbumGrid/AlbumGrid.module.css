@@ -2,21 +2,21 @@
 
 /* Block: albumGrid */
 .albumGrid {
-  margin-bottom: 40px;
+  margin-bottom: var(--space-10);
 }
 
 .albumGrid__header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 0 20px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: 0 var(--space-5);
 }
 
 .albumGrid__title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--color-text-primary, #ffffff);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -24,12 +24,12 @@
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  transition: all 0.3s ease;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-slow);
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -42,14 +42,14 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 107, 107, 0.15), rgba(255, 107, 107, 0.25), rgba(255, 107, 107, 0.15), transparent);
-  transition: left 0.4s ease;
-  border-radius: 20px;
+  background: linear-gradient(90deg, transparent, var(--primary-15), var(--primary-20), var(--primary-15), transparent);
+  transition: left var(--transition-slow);
+  border-radius: var(--radius-full);
 }
 
 .albumGrid__viewAllButton:hover {
-  color: var(--color-primary, #ff6b6b);
-  background: rgba(255, 107, 107, 0.08);
+  color: var(--color-primary);
+  background: var(--primary-10);
 }
 
 .albumGrid__viewAllButton:hover::before {
@@ -59,8 +59,8 @@
 .albumGrid__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-  padding: 0 20px;
+  gap: var(--space-5);
+  padding: 0 var(--space-5);
   /* NO min-height aquí - el grid debe ocupar solo lo necesario */
 }
 
@@ -70,27 +70,27 @@
 @media (max-width: 1200px) {
   .albumGrid__grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
+    gap: var(--space-4);
   }
 
   .albumGrid__title {
-    font-size: 22px;
+    font-size: var(--text-xl);
   }
 }
 
 /* Mobile - Horizontal scroll carousel */
 @media (max-width: 768px) {
   .albumGrid {
-    margin-bottom: 28px;
+    margin-bottom: var(--space-8);
   }
 
   .albumGrid__header {
-    padding: 0 16px;
-    margin-bottom: 12px;
+    padding: 0 var(--space-4);
+    margin-bottom: var(--space-3);
   }
 
   .albumGrid__title {
-    font-size: 20px;
+    font-size: var(--text-xl);
   }
 
   .albumGrid__grid {
@@ -100,9 +100,9 @@
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    gap: 12px;
-    padding: 0 16px;
-    padding-bottom: 8px; /* Space for potential scrollbar */
+    gap: var(--space-3);
+    padding: 0 var(--space-4);
+    padding-bottom: var(--space-2);
 
     /* Hide scrollbar but keep functionality */
     scrollbar-width: none; /* Firefox */
@@ -124,17 +124,17 @@
 /* Small Mobile */
 @media (max-width: 480px) {
   .albumGrid__header {
-    padding: 0 12px;
+    padding: 0 var(--space-3);
   }
 
   .albumGrid__title {
-    font-size: 18px;
+    font-size: var(--text-lg);
   }
 
   .albumGrid__grid {
-    gap: 10px;
-    padding: 0 12px;
-    padding-bottom: 6px;
+    gap: var(--space-3);
+    padding: 0 var(--space-3);
+    padding-bottom: var(--space-2);
   }
 
   .albumGrid__grid > * {

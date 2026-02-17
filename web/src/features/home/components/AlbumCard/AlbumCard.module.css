@@ -73,7 +73,7 @@
   opacity: 0;
   transform: translateY(8px);
   pointer-events: auto;
-  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.4);
+  box-shadow: 0 4px 12px var(--primary-30);
 }
 
 .albumCard:hover .albumCard__playButton {
@@ -84,7 +84,7 @@
 .albumCard__playButton:hover {
   background: var(--color-primary-hover);
   transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(237, 104, 66, 0.5);
+  box-shadow: var(--shadow-glow-primary);
 }
 
 .albumCard__playButton:active {

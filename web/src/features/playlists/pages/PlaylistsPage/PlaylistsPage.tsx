@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus, Music, Trash2, Edit2, Search, X } from 'lucide-react';
+import { Plus, Music, Trash2, Edit2 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { useGridDimensions } from '@features/home/hooks';
 import { Header } from '@shared/components/layout/Header';
-import { Button, Pagination } from '@shared/components/ui';
+import { Button, Pagination, SearchInput, EmptyState } from '@shared/components/ui';
 import { formatDuration } from '@shared/utils/format';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
 import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
@@ -115,27 +115,11 @@ export default function PlaylistsPage() {
         <Header
           customSearch={
             <div className={styles.playlistsPage__searchForm}>
-              <div className={styles.playlistsPage__searchWrapper}>
-                <Search size={20} className={styles.playlistsPage__searchIcon} />
-                <input
-                  type="text"
-                  placeholder="Buscar playlists..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={styles.playlistsPage__searchInput}
-                  autoComplete="off"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className={styles.playlistsPage__searchClearButton}
-                    aria-label="Limpiar búsqueda"
-                  >
-                    <X size={18} />
-                  </button>
-                )}
-              </div>
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Buscar playlists..."
+              />
             </div>
           }
         />
@@ -177,11 +161,12 @@ export default function PlaylistsPage() {
               <p>Cargando playlists...</p>
             </div>
           ) : playlists.length === 0 ? (
-            <div className={styles.playlistsPage__emptyState}>
-              <Music size={64} />
-              <h2>No tienes playlists todavía</h2>
-              <p>Crea tu primera playlist para organizar tu música</p>
-            </div>
+            <EmptyState
+              icon={<Music size={64} />}
+              title="No tienes playlists todavía"
+              description="Crea tu primera playlist para organizar tu música"
+              action={{ label: 'Nueva Playlist', onClick: () => setShowCreateModal(true) }}
+            />
           ) : (
             <div className={styles.playlistsPage__gridWrapper}>
               <div className={styles.playlistsPage__grid}>

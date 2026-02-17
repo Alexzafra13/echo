@@ -302,6 +302,94 @@ textarea:focus-visible {
   transform: translateY(0);
 }
 
+/* Interactive card hover effect - use on clickable cards */
+.interactive-card {
+  transition: transform var(--transition-slow), box-shadow var(--transition-slow);
+}
+
+.interactive-card:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Icon button - circular 40x40 button for toolbar actions */
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--white-05);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition-base);
+}
+
+.icon-button:hover {
+  background: var(--white-10);
+  color: var(--text-primary);
+}
+
+/* Flex utilities */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Disabled state */
+.disabled-state {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ===== Shared Keyframe Animations ===== */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

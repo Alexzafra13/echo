@@ -20,9 +20,11 @@ export class RegisterRequestDto {
     description: 'Password (must contain uppercase, lowercase, number and special character)',
     example: 'SecurePass123!',
     minLength: 8,
+    maxLength: 128,
   })
   @IsString()
   @MinLength(8)
+  @MaxLength(128, { message: 'Password must not exceed 128 characters' })
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/, {
     message: 'Password must contain uppercase, lowercase, number and special character',
   })
