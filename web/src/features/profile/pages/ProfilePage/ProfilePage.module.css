@@ -63,7 +63,7 @@
 }
 
 .profilePage__avatarContainer:hover {
-  border-color: rgba(255, 107, 107, 0.5);
+  border-color: var(--primary-50);
 }
 
 .profilePage__avatar {
@@ -264,8 +264,8 @@
 .profilePage__btnEdit {
   margin-left: auto;
   padding: 6px 16px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
   border-radius: 6px;
   color: var(--color-primary);
   font-size: 14px;
@@ -275,8 +275,8 @@
 }
 
 .profilePage__btnEdit:hover {
-  background: rgba(255, 107, 107, 0.15);
-  border-color: rgba(255, 107, 107, 0.5);
+  background: var(--primary-15);
+  border-color: var(--primary-50);
 }
 
 .profilePage__successSmall {
@@ -298,8 +298,8 @@
 }
 
 .profilePage__badge_admin {
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
   color: var(--color-primary);
 }
 
@@ -398,8 +398,8 @@
 /* Submit Button */
 .profilePage__submitButton {
   padding: 12px 24px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
   border-radius: 8px;
   color: var(--color-primary);
   font-size: 14px;
@@ -483,8 +483,8 @@
 }
 
 .profilePage__toggleInput:checked + .profilePage__toggleSlider {
-  background-color: rgba(255, 107, 107, 0.3);
-  border-color: rgba(255, 107, 107, 0.5);
+  background-color: var(--primary-30);
+  border-color: var(--primary-50);
 }
 
 .profilePage__toggleInput:checked + .profilePage__toggleSlider:before {
@@ -557,8 +557,8 @@
 }
 
 .profilePage__submitButton:hover:not(:disabled) {
-  background: rgba(255, 107, 107, 0.15);
-  border-color: rgba(255, 107, 107, 0.5);
+  background: var(--primary-15);
+  border-color: var(--primary-50);
 }
 
 .profilePage__submitButton:disabled {

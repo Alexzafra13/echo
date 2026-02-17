@@ -80,7 +80,7 @@
 
 .artistPlaylistsPage__searchInput:focus {
   outline: none;
-  border-color: var(--accent-primary, #ff6b6b);
+  border-color: var(--color-primary);
   background: var(--white-08);
 }
 

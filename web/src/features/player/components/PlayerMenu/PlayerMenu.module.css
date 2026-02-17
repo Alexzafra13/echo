@@ -138,7 +138,7 @@
 }
 
 .toggleIndicator--active {
-  background: rgba(255, 107, 107, 0.3);
+  background: var(--primary-30);
 }
 
 .toggleIndicator--active::after {

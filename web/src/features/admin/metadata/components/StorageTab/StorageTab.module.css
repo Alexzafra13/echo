@@ -62,8 +62,8 @@
 }
 
 .radioOption.selected {
-  background: rgba(255, 107, 107, 0.08);
-  border-color: rgba(255, 107, 107, 0.3);
+  background: var(--primary-10);
+  border-color: var(--primary-30);
 }
 
 .radioOption input[type="radio"] {
@@ -71,7 +71,7 @@
   height: 18px;
   margin-top: 2px;
   cursor: pointer;
-  accent-color: var(--color-primary, #ff6b6b);
+  accent-color: var(--color-primary);
 }
 
 .radioContent {

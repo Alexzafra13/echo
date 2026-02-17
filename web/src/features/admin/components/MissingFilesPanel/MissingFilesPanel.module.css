@@ -75,10 +75,10 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
   border-radius: 8px;
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -86,8 +86,8 @@
 }
 
 .refreshButton:hover:not(:disabled) {
-  background: rgba(255, 107, 107, 0.15);
-  border-color: rgba(255, 107, 107, 0.5);
+  background: var(--primary-15);
+  border-color: var(--primary-50);
 }
 
 .refreshButton:disabled {

@@ -350,10 +350,19 @@
   --warning-20: rgba(245, 158, 11, 0.20);
   --info-10: rgba(59, 130, 246, 0.10);
   --info-30: rgba(59, 130, 246, 0.30);
+  --primary-05: rgba(237, 104, 66, 0.05);
   --primary-10: rgba(237, 104, 66, 0.10);
   --primary-15: rgba(237, 104, 66, 0.15);
   --primary-20: rgba(237, 104, 66, 0.20);
+  --primary-25: rgba(237, 104, 66, 0.25);
   --primary-30: rgba(237, 104, 66, 0.30);
+  --primary-40: rgba(237, 104, 66, 0.40);
+  --primary-50: rgba(237, 104, 66, 0.50);
+  --info-05: rgba(59, 130, 246, 0.05);
+  --info-15: rgba(59, 130, 246, 0.15);
+  --error-05: rgba(239, 68, 68, 0.05);
+  --error-08: rgba(239, 68, 68, 0.08);
+  --error-12: rgba(239, 68, 68, 0.12);
 
   /* ===== Aliases for Compatibility ===== */
   /* Legacy variable names used in existing components */

@@ -57,7 +57,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   font-size: 14px;
   font-weight: 600;
 }

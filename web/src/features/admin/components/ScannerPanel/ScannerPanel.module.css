@@ -126,7 +126,7 @@
 .statValue {
   font-size: 24px;
   font-weight: 700;
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
 }
 
 .statLabel {

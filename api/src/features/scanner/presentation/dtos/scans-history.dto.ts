@@ -1,35 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsInt, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { PaginationQueryDto } from '@shared/dtos/pagination-query.dto';
 
-/**
- * ScansHistoryQueryDto - Query params para historial de escaneos
- */
-export class ScansHistoryQueryDto {
-  @ApiProperty({
-    description: 'Página (empezando en 1)',
-    required: false,
-    default: 1,
-    minimum: 1,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number = 1;
-
-  @ApiProperty({
-    description: 'Límite de resultados por página',
-    required: false,
-    default: 20,
-    minimum: 1,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  limit?: number = 20;
-}
+// Reutilizar DTO compartido en vez de duplicar
+export { PaginationQueryDto as ScansHistoryQueryDto };
 
 /**
  * ScanHistoryItemDto - Item individual del historial

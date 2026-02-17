@@ -100,7 +100,7 @@
 .artistsPage__searchInput:focus {
   outline: none;
   background: var(--white-08);
-  border-color: var(--color-primary, #ff6b6b);
+  border-color: var(--color-primary);
 }
 
 .artistsPage__searchClearButton {
@@ -153,7 +153,7 @@
 }
 
 .artistsPage__error {
-  color: #ff6b6b;
+  color: var(--color-error);
 }
 
 .artistsPage__list {

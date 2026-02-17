@@ -59,7 +59,7 @@
   width: 20px;
   height: 20px;
   cursor: pointer;
-  accent-color: var(--color-primary, #ff6b6b);
+  accent-color: var(--color-primary);
 }
 
 .toggleLabel {
@@ -89,7 +89,7 @@
 }
 
 .providerIcon {
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -138,7 +138,7 @@
 
 .providerLink {
   font-size: 13px;
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s ease;

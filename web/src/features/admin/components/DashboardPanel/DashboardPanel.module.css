@@ -233,7 +233,7 @@
 }
 
 .loadingIcon {
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -270,8 +270,8 @@
 
 .retryButton {
   padding: 10px var(--space-6);
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
   border-radius: var(--radius-base);
   color: var(--color-primary);
   font-size: var(--text-sm);
@@ -281,8 +281,8 @@
 }
 
 .retryButton:hover {
-  background: rgba(255, 107, 107, 0.15);
-  border-color: rgba(255, 107, 107, 0.5);
+  background: var(--primary-15);
+  border-color: var(--primary-50);
 }
 
 /* Responsive */
