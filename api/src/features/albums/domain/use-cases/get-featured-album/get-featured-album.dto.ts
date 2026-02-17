@@ -1,6 +1,3 @@
-/**
- * AlbumOutput - Datos de un álbum en la respuesta
- */
 export interface AlbumOutput {
   id: string;
   name: string;
@@ -19,7 +16,4 @@ export interface AlbumOutput {
   updatedAt: Date;
 }
 
-/**
- * GetFeaturedAlbumOutput - Datos de salida del álbum destacado
- */
 export type GetFeaturedAlbumOutput = AlbumOutput | null;

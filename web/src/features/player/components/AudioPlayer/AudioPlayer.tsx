@@ -44,7 +44,6 @@ export function AudioPlayer() {
   const queueRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Swipe gesture state for mobile
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const touchStartX = useRef<number>(0);
@@ -52,20 +51,16 @@ export function AudioPlayer() {
   const isSwiping = useRef(false);
   const swipeTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Cleanup swipe timeout on unmount
   useEffect(() => {
     return () => {
       if (swipeTimeoutRef.current) clearTimeout(swipeTimeoutRef.current);
     };
   }, []);
 
-  // Detectar cuando el usuario llega al final de la página para activar mini-player
   const isMiniMode = usePageEndDetection(120);
 
-  // Sistema de preferencias
   const preference = usePlayerSettingsStore((s) => s.playerPreference);
 
-  // Detectar si estamos en mobile (viewport <= 768px)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -77,31 +72,23 @@ export function AudioPlayer() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Lógica de visibilidad basada en preferencia
-  // - Cuando NowPlayingView está abierto: SIEMPRE ocultar
-  // - En mobile: NUNCA ocultar (no hay sidebar)
-  // - 'footer': siempre visible en footer (shouldHide = false)
-  // - 'sidebar': siempre oculto, usa mini-player en sidebar (shouldHide = true)
-  // - 'dynamic': ocultar cuando hay scroll (shouldHide = isMiniMode)
+  // Visibilidad según preferencia, viewport y NowPlayingView
   const shouldHide = isNowPlayingOpen ? true :
     isMobile ? false :
     preference === 'footer' ? false :
     preference === 'sidebar' ? true :
     isMiniMode;
 
-  // Cerrar dropdowns al hacer click fuera
   useClickOutsideRef(queueRef, () => setIsQueueOpen(false), isQueueOpen);
   useClickOutsideRef(menuRef, () => setIsMenuOpen(false), isMenuOpen);
 
-  // Controlar espaciador del footer según contenido, preferencia y scroll
+  // Spacer del footer según contenido y preferencia
   useEffect(() => {
     const hasContent = !!(currentTrack || currentRadioStation);
 
-    // En mobile: SIEMPRE agregar spacer si hay contenido (no hay sidebar en mobile)
-    // En desktop: depende de la preferencia y scroll
     const needsFooterSpacer = isMobile
-      ? hasContent  // Mobile: siempre footer si hay contenido
-      : hasContent &&  // Desktop: depende de preferencia
+      ? hasContent
+      : hasContent &&
         preference !== 'sidebar' &&
         !(preference === 'dynamic' && isMiniMode);
 
@@ -116,7 +103,6 @@ export function AudioPlayer() {
     };
   }, [currentTrack, currentRadioStation, isMiniMode, preference, isMobile]);
 
-  // Extraer color dominante del cover para gradient móvil
   const colorSourceUrl = useMemo(() => {
     if (isRadioMode) return currentRadioStation?.favicon || undefined;
     if (currentTrack) {
@@ -129,8 +115,7 @@ export function AudioPlayer() {
   }, [isRadioMode, currentRadioStation?.favicon, currentTrack]);
   const dominantColor = useDominantColor(colorSourceUrl, '0, 0, 0');
 
-  // Swipe gesture handlers for mobile
-  const SWIPE_THRESHOLD = 60; // Minimum distance to trigger swipe action
+  const SWIPE_THRESHOLD = 60;
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (!isMobile || isRadioMode) return;
@@ -145,10 +130,8 @@ export function AudioPlayer() {
     const deltaX = e.touches[0].clientX - touchStartX.current;
     const deltaY = e.touches[0].clientY - touchStartY.current;
 
-    // Only swipe horizontally if movement is more horizontal than vertical
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
       isSwiping.current = true;
-      // Limit the offset for visual feedback
       const limitedOffset = Math.max(-100, Math.min(100, deltaX));
       setSwipeOffset(limitedOffset);
     }
@@ -163,11 +146,9 @@ export function AudioPlayer() {
     const deltaX = swipeOffset;
 
     if (Math.abs(deltaX) >= SWIPE_THRESHOLD) {
-      // Clear any pending swipe action to prevent rapid swipes from queuing multiple skips
       if (swipeTimeoutRef.current) clearTimeout(swipeTimeoutRef.current);
 
       if (deltaX < 0) {
-        // Swipe left → next track
         setSwipeDirection('left');
         swipeTimeoutRef.current = setTimeout(() => {
           playNext();
@@ -175,7 +156,6 @@ export function AudioPlayer() {
           setSwipeOffset(0);
         }, 200);
       } else {
-        // Swipe right → previous track
         setSwipeDirection('right');
         swipeTimeoutRef.current = setTimeout(() => {
           playPrevious();
@@ -184,14 +164,12 @@ export function AudioPlayer() {
         }, 200);
       }
     } else {
-      // Reset if swipe was too short
       setSwipeOffset(0);
     }
 
     isSwiping.current = false;
   }, [isMobile, isRadioMode, swipeOffset, playNext, playPrevious]);
 
-  // No mostrar si no hay ni track ni radio
   if (!currentTrack && !currentRadioStation) {
     return null;
   }
@@ -208,14 +186,12 @@ export function AudioPlayer() {
     setIsQueueOpen(!isQueueOpen);
   };
 
-  // Obtener información de visualización (track o radio)
   const { title, artist, cover, albumId, albumName } = getPlayerDisplayInfo(
     isRadioMode,
     currentRadioStation,
     currentTrack
   );
 
-  // Navegar al álbum al hacer clic en la carátula
   const handleGoToAlbum = () => {
     if (!isRadioMode && albumId) {
       setLocation(`/album/${albumId}`);
@@ -224,16 +200,14 @@ export function AudioPlayer() {
 
   const canNavigateToAlbum = !isRadioMode && albumId;
 
-  // Abrir NowPlayingView al hacer clic en trackInfo (solo mobile)
   const handleTrackInfoClick = () => {
     if (isMobile) {
       setIsNowPlayingOpen(true);
     }
   };
 
-  // Calculate swipe styles for mobile (separate animations for cover and text)
   const coverSwipeStyles = isMobile && !isRadioMode ? {
-    opacity: swipeDirection ? 0 : 1, // Only fade when changing tracks, not during swipe
+    opacity: swipeDirection ? 0 : 1,
     transition: 'opacity 0.2s ease-out',
   } as React.CSSProperties : undefined;
 
@@ -258,7 +232,6 @@ export function AudioPlayer() {
       onTouchEnd={handleTouchEnd}
     >
 
-      {/* Track/Radio info - Left side */}
       <div
         className={`${styles.trackInfo} ${isMobile ? styles['trackInfo--clickable'] : ''}`}
         onClick={handleTrackInfoClick}
@@ -284,7 +257,6 @@ export function AudioPlayer() {
         <div className={styles.trackDetails} style={textSwipeStyles}>
           <div className={styles.trackTitle}>{title}</div>
           <div className={styles.trackArtist}>{artist}</div>
-          {/* Album name - clickable link to album (solo desktop) */}
           {canNavigateToAlbum && albumName && (
             <div
               className={styles.trackAlbum}
@@ -294,7 +266,6 @@ export function AudioPlayer() {
               {albumName}
             </div>
           )}
-          {/* ICY Metadata - Now Playing for Radio */}
           {isRadioMode && radioMetadata && (
             <div className={styles.trackMetadata}>
               {radioMetadata.title || `${radioMetadata.artist || ''} - ${radioMetadata.song || ''}`.trim()}
@@ -303,10 +274,8 @@ export function AudioPlayer() {
         </div>
       </div>
 
-      {/* Player controls - Center */}
       <div className={styles.playerControls}>
         <div className={styles.controlButtons}>
-          {/* Radio mode: solo play/pause centrado */}
           {isRadioMode ? (
             <button
               className={`${styles.controlButton} ${styles.playButton}`}
@@ -316,7 +285,6 @@ export function AudioPlayer() {
               {isPlaying ? <Pause size={24} /> : <Play size={24} />}
             </button>
           ) : (
-            /* Track mode: controles completos */
             <>
               <button
                 className={`${styles.controlButton} ${styles.controlButtonSmall} ${isShuffle ? styles.active : ''}`}
@@ -364,9 +332,7 @@ export function AudioPlayer() {
         </div>
       </div>
 
-      {/* Volume control - Right side */}
       <div className={styles.volumeControl}>
-        {/* Indicador EN VIVO para radio con estado de señal */}
         {isRadioMode && (
           <div className={`${styles.liveIndicator} ${
             radioSignalStatus === 'good' ? styles['liveIndicator--good'] :
@@ -384,7 +350,6 @@ export function AudioPlayer() {
           </div>
         )}
 
-        {/* Queue button and dropdown - Solo para tracks */}
         {!isRadioMode && (
           <div className={styles.queueContainer} ref={queueRef}>
             <button
@@ -402,7 +367,6 @@ export function AudioPlayer() {
           </div>
         )}
 
-        {/* Volume container con slider horizontal */}
         <div className={styles.volumeContainer}>
           <button
             className={styles.volumeButton}
@@ -425,7 +389,6 @@ export function AudioPlayer() {
           />
         </div>
 
-        {/* Botón expandir NowPlayingView (solo desktop) */}
         {!isMobile && (
           <button
             className={styles.expandButton}
@@ -436,7 +399,6 @@ export function AudioPlayer() {
           </button>
         )}
 
-        {/* Menú de opciones junto al volumen */}
         <PlayerMenu
           isOpen={isMenuOpen}
           onToggle={() => setIsMenuOpen(!isMenuOpen)}
@@ -447,12 +409,10 @@ export function AudioPlayer() {
         />
       </div>
 
-      {/* Progress bar - Solo para tracks, no para radio */}
       {!isRadioMode && (
         <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />
       )}
 
-      {/* NowPlayingView - Vista completa en pantalla (mobile) */}
       <NowPlayingView
         isOpen={isNowPlayingOpen}
         onClose={() => setIsNowPlayingOpen(false)}

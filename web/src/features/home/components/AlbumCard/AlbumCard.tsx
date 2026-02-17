@@ -4,20 +4,6 @@ import type { AlbumCardProps } from '../../types';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import styles from './AlbumCard.module.css';
 
-/**
- * AlbumCard Component
- * Displays a single album with cover, title, artist and play button on hover
- * Memoized to prevent unnecessary re-renders in lists
- *
- * @example
- * <AlbumCard
- *   cover="/images/album.jpg"
- *   title="American Idiot"
- *   artist="Green Day"
- *   onClick={() => navigate('/album/123')}
- *   onPlayClick={() => play(albumId)}
- * />
- */
 export const AlbumCard = React.memo(function AlbumCard({
   cover,
   title,

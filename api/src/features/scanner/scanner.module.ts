@@ -34,45 +34,33 @@ import {
 } from './infrastructure/services/scanning';
 import { CoverArtService } from '@shared/services';
 
-// Escaneo de librería musical con procesamiento en background (BullMQ)
 @Module({
   imports: [
-    QueueModule, // Para BullMQ
-    WebSocketModule, // Para WebSocket
-    forwardRef(() => AlbumsModule), // Para invalidar caché después del scan
-    ExternalMetadataModule, // Para auto-enriquecimiento de metadatos
-    forwardRef(() => DjModule), // Para análisis DJ post-scan (BPM, Key, Energy)
+    QueueModule,
+    WebSocketModule,
+    forwardRef(() => AlbumsModule),
+    ExternalMetadataModule,
+    forwardRef(() => DjModule),
   ],
   controllers: [ScannerController],
   providers: [
-    // Use Cases
     StartScanUseCase,
     GetScanStatusUseCase,
     GetScansHistoryUseCase,
-
-    // Repository
     DrizzleScannerRepository,
-
-    // Core Services
     FileScannerService,
     MetadataExtractorService,
     FileWatcherService,
     LufsAnalyzerService,
     LufsAnalysisQueueService,
     CoverArtService,
-
-    // Scanning Services (SRP extraction)
     EntityCreationService,
     LibraryStatsService,
     LibraryCleanupService,
     TrackGenreService,
     TrackProcessingService,
     ScanProcessorService,
-
-    // Gateways (WebSocket)
     ScannerGateway,
-
-    // Port implementations
     {
       provide: SCANNER_REPOSITORY,
       useClass: DrizzleScannerRepository,

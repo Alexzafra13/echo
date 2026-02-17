@@ -39,9 +39,6 @@ export interface ResetPasswordResponse {
 }
 
 export const usersApi = {
-  /**
-   * Lista todos los usuarios con paginación
-   */
   async list(skip: number = 0, take: number = 100): Promise<ListUsersResponse> {
     const response = await apiClient.get<ListUsersResponse>(
       `/admin/users?skip=${skip}&take=${take}`
@@ -49,39 +46,26 @@ export const usersApi = {
     return response.data;
   },
 
-  /**
-   * Crea un nuevo usuario
-   */
   async create(data: CreateUserRequest): Promise<CreateUserResponse> {
     const response = await apiClient.post<CreateUserResponse>('/admin/users', data);
     return response.data;
   },
 
-  /**
-   * Actualiza un usuario existente
-   */
   async update(id: string, data: UpdateUserRequest): Promise<User> {
     const response = await apiClient.put<User>(`/admin/users/${id}`, data);
     return response.data;
   },
 
-  /**
-   * Desactiva un usuario (soft delete)
-   */
+  // Desactiva un usuario (soft delete)
   async delete(id: string): Promise<void> {
     await apiClient.delete(`/admin/users/${id}`);
   },
 
-  /**
-   * Elimina permanentemente un usuario (hard delete)
-   */
+  // Elimina permanentemente un usuario (hard delete)
   async permanentlyDelete(id: string): Promise<void> {
     await apiClient.delete(`/admin/users/${id}/permanently`);
   },
 
-  /**
-   * Resetea la contraseña de un usuario
-   */
   async resetPassword(id: string): Promise<ResetPasswordResponse> {
     const response = await apiClient.post<ResetPasswordResponse>(
       `/admin/users/${id}/reset-password`

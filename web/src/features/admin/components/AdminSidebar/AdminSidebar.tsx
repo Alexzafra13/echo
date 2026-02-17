@@ -14,12 +14,7 @@ interface AdminSidebarProps {
   tabs: Tab[];
 }
 
-/**
- * AdminSidebar Component
- * Sidebar navigation for admin panel (bottom nav on mobile like Home sidebar)
- */
 export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps) {
-  // Detectar cuando el usuario llega al final de la página para mostrar mini-player
   const isMiniMode = usePageEndDetection(120);
 
   const handleNavClick = (itemId: string) => {
@@ -28,7 +23,6 @@ export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps
 
   return (
     <aside className={styles.sidebar}>
-      {/* Logo - Same as main sidebar */}
       <div className={styles.sidebar__logoContainer}>
         <img
           src="/images/logos/echo_dark.svg"
@@ -37,7 +31,6 @@ export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps
         />
       </div>
 
-      {/* Navigation */}
       <nav className={styles.sidebar__nav}>
         {tabs.map((tab) => (
           <button
@@ -51,7 +44,6 @@ export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps
         ))}
       </nav>
 
-      {/* Mini Player - se muestra al final de la página */}
       <MiniPlayer isVisible={isMiniMode} />
     </aside>
   );

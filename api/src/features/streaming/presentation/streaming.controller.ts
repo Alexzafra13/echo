@@ -30,10 +30,8 @@ import * as fs from 'fs';
 import { ReadStream } from 'fs';
 import { ServerResponse } from 'http';
 
-// Timeout para streams en milisegundos (10 minutos - suficiente para cualquier track)
 const STREAM_TIMEOUT_MS = 10 * 60 * 1000;
 
-// Streaming de audio con soporte para Range requests (seek/skip)
 @ApiTags('streaming')
 @Controller('tracks')
 @UseGuards(StreamTokenGuard)
@@ -73,7 +71,6 @@ export class StreamingController implements OnModuleDestroy {
       this.activeStreams.delete(stream);
     };
 
-    // Timeout para prevenir conexiones zombie
     if (typeof res.setTimeout === 'function') {
       res.setTimeout(STREAM_TIMEOUT_MS, () => {
         this.logger.warn(
@@ -105,10 +102,8 @@ export class StreamingController implements OnModuleDestroy {
       }
     });
 
-    // Manejar desconexión abrupta del cliente
     res.on('error', (error) => {
       cleanup();
-      // Solo loguear si no es una desconexion normal
       if ((error as NodeJS.ErrnoException).code !== 'ECONNRESET') {
         this.logger.warn(
           {
@@ -123,7 +118,6 @@ export class StreamingController implements OnModuleDestroy {
       }
     });
 
-    // Desconexión normal del cliente
     res.on('close', () => {
       cleanup();
       if (!stream.destroyed) {
@@ -176,7 +170,7 @@ export class StreamingController implements OnModuleDestroy {
     res.header('Content-Type', metadata.mimeType);
     res.header('Content-Length', metadata.fileSize.toString());
     res.header('Accept-Ranges', 'bytes');
-    res.header('Cache-Control', 'public, max-age=31536000'); // 1 año
+    res.header('Cache-Control', 'public, max-age=31536000');
 
     res.status(HttpStatus.OK).send();
   }
@@ -226,7 +220,6 @@ export class StreamingController implements OnModuleDestroy {
     const { filePath, fileSize, mimeType } = metadata;
 
     if (range) {
-      // Partial content (Range request)
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
@@ -251,7 +244,6 @@ export class StreamingController implements OnModuleDestroy {
       const stream = this.createManagedStream(filePath, trackId, res.raw, { start, end });
       stream.pipe(res.raw);
     } else {
-      // Archivo completo
       res.raw.writeHead(HttpStatus.OK, {
         'Content-Type': mimeType,
         'Content-Length': fileSize.toString(),

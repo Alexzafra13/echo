@@ -71,7 +71,6 @@ import {
     CustomAlbumCoversController,
   ],
   providers: [
-    // Dashboard services (implementing domain ports)
     { provide: LIBRARY_STATS_PROVIDER, useClass: LibraryStatsService },
     { provide: STORAGE_BREAKDOWN_PROVIDER, useClass: StorageBreakdownService },
     { provide: SYSTEM_HEALTH_CHECKER, useClass: SystemHealthService },
@@ -79,7 +78,6 @@ import {
     { provide: ACTIVITY_STATS_PROVIDER, useClass: ActivityStatsService },
     { provide: SCAN_STATS_PROVIDER, useClass: ScanStatsService },
     { provide: ALERTS_PROVIDER, useClass: AlertsService },
-    // Use cases
     CreateUserUseCase,
     ListUsersUseCase,
     UpdateUserUseCase,

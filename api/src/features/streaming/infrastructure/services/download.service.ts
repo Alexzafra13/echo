@@ -23,13 +23,6 @@ export interface AlbumDownloadInfo {
   }[];
 }
 
-/**
- * DownloadService - Service for handling file downloads
- *
- * Responsibilities:
- * - Get album information for ZIP download
- * - Stream album as ZIP file with proper structure
- */
 @Injectable()
 export class DownloadService {
   constructor(
@@ -38,11 +31,7 @@ export class DownloadService {
     private readonly drizzle: DrizzleService,
   ) {}
 
-  /**
-   * Get album information for download
-   */
   async getAlbumDownloadInfo(albumId: string): Promise<AlbumDownloadInfo> {
-    // Get album with artist
     const [album] = await this.drizzle.db
       .select({
         id: albums.id,
@@ -59,7 +48,6 @@ export class DownloadService {
       throw new NotFoundException('Album not found');
     }
 
-    // Get all tracks
     const albumTracks = await this.drizzle.db
       .select({
         id: tracks.id,
@@ -86,24 +74,18 @@ export class DownloadService {
     };
   }
 
-  /**
-   * Stream album as ZIP file with backpressure support
-   * Prevents OOM when client reads slowly by respecting stream backpressure
-   */
+  // Genera ZIP del álbum respetando backpressure para evitar OOM
   async streamAlbumAsZip(
     albumInfo: AlbumDownloadInfo,
     outputStream: Writable,
   ): Promise<void> {
-    // Use smaller highWaterMark to reduce memory usage
     const archive = archiver('zip', {
-      zlib: { level: 0 }, // No compression for audio files (already compressed)
-      highWaterMark: 1024 * 1024, // 1MB buffer instead of default 16KB
+      zlib: { level: 0 },
+      highWaterMark: 1024 * 1024,
     });
 
-    // Track if we've been aborted
     let aborted = false;
 
-    // Handle client disconnect
     outputStream.on('close', () => {
       if (!archive.closed) {
         aborted = true;
@@ -115,7 +97,6 @@ export class DownloadService {
       }
     });
 
-    // Handle archive errors - don't throw, just log and abort
     archive.on('error', (err: Error) => {
       this.logger.error(
         { error: err.message, albumId: albumInfo.albumId },
@@ -138,22 +119,18 @@ export class DownloadService {
       }
     });
 
-    // Pipe archive to output stream
     archive.pipe(outputStream);
 
-    // Create folder structure: ArtistName - AlbumName/
     const folderName = this.sanitizeFolderName(
       `${albumInfo.artistName} - ${albumInfo.albumName}`,
     );
 
-    // Helper to wait for drain when backpressure occurs
     const waitForDrain = (): Promise<void> => {
       return new Promise((resolve) => {
         outputStream.once('drain', resolve);
       });
     };
 
-    // Add cover if exists
     if (albumInfo.coverPath && fs.existsSync(albumInfo.coverPath) && !aborted) {
       const coverExt = path.extname(albumInfo.coverPath);
       archive.file(albumInfo.coverPath, {
@@ -161,9 +138,7 @@ export class DownloadService {
       });
     }
 
-    // Add tracks one by one, respecting backpressure
     for (const track of albumInfo.tracks) {
-      // Check if we should abort
       if (aborted) {
         this.logger.info({ albumId: albumInfo.albumId }, 'Aborting ZIP due to disconnect');
         break;
@@ -177,7 +152,6 @@ export class DownloadService {
         continue;
       }
 
-      // Build filename: "01 - Title.flac" or "1-01 - Title.flac" for multi-disc
       const trackNum = String(track.trackNumber || 0).padStart(2, '0');
       const discPrefix =
         track.discNumber && track.discNumber > 1
@@ -187,22 +161,19 @@ export class DownloadService {
       const ext = track.suffix || path.extname(track.path).slice(1) || 'mp3';
       const fileName = `${discPrefix}${trackNum} - ${safeTitle}.${ext}`;
 
-      // Use stream instead of file path for better backpressure handling
       const fileStream = fs.createReadStream(track.path, {
-        highWaterMark: 64 * 1024, // 64KB chunks
+        highWaterMark: 64 * 1024,
       });
 
       archive.append(fileStream, {
         name: `${folderName}/${fileName}`,
       });
 
-      // Wait for drain if the output buffer is full (backpressure)
       if (outputStream.writableNeedDrain) {
         await waitForDrain();
       }
     }
 
-    // Finalize archive if not aborted
     if (!aborted) {
       await archive.finalize();
 
@@ -217,11 +188,7 @@ export class DownloadService {
     }
   }
 
-  /**
-   * Calculate estimated ZIP size (sum of file sizes)
-   */
   async calculateAlbumSize(albumInfo: AlbumDownloadInfo): Promise<number> {
-    // Stat all files in parallel for better performance
     const statPromises = albumInfo.tracks.map(async (track) => {
       try {
         const stats = await fs.promises.stat(track.path);
@@ -231,7 +198,6 @@ export class DownloadService {
       }
     });
 
-    // Add cover size if exists
     if (albumInfo.coverPath) {
       statPromises.push(
         fs.promises.stat(albumInfo.coverPath).then(s => s.size).catch(() => 0),
@@ -242,25 +208,19 @@ export class DownloadService {
     return sizes.reduce((sum, size) => sum + size, 0);
   }
 
-  /**
-   * Sanitize folder name for filesystem
-   */
   private sanitizeFolderName(name: string): string {
     return name
-      .replace(/[<>:"/\\|?*]/g, '_') // Replace invalid chars
-      .replace(/\.+$/g, '') // Remove trailing dots
+      .replace(/[<>:"/\\|?*]/g, '_')
+      .replace(/\.+$/g, '')
       .trim()
-      .slice(0, 200); // Limit length
+      .slice(0, 200);
   }
 
-  /**
-   * Sanitize file name for filesystem
-   */
   private sanitizeFileName(name: string): string {
     return name
-      .replace(/[<>:"/\\|?*]/g, '_') // Replace invalid chars
-      .replace(/\.+$/g, '') // Remove trailing dots
+      .replace(/[<>:"/\\|?*]/g, '_')
+      .replace(/\.+$/g, '')
       .trim()
-      .slice(0, 200); // Limit length
+      .slice(0, 200);
   }
 }

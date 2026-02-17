@@ -4,14 +4,7 @@ import { User } from '../../domain/entities/user.entity';
 import { ITokenService, TokenPayload } from '../../domain/ports/token-service.port';
 import { SecuritySecretsService } from '@config/security-secrets.service';
 
-// Type for JWT expiresIn option (e.g., '24h', '7d')
 type ExpiresIn = JwtSignOptions['expiresIn'];
-
-/**
- * JwtAdapter - Implementa ITokenService con NestJS JWT
- *
- * Uses SecuritySecretsService for auto-generated secrets
- */
 @Injectable()
 export class JwtAdapter implements ITokenService {
   constructor(

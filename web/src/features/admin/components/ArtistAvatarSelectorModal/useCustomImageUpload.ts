@@ -129,27 +129,18 @@ export function useCustomImageUpload({ artistId, imageType, onSuccess }: UseCust
   );
 
   return {
-    // File upload state
     selectedFile,
     previewUrl,
     fileInputRef,
     handleFileSelect,
-
-    // Custom images state
     customImages,
     selectedCustomImage,
     setSelectedCustomImage,
     isLoadingCustomImages,
-
-    // Loading states
     isUploading,
     isApplying,
     isDeleting,
-
-    // Error state
     displayError,
-
-    // Actions
     handleUpload,
     handleCancel,
     handleApplyCustomImage,

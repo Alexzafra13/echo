@@ -32,7 +32,6 @@ export class ChangePasswordUseCase {
       throw new NotFoundError('User', input.userId);
     }
 
-    // En primer login no se requiere contraseña actual
     if (!user.mustChangePassword) {
       if (!input.currentPassword) {
         throw new ValidationError('Current password is required');

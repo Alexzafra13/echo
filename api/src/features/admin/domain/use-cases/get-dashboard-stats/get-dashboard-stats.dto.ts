@@ -1,24 +1,22 @@
-export interface GetDashboardStatsInput {
-  // No input needed for now
-}
+export interface GetDashboardStatsInput {}
 
 export interface LibraryStats {
   totalTracks: number;
   totalAlbums: number;
   totalArtists: number;
   totalGenres: number;
-  totalDuration: number; // in seconds
-  totalStorage: number; // in bytes
+  totalDuration: number;
+  totalStorage: number;
   tracksAddedToday: number;
   albumsAddedToday: number;
   artistsAddedToday: number;
 }
 
 export interface StorageBreakdown {
-  music: number; // bytes
-  metadata: number; // bytes
-  avatars: number; // bytes
-  total: number; // bytes
+  music: number;
+  metadata: number;
+  avatars: number;
+  total: number;
 }
 
 export interface SystemHealth {
@@ -78,14 +76,14 @@ export interface ScanStats {
   currentScan: {
     isRunning: boolean;
     startedAt: Date | null;
-    progress: number; // 0-100
+    progress: number;
   };
 }
 
 export interface ActiveAlerts {
   orphanedFiles: number;
   pendingConflicts: number;
-  missingFiles: number; // Tracks marked as missing (file not found)
+  missingFiles: number;
   storageWarning: boolean;
   storageDetails?: {
     currentMB: number;
@@ -96,7 +94,7 @@ export interface ActiveAlerts {
 }
 
 export interface ActivityTimelineDay {
-  date: string; // ISO date string (YYYY-MM-DD)
+  date: string;
   scans: number;
   enrichments: number;
   errors: number;
@@ -119,6 +117,6 @@ export interface GetDashboardStatsOutput {
   activityStats: ActivityStats;
   scanStats: ScanStats;
   activeAlerts: ActiveAlerts;
-  activityTimeline: ActivityTimelineDay[]; // Last 7 days
-  recentActivities: RecentActivity[]; // Last 10 activities
+  activityTimeline: ActivityTimelineDay[];
+  recentActivities: RecentActivity[];
 }

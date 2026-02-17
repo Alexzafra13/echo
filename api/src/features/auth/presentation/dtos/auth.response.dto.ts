@@ -83,7 +83,7 @@ export class AuthResponseDto {
     dto.user.username = data.user.username;
     dto.user.name = data.user.name;
     dto.user.isAdmin = data.user.isAdmin;
-    dto.user.hasAvatar = !!data.user.avatarPath; // true if avatarPath exists
+    dto.user.hasAvatar = !!data.user.avatarPath;
     dto.user.createdAt = data.user.createdAt;
 
     dto.accessToken = data.accessToken;

@@ -1,14 +1,8 @@
-/**
- * GetAlbumsInput - Datos de entrada para obtener lista de álbumes
- */
 export interface GetAlbumsInput {
   skip: number;
   take: number;
 }
 
-/**
- * AlbumOutput - Datos de un álbum en la respuesta
- */
 export interface AlbumOutput {
   id: string;
   name: string;
@@ -27,9 +21,6 @@ export interface AlbumOutput {
   updatedAt: Date;
 }
 
-/**
- * GetAlbumsOutput - Datos de salida de la lista de álbumes
- */
 export interface GetAlbumsOutput {
   data: AlbumOutput[];
   total: number;

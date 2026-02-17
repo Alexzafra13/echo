@@ -30,7 +30,6 @@ export class ScanStatsService {
     const latestScan = latestScanResult[0] ?? null;
     const currentScan = currentScanResult[0] ?? null;
 
-    // Obtener progreso en tiempo real del gateway si hay un scan activo
     let progress = 0;
     if (currentScan) {
       const liveProgress = this.scannerGateway.getCurrentProgress(currentScan.id);

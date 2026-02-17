@@ -2,9 +2,6 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { IPasswordService } from '../../domain/ports/password-service.port';
 
-/**
- * BcryptAdapter - Implementa IPasswordService con bcryptjs
- */
 @Injectable()
 export class BcryptAdapter implements IPasswordService {
   private readonly rounds = 12;

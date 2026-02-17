@@ -2,13 +2,6 @@ import { Injectable, Inject } from '@nestjs/common';
 import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
 import { ListUsersInput, ListUsersOutput } from './list-users.dto';
 
-/**
- * ListUsersUseCase - Lista todos los usuarios con paginación
- *
- * Usa IUserRepository (port) para acceso a datos
- * ✅ Arquitectura hexagonal correcta
- * ✅ Domain no depende de Infrastructure
- */
 @Injectable()
 export class ListUsersUseCase {
   constructor(
@@ -20,13 +13,12 @@ export class ListUsersUseCase {
     const skip = input.skip || 0;
     const take = input.take || 20;
 
-    // Obtener usuarios con paginación usando el repository
     const [usersEntities, total] = await Promise.all([
       this.userRepository.findAll(skip, take),
       this.userRepository.count(),
     ]);
 
-    // Obtener todos los admins para identificar al primero (system admin)
+    // Identificar al system admin (primer admin creado)
     const allUsers = await this.userRepository.findAll(0, 1000);
     const adminUsers = allUsers.filter(u => u.isAdmin);
     const systemAdmin = adminUsers.length > 0
@@ -35,7 +27,6 @@ export class ListUsersUseCase {
         )
       : null;
 
-    // Mapear entidades del domain a DTOs
     const users = usersEntities.map((user) => ({
       id: user.id,
       username: user.username,

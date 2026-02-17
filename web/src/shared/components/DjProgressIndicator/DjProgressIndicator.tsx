@@ -4,22 +4,15 @@ import { useDjProgressStore } from '@shared/store';
 import { useClickOutside } from '@shared/hooks';
 import styles from './DjProgressIndicator.module.css';
 
-/**
- * DjProgressIndicator Component
- * Shows DJ analysis progress (BPM, Key, Energy) in the header
- * Compact indicator that expands to popover on click
- */
 export function DjProgressIndicator() {
   const progress = useDjProgressStore((state) => state.progress);
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // Click outside to close
   const { ref: containerRef, isClosing, close } = useClickOutside<HTMLDivElement>(
     () => setShowTooltip(false),
     { enabled: showTooltip, animationDuration: 200 }
   );
 
-  // Don't show if no progress data or not running and no pending
   if (!progress || (!progress.isRunning && progress.pendingTracks === 0)) {
     return null;
   }
@@ -38,7 +31,6 @@ export function DjProgressIndicator() {
 
   return (
     <div className={styles.container} ref={containerRef}>
-      {/* Compact indicator */}
       <div
         className={`${styles.indicator} ${isRunning ? styles['indicator--running'] : styles['indicator--idle']}`}
         onClick={handleToggle}
@@ -50,7 +42,6 @@ export function DjProgressIndicator() {
         )}
       </div>
 
-      {/* Popover with details */}
       {showTooltip && (
         <div className={`${styles.tooltip} ${isClosing ? styles['tooltip--closing'] : ''}`}>
           <div className={styles.tooltipHeader}>
@@ -62,7 +53,6 @@ export function DjProgressIndicator() {
           </div>
 
           <div className={styles.tooltipContent}>
-            {/* Progress bar */}
             {isRunning && (
               <div className={styles.progressSection}>
                 <div className={styles.progressBar}>
@@ -75,7 +65,6 @@ export function DjProgressIndicator() {
               </div>
             )}
 
-            {/* Stats */}
             <div className={styles.statsGrid}>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>Procesados</span>
@@ -97,7 +86,6 @@ export function DjProgressIndicator() {
               )}
             </div>
 
-            {/* Info text */}
             <p className={styles.infoText}>
               Analizando BPM, tonalidad y energía para mezcla armónica.
             </p>

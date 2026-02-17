@@ -18,12 +18,6 @@ import {
 } from '../../ports';
 import { GetDashboardStatsInput, GetDashboardStatsOutput } from './get-dashboard-stats.dto';
 
-/**
- * GetDashboardStatsUseCase - Orchestrates dashboard statistics retrieval
- *
- * This use case delegates to specialized services for each type of statistic,
- * following the Single Responsibility Principle.
- */
 @Injectable()
 export class GetDashboardStatsUseCase {
   constructor(
@@ -47,10 +41,9 @@ export class GetDashboardStatsUseCase {
 
   async execute(_input: GetDashboardStatsInput): Promise<GetDashboardStatsOutput> {
     try {
-      // Get storage breakdown first (needed by systemHealth and alerts)
+      // Se obtiene primero porque systemHealth y alerts lo necesitan
       const storageBreakdownData = await this.storageBreakdown.get();
 
-      // Get all other stats in parallel
       const [
         libraryStatsData,
         systemHealthData,

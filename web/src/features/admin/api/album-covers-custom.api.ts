@@ -1,9 +1,5 @@
 import { apiClient } from '@shared/services/api';
 
-// ============================================
-// INTERFACES
-// ============================================
-
 export interface UploadCustomCoverRequest {
   albumId: string;
   file: File;
@@ -22,7 +18,7 @@ export interface CustomCover {
   albumId: string;
   filePath: string;
   fileName: string;
-  fileSize: string; // BigInt as string
+  fileSize: string;
   mimeType: string;
   isActive: boolean;
   uploadedBy: string | null;
@@ -56,13 +52,6 @@ export interface DeleteCustomCoverResponse {
   message: string;
 }
 
-// ============================================
-// API FUNCTIONS
-// ============================================
-
-/**
- * Upload a custom cover for an album
- */
 async function uploadCustomCover(request: UploadCustomCoverRequest): Promise<UploadCustomCoverResponse> {
   const formData = new FormData();
   formData.append('file', request.file);
@@ -80,9 +69,6 @@ async function uploadCustomCover(request: UploadCustomCoverRequest): Promise<Upl
   return response.data;
 }
 
-/**
- * List all custom covers for an album
- */
 async function listCustomCovers(albumId: string): Promise<ListCustomCoversResponse> {
   const response = await apiClient.get<ListCustomCoversResponse>(
     `/admin/metadata/album/custom-covers/${albumId}`
@@ -90,9 +76,6 @@ async function listCustomCovers(albumId: string): Promise<ListCustomCoversRespon
   return response.data;
 }
 
-/**
- * Apply a custom cover as the active cover
- */
 async function applyCustomCover(request: ApplyCustomCoverRequest): Promise<ApplyCustomCoverResponse> {
   const response = await apiClient.post<ApplyCustomCoverResponse>(
     `/admin/metadata/album/custom-covers/${request.albumId}/apply/${request.customCoverId}`
@@ -100,19 +83,12 @@ async function applyCustomCover(request: ApplyCustomCoverRequest): Promise<Apply
   return response.data;
 }
 
-/**
- * Delete a custom cover
- */
 async function deleteCustomCover(request: DeleteCustomCoverRequest): Promise<DeleteCustomCoverResponse> {
   const response = await apiClient.delete<DeleteCustomCoverResponse>(
     `/admin/metadata/album/custom-covers/${request.albumId}/${request.customCoverId}`
   );
   return response.data;
 }
-
-// ============================================
-// EXPORTS
-// ============================================
 
 export const albumCoversApi = {
   uploadCustomCover,

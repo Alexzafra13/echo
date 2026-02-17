@@ -11,10 +11,6 @@ interface EditPlaylistModalProps {
   isLoading?: boolean;
 }
 
-/**
- * EditPlaylistModal Component
- * Modal for editing an existing playlist
- */
 export function EditPlaylistModal({ playlist, onClose, onSubmit, isLoading = false }: EditPlaylistModalProps) {
   const [name, setName] = useState(playlist.name);
   const [description, setDescription] = useState(playlist.description || '');
@@ -96,7 +92,6 @@ export function EditPlaylistModal({ playlist, onClose, onSubmit, isLoading = fal
           </label>
         </div>
 
-        {/* Actions */}
         <div className={styles.actions}>
           <Button
             type="button"

@@ -13,20 +13,17 @@ export class ChangeLanguageUseCase {
   ) {}
 
   async execute(input: ChangeLanguageInput): Promise<void> {
-    // 1. Validar idioma
     if (!this.VALID_LANGUAGES.includes(input.language)) {
       throw new ValidationError(
         `Invalid language. Must be one of: ${this.VALID_LANGUAGES.join(', ')}`,
       );
     }
 
-    // 2. Verificar que usuario existe
     const user = await this.userRepository.findById(input.userId);
     if (!user) {
       throw new NotFoundError('User', input.userId);
     }
 
-    // 3. Actualizar idioma
     await this.userRepository.updatePartial(input.userId, {
       language: input.language,
     });

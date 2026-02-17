@@ -46,7 +46,7 @@ export class AlbumsController {
 
   @Get('recent')
   @HttpCode(HttpStatus.OK)
-  @CacheControl(60) // 1 minute cache
+  @CacheControl(60)
   @ApiOperation({
     summary: 'Obtener álbumes recientes',
     description: 'Retorna los álbumes más recientemente agregados a la librería'
@@ -80,7 +80,7 @@ export class AlbumsController {
 
   @Get('top-played')
   @HttpCode(HttpStatus.OK)
-  @CacheControl(300) // 5 minute cache (stats based)
+  @CacheControl(300)
   @ApiOperation({
     summary: 'Obtener álbumes más reproducidos',
     description: 'Retorna los álbumes con más reproducciones basado en estadísticas reales de reproducción del usuario'
@@ -295,7 +295,7 @@ export class AlbumsController {
 
   @Get('featured')
   @HttpCode(HttpStatus.OK)
-  @CacheControl(300) // 5 minute cache
+  @CacheControl(300)
   @ApiCommonErrors()
   @ApiNotFoundError('Álbum destacado')
   @ApiOperation({
@@ -315,7 +315,6 @@ export class AlbumsController {
     return AlbumResponseDto.fromDomain(result);
   }
 
-  // Debe ir antes de @Get(':id') por orden de rutas
   @Get(':id/tracks')
   @HttpCode(HttpStatus.OK)
   @ApiCommonErrors()
@@ -371,7 +370,7 @@ export class AlbumsController {
     res.headers({
       'Content-Type': result.mimeType,
       'Content-Length': result.fileSize.toString(),
-      'Cache-Control': 'public, max-age=2592000', // 30 días
+      'Cache-Control': 'public, max-age=2592000',
     });
 
     res.send(result.buffer);
@@ -403,7 +402,7 @@ export class AlbumsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @CacheControl(60) // 1 minute cache
+  @CacheControl(60)
   @ApiOperation({
     summary: 'Listar álbumes',
     description: 'Retorna una lista paginada de todos los álbumes disponibles en el servidor'
@@ -443,7 +442,7 @@ export class AlbumsController {
 
   @Get('search/:query')
   @HttpCode(HttpStatus.OK)
-  @CacheControl(30) // 30 second cache for search
+  @CacheControl(30)
   @ApiOperation({
     summary: 'Buscar álbumes',
     description: 'Busca álbumes por nombre (mínimo 2 caracteres). La búsqueda es case-insensitive y busca coincidencias parciales'

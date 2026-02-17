@@ -1,3 +1,2 @@
-// Services moved to infrastructure/services
-// Re-exporting for backwards compatibility
+// Re-export por compatibilidad
 export * from '../../infrastructure/services';

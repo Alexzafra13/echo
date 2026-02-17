@@ -36,7 +36,6 @@ import {
   ConnectedServerResponseDto,
 } from './dto';
 
-// Gestión de tokens de acceso y federación mutua entre servidores
 @ApiTags('federation')
 @Controller('federation/access-tokens')
 @UseGuards(JwtAuthGuard)
@@ -179,7 +178,6 @@ export class AccessTokenController {
       throw new ForbiddenException('No tienes acceso a este token');
     }
 
-    // Only include defined values to allow partial updates
     const permissionsToUpdate: Partial<{ canBrowse: boolean; canStream: boolean; canDownload: boolean }> = {};
     if (dto.canBrowse !== undefined) permissionsToUpdate.canBrowse = dto.canBrowse;
     if (dto.canStream !== undefined) permissionsToUpdate.canStream = dto.canStream;
@@ -261,13 +259,11 @@ export class AccessTokenController {
       throw new NotFoundException('No hay solicitud mutua pendiente');
     }
 
-    // Approve the request
     const approved = await this.tokenService.approveMutualRequest(id);
     if (!approved) {
       throw new NotFoundException('Error al aprobar solicitud mutua');
     }
 
-    // Connect to the remote server using the invitation token they provided
     const server = await this.remoteServerService.connectToServer(
       user.id,
       accessToken.serverUrl,

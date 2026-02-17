@@ -24,21 +24,17 @@ export class UploadAvatarUseCase {
   ) {}
 
   async execute(input: UploadAvatarInput): Promise<UploadAvatarOutput> {
-    // 1. Validate user exists
     const user = await this.userRepository.findById(input.userId);
     if (!user) {
       throw new NotFoundError('User', input.userId);
     }
 
-    // 2. Validate file using shared utility
     validateFileUpload(input.file, FILE_UPLOAD_CONFIGS.avatar);
 
-    // 3. Delete old avatar if exists
     if (user.avatarPath) {
       try {
         await this.storageService.deleteImage(user.avatarPath);
       } catch (error) {
-        // Log but don't fail - old avatar might not exist
         this.logger.warn(
           { userId: input.userId, oldAvatarPath: user.avatarPath, error: (error as Error).message },
           'Failed to delete old avatar',
@@ -46,19 +42,15 @@ export class UploadAvatarUseCase {
       }
     }
 
-    // 4. Determine file extension from MIME type
     const extension = getExtensionFromMimeType(input.file.mimetype);
 
-    // 6. Get storage path
     const avatarPath = await this.storageService.getUserAvatarPath(
       input.userId,
       extension
     );
 
-    // 7. Save the file
     await this.storageService.saveImage(avatarPath, input.file.buffer);
 
-    // 8. Update user record in database
     await this.userRepository.updatePartial(input.userId, {
       avatarPath,
       avatarMimeType: input.file.mimetype,
@@ -66,7 +58,6 @@ export class UploadAvatarUseCase {
       avatarUpdatedAt: new Date(),
     });
 
-    // 9. Invalidate image cache so the new avatar is served immediately
     this.imageService.invalidateUserAvatarCache(input.userId);
 
     return {

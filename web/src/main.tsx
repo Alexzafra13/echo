@@ -1,4 +1,4 @@
-// Import polyfills first to ensure they're loaded before any other code
+// Polyfills antes de cualquier otro código
 import './polyfills/crypto.polyfill';
 
 import React from 'react';
@@ -9,17 +9,16 @@ import { PlayerProvider } from '@features/player';
 import App from './app/App';
 import '@shared/styles/global.css';
 
-// Create React Query client optimized for self-hosted music server
-// Music library data changes infrequently, so aggressive caching reduces server load
+// Caché agresivo: la biblioteca musical cambia poco
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes - data considered fresh
-      gcTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer (library changes rarely)
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 30,
       retry: 1,
-      refetchOnWindowFocus: false, // Don't refetch when tab regains focus
-      refetchOnMount: false, // Use cached data if fresh (reduces unnecessary requests)
-      refetchOnReconnect: false, // Library doesn't change during brief disconnects
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
     },
   },
 });

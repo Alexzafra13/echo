@@ -8,13 +8,11 @@ import { UserProps } from '../../domain/entities/user.entity';
 import { SecuritySecretsService } from '@config/security-secrets.service';
 import { TokenBlacklistService } from '../services/token-blacklist.service';
 
-// Extender UserProps con el token raw para logout
 export interface UserPropsWithToken extends UserProps {
   rawToken?: string;
   tokenExp?: number;
 }
 
-// Passport strategy: valida JWT y extrae usuario
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -26,19 +24,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: secretsService.jwtSecret,
-      passReqToCallback: true, // Pasar request para extraer token raw
+      passReqToCallback: true,
     };
     super(options);
   }
 
   async validate(req: FastifyRequest, payload: TokenPayload): Promise<UserPropsWithToken | null> {
-    // Extraer el token raw del header para poder invalidarlo en logout
     const authHeader = req.headers.authorization;
     const rawToken = authHeader?.replace('Bearer ', '');
 
-    // Verificar si el token está en la blacklist (usuario hizo logout)
     if (rawToken && await this.tokenBlacklist.isBlacklisted(rawToken)) {
-      return null; // Token invalidado
+      return null;
     }
 
     const user = await this.userRepository.findById(payload.userId);
@@ -47,7 +43,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       return null;
     }
 
-    // Retornar usuario con token raw y exp para logout
     return {
       ...user.toPrimitives(),
       rawToken,

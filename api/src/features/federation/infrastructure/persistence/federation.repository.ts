@@ -27,10 +27,7 @@ import {
 export class FederationRepository implements IFederationRepository {
   constructor(private readonly drizzle: DrizzleService) {}
 
-  // ============================================
-  // Type Mappers (Drizzle returns string, domain expects union types)
-  // ============================================
-
+  // Mappers: Drizzle devuelve string, el dominio espera union types
   private mapToAlbumImportQueue(record: typeof albumImportQueue.$inferSelect): AlbumImportQueue {
     return {
       ...record,
@@ -44,10 +41,6 @@ export class FederationRepository implements IFederationRepository {
       mutualStatus: record.mutualStatus as MutualFederationStatus,
     };
   }
-
-  // ============================================
-  // Connected Servers
-  // ============================================
 
   async createConnectedServer(data: NewConnectedServer): Promise<ConnectedServer> {
     const [server] = await this.drizzle.db
@@ -106,10 +99,6 @@ export class FederationRepository implements IFederationRepository {
       .returning();
     return result.length > 0;
   }
-
-  // ============================================
-  // Federation Tokens (Invitation codes)
-  // ============================================
 
   async createFederationToken(data: NewFederationToken): Promise<FederationToken> {
     const [token] = await this.drizzle.db
@@ -179,8 +168,7 @@ export class FederationRepository implements IFederationRepository {
   ): Promise<FederationToken | null> {
     const now = new Date();
 
-    // Atomic update with conditions - only updates if token is valid, not expired, and has uses left
-    // Uses SQL: UPDATE ... WHERE token = ? AND expiresAt > NOW() AND currentUses < maxUses
+    // Actualización atómica: solo aplica si el token es válido, no expirado y tiene usos disponibles
     const [updated] = await this.drizzle.db
       .update(federationTokens)
       .set({
@@ -201,10 +189,6 @@ export class FederationRepository implements IFederationRepository {
 
     return updated ?? null;
   }
-
-  // ============================================
-  // Federation Access Tokens
-  // ============================================
 
   async createFederationAccessToken(
     data: NewFederationAccessToken,
@@ -275,10 +259,6 @@ export class FederationRepository implements IFederationRepository {
       .returning();
     return result.length > 0;
   }
-
-  // ============================================
-  // Album Import Queue
-  // ============================================
 
   async createAlbumImport(data: NewAlbumImportQueue): Promise<AlbumImportQueue> {
     const [importItem] = await this.drizzle.db
@@ -360,10 +340,6 @@ export class FederationRepository implements IFederationRepository {
       .returning();
     return result.length > 0;
   }
-
-  // ============================================
-  // Mutual Federation
-  // ============================================
 
   async findPendingMutualRequests(ownerId: string): Promise<FederationAccessToken[]> {
     const results = await this.drizzle.db

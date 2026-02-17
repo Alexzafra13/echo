@@ -45,7 +45,6 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     toggleRepeat,
   } = usePlayer();
 
-  // Queue panel state
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isQueueClosing, setIsQueueClosing] = useState(false);
   const [queueState, setQueueState] = useState<'half' | 'full'>('half');
@@ -57,7 +56,6 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   const queueStateRef = useRef(queueState);
   const queueDragOffsetRef = useRef(queueDragOffset);
 
-  // Detect desktop
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
 
   useEffect(() => {
@@ -66,13 +64,11 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Swipe to close gesture
   const { dragOffset, handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipeToClose({
     enabled: isOpen && !isQueueOpen,
     onClose,
   });
 
-  // Navigation handlers
   const handleGoToAlbum = useCallback(
     (e: React.MouseEvent, albumId: string) => {
       e.stopPropagation();
@@ -95,12 +91,10 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     [isRadioMode, onClose, setLocation]
   );
 
-  // Volume handlers
   const handleToggleMute = useCallback(() => {
     setVolume(volume === 0 ? 0.7 : 0);
   }, [volume, setVolume]);
 
-  // Queue handlers
   const handleToggleQueue = useCallback(() => {
     if (isQueueOpen) {
       if (isDesktop) {
@@ -129,14 +123,12 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     }
   }, [isDesktop]);
 
-  // Open queue by default on desktop when NowPlayingView opens
   useEffect(() => {
     if (isOpen && isDesktop && !isRadioMode) {
       setIsQueueOpen(true);
     }
   }, [isOpen, isDesktop, isRadioMode]);
 
-  // Reset queue state when NowPlayingView closes
   useEffect(() => {
     if (!isOpen) {
       setIsQueueOpen(false);
@@ -146,7 +138,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     }
   }, [isOpen]);
 
-  // Block body scroll when open
+  // Bloquear scroll del body mientras está abierto
   useEffect(() => {
     if (isOpen) {
       const scrollY = window.scrollY;

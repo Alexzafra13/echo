@@ -21,28 +21,23 @@ export class ResetUserPasswordUseCase {
   ) {}
 
   async execute(input: ResetUserPasswordInput): Promise<ResetUserPasswordOutput> {
-    // 1. Verificar que el usuario existe
     const user = await this.userRepository.findById(input.userId);
     if (!user) {
       throw new NotFoundError('User not found');
     }
 
-    // 2. No permitir que un admin resetee su propia contraseña
     if (input.adminId && input.userId === input.adminId) {
       throw new ForbiddenError('No puedes resetear tu propia contraseña desde el panel de admin. Usa la opción de cambio de contraseña en tu perfil.');
     }
 
-    // 3. Generar nueva contraseña temporal alfanumérica
     const temporaryPassword = PasswordUtil.generateTemporaryPassword();
     const passwordHash = await this.passwordService.hash(temporaryPassword);
 
-    // 3. Actualizar contraseña y forzar cambio en próximo login
     await this.userRepository.updatePassword(input.userId, passwordHash);
     await this.userRepository.updatePartial(input.userId, {
       mustChangePassword: true,
     });
 
-    // 4. Log password reset
     await this.logService.info(
       LogCategory.AUTH,
       `Password reset by admin: ${user.username}`,
@@ -53,7 +48,6 @@ export class ResetUserPasswordUseCase {
       },
     );
 
-    // 5. Retornar contraseña temporal para que admin la comunique al usuario
     return {
       temporaryPassword,
     };

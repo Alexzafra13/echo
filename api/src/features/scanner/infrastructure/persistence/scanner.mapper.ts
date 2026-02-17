@@ -5,18 +5,7 @@ import {
 } from '@infrastructure/database/schema/system';
 import { ScanStatus } from '../../domain/entities/library-scan.entity';
 
-/**
- * ScannerMapper - Convierte entre entidad del dominio y modelo de BD
- *
- * Responsabilidades:
- * - Convertir de DB → Domain
- * - Convertir de Domain → DB
- * - Mantener separación entre capas
- */
 export class ScannerMapper {
-  /**
-   * Convierte de registro de BD a entidad del dominio
-   */
   static toDomain(raw: LibraryScanDb): LibraryScan {
     return LibraryScan.fromPrimitives({
       id: raw.id,
@@ -30,16 +19,10 @@ export class ScannerMapper {
     });
   }
 
-  /**
-   * Convierte array de BD a array de dominio
-   */
   static toDomainArray(raw: LibraryScanDb[]): LibraryScan[] {
     return raw.map((item) => this.toDomain(item));
   }
 
-  /**
-   * Convierte de entidad del dominio a modelo de BD
-   */
   static toPersistence(domain: LibraryScan): NewLibraryScan {
     const primitives = domain.toPrimitives();
 

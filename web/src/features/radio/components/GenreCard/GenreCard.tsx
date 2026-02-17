@@ -13,11 +13,6 @@ interface GenreCardProps {
   onClick: (genreId: string) => void;
 }
 
-/**
- * GenreCard Component
- * Displays a single genre with icon, name and station count
- * Memoized to prevent unnecessary re-renders in lists
- */
 export const GenreCard = memo(function GenreCard({ genre, onClick }: GenreCardProps) {
   const handleClick = useCallback(() => {
     onClick(genre.id);

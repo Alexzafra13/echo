@@ -21,7 +21,6 @@ interface AlbumCoverUploadTabProps {
 export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabProps) {
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // Hook para manejo de archivos
   const {
     selectedFile,
     previewUrl,
@@ -42,7 +41,6 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
     (cover) => cover.albumId === albumId
   );
 
-  // Combinar errores del hook y de upload
   const displayError = uploadError || fileError;
 
   const handleUpload = () => {
@@ -54,7 +52,6 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
       { albumId, file: selectedFile },
       {
         onSuccess: (data) => {
-          // Aplicar automáticamente la cover recién subida
           applyCover(
             {
               albumId,
@@ -116,7 +113,6 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
 
   return (
     <div className={styles.container}>
-      {/* File Selection */}
       <div className={styles.uploadSection}>
         <input
           ref={fileInputRef}
@@ -160,7 +156,6 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
         )}
       </div>
 
-      {/* Error Message */}
       {displayError && (
         <div className={styles.errorMessage}>
           <AlertCircle size={16} />
@@ -168,7 +163,6 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
         </div>
       )}
 
-      {/* Uploaded Covers Gallery */}
       <div className={styles.gallerySection}>
         <h3 className={styles.galleryTitle}>Portadas subidas</h3>
 

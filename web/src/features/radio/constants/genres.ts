@@ -1,8 +1,5 @@
 import type { Genre } from '../components';
 
-/**
- * Lista de géneros disponibles para filtrar estaciones de radio
- */
 export const GENRES: Genre[] = [
   { id: 'top', label: 'Top', icon: '🔥' },
   { id: 'all', label: 'Todas', icon: '🌐' },

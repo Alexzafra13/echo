@@ -8,7 +8,7 @@ import { LibraryStats } from '../../domain/use-cases/get-dashboard-stats/get-das
 @Injectable()
 export class LibraryStatsService {
   private readonly CACHE_KEY = 'dashboard:library-stats';
-  private readonly CACHE_TTL = 300; // 5 minutes
+  private readonly CACHE_TTL = 300;
 
   constructor(
     private readonly drizzle: DrizzleService,

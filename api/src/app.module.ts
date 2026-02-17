@@ -14,7 +14,6 @@ import { QueueModule } from './infrastructure/queue/queue.module';
 import { FilesystemModule } from './infrastructure/filesystem/filesystem.module';
 import { WebSocketModule } from './infrastructure/websocket';
 
-// Features
 import { AuthModule } from './features/auth/auth.module';
 import { UsersModule } from './features/users/users.module';
 import { AdminModule } from './features/admin/admin.module';
@@ -43,14 +42,12 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
 
 @Module({
   imports: [
-    // Config
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
       validate: validateEnvironment,
     }),
 
-    // Pino Logger
     LoggerModule.forRoot({
       pinoHttp: {
         transport: process.env.NODE_ENV !== 'production'
@@ -60,17 +57,15 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
                 colorize: true,
                 translateTime: 'HH:MM:ss Z',
                 ignore: 'pid,hostname',
-                singleLine: false, // Changed to false for better readability of different log levels
+                singleLine: false,
               },
             }
           : undefined,
-        // Auto-configure log level based on environment, but allow override via LOG_LEVEL
         level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
         serializers: {
           req: (req: any) => ({
             method: req.method,
             url: req.url,
-            // Sanitize params and query to prevent logging sensitive data
             params: sanitizeParams(req.params),
             query: sanitizeQueryParams(req.query),
           }),
@@ -81,27 +76,23 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
       },
     }),
 
-    // Rate Limiting - 300 req/min per IP (5/sec)
-    // Routes like /auth/login have stricter limits via @Throttle()
+    // Rate limiting: 300 req/min por IP
     ThrottlerModule.forRoot([{
       ttl: 60000,
       limit: 300,
     }]),
 
-    // Scheduled Tasks (cron jobs)
     ScheduleModule.forRoot(),
 
-    // Global Infrastructure
     DrizzleModule,
-    SecuritySecretsModule, // Auto-generates JWT secrets on first run
+    SecuritySecretsModule,
     CacheModule,
     QueueModule,
     FilesystemModule,
     WebSocketModule,
     LogsModule,
 
-    // Features
-    SetupModule, // Must be first - handles first-run wizard
+    SetupModule,
     HealthModule,
     AuthModule,
     UsersModule,
@@ -123,30 +114,12 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
     SocialModule,
     FederationModule,
   ],
-  controllers: [
-    // SPA fallback is registered manually in main.ts (must be outside /api prefix)
-  ],
+  controllers: [],
   providers: [
-    // Global Rate Limiting Guard
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-    // Global Exception Filter
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
-    // Global Logging Interceptor (logs errors 500 and auth failures)
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
-    },
-    // Global Cache-Control Interceptor (adds cache headers via @CacheControl decorator)
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CacheControlInterceptor,
-    },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: CacheControlInterceptor },
   ],
 })
 export class AppModule {}

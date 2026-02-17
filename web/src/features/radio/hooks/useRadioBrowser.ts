@@ -2,9 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { radioService } from '../services';
 import type { SearchStationsParams } from '../types';
 
-/**
- * Hook to search stations in Radio Browser API
- */
 export function useSearchStations(params: SearchStationsParams, enabled: boolean = true) {
   return useQuery({
     queryKey: ['radio', 'search', params],
@@ -14,9 +11,6 @@ export function useSearchStations(params: SearchStationsParams, enabled: boolean
   });
 }
 
-/**
- * Hook to fetch top voted stations
- */
 export function useTopVotedStations(limit: number = 20) {
   return useQuery({
     queryKey: ['radio', 'top-voted', limit],
@@ -25,9 +19,6 @@ export function useTopVotedStations(limit: number = 20) {
   });
 }
 
-/**
- * Hook to fetch popular stations
- */
 export function usePopularStations(limit: number = 20) {
   return useQuery({
     queryKey: ['radio', 'popular', limit],
@@ -36,9 +27,6 @@ export function usePopularStations(limit: number = 20) {
   });
 }
 
-/**
- * Hook to fetch stations by country
- */
 export function useStationsByCountry(countryCode: string, limit: number = 50) {
   return useQuery({
     queryKey: ['radio', 'by-country', countryCode, limit],
@@ -48,9 +36,6 @@ export function useStationsByCountry(countryCode: string, limit: number = 50) {
   });
 }
 
-/**
- * Hook to fetch stations by tag (genre)
- */
 export function useStationsByTag(tag: string, limit: number = 50) {
   return useQuery({
     queryKey: ['radio', 'by-tag', tag, limit],
@@ -60,9 +45,6 @@ export function useStationsByTag(tag: string, limit: number = 50) {
   });
 }
 
-/**
- * Hook to fetch available tags (genres)
- */
 export function useRadioTags(limit: number = 100) {
   return useQuery({
     queryKey: ['radio', 'tags', limit],
@@ -71,9 +53,6 @@ export function useRadioTags(limit: number = 100) {
   });
 }
 
-/**
- * Hook to fetch available countries
- */
 export function useRadioCountries() {
   return useQuery({
     queryKey: ['radio', 'countries'],

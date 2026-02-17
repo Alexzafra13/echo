@@ -34,10 +34,8 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
     setVolume,
   } = usePlayer();
 
-  // Cerrar menú al hacer click fuera
   useClickOutsideRef(menuRef, () => setIsMenuOpen(false), isMenuOpen);
 
-  // No mostrar si no hay ni track ni radio
   if (!currentTrack && !currentRadioStation) {
     return null;
   }
@@ -59,14 +57,12 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
     setVolume(volume === 0 ? 0.7 : 0);
   };
 
-  // Obtener información de visualización (track o radio)
   const { title, artist, cover, albumId, albumName } = getPlayerDisplayInfo(
     isRadioMode,
     currentRadioStation,
     currentTrack
   );
 
-  // Navegar al álbum al hacer clic en la carátula
   const handleGoToAlbum = () => {
     if (!isRadioMode && albumId) {
       setLocation(`/album/${albumId}`);
@@ -75,10 +71,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
 
   const canNavigateToAlbum = !isRadioMode && albumId;
 
-  // Lógica de visibilidad basada en preferencia
-  // - 'sidebar': siempre visible en sidebar (shouldShow = true)
-  // - 'dynamic': visible cuando hay scroll (shouldShow = isVisible)
-  // - 'footer': siempre oculto, usa footer player (shouldShow = false)
   const shouldShow =
     preference === 'sidebar' ? true :
     preference === 'dynamic' ? isVisible :
@@ -86,7 +78,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
 
   return (
     <div className={`${styles.miniPlayer} ${shouldShow ? styles['miniPlayer--visible'] : ''}`}>
-      {/* Cover con animación de reproducción */}
       <div
         className={`${styles.coverContainer} ${canNavigateToAlbum ? styles['coverContainer--clickable'] : ''}`}
         onClick={canNavigateToAlbum ? handleGoToAlbum : undefined}
@@ -98,7 +89,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
           className={styles.cover}
           onError={handleImageError}
         />
-        {/* Animación EQ en la parte inferior del disco */}
         {isPlaying && (
           <div className={styles.playingIndicator}>
             <div className={`${styles.bar} ${styles.bar1}`}></div>
@@ -110,13 +100,11 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         )}
       </div>
 
-      {/* Info */}
       <div className={styles.info}>
         <div className={styles.title}>{title}</div>
         <div className={styles.artist}>{artist}</div>
       </div>
 
-      {/* Progress bar - Debajo del artista (Solo para tracks) */}
       {!isRadioMode && (
         <div className={styles.progressContainer}>
           <div
@@ -135,7 +123,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         </div>
       )}
 
-      {/* Indicador EN VIVO para radio */}
       {isRadioMode && (
         <div className={styles.liveIndicator}>
           <Radio size={12} className={styles.liveIcon} />
@@ -143,7 +130,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         </div>
       )}
 
-      {/* Play controls - centrados */}
       <div className={styles.controls}>
         {!isRadioMode && (
           <button
@@ -173,7 +159,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
           </button>
         )}
 
-        {/* Menú de opciones - posicionado absoluto */}
         <div className={styles.menuWrapper}>
           <PlayerMenu
             isOpen={isMenuOpen}
@@ -185,7 +170,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         </div>
       </div>
 
-      {/* Volume bar horizontal */}
       <div className={styles.volumeSection}>
         <button
           className={styles.volumeButton}

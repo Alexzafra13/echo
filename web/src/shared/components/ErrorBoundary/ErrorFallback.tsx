@@ -7,12 +7,6 @@ interface ErrorFallbackProps {
   onReset: () => void;
 }
 
-/**
- * Error Fallback UI
- *
- * Displays a user-friendly error message when the ErrorBoundary
- * catches an error.
- */
 export function ErrorFallback({ error, errorInfo, onReset }: ErrorFallbackProps) {
   const handleReload = () => {
     window.location.reload();

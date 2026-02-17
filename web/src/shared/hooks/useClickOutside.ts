@@ -1,50 +1,20 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 
 export interface UseClickOutsideOptions {
-  /** Whether the listener is active (default: true) */
   enabled?: boolean;
-  /** Animation duration in ms before calling onClose (default: 0) */
   animationDuration?: number;
-  /** Close on scroll (default: true) */
   closeOnScroll?: boolean;
-  /** Delay in ms before closing on scroll - makes it more subtle (default: 100) */
   scrollCloseDelay?: number;
-  /** Minimum scroll distance in px to trigger close (default: 20) */
   scrollThreshold?: number;
 }
 
 export interface UseClickOutsideReturn<T extends HTMLElement> {
-  /** Ref to attach to the container element */
   ref: React.RefObject<T>;
-  /** Whether the closing animation is in progress */
   isClosing: boolean;
-  /** Manually trigger close with animation */
   close: (callback?: () => void) => void;
 }
 
-/**
- * Hook to detect clicks outside an element
- *
- * Supports optional closing animation before triggering callback.
- *
- * @param onClose - Callback when click outside is detected
- * @param options - Configuration options
- * @returns ref to attach, isClosing state, and close function
- *
- * @example
- * ```tsx
- * const { ref, isClosing, close } = useClickOutside(
- *   () => setIsOpen(false),
- *   { enabled: isOpen, animationDuration: 200 }
- * );
- *
- * return (
- *   <div ref={ref} className={isClosing ? 'closing' : ''}>
- *     <button onClick={() => close()}>Close</button>
- *   </div>
- * );
- * ```
- */
+// Detecta clics fuera de un elemento, con soporte para animación de cierre
 export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
   onClose: () => void,
   options: UseClickOutsideOptions = {}
@@ -61,13 +31,10 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
   const isClosingRef = useRef(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingCallbackRef = useRef<(() => void) | null>(null);
-  // Use state for isClosing so component re-renders with animation class
   const [isClosing, setIsClosing] = useState(false);
 
-  // Reset closing state when enabled changes (menu opens/closes)
   useEffect(() => {
     if (enabled) {
-      // Menu opening - reset any stuck state from previous close
       isClosingRef.current = false;
       setIsClosing(false);
       if (timeoutRef.current) {
@@ -78,26 +45,20 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
     }
   }, [enabled]);
 
-  // Execute pending callbacks when menu closes externally
+  // Ejecutar callbacks pendientes al cerrar externamente
   useEffect(() => {
     if (!enabled && pendingCallbackRef.current) {
       const callback = pendingCallbackRef.current;
       pendingCallbackRef.current = null;
-      // Use setTimeout to ensure state updates have propagated
       setTimeout(callback, 0);
     }
   }, [enabled]);
 
-  /**
-   * Close with optional animation
-   */
   const close = useCallback((callback?: () => void) => {
-    // Store callback to execute after close
     if (callback) {
       pendingCallbackRef.current = callback;
     }
 
-    // If already closing, don't start again but ensure callback runs
     if (isClosingRef.current) {
       return;
     }
@@ -108,7 +69,6 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
 
       timeoutRef.current = setTimeout(() => {
         onClose();
-        // Execute pending callback
         if (pendingCallbackRef.current) {
           pendingCallbackRef.current();
           pendingCallbackRef.current = null;
@@ -118,7 +78,6 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
       }, animationDuration);
     } else {
       onClose();
-      // Execute callback immediately
       if (pendingCallbackRef.current) {
         pendingCallbackRef.current();
         pendingCallbackRef.current = null;
@@ -142,7 +101,7 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
     };
   }, [enabled, close]);
 
-  // Close on scroll with delay and threshold
+  // Cerrar al hacer scroll con umbral mínimo
   useEffect(() => {
     if (!enabled || !closeOnScroll) return;
 
@@ -156,20 +115,16 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
       accumulatedScroll += scrollDelta;
       scrollStartY = currentScrollY;
 
-      // Only trigger close if scroll exceeds threshold
       if (accumulatedScroll >= scrollThreshold) {
-        // Clear any pending timeout
         if (scrollTimeoutId) {
           clearTimeout(scrollTimeoutId);
         }
-        // Add delay before closing for smoother UX
         scrollTimeoutId = setTimeout(() => {
           close();
         }, scrollCloseDelay);
       }
     };
 
-    // Listen to scroll on capture phase to catch all scroll events
     window.addEventListener('scroll', handleScroll, true);
 
     return () => {
@@ -180,7 +135,6 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
     };
   }, [enabled, closeOnScroll, close, scrollCloseDelay, scrollThreshold]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {

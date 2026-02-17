@@ -13,11 +13,7 @@ interface CountrySelectModalProps {
   userCountryCode?: string;
 }
 
-/**
- * CountrySelectModal Component
- * Modal for selecting a country to filter radio stations
- * Uses virtualization for the "All countries" section to handle 200+ countries efficiently
- */
+// Usa virtualización para manejar 200+ países eficientemente
 export const CountrySelectModal = memo(function CountrySelectModal({
   isOpen,
   onClose,
@@ -41,7 +37,6 @@ export const CountrySelectModal = memo(function CountrySelectModal({
 
   if (!isOpen) return null;
 
-  // Filter countries by search query
   const filteredCountries = searchQuery
     ? countries.filter(c =>
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -56,7 +51,6 @@ export const CountrySelectModal = memo(function CountrySelectModal({
   return (
     <div className={styles.modal__overlay} onClick={handleClose}>
       <div className={styles.modal__content} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
         <div className={styles.modal__header}>
           <h2 className={styles.modal__title}>
             <Globe size={20} />
@@ -71,7 +65,6 @@ export const CountrySelectModal = memo(function CountrySelectModal({
           </button>
         </div>
 
-        {/* Search bar */}
         <div className={styles.modal__search}>
           <Search size={16} />
           <input
@@ -93,9 +86,7 @@ export const CountrySelectModal = memo(function CountrySelectModal({
           )}
         </div>
 
-        {/* Content */}
         <div className={styles.modal__body} ref={scrollContainerRef}>
-          {/* Todo el mundo option */}
           <button
             className={`${styles.countryOption} ${selectedCountry === 'ALL' ? styles['countryOption--selected'] : ''}`}
             onClick={() => handleCountryClick('ALL')}
@@ -107,7 +98,6 @@ export const CountrySelectModal = memo(function CountrySelectModal({
             )}
           </button>
 
-          {/* User country section */}
           {userCountry && (
             <>
               <div className={styles.modal__section}>
@@ -129,7 +119,6 @@ export const CountrySelectModal = memo(function CountrySelectModal({
             </>
           )}
 
-          {/* Popular countries section */}
           {popularCountries.length > 0 && (
             <>
               <div className={styles.modal__section}>
@@ -156,7 +145,6 @@ export const CountrySelectModal = memo(function CountrySelectModal({
             </>
           )}
 
-          {/* All other countries section - VIRTUALIZED */}
           {otherCountries.length > 0 && !searchQuery && (
             <>
               <div className={styles.modal__section}>
@@ -170,7 +158,6 @@ export const CountrySelectModal = memo(function CountrySelectModal({
             </>
           )}
 
-          {/* No results */}
           {searchQuery && filteredCountries.length === 0 && (
             <div className={styles.modal__empty}>
               <p>No se encontraron países</p>
@@ -182,10 +169,6 @@ export const CountrySelectModal = memo(function CountrySelectModal({
   );
 });
 
-/**
- * VirtualizedCountryList Component
- * Renders a virtualized list of countries for better performance with 150+ items
- */
 interface VirtualizedCountryListProps {
   countries: Country[];
   selectedCountry: string;
@@ -198,15 +181,15 @@ function VirtualizedCountryList({ countries, selectedCountry, onCountryClick }: 
   const virtualizer = useVirtualizer({
     count: countries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 56, // Estimated height of each country option (padding + content)
-    overscan: 5, // Render 5 extra items above/below viewport for smoother scrolling
+    estimateSize: () => 56,
+    overscan: 5,
   });
 
   return (
     <div
       ref={parentRef}
       className={styles.virtualList}
-      style={{ height: Math.min(400, countries.length * 56) }} // Max height 400px
+      style={{ height: Math.min(400, countries.length * 56) }}
     >
       <div
         style={{

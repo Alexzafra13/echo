@@ -8,26 +8,16 @@ import { useAutoPlaylists } from '@features/home/hooks';
 import styles from './ActionCardsRow.module.css';
 
 export interface ActionCardsRowProps {
-  /** Additional CSS class */
   className?: string;
 }
 
-/**
- * ActionCardsRow Component
- * A row of 3 action cards: Shuffle, Daily Recommendations, Social
- * Responsive layout that adapts to all screen sizes consistently
- */
 export function ActionCardsRow({ className }: ActionCardsRowProps) {
   const [, setLocation] = useLocation();
   const { shufflePlay, isLoading: shuffleLoading } = useShufflePlay();
 
-  // Get random albums for background cover decoration
   const { data: randomAlbumsData } = useRandomAlbums(3);
-
-  // Get auto playlists for Wave Mix cover decoration
   const { data: autoPlaylists } = useAutoPlaylists();
 
-  // Pick a random album cover for the shuffle button
   const shuffleCoverUrl = useMemo(() => {
     const albums = randomAlbumsData?.albums || [];
     if (albums.length === 0) return undefined;
@@ -35,10 +25,8 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
     return randomAlbum?.id ? `/api/albums/${randomAlbum.id}/cover` : undefined;
   }, [randomAlbumsData]);
 
-  // Pick a random album cover from Wave Mix tracks
   const waveMixCoverUrl = useMemo(() => {
     if (!autoPlaylists || autoPlaylists.length === 0) return undefined;
-    // Collect unique album IDs from all playlists
     const albumIds = new Set<string>();
     for (const playlist of autoPlaylists) {
       for (const scoredTrack of playlist.tracks || []) {
@@ -63,7 +51,6 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
 
   return (
     <div className={`${styles.actionCardsRow} ${className || ''}`}>
-      {/* Shuffle / Random Play */}
       <ActionCard
         icon={<Shuffle size={22} />}
         loadingIcon={<RefreshCw size={22} className={styles.spinning} />}
@@ -75,7 +62,6 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
         backgroundCoverUrl={shuffleCoverUrl}
       />
 
-      {/* Wave Mix - Daily Recommendations */}
       <ActionCard
         icon={<Calendar size={22} />}
         title="Wavemix"
@@ -84,7 +70,6 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
         backgroundCoverUrl={waveMixCoverUrl}
       />
 
-      {/* Trending - Top 50 most played tracks */}
       <ActionCard
         icon={<TrendingUp size={22} />}
         title="Tendencias"

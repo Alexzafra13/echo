@@ -1,7 +1,3 @@
-/**
- * Radio Types - Re-export shared radio types and add component props
- */
-
 import type {
   RadioSource,
   RadioStation,
@@ -14,7 +10,6 @@ import type {
   CreateCustomStationDto,
 } from '@shared/types/radio.types';
 
-// Re-export for external use
 export type {
   RadioSource,
   RadioStation,
@@ -27,9 +22,6 @@ export type {
   CreateCustomStationDto,
 };
 
-/**
- * Props for RadioStationCard component
- */
 export interface RadioStationCardProps {
   station: RadioBrowserStation | RadioStation;
   isFavorite?: boolean;
@@ -38,24 +30,15 @@ export interface RadioStationCardProps {
   onDelete?: () => void;
 }
 
-/**
- * Props for RadioSearch component
- */
 export interface RadioSearchProps {
   onSearch: (params: SearchStationsParams) => void;
   isLoading?: boolean;
 }
 
-/**
- * Props for RadioBrowser component
- */
 export interface RadioBrowserProps {
   onStationSelect: (station: RadioBrowserStation) => void;
 }
 
-/**
- * Props for FavoriteStations component
- */
 export interface FavoriteStationsProps {
   stations: RadioStation[];
   onPlay: (station: RadioStation) => void;
@@ -63,9 +46,6 @@ export interface FavoriteStationsProps {
   isLoading?: boolean;
 }
 
-/**
- * Radio player state
- */
 export interface RadioPlayerState {
   isPlaying: boolean;
   currentStation: RadioStation | RadioBrowserStation | null;

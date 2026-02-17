@@ -7,32 +7,17 @@ import { EssentiaAnalyzerService, DjAnalysisQueueService } from './infrastructur
 import { DjCompatibilityService } from './domain/services/dj-compatibility.service';
 import { ScannerModule } from '@features/scanner/scanner.module';
 
-/**
- * DjModule - Harmonic analysis for DJ mixing
- *
- * Provides:
- * - Audio analysis (BPM, Key, Camelot) via Essentia.js
- * - DJ compatibility scoring for harmonic mixing
- * - Analysis queue for background processing
- */
 @Module({
   imports: [
     QueueModule,
     WebSocketModule,
-    forwardRef(() => ScannerModule), // For ScannerGateway (circular dep with Scanner)
+    forwardRef(() => ScannerModule),
   ],
   providers: [
-    // Repository
     { provide: DJ_ANALYSIS_REPOSITORY, useClass: DrizzleDjAnalysisRepository },
-
-    // Audio Analyzer
     { provide: AUDIO_ANALYZER, useClass: EssentiaAnalyzerService },
     EssentiaAnalyzerService,
-
-    // Queue Service
     DjAnalysisQueueService,
-
-    // Compatibility Service
     DjCompatibilityService,
   ],
   exports: [

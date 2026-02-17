@@ -1,5 +1,5 @@
 export interface ChangePasswordInput {
   userId: string;
-  currentPassword?: string; // Opcional cuando mustChangePassword es true
+  currentPassword?: string;
   newPassword: string;
 }

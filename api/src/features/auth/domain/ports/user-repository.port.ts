@@ -15,14 +15,12 @@ export interface UserUpdateableFields {
   avatarUpdatedAt?: Date | null;
   lastLoginAt?: Date;
   lastAccessAt?: Date;
-  // Profile privacy settings
   isPublicProfile?: boolean;
   showTopTracks?: boolean;
   showTopArtists?: boolean;
   showTopAlbums?: boolean;
   showPlaylists?: boolean;
   bio?: string | null;
-  // Home page customization
   homeSections?: HomeSectionConfig[];
 }
 

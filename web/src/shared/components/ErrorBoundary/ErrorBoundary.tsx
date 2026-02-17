@@ -11,15 +11,7 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-/**
- * Error Boundary Component
- *
- * Catches JavaScript errors anywhere in the child component tree,
- * logs those errors, and displays a fallback UI instead of crashing
- * the whole application.
- *
- * @see https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
- */
+// Captura errores en el arbol de componentes y muestra un fallback
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -31,7 +23,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
-    // Update state so the next render will show the fallback UI
     return {
       hasError: true,
       error,
@@ -39,14 +30,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log error to console in development
     if (import.meta.env.DEV) {
       console.error('Error caught by ErrorBoundary:', error);
       console.error('Error info:', errorInfo);
     }
-
-    // TODO: Log to error monitoring service (Sentry, Datadog, etc.)
-    // Example: logErrorToService(error, errorInfo);
 
     this.setState({
       error,

@@ -7,9 +7,6 @@ import type {
   ReorderTracksDto,
 } from '../types';
 
-/**
- * Hook to fetch all playlists
- */
 export function usePlaylists(params?: {
   skip?: number;
   take?: number;
@@ -22,52 +19,37 @@ export function usePlaylists(params?: {
   });
 }
 
-/**
- * Hook to fetch a specific playlist by ID
- * Self-hosted: playlists change rarely, mutations handle invalidation
- */
 export function usePlaylist(id: string) {
   return useQuery({
     queryKey: ['playlists', id],
     queryFn: () => playlistsService.getPlaylist(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes - mutations invalidate on changes
-    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache for fast navigation
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 
-/**
- * Hook to fetch tracks in a playlist
- * Self-hosted: track list only changes via user mutations which invalidate cache
- */
 export function usePlaylistTracks(playlistId: string) {
   return useQuery({
     queryKey: ['playlists', playlistId, 'tracks'],
     queryFn: () => playlistsService.getPlaylistTracks(playlistId),
     enabled: !!playlistId,
-    staleTime: 5 * 60 * 1000, // 5 minutes - mutations invalidate on changes
-    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache for fast navigation
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
 
-/**
- * Hook to create a new playlist
- */
 export function useCreatePlaylist() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (dto: CreatePlaylistDto) => playlistsService.createPlaylist(dto),
     onSuccess: () => {
-      // Invalidate playlists list to refetch
       queryClient.invalidateQueries({ queryKey: ['playlists'] });
     },
   });
 }
 
-/**
- * Hook to update a playlist
- */
 export function useUpdatePlaylist() {
   const queryClient = useQueryClient();
 
@@ -75,31 +57,23 @@ export function useUpdatePlaylist() {
     mutationFn: ({ id, dto }: { id: string; dto: UpdatePlaylistDto }) =>
       playlistsService.updatePlaylist(id, dto),
     onSuccess: (_, variables) => {
-      // Invalidate specific playlist and list
       queryClient.invalidateQueries({ queryKey: ['playlists', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['playlists'] });
     },
   });
 }
 
-/**
- * Hook to delete a playlist
- */
 export function useDeletePlaylist() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => playlistsService.deletePlaylist(id),
     onSuccess: () => {
-      // Invalidate playlists list
       queryClient.invalidateQueries({ queryKey: ['playlists'] });
     },
   });
 }
 
-/**
- * Hook to add a track to a playlist
- */
 export function useAddTrackToPlaylist() {
   const queryClient = useQueryClient();
 
@@ -107,7 +81,6 @@ export function useAddTrackToPlaylist() {
     mutationFn: ({ playlistId, dto }: { playlistId: string; dto: AddTrackToPlaylistDto }) =>
       playlistsService.addTrackToPlaylist(playlistId, dto),
     onSuccess: (_, variables) => {
-      // Invalidate playlist tracks and playlist itself (to update track count)
       queryClient.invalidateQueries({
         queryKey: ['playlists', variables.playlistId, 'tracks'],
       });
@@ -117,9 +90,6 @@ export function useAddTrackToPlaylist() {
   });
 }
 
-/**
- * Hook to remove a track from a playlist
- */
 export function useRemoveTrackFromPlaylist() {
   const queryClient = useQueryClient();
 
@@ -127,7 +97,6 @@ export function useRemoveTrackFromPlaylist() {
     mutationFn: ({ playlistId, trackId }: { playlistId: string; trackId: string }) =>
       playlistsService.removeTrackFromPlaylist(playlistId, trackId),
     onSuccess: (_, variables) => {
-      // Invalidate playlist tracks and playlist itself
       queryClient.invalidateQueries({
         queryKey: ['playlists', variables.playlistId, 'tracks'],
       });
@@ -137,9 +106,6 @@ export function useRemoveTrackFromPlaylist() {
   });
 }
 
-/**
- * Hook to reorder tracks in a playlist
- */
 export function useReorderPlaylistTracks() {
   const queryClient = useQueryClient();
 
@@ -147,7 +113,6 @@ export function useReorderPlaylistTracks() {
     mutationFn: ({ playlistId, dto }: { playlistId: string; dto: ReorderTracksDto }) =>
       playlistsService.reorderTracks(playlistId, dto),
     onSuccess: (_, variables) => {
-      // Invalidate playlist tracks
       queryClient.invalidateQueries({
         queryKey: ['playlists', variables.playlistId, 'tracks'],
       });
@@ -155,9 +120,6 @@ export function useReorderPlaylistTracks() {
   });
 }
 
-/**
- * Hook to fetch public playlists containing tracks from a specific artist
- */
 export function usePlaylistsByArtist(artistId: string | undefined, params?: {
   skip?: number;
   take?: number;
@@ -166,6 +128,6 @@ export function usePlaylistsByArtist(artistId: string | undefined, params?: {
     queryKey: ['playlists', 'by-artist', artistId, params],
     queryFn: () => playlistsService.getPlaylistsByArtist(artistId!, params),
     enabled: !!artistId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }

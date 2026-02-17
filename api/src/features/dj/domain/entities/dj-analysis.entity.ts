@@ -1,10 +1,3 @@
-/**
- * DjAnalysis Entity - Audio analysis for DJ features
- *
- * Contains BPM, key, energy, and other audio characteristics
- * used for intelligent mixing and track recommendations.
- */
-
 import {
   keyToCamelot as camelotUtilKeyToCamelot,
   areKeysCompatible,
@@ -20,19 +13,16 @@ export interface DjAnalysisProps {
   id: string;
   trackId: string;
 
-  // Audio analysis results
   bpm?: number;
-  key?: string; // Musical key (e.g., "Am", "C#m")
-  camelotKey?: string; // Camelot notation (e.g., "8A", "11B")
-  energy?: number; // 0.0 - 1.0 (sigmoid-normalized)
-  rawEnergy?: number; // 0.0 - 1.0 (pre-sigmoid, for auto-calibration)
-  danceability?: number; // 0.0 - 1.0
+  key?: string;
+  camelotKey?: string;
+  energy?: number;
+  rawEnergy?: number;
+  danceability?: number;
 
-  // Status
   status: DjAnalysisStatus;
   analysisError?: string;
 
-  // Timestamps
   analyzedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -46,17 +36,11 @@ export interface DjAnalysisValidationError {
 export class DjAnalysis {
   private constructor(private readonly props: DjAnalysisProps) {}
 
-  /**
-   * Create a new DjAnalysis with validation
-   * @throws Error if BPM or energy values are out of valid range
-   */
   static create(props: Omit<DjAnalysisProps, 'id' | 'createdAt' | 'updatedAt'>): DjAnalysis {
-    // Validate BPM if provided
     if (props.bpm !== undefined && !isValidBpm(props.bpm)) {
       throw new Error(`Invalid BPM value: ${props.bpm}. Must be between 30 and 300.`);
     }
 
-    // Validate energy if provided
     if (props.energy !== undefined && !isValidEnergy(props.energy)) {
       throw new Error(`Invalid energy value: ${props.energy}. Must be between 0 and 1.`);
     }
@@ -70,10 +54,6 @@ export class DjAnalysis {
     });
   }
 
-  /**
-   * Validate analysis data without throwing
-   * @returns Array of validation errors (empty if valid)
-   */
   static validate(props: Partial<DjAnalysisProps>): DjAnalysisValidationError[] {
     const errors: DjAnalysisValidationError[] = [];
 
@@ -96,7 +76,6 @@ export class DjAnalysis {
     return new DjAnalysis(props);
   }
 
-  // Getters
   get id(): string {
     return this.props.id;
   }
@@ -149,19 +128,10 @@ export class DjAnalysis {
     return this.props.updatedAt;
   }
 
-  // Business logic methods
-
-  /**
-   * Check if two tracks are harmonically compatible using Camelot wheel
-   * Compatible transitions: same key, +1/-1 on wheel, or relative major/minor
-   */
   isHarmonicallyCompatibleWith(other: DjAnalysis): boolean {
     return areKeysCompatible(this.camelotKey, other.camelotKey);
   }
 
-  /**
-   * Check if BPM is compatible for mixing (uses config tolerance)
-   */
   isBpmCompatibleWith(other: DjAnalysis, tolerancePercent = DJ_CONFIG.compatibility.bpmTolerancePercent): boolean {
     if (!this.bpm || !other.bpm) {
       return false;
@@ -171,9 +141,6 @@ export class DjAnalysis {
     return diff <= tolerancePercent / 100;
   }
 
-  /**
-   * Calculate BPM adjustment needed to match another track
-   */
   getBpmAdjustmentTo(targetBpm: number): number {
     if (!this.bpm) {
       return 0;
@@ -181,20 +148,13 @@ export class DjAnalysis {
     return ((targetBpm - this.bpm) / this.bpm) * 100;
   }
 
-  /**
-   * Get harmonic compatibility score (0-100)
-   */
   getHarmonicScore(other: DjAnalysis): number {
-    // Return 0 when keys are missing (entity-specific behavior)
     if (!this.camelotKey || !other.camelotKey) {
       return 0;
     }
     return getSimpleHarmonicScore(this.camelotKey, other.camelotKey);
   }
 
-  /**
-   * Convert musical key to Camelot notation
-   */
   static keyToCamelot(key: string): string | undefined {
     return camelotUtilKeyToCamelot(key) ?? undefined;
   }

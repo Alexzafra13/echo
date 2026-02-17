@@ -2,32 +2,20 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useDropdownPosition } from './useDropdownPosition';
 
 export interface UseDropdownMenuOptions {
-  /** Offset from trigger element in pixels (default: 8) */
   offset?: number;
-  /** Horizontal alignment (default: 'right') */
   align?: 'left' | 'right';
-  /** Maximum height of dropdown (default: 400) */
   maxHeight?: number;
-  /** Animation duration in ms (default: 150) */
   animationDuration?: number;
 }
 
 export interface UseDropdownMenuReturn {
-  /** Whether the dropdown is currently open */
   isOpen: boolean;
-  /** Whether the dropdown is in closing animation */
   isClosing: boolean;
-  /** Ref to attach to the trigger button */
   triggerRef: React.RefObject<HTMLButtonElement>;
-  /** Ref to attach to the dropdown container */
   dropdownRef: React.RefObject<HTMLDivElement>;
-  /** Calculated position for the dropdown (use for inline styles) */
   effectivePosition: ReturnType<typeof useDropdownPosition>;
-  /** Toggle the menu open/closed */
   toggleMenu: (e: React.MouseEvent) => void;
-  /** Close the menu with animation */
   closeMenu: () => void;
-  /** Handle option click - calls callback and closes menu */
   handleOptionClick: <T extends unknown[]>(
     e: React.MouseEvent,
     callback?: (...args: T) => void,

@@ -9,25 +9,16 @@ import {
   type HarmonicCompatibility,
 } from '../utils/camelot.util';
 
-/**
- * DJ Compatibility Service
- *
- * Calculates compatibility scores between tracks based on:
- * - BPM matching (tempo compatibility for beatmatching)
- * - Key/Camelot compatibility (harmonic mixing)
- * - Energy flow (smooth energy transitions)
- */
-
 export interface CompatibilityScore {
-  overall: number; // 0-100
-  bpmScore: number; // 0-100
-  keyScore: number; // 0-100
-  energyScore: number; // 0-100
-  danceabilityScore: number | null; // 0-100 (null if not available)
-  bpmDiff: number; // Percentage difference
+  overall: number;
+  bpmScore: number;
+  keyScore: number;
+  energyScore: number;
+  danceabilityScore: number | null;
+  bpmDiff: number;
   keyCompatibility: 'perfect' | 'compatible' | 'energy_boost' | 'incompatible';
-  energyDiff: number; // Absolute difference
-  danceabilityDiff: number | null; // Absolute difference (null if not available)
+  energyDiff: number;
+  danceabilityDiff: number | null;
   canBeatmatch: boolean;
   suggestedTransition: 'smooth' | 'energy_up' | 'energy_down' | 'key_change';
 }
@@ -41,34 +32,20 @@ export interface TrackDjData {
   danceability?: number | null;
 }
 
-/**
- * Get Camelot notation from musical key
- * Delegates to centralized camelot utility
- */
 export function keyToCamelot(key: string | null): string | null {
   return camelotUtilKeyToCamelot(key);
 }
 
-/**
- * Calculate BPM compatibility score
- * - Perfect match (0% diff) = 100
- * - ±3% = 90 (easy beatmatch)
- * - ±6% = 70 (moderate pitch adjustment)
- * - ±10% = 40 (significant adjustment)
- * - >10% = decreasing score
- *
- * Also considers half/double time (e.g., 140 BPM compatible with 70 BPM)
- */
+// Compatibilidad de BPM considerando half/double time
 export function calculateBpmScore(bpm1: number | null, bpm2: number | null): { score: number; diff: number; canBeatmatch: boolean } {
   if (!bpm1 || !bpm2 || bpm1 === 0 || bpm2 === 0) {
-    return { score: 50, diff: 0, canBeatmatch: false }; // Unknown, neutral score
+    return { score: 50, diff: 0, canBeatmatch: false };
   }
 
-  // Check direct match and half/double time
   const diffs = [
-    Math.abs(bpm1 - bpm2) / bpm1, // Direct
-    Math.abs(bpm1 - bpm2 * 2) / bpm1, // Double time
-    Math.abs(bpm1 - bpm2 / 2) / bpm1, // Half time
+    Math.abs(bpm1 - bpm2) / bpm1,
+    Math.abs(bpm1 - bpm2 * 2) / bpm1,
+    Math.abs(bpm1 - bpm2 / 2) / bpm1,
   ];
 
   const minDiff = Math.min(...diffs);
@@ -78,33 +55,22 @@ export function calculateBpmScore(bpm1: number | null, bpm2: number | null): { s
   let canBeatmatch = true;
 
   if (diffPercent <= 0.5) {
-    score = 100; // Perfect match
+    score = 100;
   } else if (diffPercent <= 3) {
-    score = 95 - (diffPercent * 1.67); // 95-90
+    score = 95 - (diffPercent * 1.67);
   } else if (diffPercent <= 6) {
-    score = 90 - ((diffPercent - 3) * 6.67); // 90-70
+    score = 90 - ((diffPercent - 3) * 6.67);
   } else if (diffPercent <= 10) {
-    score = 70 - ((diffPercent - 6) * 7.5); // 70-40
+    score = 70 - ((diffPercent - 6) * 7.5);
     canBeatmatch = diffPercent <= 8;
   } else {
-    score = Math.max(0, 40 - ((diffPercent - 10) * 4)); // 40-0
+    score = Math.max(0, 40 - ((diffPercent - 10) * 4));
     canBeatmatch = false;
   }
 
   return { score, diff: diffPercent, canBeatmatch };
 }
 
-/**
- * Calculate key/harmonic compatibility score using Camelot wheel
- * Delegates to centralized camelot utility
- *
- * Compatible combinations:
- * - Same key (9B → 9B) = 100 (perfect)
- * - ±1 on wheel (9B → 8B, 10B) = 90 (energy change)
- * - Same number, different letter (9B → 9A) = 85 (mood shift major↔minor)
- * - ±2 on wheel = 55 (noticeable but usable)
- * - Other = 20-40 (clash)
- */
 export function calculateKeyScore(
   camelot1: string | null,
   camelot2: string | null
@@ -112,20 +78,12 @@ export function calculateKeyScore(
   return calculateHarmonicScore(camelot1, camelot2);
 }
 
-/**
- * Calculate energy flow score
- *
- * - Small change (±0.1) = 100 (smooth)
- * - Moderate change (±0.2) = 80 (noticeable)
- * - Large change (±0.3) = 60 (dramatic)
- * - Very large = decreasing
- */
 export function calculateEnergyScore(
   energy1: number | null,
   energy2: number | null
 ): { score: number; diff: number; transition: 'smooth' | 'energy_up' | 'energy_down' } {
   if (energy1 === null || energy2 === null) {
-    return { score: 70, diff: 0, transition: 'smooth' }; // Unknown, neutral
+    return { score: 70, diff: 0, transition: 'smooth' };
   }
 
   const diff = energy2 - energy1;
@@ -135,13 +93,13 @@ export function calculateEnergyScore(
   if (absDiff <= 0.1) {
     score = 100;
   } else if (absDiff <= 0.2) {
-    score = 90 - ((absDiff - 0.1) * 100); // 90-80
+    score = 90 - ((absDiff - 0.1) * 100);
   } else if (absDiff <= 0.3) {
-    score = 80 - ((absDiff - 0.2) * 100); // 80-70
+    score = 80 - ((absDiff - 0.2) * 100);
   } else if (absDiff <= 0.5) {
-    score = 70 - ((absDiff - 0.3) * 50); // 70-60
+    score = 70 - ((absDiff - 0.3) * 50);
   } else {
-    score = Math.max(30, 60 - ((absDiff - 0.5) * 60)); // 60-30
+    score = Math.max(30, 60 - ((absDiff - 0.5) * 60));
   }
 
   const transition = absDiff <= 0.15 ? 'smooth' : (diff > 0 ? 'energy_up' : 'energy_down');
@@ -149,18 +107,12 @@ export function calculateEnergyScore(
   return { score, diff, transition };
 }
 
-/**
- * Calculate danceability compatibility score
- *
- * Similar tracks in danceability mix well together.
- * Uses same scoring as energy for consistency.
- */
 export function calculateDanceabilityScore(
   danceability1: number | null | undefined,
   danceability2: number | null | undefined
 ): { score: number; diff: number } | null {
   if (danceability1 == null || danceability2 == null) {
-    return null; // Not available
+    return null;
   }
 
   const diff = danceability2 - danceability1;

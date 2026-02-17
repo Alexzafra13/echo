@@ -69,7 +69,6 @@ export class DrizzleUserRepository implements IUserRepository {
         mustChangePassword: primitives.mustChangePassword,
         lastLoginAt: null,
         lastAccessAt: null,
-        // Profile privacy settings
         isPublicProfile: primitives.isPublicProfile,
         showTopTracks: primitives.showTopTracks,
         showTopArtists: primitives.showTopArtists,

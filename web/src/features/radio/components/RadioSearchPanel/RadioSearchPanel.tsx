@@ -12,10 +12,6 @@ interface RadioSearchPanelProps {
   onClose: () => void;
 }
 
-/**
- * RadioSearchPanel Component
- * Overlay panel that shows search results below header with glassmorphism
- */
 export function RadioSearchPanel({
   isOpen,
   searchResults,
@@ -27,7 +23,6 @@ export function RadioSearchPanel({
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
-  // Handle open/close transitions
   useEffect(() => {
     const shouldShow = isOpen && query.length >= 2;
 
@@ -44,7 +39,6 @@ export function RadioSearchPanel({
     }
   }, [isOpen, query, isVisible]);
 
-  // Group results
   const groupedResults = useMemo(() => {
     if (!searchResults.length) return null;
     return {

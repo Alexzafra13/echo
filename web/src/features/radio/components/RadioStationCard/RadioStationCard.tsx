@@ -14,20 +14,6 @@ interface RadioStationCardProps {
   onToggleFavorite?: () => void;
 }
 
-/**
- * RadioStationCard Component
- * Displays a single radio station with cover, name, country and play button
- * Memoized to prevent unnecessary re-renders in lists
- *
- * @example
- * <RadioStationCard
- *   station={station}
- *   isFavorite={true}
- *   isPlaying={false}
- *   onPlay={() => playRadio(station)}
- *   onToggleFavorite={() => toggleFavorite(station)}
- * />
- */
 export const RadioStationCard = memo(function RadioStationCard({
   station,
   isFavorite = false,
@@ -48,7 +34,7 @@ export const RadioStationCard = memo(function RadioStationCard({
     onToggleFavorite?.();
   }, [onToggleFavorite]);
 
-  // Get station properties (compatible with both RadioBrowserStation and RadioStation)
+  // Compatible con RadioBrowserStation y RadioStation
   const name = station.name;
   const favicon = 'favicon' in station ? station.favicon : null;
   const country = 'country' in station ? station.country : null;
@@ -56,12 +42,11 @@ export const RadioStationCard = memo(function RadioStationCard({
   const codec = 'codec' in station ? station.codec : null;
   const bitrate = 'bitrate' in station ? station.bitrate : null;
 
-  // Format tags for display (handle null, empty string, and valid strings)
   const genreTags = tags && typeof tags === 'string' && tags.trim()
     ? tags.split(',').slice(0, 2).join(', ')
     : 'Radio';
 
-  // Check if metadata text overflows and needs animation
+  // Anima el texto de metadatos si desborda el contenedor
   useEffect(() => {
     if (metadataTextRef.current && currentMetadata?.title) {
       const element = metadataTextRef.current;

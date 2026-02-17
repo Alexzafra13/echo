@@ -1,66 +1,34 @@
-/**
- * Player Settings Store
- *
- * Consolidated Zustand store for all player settings:
- * - Player position preference (dynamic, sidebar, footer)
- * - Crossfade settings (enabled, duration)
- * - Normalization settings (enabled, targetLufs, preventClipping)
- * - Autoplay settings (enabled)
- *
- * Replaces the individual hooks that used CustomEvent pattern:
- * - usePlayerPreference
- * - useCrossfadeSettings
- * - useNormalizationSettings
- * - useAutoplaySettings
- */
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CrossfadeSettings, NormalizationSettings, AutoplaySettings } from '../types';
 
-// Current store version - increment when changing the persisted state structure
+// Incrementar al cambiar la estructura del estado persistido
 const STORE_VERSION = 2;
 
-// Player position preference type
 export type PlayerPreference = 'dynamic' | 'sidebar' | 'footer';
 
 interface PlayerSettingsState {
-  // Player position preference
   playerPreference: PlayerPreference;
-
-  // Crossfade settings
   crossfade: CrossfadeSettings;
-
-  // Normalization settings
   normalization: NormalizationSettings;
-
-  // Autoplay settings
   autoplay: AutoplaySettings;
 
-  // Player preference actions
   setPlayerPreference: (preference: PlayerPreference) => void;
-
-  // Crossfade actions
   setCrossfadeEnabled: (enabled: boolean) => void;
   setCrossfadeDuration: (duration: number) => void;
   setCrossfadeSmartMode: (enabled: boolean) => void;
   setCrossfadeTempoMatch: (tempoMatch: boolean) => void;
-
-  // Normalization actions
   setNormalizationEnabled: (enabled: boolean) => void;
   setNormalizationTargetLufs: (targetLufs: -14 | -16) => void;
   setNormalizationPreventClipping: (preventClipping: boolean) => void;
-
-  // Autoplay actions
   setAutoplayEnabled: (enabled: boolean) => void;
 }
 
-// Default values
 const DEFAULT_CROSSFADE: CrossfadeSettings = {
   enabled: false,
   duration: 5,
-  smartMode: true, // Use track's outroStart when available for intelligent timing
-  tempoMatch: false, // Gradually match BPM during crossfade (disabled by default)
+  smartMode: true,
+  tempoMatch: false,
 };
 
 const DEFAULT_NORMALIZATION: NormalizationSettings = {
@@ -73,7 +41,6 @@ const DEFAULT_AUTOPLAY: AutoplaySettings = {
   enabled: true,
 };
 
-// Initial state values (used for defaults and reset)
 const initialState = {
   playerPreference: 'dynamic' as PlayerPreference,
   crossfade: DEFAULT_CROSSFADE,
@@ -84,14 +51,11 @@ const initialState = {
 export const usePlayerSettingsStore = create<PlayerSettingsState>()(
   persist(
     (set) => ({
-      // Initial state
       ...initialState,
 
-      // Player preference actions
       setPlayerPreference: (preference) =>
         set({ playerPreference: preference }),
 
-      // Crossfade actions
       setCrossfadeEnabled: (enabled) =>
         set((state) => ({
           crossfade: { ...state.crossfade, enabled },
@@ -101,7 +65,6 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
         set((state) => ({
           crossfade: {
             ...state.crossfade,
-            // Clamp duration between 1 and 12 seconds
             duration: Math.max(1, Math.min(12, duration)),
           },
         })),
@@ -116,7 +79,6 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
           crossfade: { ...state.crossfade, tempoMatch },
         })),
 
-      // Normalization actions
       setNormalizationEnabled: (enabled) =>
         set((state) => ({
           normalization: { ...state.normalization, enabled },
@@ -132,7 +94,6 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
           normalization: { ...state.normalization, preventClipping },
         })),
 
-      // Autoplay actions
       setAutoplayEnabled: (enabled) =>
         set((state) => ({
           autoplay: { ...state.autoplay, enabled },
@@ -142,13 +103,11 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
       name: 'echo-player-settings',
       version: STORE_VERSION,
 
-      // Migration: handle old store versions
       migrate: (persistedState, version) => {
-        // If no version or very old, reset to clean state
         if (version === 0 || !persistedState) {
           return initialState;
         }
-        // v1 → v2: add tempoMatch to crossfade settings
+        // v1 → v2: agrega tempoMatch a crossfade
         if (version < 2) {
           const state = persistedState as Record<string, unknown>;
           const crossfade = state.crossfade as CrossfadeSettings | undefined;
@@ -159,7 +118,7 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
         return persistedState as PlayerSettingsState;
       },
 
-      // Error handling + migration from old localStorage keys
+      // Migración desde claves antiguas de localStorage
       onRehydrateStorage: () => (state, error) => {
         if (error) {
           console.error('[PlayerSettingsStore] Error loading persisted state:', error);
@@ -169,9 +128,7 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
 
         if (!state) return;
 
-        // Try to migrate from old storage keys if they exist
         try {
-          // Migrate player preference
           const oldPreference = localStorage.getItem('player-preference');
           if (oldPreference && state.playerPreference === 'dynamic') {
             const validPreferences: PlayerPreference[] = ['dynamic', 'sidebar', 'footer'];
@@ -181,7 +138,6 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
             localStorage.removeItem('player-preference');
           }
 
-          // Migrate crossfade settings
           const oldCrossfade = localStorage.getItem('crossfade-settings');
           if (oldCrossfade) {
             const parsed = JSON.parse(oldCrossfade);
@@ -190,7 +146,6 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
             localStorage.removeItem('crossfade-settings');
           }
 
-          // Migrate normalization settings
           const oldNormalization = localStorage.getItem('normalization-settings');
           if (oldNormalization) {
             const parsed = JSON.parse(oldNormalization);
@@ -200,7 +155,6 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
             localStorage.removeItem('normalization-settings');
           }
 
-          // Migrate autoplay settings
           const oldAutoplay = localStorage.getItem('autoplay-settings');
           if (oldAutoplay) {
             const parsed = JSON.parse(oldAutoplay);
@@ -208,11 +162,9 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
             localStorage.removeItem('autoplay-settings');
           }
         } catch {
-          // Ignore migration errors from old keys
         }
       },
 
-      // Safe merge: ensure defaults are always present
       merge: (persistedState, currentState) => ({
         ...currentState,
         ...(persistedState as Partial<PlayerSettingsState> || {}),

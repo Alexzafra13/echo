@@ -8,7 +8,7 @@ import { StorageBreakdown } from '../../domain/use-cases/get-dashboard-stats/get
 @Injectable()
 export class StorageBreakdownService {
   private readonly CACHE_KEY = 'dashboard:storage-breakdown';
-  private readonly CACHE_TTL = 300; // 5 minutes
+  private readonly CACHE_TTL = 300;
 
   constructor(
     private readonly drizzle: DrizzleService,

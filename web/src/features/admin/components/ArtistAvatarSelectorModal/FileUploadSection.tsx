@@ -11,10 +11,6 @@ interface FileUploadSectionProps {
   onSuccess?: () => void;
 }
 
-/**
- * FileUploadSection Component
- * Permite subir imágenes personalizadas desde el PC
- */
 export function FileUploadSection({ artistId, imageType, onSuccess }: FileUploadSectionProps) {
   const {
     selectedFile,
@@ -37,7 +33,6 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
 
   return (
     <div className={styles.container}>
-      {/* Upload Section */}
       <div className={styles.uploadSection}>
         <h3 className={styles.sectionTitle}>Subir desde tu PC</h3>
 
@@ -95,7 +90,6 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
         )}
       </div>
 
-      {/* Custom Images List */}
       {customImages.length > 0 && (
         <div className={styles.customImagesSection}>
           <h3 className={styles.sectionTitle}>Imágenes subidas ({customImages.length})</h3>
@@ -127,7 +121,6 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
   );
 }
 
-/* Custom Image Card - extracted for readability in map */
 interface CustomImageCardProps {
   image: CustomImage;
   artistId: string;

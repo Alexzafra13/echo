@@ -12,7 +12,7 @@ import { ActiveAlerts, StorageBreakdown } from '../../domain/use-cases/get-dashb
 
 @Injectable()
 export class AlertsService {
-  private readonly MAX_STORAGE_MB = 5120; // 5GB default limit
+  private readonly MAX_STORAGE_MB = 5120;
 
   constructor(private readonly drizzle: DrizzleService) {}
 

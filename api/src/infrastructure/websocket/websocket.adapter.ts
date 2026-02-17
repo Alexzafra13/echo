@@ -5,20 +5,6 @@ import { appConfig } from '@config/app.config';
 import { SecuritySecretsService } from '@config/security-secrets.service';
 import * as jwt from 'jsonwebtoken';
 
-/**
- * WebSocketAdapter - Adaptador personalizado para Socket.IO
- *
- * Responsabilidades:
- * - Configurar Socket.IO con opciones personalizadas
- * - Habilitar CORS para conexiones WebSocket
- * - Configurar transports (websocket, polling)
- * - Autenticación JWT en el handshake (middleware)
- * - Logging de conexiones
- *
- * Uso:
- * const app = await NestFactory.create(AppModule);
- * app.useWebSocketAdapter(new WebSocketAdapter(app));
- */
 export class WebSocketAdapter extends IoAdapter {
   private readonly logger = new Logger(WebSocketAdapter.name);
   private secretsService: SecuritySecretsService | null = null;
@@ -27,16 +13,11 @@ export class WebSocketAdapter extends IoAdapter {
     super(appContext);
   }
 
-  /**
-   * Gets the JWT secret from SecuritySecretsService or falls back to env var
-   */
   private getJwtSecret(): string | undefined {
-    // Try to get from SecuritySecretsService (lazy initialization)
     if (!this.secretsService) {
       try {
         this.secretsService = this.appContext.get(SecuritySecretsService);
       } catch {
-        // SecuritySecretsService not available, fall back to env var
         this.logger.debug('SecuritySecretsService not available, using env var');
       }
     }
@@ -44,24 +25,16 @@ export class WebSocketAdapter extends IoAdapter {
     if (this.secretsService) {
       try {
         return this.secretsService.jwtSecret;
-      } catch {
-        // Service not initialized, fall back to env var
-      }
+      } catch {}
     }
 
     return process.env.JWT_SECRET;
   }
 
-  /**
-   * Crea servidor de Socket.IO con configuración personalizada
-   */
   createIOServer(port: number, options?: ServerOptions): Server {
-    // In test/development mode, allow all origins for easier testing
-    // In production, use configured CORS origins
     const isTestOrDev = process.env.NODE_ENV !== 'production';
     const corsOrigins = isTestOrDev ? true : appConfig.cors_origins;
 
-    // Configuración del servidor Socket.IO
     const serverOptions: Partial<ServerOptions> = {
       ...options,
       cors: {
@@ -69,16 +42,12 @@ export class WebSocketAdapter extends IoAdapter {
         credentials: true,
         methods: ['GET', 'POST'],
       },
-      // Transports: polling primero para mejor compatibilidad, luego websocket
       transports: ['polling', 'websocket'],
-      // Ping interval para mantener conexión viva
       pingInterval: 10000,
       pingTimeout: 5000,
-      // Aumentar límite de listeners
-      maxHttpBufferSize: 1e6, // 1MB
-      // Habilitar compresión
+      maxHttpBufferSize: 1e6,
       perMessageDeflate: {
-        threshold: 1024, // Comprimir mensajes > 1KB
+        threshold: 1024,
       },
     };
 

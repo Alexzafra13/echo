@@ -11,13 +11,7 @@ interface DjProgressEvent {
   estimatedTimeRemaining: string | null;
 }
 
-/**
- * Global hook to listen for DJ analysis progress via WebSocket
- * Should be mounted once at app level (e.g., in MainLayout)
- *
- * On mount/reconnect, fetches current state from the API so progress
- * is visible even if the user navigated away and came back.
- */
+// Escucha progreso de análisis DJ via WebSocket y sincroniza con API al montar
 export function useDjProgressListener() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const updateProgress = useDjProgressStore((state) => state.updateProgress);
@@ -26,7 +20,6 @@ export function useDjProgressListener() {
     updateProgress(data);
   }, [updateProgress]);
 
-  // Fetch current DJ status from API on mount
   useEffect(() => {
     if (!accessToken) return;
 
@@ -44,16 +37,13 @@ export function useDjProgressListener() {
           estimatedTimeRemaining: null,
         });
       }
-    }).catch(() => {
-      // Silently ignore — user may not be admin or request was aborted
-    });
+    }).catch(() => {});
 
     return () => {
       abortController.abort();
     };
   }, [accessToken, updateProgress]);
 
-  // Listen for real-time updates via WebSocket
   useEffect(() => {
     if (!accessToken) return;
 

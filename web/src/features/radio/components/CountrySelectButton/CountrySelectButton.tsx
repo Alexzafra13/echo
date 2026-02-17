@@ -8,11 +8,6 @@ interface CountrySelectButtonProps {
   onClick: () => void;
 }
 
-/**
- * CountrySelectButton Component
- * Button to open the country selection modal
- * Shows the currently selected country with its flag
- */
 export function CountrySelectButton({
   countries,
   selectedCountry,

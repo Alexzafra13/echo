@@ -1,13 +1,10 @@
 import { generateUuid } from '@shared/utils';
 
-/**
- * Interfaz que define la estructura de propiedades del Album
- */
 export interface AlbumProps {
   id: string;
   name: string;
   artistId?: string;
-  artistName?: string; // Artist name for display
+  artistName?: string;
   albumArtistId?: string;
   coverArtPath?: string;
   year?: number;
@@ -21,30 +18,13 @@ export interface AlbumProps {
   updatedAt: Date;
 }
 
-/**
- * Album Entity - Representa un álbum en el dominio
- *
- * Responsabilidades:
- * - Encapsular las propiedades de un álbum
- * - Proporcionar getters para acceder a los datos
- * - Crear nuevos álbumes con factory method
- * - Convertir a primitivos (para mapear a BD o DTOs)
- */
 export class Album {
   private props: AlbumProps;
 
-  /**
-   * Constructor privado - no llamar directamente
-   * Usar Album.create() en su lugar
-   */
   constructor(props: AlbumProps) {
     this.props = props;
   }
 
-  /**
-   * Factory method para crear un nuevo Album
-   * Genera automáticamente: id (UUID), createdAt, updatedAt
-   */
   static create(
     props: Omit<AlbumProps, 'id' | 'createdAt' | 'updatedAt'>,
   ): Album {
@@ -56,15 +36,10 @@ export class Album {
     });
   }
 
-  /**
-   * Factory method para reconstruir un Album desde BD
-   * Se usa cuando traes datos de Drizzle
-   */
+  // Reconstruye un Album desde datos persistidos
   static reconstruct(props: AlbumProps): Album {
     return new Album(props);
   }
-
-  // ============ GETTERS (Solo lectura) ============
 
   get id(): string {
     return this.props.id;
@@ -126,12 +101,6 @@ export class Album {
     return this.props.updatedAt;
   }
 
-  // ============ MÉTODOS DE CONVERSIÓN ============
-
-  /**
-   * Retorna todas las propiedades del álbum como un objeto plano
-   * Útil para mapear a Drizzle o DTOs
-   */
   toPrimitives(): AlbumProps {
     return { ...this.props };
   }

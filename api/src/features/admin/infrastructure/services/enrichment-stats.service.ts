@@ -15,7 +15,7 @@ interface PeriodStats {
 @Injectable()
 export class EnrichmentStatsService {
   private readonly CACHE_KEY = 'dashboard:enrichment-stats';
-  private readonly CACHE_TTL = 120; // 2 minutes
+  private readonly CACHE_TTL = 120;
 
   constructor(
     private readonly drizzle: DrizzleService,

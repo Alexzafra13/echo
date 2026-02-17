@@ -80,10 +80,8 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
           </button>
         </div>
 
-        {/* Error message */}
         {error && <div className={styles.errorBox}>{error}</div>}
 
-        {/* Create new playlist form */}
         {showCreateForm ? (
           <form onSubmit={handleCreateAndAdd} className={styles.createForm}>
             <input
@@ -124,7 +122,6 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
           </form>
         ) : (
           <>
-            {/* Create new playlist button */}
             <button
               className={styles.createButton}
               onClick={() => setShowCreateForm(true)}
@@ -134,7 +131,6 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
               <span>Crear nueva playlist</span>
             </button>
 
-            {/* Playlists list */}
             <div className={styles.playlistsList}>
               {loadingPlaylists ? (
                 <div className={styles.loading}>

@@ -9,17 +9,11 @@ interface BackgroundPositionModalProps {
   artistId: string;
   artistName: string;
   backgroundUrl: string;
-  initialPosition?: string; // Initial CSS background-position value
+  initialPosition?: string;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-/**
- * BackgroundPositionModal Component
- * Drag-to-reposition interface for background images
- * Shows a fixed viewport (hero area) and allows dragging the image within it
- * Uses background-size: 100% (width 100%, height auto) matching the actual CSS
- */
 export function BackgroundPositionModal({
   artistId,
   artistName,
@@ -39,38 +33,32 @@ export function BackgroundPositionModal({
 
   const { mutate: updatePosition, isPending } = useUpdateBackgroundPosition();
 
-  // Load image and calculate initial position
+  // Cargar imagen y calcular posición inicial
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
       setImageLoaded(true);
 
-      // Calculate initial position based on initialPosition prop
       if (containerRef.current) {
         const container = containerRef.current;
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
 
-        // Use background-size: 100% logic (NOT cover)
-        // Width is always 100% of container, height scales proportionally
+        // background-size: 100% => ancho completo, alto proporcional
         const imageRatio = img.naturalWidth / img.naturalHeight;
         const renderWidth = containerWidth;
         const renderHeight = containerWidth / imageRatio;
 
-        // Save calculated dimensions
         setImageDimensions({ width: renderWidth, height: renderHeight });
 
-        // Parse background-position to calculate initial offset
         const parts = initialPosition.split(' ');
         const yPart = parts[1] || 'top';
 
         let xOffset = 0;
         let yOffset = 0;
 
-        // X is always 0 since width === containerWidth
         xOffset = 0;
 
-        // Calculate Y offset
         if (yPart === 'center') {
           yOffset = -(renderHeight - containerHeight) / 2;
         } else if (yPart === 'bottom') {
@@ -88,7 +76,7 @@ export function BackgroundPositionModal({
     img.src = backgroundUrl;
   }, [backgroundUrl, initialPosition]);
 
-  // Handle drag move with useCallback to avoid recreating on every render
+  // Solo movimiento vertical, el ancho siempre es 100%
   const handleMove = useCallback((_clientX: number, clientY: number) => {
     if (!containerRef.current || !imageRef.current) return;
 
@@ -97,10 +85,8 @@ export function BackgroundPositionModal({
     const containerHeight = container.clientHeight;
     const imageHeight = image.clientHeight;
 
-    // Only vertical movement (background-size: 100% keeps width fixed)
     let newY = clientY - dragStartRef.current.y;
 
-    // Constrain movement (image can't reveal edges)
     const maxY = 0;
     const minY = containerHeight - imageHeight;
 
@@ -109,7 +95,6 @@ export function BackgroundPositionModal({
     setImagePosition({ x: 0, y: newY });
   }, []);
 
-  // Mouse handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     setIsDragging(true);
     dragStartRef.current = {
@@ -128,10 +113,10 @@ export function BackgroundPositionModal({
     setIsDragging(false);
   }, []);
 
-  // Touch handlers - registered with {passive: false} to allow preventDefault
+  // Touch con passive: false para permitir preventDefault
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (e.touches.length !== 1) return;
-    e.preventDefault(); // Prevent scrolling
+    e.preventDefault();
     setIsDragging(true);
     const touch = e.touches[0];
     dragStartRef.current = {
@@ -142,7 +127,7 @@ export function BackgroundPositionModal({
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!isDragging || e.touches.length !== 1) return;
-    e.preventDefault(); // Prevent scrolling
+    e.preventDefault();
     const touch = e.touches[0];
     handleMove(touch.clientX, touch.clientY);
   }, [isDragging, handleMove]);
@@ -151,10 +136,8 @@ export function BackgroundPositionModal({
     setIsDragging(false);
   }, []);
 
-  // Add/remove event listeners
   useEffect(() => {
     if (isDragging) {
-      // Mouse events
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
 
@@ -165,7 +148,6 @@ export function BackgroundPositionModal({
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  // Touch event listeners with {passive: false}
   useEffect(() => {
     const overlay = containerRef.current;
     if (!overlay) return;
@@ -187,7 +169,7 @@ export function BackgroundPositionModal({
     };
   }, [isDragging, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
-  // Convert image position to CSS background-position
+  // Convierte posición del arrastre a CSS background-position
   const calculateBackgroundPosition = (): string => {
     if (!containerRef.current || !imageRef.current) return 'center top';
 
@@ -196,22 +178,15 @@ export function BackgroundPositionModal({
     const containerHeight = container.clientHeight;
     const imageHeight = image.clientHeight;
 
-    // Calculate percentage position
-    // background-position percentage is calculated as:
-    // (container - image) * (percent / 100) = offset
-    // So: percent = (offset / (container - image)) * 100
     const heightDiff = imageHeight - containerHeight;
 
-    // X is always center (50%) since width is always 100%
     const xPercent = 50;
-    let yPercent = 0;  // default top
+    let yPercent = 0;
 
     if (heightDiff > 0) {
-      // Image is taller than container
       yPercent = (Math.abs(imagePosition.y) / heightDiff) * 100;
     }
 
-    // Clamp values
     const xClamped = Math.max(0, Math.min(100, xPercent));
     const yClamped = Math.max(0, Math.min(100, yPercent));
 
@@ -241,7 +216,6 @@ export function BackgroundPositionModal({
   };
 
   const handleReset = () => {
-    // Reset to top (Y=0, X always 0 with background-size: 100%)
     setImagePosition({
       x: 0,
       y: 0,
@@ -267,7 +241,6 @@ export function BackgroundPositionModal({
             La vista previa muestra exactamente la porción que se verá.
           </p>
 
-          {/* Fixed viewport container (like hero section) */}
           <div
             ref={containerRef}
             className={styles.preview}
@@ -285,7 +258,6 @@ export function BackgroundPositionModal({
 
             {imageLoaded && (
               <>
-                {/* Draggable image */}
                 <img
                   ref={imageRef}
                   src={backgroundUrl}
@@ -299,7 +271,6 @@ export function BackgroundPositionModal({
                   draggable={false}
                 />
 
-                {/* Overlay with instructions */}
                 <div className={styles.preview__overlay}>
                   <div className={styles.preview__instructions}>
                     {isDragging ? (

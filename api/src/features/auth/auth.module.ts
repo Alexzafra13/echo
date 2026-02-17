@@ -22,11 +22,8 @@ import { CacheModule } from '@infrastructure/cache/cache.module';
     PassportModule,
     LogsModule,
     CacheModule,
-    // Use registerAsync to get secret from SecuritySecretsService
-    // Secrets are auto-generated on first run
     JwtModule.registerAsync({
       useFactory: async (secretsService: SecuritySecretsService): Promise<JwtModuleOptions> => {
-        // Ensure secrets are initialized before using them
         await secretsService.initializeSecrets();
         return {
           secret: secretsService.jwtSecret,
@@ -40,24 +37,18 @@ import { CacheModule } from '@infrastructure/cache/cache.module';
   ],
   controllers: [AuthController],
   providers: [
-    // Use Cases
     LoginUseCase,
     RefreshTokenUseCase,
     LogoutUseCase,
 
-    // Services
     TokenBlacklistService,
-
-    // Repository
     DrizzleUserRepository,
 
-    // Repository implementation
     {
       provide: USER_REPOSITORY,
       useClass: DrizzleUserRepository,
     },
 
-    // Service implementations
     {
       provide: TOKEN_SERVICE,
       useClass: JwtAdapter,
@@ -71,7 +62,6 @@ import { CacheModule } from '@infrastructure/cache/cache.module';
       useClass: TokenBlacklistService,
     },
 
-    // Passport strategy
     JwtStrategy,
   ],
   exports: [USER_REPOSITORY, TOKEN_SERVICE, PASSWORD_SERVICE],

@@ -2,9 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { radioService } from '../services';
 import type { SaveApiStationDto, CreateCustomStationDto } from '../types';
 
-/**
- * Hook to fetch user's favorite stations
- */
 export function useFavoriteStations() {
   return useQuery({
     queryKey: ['radio', 'favorites'],
@@ -13,9 +10,6 @@ export function useFavoriteStations() {
   });
 }
 
-/**
- * Hook to save a station from Radio Browser API as favorite
- */
 export function useSaveFavoriteFromApi() {
   const queryClient = useQueryClient();
 
@@ -23,15 +17,11 @@ export function useSaveFavoriteFromApi() {
     mutationFn: (stationData: SaveApiStationDto) =>
       radioService.saveFavoriteFromApi(stationData),
     onSuccess: () => {
-      // Invalidate favorites list to refetch
       queryClient.invalidateQueries({ queryKey: ['radio', 'favorites'] });
     },
   });
 }
 
-/**
- * Hook to create a custom radio station
- */
 export function useCreateCustomStation() {
   const queryClient = useQueryClient();
 
@@ -39,30 +29,22 @@ export function useCreateCustomStation() {
     mutationFn: (stationData: CreateCustomStationDto) =>
       radioService.createCustomStation(stationData),
     onSuccess: () => {
-      // Invalidate favorites list to refetch
       queryClient.invalidateQueries({ queryKey: ['radio', 'favorites'] });
     },
   });
 }
 
-/**
- * Hook to delete a favorite station
- */
 export function useDeleteFavoriteStation() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (stationId: string) => radioService.deleteFavorite(stationId),
     onSuccess: () => {
-      // Invalidate favorites list to refetch
       queryClient.invalidateQueries({ queryKey: ['radio', 'favorites'] });
     },
   });
 }
 
-/**
- * Hook to check if a station is in favorites
- */
 export function useIsInFavorites(stationUuid: string) {
   return useQuery({
     queryKey: ['radio', 'is-favorite', stationUuid],

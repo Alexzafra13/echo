@@ -1,4 +1,4 @@
-// Load .env only in development (in production, Docker sets env vars directly)
+// Cargar .env solo en desarrollo
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv/config');
 }
@@ -17,34 +17,28 @@ import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 
 async function bootstrap() {
-  // Configure Fastify to handle BigInt serialization
   const fastifyAdapter = new FastifyAdapter();
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     fastifyAdapter,
-    { bufferLogs: true }, // Buffer logs until Pino logger is ready
+    { bufferLogs: true },
   );
 
-  // Set Pino as the application logger
   const logger = app.get(Logger);
   app.useLogger(logger);
 
-  // Register multipart/form-data support for file uploads
   await app.register(require('@fastify/multipart'), {
     limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB max (covers both avatars 5MB and covers 10MB)
+      fileSize: 10 * 1024 * 1024, // 10MB
     },
   });
 
-  // Compression for JSON responses
-  // In production, compression is handled by the reverse proxy (nginx)
-  // to avoid double-compression.
+  // Compresión solo en desarrollo; en producción la maneja el proxy reverso
   if (process.env.NODE_ENV !== 'production') {
     await app.register(require('@fastify/compress'), {
       encodings: ['gzip', 'deflate'],
-      threshold: 1024, // Only compress responses > 1KB
-      // Skip compression for audio/video/images (already compressed)
+      threshold: 1024,
       customTypes: /^(?!audio\/|video\/|image\/).*$/,
     });
     logger.log('Compression enabled (development mode)');
@@ -52,30 +46,27 @@ async function bootstrap() {
     logger.log('Compression disabled - handled by reverse proxy');
   }
 
-  // Security: Helmet - Protection against common web vulnerabilities
   await app.register(require('@fastify/helmet'), {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], // Allow inline styles and Google Fonts
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         scriptSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'blob:', 'https:'], // Allow external images (radio logos, covers)
-        connectSrc: ["'self'", 'ws:', 'wss:', 'https://ipapi.co'], // WebSocket + geolocation API
-        fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'], // Allow Google Fonts
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        connectSrc: ["'self'", 'ws:', 'wss:', 'https://ipapi.co'],
+        fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
         objectSrc: ["'none'"],
-        mediaSrc: ["'self'", 'blob:', 'http:', 'https:'], // Allow blob URLs + external radio streams (HTTP and HTTPS)
+        mediaSrc: ["'self'", 'blob:', 'http:', 'https:'],
         frameSrc: ["'none'"],
-        upgradeInsecureRequests: null, // Disable HTTPS redirect - allow HTTP for local networks
+        upgradeInsecureRequests: null, // Permitir HTTP en redes locales
       },
     },
-    crossOriginEmbedderPolicy: false, // Disable for audio streaming
-    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow audio streaming across origins
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
-  // WebSocket Adapter
   app.useWebSocketAdapter(new WebSocketAdapter(app));
 
-  // CORS
   app.enableCors({
     origin: appConfig.cors_origins,
     credentials: true,
@@ -83,10 +74,8 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  // API Prefix
   app.setGlobalPrefix(appConfig.api_prefix);
 
-  // Validation Pipe Global
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -95,22 +84,17 @@ async function bootstrap() {
     }),
   );
 
-  // Configure BigInt serialization for JSON responses
-  // Add toJSON method to BigInt prototype so JSON.stringify handles it automatically
-  // This is the standard way to make a type JSON-serializable
-  // @ts-ignore - BigInt doesn't have toJSON in type definitions, but we can add it
+  // Serialización de BigInt para respuestas JSON
+  // @ts-ignore
   BigInt.prototype.toJSON = function() {
     return this.toString();
   };
 
-  // MustChangePassword: Bloquea acceso si usuario debe cambiar contraseña
-  // Usa interceptor en lugar de guard porque los interceptores se ejecutan
-  // DESPUÉS de los guards, garantizando que request.user ya esté poblado.
+  // Interceptor que bloquea acceso si el usuario debe cambiar contraseña
   const reflector = app.get(Reflector);
   app.useGlobalInterceptors(new MustChangePasswordInterceptor(reflector));
 
-  // Swagger Configuration (Development only)
-  // In production, API docs are not needed and we save memory
+  // Swagger solo en desarrollo
   if (process.env.NODE_ENV !== 'production') {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('Echo Music Server API')
@@ -151,8 +135,7 @@ async function bootstrap() {
     logger.log('Swagger documentation enabled at /api/docs');
   }
 
-  // Serve Frontend Static Files (Production)
-  // Single container serves both API and frontend
+  // Servir archivos estáticos del frontend en producción
   const frontendPath = join(__dirname, '..', '..', 'web', 'dist');
   const indexHtmlPath = join(frontendPath, 'index.html');
 
@@ -162,33 +145,25 @@ async function bootstrap() {
     const fastify = app.getHttpAdapter().getInstance();
     const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
 
-    // Register @fastify/static for serving static assets
     await fastify.register(require('@fastify/static'), {
       root: frontendPath,
       prefix: '/',
       decorateReply: false,
     });
 
-    // Use preHandler hook to implement SPA routing
-    // This runs BEFORE NestJS routing, so it can intercept and serve index.html
+    // Fallback SPA: rutas desconocidas devuelven index.html
     fastify.addHook('preHandler', async (request, reply) => {
       const url = request.url;
 
-      // Skip API routes - let NestJS handle them
       if (url.startsWith('/api/')) {
         return;
       }
 
-      // Skip if it's a static file that exists
-      // @fastify/static will handle: /, /assets/*, /vite.svg, etc.
-      // We only want to serve index.html for unknown routes like /login, /albums
       const filePath = join(frontendPath, url === '/' ? 'index.html' : url);
       if (existsSync(filePath)) {
         return;
       }
 
-      // Serve index.html for SPA client-side routing
-      // Add cache-control headers to prevent browser caching issues
       reply
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .header('Pragma', 'no-cache')
@@ -204,17 +179,14 @@ async function bootstrap() {
     logger.warn(`Running in API-only mode (development)`);
   }
 
-  // Start server (this calls app.init() automatically)
   await app.listen(appConfig.port, '0.0.0.0');
 
-  // Auto-detect server IPs for easier access
   const networkInterfaces = require('os').networkInterfaces();
   const networkIPs: string[] = [];
 
   for (const interfaceName in networkInterfaces) {
     const interfaces = networkInterfaces[interfaceName];
     for (const iface of interfaces) {
-      // Skip internal (loopback) and non-IPv4 addresses
       if (iface.family === 'IPv4' && !iface.internal) {
         networkIPs.push(iface.address);
       }
@@ -253,8 +225,8 @@ Node.js: ${process.version}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   `);
 
-  // Graceful shutdown handlers
-  const SHUTDOWN_TIMEOUT = 10000; // 10 seconds
+  // Apagado ordenado
+  const SHUTDOWN_TIMEOUT = 10000;
   let isShuttingDown = false;
 
   const gracefulShutdown = async (signal: string) => {
@@ -266,14 +238,12 @@ Node.js: ${process.version}
 
     logger.log({ signal }, 'Starting graceful shutdown...');
 
-    // Force exit after timeout
     const forceExitTimer = setTimeout(() => {
       logger.error('Graceful shutdown timed out, forcing exit');
       process.exit(1);
     }, SHUTDOWN_TIMEOUT);
 
     try {
-      // Close the NestJS application (triggers OnModuleDestroy hooks)
       await app.close();
       clearTimeout(forceExitTimer);
       logger.log('Application closed successfully');
@@ -285,21 +255,16 @@ Node.js: ${process.version}
     }
   };
 
-  // Handle termination signals
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-  // Handle uncaught exceptions
   process.on('uncaughtException', (error) => {
     logger.error({ error: error.message, stack: error.stack }, 'Uncaught Exception');
     gracefulShutdown('uncaughtException');
   });
 
-  // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
     logger.error({ reason: String(reason) }, 'Unhandled Rejection');
-    // Don't shutdown on unhandled rejection - just log it
-    // This is consistent with Node.js default behavior
   });
 }
 
