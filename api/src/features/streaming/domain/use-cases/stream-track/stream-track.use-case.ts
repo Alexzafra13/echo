@@ -1,6 +1,6 @@
-import { Injectable, Inject, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { NotFoundError } from '@shared/errors';
+import { NotFoundError, ForbiddenError } from '@shared/errors';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { getAudioMimeType } from '@shared/utils';
 import { StreamTrackInput, StreamTrackOutput } from './stream-track.dto';
@@ -29,7 +29,7 @@ export class StreamTrackUseCase {
         { filePath, resolved, dataPath },
         'Path traversal attempt detected - file path outside data directory',
       );
-      throw new ForbiddenException('Invalid file path');
+      throw new ForbiddenError('Invalid file path');
     }
 
     return resolved;
