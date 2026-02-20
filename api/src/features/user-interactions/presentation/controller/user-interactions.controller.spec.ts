@@ -1,0 +1,145 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
+import { UserInteractionsController } from './user-interactions.controller';
+import {
+  SetRatingUseCase,
+  RemoveRatingUseCase,
+  GetUserInteractionsUseCase,
+  GetItemSummaryUseCase,
+} from '../../domain/use-cases';
+
+describe('UserInteractionsController', () => {
+  let controller: UserInteractionsController;
+  let setRatingUseCase: jest.Mocked<SetRatingUseCase>;
+  let removeRatingUseCase: jest.Mocked<RemoveRatingUseCase>;
+  let getUserInteractionsUseCase: jest.Mocked<GetUserInteractionsUseCase>;
+  let getItemSummaryUseCase: jest.Mocked<GetItemSummaryUseCase>;
+
+  const mockUser = { id: 'user-1', username: 'testuser' };
+
+  const mockLogger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [UserInteractionsController],
+      providers: [
+        { provide: SetRatingUseCase, useValue: { execute: jest.fn() } },
+        { provide: RemoveRatingUseCase, useValue: { execute: jest.fn() } },
+        { provide: GetUserInteractionsUseCase, useValue: { execute: jest.fn() } },
+        { provide: GetItemSummaryUseCase, useValue: { execute: jest.fn() } },
+        { provide: getLoggerToken(UserInteractionsController.name), useValue: mockLogger },
+      ],
+    }).compile();
+
+    controller = module.get<UserInteractionsController>(UserInteractionsController);
+    setRatingUseCase = module.get(SetRatingUseCase);
+    removeRatingUseCase = module.get(RemoveRatingUseCase);
+    getUserInteractionsUseCase = module.get(GetUserInteractionsUseCase);
+    getItemSummaryUseCase = module.get(GetItemSummaryUseCase);
+  });
+
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
+
+  describe('setRating', () => {
+    it('should set a rating and return the result', async () => {
+      const mockResult = {
+        userId: 'user-1',
+        itemId: 'track-1',
+        itemType: 'track',
+        rating: 5,
+        createdAt: new Date('2025-01-01'),
+        updatedAt: new Date('2025-01-01'),
+      };
+
+      setRatingUseCase.execute.mockResolvedValue(mockResult as any);
+
+      const dto = { itemId: 'track-1', itemType: 'track', rating: 5 };
+      const req = { user: mockUser } as any;
+
+      const result = await controller.setRating(dto as any, req);
+
+      expect(setRatingUseCase.execute).toHaveBeenCalledWith('user-1', 'track-1', 'track', 5);
+      expect(result.rating).toBe(5);
+      expect(result.itemId).toBe('track-1');
+    });
+  });
+
+  describe('removeRating', () => {
+    it('should remove a rating for an item', async () => {
+      removeRatingUseCase.execute.mockResolvedValue(undefined);
+
+      const req = { user: mockUser } as any;
+
+      await controller.removeRating('track-1', 'track' as any, req);
+
+      expect(removeRatingUseCase.execute).toHaveBeenCalledWith('user-1', 'track-1', 'track');
+    });
+  });
+
+  describe('getUserInteractions', () => {
+    it('should return user interactions', async () => {
+      const mockInteractions = [
+        {
+          userId: 'user-1',
+          itemId: 'track-1',
+          itemType: 'track',
+          rating: 4,
+          ratedAt: new Date('2025-01-01'),
+        },
+      ];
+
+      getUserInteractionsUseCase.execute.mockResolvedValue(mockInteractions as any);
+
+      const req = { user: mockUser } as any;
+      const query = { itemType: 'track' };
+
+      const result = await controller.getUserInteractions(query as any, req);
+
+      expect(getUserInteractionsUseCase.execute).toHaveBeenCalledWith('user-1', 'track');
+      expect(result).toHaveLength(1);
+      expect(result[0].rating).toBe(4);
+    });
+
+    it('should return all interactions when no itemType filter', async () => {
+      getUserInteractionsUseCase.execute.mockResolvedValue([]);
+
+      const req = { user: mockUser } as any;
+      const query = {};
+
+      const result = await controller.getUserInteractions(query as any, req);
+
+      expect(getUserInteractionsUseCase.execute).toHaveBeenCalledWith('user-1', undefined);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getItemSummary', () => {
+    it('should return the rating summary for an item', async () => {
+      const mockSummary = {
+        itemId: 'track-1',
+        itemType: 'track',
+        userRating: 5,
+        averageRating: 4.2,
+        totalRatings: 10,
+      };
+
+      getItemSummaryUseCase.execute.mockResolvedValue(mockSummary as any);
+
+      const req = { user: mockUser } as any;
+
+      const result = await controller.getItemSummary('track-1', 'track' as any, req);
+
+      expect(getItemSummaryUseCase.execute).toHaveBeenCalledWith('track-1', 'track', 'user-1');
+      expect(result.averageRating).toBe(4.2);
+      expect(result.totalRatings).toBe(10);
+      expect(result.userRating).toBe(5);
+    });
+  });
+});

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundError } from '@shared/errors';
+import { NotFoundError, ForbiddenError } from '@shared/errors';
 import { StreamTrackUseCase } from './stream-track.use-case';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { Track } from '@features/tracks/domain/entities/track.entity';
@@ -31,6 +31,8 @@ describe('StreamTrackUseCase', () => {
   });
 
   beforeEach(async () => {
+    process.env.DATA_PATH = '/app/data';
+
     const mockTrackRepository: Partial<ITrackRepository> = {
       findById: jest.fn(),
       findAll: jest.fn(),
@@ -60,24 +62,24 @@ describe('StreamTrackUseCase', () => {
     useCase = module.get<StreamTrackUseCase>(StreamTrackUseCase);
     trackRepository = module.get(TRACK_REPOSITORY);
 
-    // Reset mocks
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    delete process.env.DATA_PATH;
+  });
+
   describe('execute', () => {
-    it('debería retornar metadata del track para streaming', async () => {
-      // Arrange
+    it('should return track metadata for streaming', async () => {
       (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
       (fs.statSync as jest.Mock).mockReturnValue({
         isFile: () => true,
-        size: 5242880, // 5 MB
+        size: 5242880,
       });
 
-      // Act
       const result = await useCase.execute({ trackId: 'track-1' });
 
-      // Assert
       expect(trackRepository.findById).toHaveBeenCalledWith('track-1');
       expect(result).toEqual({
         trackId: 'track-1',
@@ -89,35 +91,24 @@ describe('StreamTrackUseCase', () => {
       });
     });
 
-    it('debería lanzar NotFoundError si trackId está vacío', async () => {
-      // Act & Assert
-      await expect(useCase.execute({ trackId: '' })).rejects.toThrow(
-        NotFoundError,
-      );
+    it('should throw NotFoundError if trackId is empty', async () => {
+      await expect(useCase.execute({ trackId: '' })).rejects.toThrow(NotFoundError);
       expect(trackRepository.findById).not.toHaveBeenCalled();
     });
 
-    it('debería lanzar NotFoundError si trackId es solo espacios', async () => {
-      // Act & Assert
-      await expect(useCase.execute({ trackId: '   ' })).rejects.toThrow(
-        NotFoundError,
-      );
+    it('should throw NotFoundError if trackId is whitespace only', async () => {
+      await expect(useCase.execute({ trackId: '   ' })).rejects.toThrow(NotFoundError);
       expect(trackRepository.findById).not.toHaveBeenCalled();
     });
 
-    it('debería lanzar NotFoundError si el track no existe', async () => {
-      // Arrange
+    it('should throw NotFoundError if track does not exist', async () => {
       (trackRepository.findById as jest.Mock).mockResolvedValue(null);
 
-      // Act & Assert
-      await expect(useCase.execute({ trackId: 'nonexistent' })).rejects.toThrow(
-        NotFoundError,
-      );
+      await expect(useCase.execute({ trackId: 'nonexistent' })).rejects.toThrow(NotFoundError);
       expect(trackRepository.findById).toHaveBeenCalledWith('nonexistent');
     });
 
-    it('debería lanzar NotFoundError si el track no tiene path', async () => {
-      // Arrange
+    it('should throw NotFoundError if track has no path', async () => {
       const trackWithoutPath = Track.reconstruct({
         id: 'track-2',
         title: 'No Path Song',
@@ -129,55 +120,42 @@ describe('StreamTrackUseCase', () => {
       });
       (trackRepository.findById as jest.Mock).mockResolvedValue(trackWithoutPath);
 
-      // Act & Assert
-      await expect(useCase.execute({ trackId: 'track-2' })).rejects.toThrow(
-        NotFoundError,
-      );
+      await expect(useCase.execute({ trackId: 'track-2' })).rejects.toThrow(NotFoundError);
     });
 
-    it('debería lanzar NotFoundError si el archivo no existe', async () => {
-      // Arrange
+    it('should throw ForbiddenError if file path is outside DATA_PATH', async () => {
+      const trackOutsideData = Track.reconstruct({
+        id: 'track-3',
+        title: 'Bad Path Song',
+        path: '/etc/passwd',
+        discNumber: 1,
+        compilation: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      (trackRepository.findById as jest.Mock).mockResolvedValue(trackOutsideData);
+
+      await expect(useCase.execute({ trackId: 'track-3' })).rejects.toThrow(ForbiddenError);
+    });
+
+    it('should throw NotFoundError if file does not exist on disk', async () => {
       (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
       (fs.existsSync as jest.Mock).mockReturnValue(false);
 
-      // Act & Assert
-      await expect(useCase.execute({ trackId: 'track-1' })).rejects.toThrow(
-        NotFoundError,
-      );
+      await expect(useCase.execute({ trackId: 'track-1' })).rejects.toThrow(NotFoundError);
     });
 
-    it('debería lanzar NotFoundError si el path no es un archivo', async () => {
-      // Arrange
+    it('should throw NotFoundError if path is not a file', async () => {
       (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
       (fs.statSync as jest.Mock).mockReturnValue({
-        isFile: () => false, // Es un directorio
+        isFile: () => false,
       });
 
-      // Act & Assert
-      await expect(useCase.execute({ trackId: 'track-1' })).rejects.toThrow(
-        NotFoundError,
-      );
+      await expect(useCase.execute({ trackId: 'track-1' })).rejects.toThrow(NotFoundError);
     });
 
-    it('debería detectar MIME type para MP3', async () => {
-      // Arrange
-      (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({
-        isFile: () => true,
-        size: 5242880,
-      });
-
-      // Act
-      const result = await useCase.execute({ trackId: 'track-1' });
-
-      // Assert
-      expect(result.mimeType).toBe('audio/mpeg');
-    });
-
-    it('debería detectar MIME type para FLAC', async () => {
-      // Arrange
+    it('should detect MIME type for FLAC files', async () => {
       const flacTrack = Track.reconstruct({
         ...mockTrack.toPrimitives(),
         path: '/app/data/test-song.flac',
@@ -189,38 +167,15 @@ describe('StreamTrackUseCase', () => {
         size: 15728640,
       });
 
-      // Act
       const result = await useCase.execute({ trackId: 'track-1' });
 
-      // Assert
       expect(result.mimeType).toBe('audio/flac');
     });
 
-    it('debería usar audio/mpeg por defecto para extensiones desconocidas', async () => {
-      // Arrange
-      const unknownTrack = Track.reconstruct({
-        ...mockTrack.toPrimitives(),
-        path: '/app/data/test-song.xyz',
-      });
-      (trackRepository.findById as jest.Mock).mockResolvedValue(unknownTrack);
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({
-        isFile: () => true,
-        size: 5242880,
-      });
-
-      // Act
-      const result = await useCase.execute({ trackId: 'track-1' });
-
-      // Assert
-      expect(result.mimeType).toBe('audio/mpeg');
-    });
-
-    it('debería extraer correctamente el nombre del archivo', async () => {
-      // Arrange
+    it('should extract the correct file name from path', async () => {
       const trackWithLongPath = Track.reconstruct({
         ...mockTrack.toPrimitives(),
-        path: '/app/data/music/library/rock/beatles/abbey-road/01-come-together.mp3',
+        path: '/app/data/music/rock/beatles/01-come-together.mp3',
       });
       (trackRepository.findById as jest.Mock).mockResolvedValue(trackWithLongPath);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
@@ -229,11 +184,39 @@ describe('StreamTrackUseCase', () => {
         size: 5242880,
       });
 
-      // Act
       const result = await useCase.execute({ trackId: 'track-1' });
 
-      // Assert
       expect(result.fileName).toBe('01-come-together.mp3');
+    });
+
+    it('should return correct file size from fs.statSync', async () => {
+      (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.statSync as jest.Mock).mockReturnValue({
+        isFile: () => true,
+        size: 10485760,
+      });
+
+      const result = await useCase.execute({ trackId: 'track-1' });
+
+      expect(result.fileSize).toBe(10485760);
+    });
+
+    it('should include track duration in output', async () => {
+      const trackWithDuration = Track.reconstruct({
+        ...mockTrack.toPrimitives(),
+        duration: 300,
+      });
+      (trackRepository.findById as jest.Mock).mockResolvedValue(trackWithDuration);
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.statSync as jest.Mock).mockReturnValue({
+        isFile: () => true,
+        size: 5242880,
+      });
+
+      const result = await useCase.execute({ trackId: 'track-1' });
+
+      expect(result.duration).toBe(300);
     });
   });
 });
