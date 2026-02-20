@@ -19,11 +19,9 @@ import { existsSync, readFileSync } from 'fs';
 async function bootstrap() {
   const fastifyAdapter = new FastifyAdapter();
 
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    fastifyAdapter,
-    { bufferLogs: true },
-  );
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, fastifyAdapter, {
+    bufferLogs: true,
+  });
 
   const logger = app.get(Logger);
   app.useLogger(logger);
@@ -82,12 +80,12 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-    }),
+    })
   );
 
   // Serialización de BigInt para respuestas JSON
   // @ts-ignore
-  BigInt.prototype.toJSON = function() {
+  BigInt.prototype.toJSON = function () {
     return this.toString();
   };
 
@@ -101,7 +99,7 @@ async function bootstrap() {
       .setTitle('Echo Music Server API')
       .setDescription(
         'API REST para servidor de música con streaming, gestión de álbumes, artistas y playlists. ' +
-        'Construido con arquitectura hexagonal y NestJS.'
+          'Construido con arquitectura hexagonal y NestJS.'
       )
       .setVersion('1.0.0')
       .addBearerAuth(
@@ -113,7 +111,7 @@ async function bootstrap() {
           description: 'Enter JWT token',
           in: 'header',
         },
-        'JWT-auth',
+        'JWT-auth'
       )
       .addTag('auth', 'Autenticación y autorización')
       .addTag('users', 'Gestión de perfil de usuario')
@@ -206,7 +204,7 @@ Environment: ${isProd ? '🚀 PRODUCTION' : '🔧 DEVELOPMENT'}
 Node.js: ${process.version}
 
 📡 Access URLs:
-   Local:    http://localhost:${appConfig.port}${networkIPs.length > 0 ? `\n   Network:  ${networkIPs.map(ip => `http://${ip}:${appConfig.port}`).join('\n             ')}` : ''}
+   Local:    http://localhost:${appConfig.port}${networkIPs.length > 0 ? `\n   Network:  ${networkIPs.map((ip) => `http://${ip}:${appConfig.port}`).join('\n             ')}` : ''}
 
 📚 API Documentation:
    Swagger:  ${isProd ? '❌ Disabled in production' : `http://localhost:${appConfig.port}/api/docs`}
@@ -251,7 +249,10 @@ Node.js: ${process.version}
       process.exit(0);
     } catch (error) {
       clearTimeout(forceExitTimer);
-      logger.error({ error: error instanceof Error ? error.message : error }, 'Error during graceful shutdown');
+      logger.error(
+        { error: error instanceof Error ? error.message : error },
+        'Error during graceful shutdown'
+      );
       process.exit(1);
     }
   };
@@ -265,7 +266,8 @@ Node.js: ${process.version}
   });
 
   process.on('unhandledRejection', (reason, promise) => {
-    logger.error({ reason: String(reason) }, 'Unhandled Rejection');
+    logger.error({ reason: String(reason) }, 'Unhandled Rejection - initiating shutdown');
+    gracefulShutdown('unhandledRejection');
   });
 }
 

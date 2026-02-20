@@ -27,11 +27,25 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "lighthouse": "lhci autorun",
-    "lighthouse:view": "lhci open"
+    "lighthouse:view": "lhci open",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "api/src/**/*.ts": [
+      "prettier --write"
+    ],
+    "web/src/**/*.{ts,tsx}": [
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
     "concurrently": "^9.2.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.2.5"
   }
 }
