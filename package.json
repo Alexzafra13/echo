@@ -28,7 +28,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "lighthouse": "lhci autorun",
     "lighthouse:view": "lhci open",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "lint-staged": {
     "api/src/**/*.ts": [
