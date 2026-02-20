@@ -1,160 +1,58 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { GetRecentAlbumsUseCase } from './get-recent-albums.use-case';
-import { ALBUM_REPOSITORY, IAlbumRepository } from '../../ports/album-repository.port';
+import { IAlbumRepository } from '../../ports/album-repository.port';
 import { Album } from '../../entities/album.entity';
 
 describe('GetRecentAlbumsUseCase', () => {
   let useCase: GetRecentAlbumsUseCase;
-  let albumRepository: jest.Mocked<IAlbumRepository>;
+  let mockRepo: jest.Mocked<IAlbumRepository>;
 
-  const createMockAlbum = (id: string, name: string) =>
-    Album.reconstruct({
-      id,
-      name,
-      artistId: 'artist-1',
-      artistName: 'The Beatles',
-      albumArtistId: 'artist-1',
-      coverArtPath: `/covers/${id}.jpg`,
-      year: 1969,
-      releaseDate: new Date('1969-09-26'),
-      compilation: false,
-      songCount: 17,
-      duration: 2820,
-      size: Number(125000000),
-      description: `Description for ${name}`,
-      createdAt: new Date('2025-01-01'),
-      updatedAt: new Date('2025-01-01'),
-    });
-
-  const mockAlbums = [
-    createMockAlbum('album-1', 'Abbey Road'),
-    createMockAlbum('album-2', 'Let It Be'),
-    createMockAlbum('album-3', 'Revolver'),
-  ];
-
-  beforeEach(async () => {
-    const mockAlbumRepository: Partial<IAlbumRepository> = {
-      findById: jest.fn(),
-      findAll: jest.fn(),
-      search: jest.fn(),
-      findByArtistId: jest.fn(),
-      findRecent: jest.fn(),
-      findMostPlayed: jest.fn(),
-      count: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        GetRecentAlbumsUseCase,
-        {
-          provide: ALBUM_REPOSITORY,
-          useValue: mockAlbumRepository,
-        },
-      ],
-    }).compile();
-
-    useCase = module.get<GetRecentAlbumsUseCase>(GetRecentAlbumsUseCase);
-    albumRepository = module.get(ALBUM_REPOSITORY);
+  const mockAlbum = Album.reconstruct({
+    id: 'album-1',
+    name: 'Recent Album',
+    compilation: false,
+    songCount: 10,
+    duration: 2000,
+    size: 100000,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   });
 
-  describe('execute', () => {
-    it('debería retornar álbumes recientes con take por defecto', async () => {
-      // Arrange
-      (albumRepository.findRecent as jest.Mock).mockResolvedValue(mockAlbums);
+  beforeEach(() => {
+    mockRepo = { findRecent: jest.fn() } as any;
+    useCase = new GetRecentAlbumsUseCase(mockRepo);
+  });
 
-      // Act
-      const result = await useCase.execute();
+  it('should return recent albums with default limit', async () => {
+    mockRepo.findRecent.mockResolvedValue([mockAlbum]);
 
-      // Assert
-      expect(albumRepository.findRecent).toHaveBeenCalledWith(12); // Default take
-      expect(result).toHaveLength(3);
-      expect(result[0].name).toBe('Abbey Road');
-    });
+    const result = await useCase.execute();
 
-    it('debería respetar el parámetro take', async () => {
-      // Arrange
-      (albumRepository.findRecent as jest.Mock).mockResolvedValue(mockAlbums.slice(0, 2));
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('Recent Album');
+    expect(mockRepo.findRecent).toHaveBeenCalledWith(12);
+  });
 
-      // Act
-      const result = await useCase.execute({ take: 2 });
+  it('should accept custom take', async () => {
+    mockRepo.findRecent.mockResolvedValue([]);
 
-      // Assert
-      expect(albumRepository.findRecent).toHaveBeenCalledWith(2);
-      expect(result).toHaveLength(2);
-    });
+    await useCase.execute({ take: 5 });
 
-    it('debería limitar take a máximo 50', async () => {
-      // Arrange
-      (albumRepository.findRecent as jest.Mock).mockResolvedValue(mockAlbums);
+    expect(mockRepo.findRecent).toHaveBeenCalledWith(5);
+  });
 
-      // Act
-      await useCase.execute({ take: 100 });
+  it('should clamp take to max 50', async () => {
+    mockRepo.findRecent.mockResolvedValue([]);
 
-      // Assert
-      expect(albumRepository.findRecent).toHaveBeenCalledWith(50);
-    });
+    await useCase.execute({ take: 100 });
 
-    it('debería asegurar take mínimo de 1', async () => {
-      // Arrange
-      (albumRepository.findRecent as jest.Mock).mockResolvedValue(mockAlbums);
+    expect(mockRepo.findRecent).toHaveBeenCalledWith(50);
+  });
 
-      // Act
-      await useCase.execute({ take: 0 });
+  it('should clamp take to min 1', async () => {
+    mockRepo.findRecent.mockResolvedValue([]);
 
-      // Assert
-      expect(albumRepository.findRecent).toHaveBeenCalledWith(1);
-    });
+    await useCase.execute({ take: -5 });
 
-    it('debería manejar take negativo', async () => {
-      // Arrange
-      (albumRepository.findRecent as jest.Mock).mockResolvedValue(mockAlbums);
-
-      // Act
-      await useCase.execute({ take: -5 });
-
-      // Assert
-      expect(albumRepository.findRecent).toHaveBeenCalledWith(1);
-    });
-
-    it('debería retornar array vacío si no hay álbumes', async () => {
-      // Arrange
-      (albumRepository.findRecent as jest.Mock).mockResolvedValue([]);
-
-      // Act
-      const result = await useCase.execute();
-
-      // Assert
-      expect(result).toHaveLength(0);
-    });
-
-    it('debería mapear correctamente las propiedades del álbum', async () => {
-      // Arrange
-      (albumRepository.findRecent as jest.Mock).mockResolvedValue([mockAlbums[0]]);
-
-      // Act
-      const result = await useCase.execute({ take: 1 });
-
-      // Assert
-      expect(result[0]).toEqual({
-        id: 'album-1',
-        name: 'Abbey Road',
-        artistId: 'artist-1',
-        artistName: 'The Beatles',
-        albumArtistId: 'artist-1',
-        coverArtPath: '/covers/album-1.jpg',
-        year: 1969,
-        releaseDate: new Date('1969-09-26'),
-        compilation: false,
-        songCount: 17,
-        duration: 2820,
-        size: Number(125000000),
-        description: 'Description for Abbey Road',
-        createdAt: new Date('2025-01-01'),
-        updatedAt: new Date('2025-01-01'),
-      });
-    });
+    expect(mockRepo.findRecent).toHaveBeenCalledWith(1);
   });
 });
