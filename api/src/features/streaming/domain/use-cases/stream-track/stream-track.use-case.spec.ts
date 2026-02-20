@@ -22,7 +22,7 @@ describe('StreamTrackUseCase', () => {
   const mockTrack = Track.reconstruct({
     id: 'track-1',
     title: 'Test Song',
-    path: '/music/test-song.mp3',
+    path: '/app/data/test-song.mp3',
     duration: 180,
     discNumber: 1,
     compilation: false,
@@ -81,7 +81,7 @@ describe('StreamTrackUseCase', () => {
       expect(trackRepository.findById).toHaveBeenCalledWith('track-1');
       expect(result).toEqual({
         trackId: 'track-1',
-        filePath: '/music/test-song.mp3',
+        filePath: '/app/data/test-song.mp3',
         fileName: 'test-song.mp3',
         fileSize: 5242880,
         mimeType: 'audio/mpeg',
@@ -180,7 +180,7 @@ describe('StreamTrackUseCase', () => {
       // Arrange
       const flacTrack = Track.reconstruct({
         ...mockTrack.toPrimitives(),
-        path: '/music/test-song.flac',
+        path: '/app/data/test-song.flac',
       });
       (trackRepository.findById as jest.Mock).mockResolvedValue(flacTrack);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
@@ -200,7 +200,7 @@ describe('StreamTrackUseCase', () => {
       // Arrange
       const unknownTrack = Track.reconstruct({
         ...mockTrack.toPrimitives(),
-        path: '/music/test-song.xyz',
+        path: '/app/data/test-song.xyz',
       });
       (trackRepository.findById as jest.Mock).mockResolvedValue(unknownTrack);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
@@ -220,7 +220,7 @@ describe('StreamTrackUseCase', () => {
       // Arrange
       const trackWithLongPath = Track.reconstruct({
         ...mockTrack.toPrimitives(),
-        path: '/var/music/library/rock/beatles/abbey-road/01-come-together.mp3',
+        path: '/app/data/music/library/rock/beatles/abbey-road/01-come-together.mp3',
       });
       (trackRepository.findById as jest.Mock).mockResolvedValue(trackWithLongPath);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
