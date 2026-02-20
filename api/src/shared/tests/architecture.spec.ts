@@ -58,27 +58,40 @@ describe('Hexagonal Architecture Compliance', () => {
     return imports;
   }
 
+  function getDomainFiles(): Array<{ file: string; relativePath: string; content: string }> {
+    const features = fs.readdirSync(featuresPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name);
+
+    const domainFiles: Array<{ file: string; relativePath: string; content: string }> = [];
+
+    for (const feature of features) {
+      const domainPath = path.join(featuresPath, feature, 'domain');
+      const files = getTypeScriptFiles(domainPath);
+
+      for (const file of files) {
+        domainFiles.push({
+          file,
+          relativePath: path.relative(featuresPath, file),
+          content: fs.readFileSync(file, 'utf-8'),
+        });
+      }
+    }
+
+    return domainFiles;
+  }
+
   describe('Domain Layer Isolation', () => {
     it('domain layer should NOT import from infrastructure layer', () => {
-      const features = fs.readdirSync(featuresPath, { withFileTypes: true })
-        .filter(d => d.isDirectory())
-        .map(d => d.name);
-
+      const domainFiles = getDomainFiles();
       const violations: string[] = [];
 
-      for (const feature of features) {
-        const domainPath = path.join(featuresPath, feature, 'domain');
-        const domainFiles = getTypeScriptFiles(domainPath);
+      for (const { file, relativePath } of domainFiles) {
+        const imports = getImports(file);
 
-        for (const file of domainFiles) {
-          const imports = getImports(file);
-          const relativePath = path.relative(featuresPath, file);
-
-          for (const imp of imports) {
-            // Detectar imports de infrastructure
-            if (imp.includes('/infrastructure/') || imp.includes('../infrastructure')) {
-              violations.push(`${relativePath} imports from infrastructure: ${imp}`);
-            }
+        for (const imp of imports) {
+          if (imp.includes('/infrastructure/') || imp.includes('../infrastructure')) {
+            violations.push(`${relativePath} imports from infrastructure: ${imp}`);
           }
         }
       }
@@ -87,10 +100,7 @@ describe('Hexagonal Architecture Compliance', () => {
     });
 
     it('domain layer should NOT import NestJS HTTP exceptions', () => {
-      const features = fs.readdirSync(featuresPath, { withFileTypes: true })
-        .filter(d => d.isDirectory())
-        .map(d => d.name);
-
+      const domainFiles = getDomainFiles();
       const violations: string[] = [];
       const forbiddenExceptions = [
         'NotFoundException',
@@ -99,20 +109,15 @@ describe('Hexagonal Architecture Compliance', () => {
         'ForbiddenException',
         'ConflictException',
         'InternalServerErrorException',
+        'HttpException',
       ];
 
-      for (const feature of features) {
-        const domainPath = path.join(featuresPath, feature, 'domain');
-        const domainFiles = getTypeScriptFiles(domainPath);
-
-        for (const file of domainFiles) {
-          const content = fs.readFileSync(file, 'utf-8');
-          const relativePath = path.relative(featuresPath, file);
-
-          for (const exception of forbiddenExceptions) {
-            if (content.includes(exception)) {
-              violations.push(`${relativePath} uses ${exception}`);
-            }
+      for (const { relativePath, content } of domainFiles) {
+        for (const exception of forbiddenExceptions) {
+          // Match as whole word to avoid false positives
+          const regex = new RegExp(`\\b${exception}\\b`);
+          if (regex.test(content)) {
+            violations.push(`${relativePath} uses ${exception}`);
           }
         }
       }
@@ -121,23 +126,12 @@ describe('Hexagonal Architecture Compliance', () => {
     });
 
     it('domain layer should NOT contain NestJS guards (CanActivate)', () => {
-      const features = fs.readdirSync(featuresPath, { withFileTypes: true })
-        .filter(d => d.isDirectory())
-        .map(d => d.name);
-
+      const domainFiles = getDomainFiles();
       const violations: string[] = [];
 
-      for (const feature of features) {
-        const domainPath = path.join(featuresPath, feature, 'domain');
-        const domainFiles = getTypeScriptFiles(domainPath);
-
-        for (const file of domainFiles) {
-          const content = fs.readFileSync(file, 'utf-8');
-          const relativePath = path.relative(featuresPath, file);
-
-          if (content.includes('CanActivate') || content.includes('ExecutionContext')) {
-            violations.push(`${relativePath} contains NestJS guard interfaces`);
-          }
+      for (const { relativePath, content } of domainFiles) {
+        if (/\bCanActivate\b/.test(content) || /\bExecutionContext\b/.test(content)) {
+          violations.push(`${relativePath} contains NestJS guard interfaces`);
         }
       }
 
@@ -145,23 +139,54 @@ describe('Hexagonal Architecture Compliance', () => {
     });
 
     it('domain layer should NOT make direct HTTP calls (fetch/axios)', () => {
-      const features = fs.readdirSync(featuresPath, { withFileTypes: true })
-        .filter(d => d.isDirectory())
-        .map(d => d.name);
-
+      const domainFiles = getDomainFiles();
       const violations: string[] = [];
 
-      for (const feature of features) {
-        const domainPath = path.join(featuresPath, feature, 'domain');
-        const domainFiles = getTypeScriptFiles(domainPath);
+      for (const { relativePath, content } of domainFiles) {
+        if (/\bfetch\s*\(/.test(content) || /\bawait\s+fetch\b/.test(content) || /\baxios\b/.test(content)) {
+          violations.push(`${relativePath} makes direct HTTP calls`);
+        }
+      }
 
-        for (const file of domainFiles) {
-          const content = fs.readFileSync(file, 'utf-8');
-          const relativePath = path.relative(featuresPath, file);
+      expect(violations).toEqual([]);
+    });
 
-          // Buscar llamadas fetch o axios
-          if (/\bfetch\s*\(/.test(content) || /\baxios\b/.test(content)) {
-            violations.push(`${relativePath} makes direct HTTP calls`);
+    it('domain layer should NOT import from presentation layer', () => {
+      const domainFiles = getDomainFiles();
+      const violations: string[] = [];
+
+      for (const { file, relativePath } of domainFiles) {
+        const imports = getImports(file);
+
+        for (const imp of imports) {
+          if (imp.includes('/presentation/') || imp.includes('../presentation')) {
+            violations.push(`${relativePath} imports from presentation: ${imp}`);
+          }
+        }
+      }
+
+      expect(violations).toEqual([]);
+    });
+
+    it('domain layer should NOT use NestJS decorators for controllers/guards', () => {
+      const domainFiles = getDomainFiles();
+      const violations: string[] = [];
+      const forbiddenDecorators = [
+        '@Controller',
+        '@Get',
+        '@Post',
+        '@Put',
+        '@Patch',
+        '@Delete',
+        '@UseGuards',
+        '@UseInterceptors',
+      ];
+
+      for (const { relativePath, content } of domainFiles) {
+        for (const decorator of forbiddenDecorators) {
+          const regex = new RegExp(`${decorator.replace('@', '@')}\\s*\\(`);
+          if (regex.test(content)) {
+            violations.push(`${relativePath} uses ${decorator}`);
           }
         }
       }
@@ -172,8 +197,6 @@ describe('Hexagonal Architecture Compliance', () => {
 
   describe('Dependency Direction', () => {
     it('infrastructure should depend on domain (not vice versa)', () => {
-      // Este test verifica que la infraestructura importa del dominio,
-      // lo cual es correcto (dependencia hacia adentro)
       const features = fs.readdirSync(featuresPath, { withFileTypes: true })
         .filter(d => d.isDirectory())
         .map(d => d.name);
@@ -196,8 +219,34 @@ describe('Hexagonal Architecture Compliance', () => {
         }
       }
 
-      // Esto debería ser true en una arquitectura hexagonal correcta
       expect(infrastructureImportsDomain).toBe(true);
+    });
+
+    it('presentation should NOT import directly from infrastructure persistence', () => {
+      const features = fs.readdirSync(featuresPath, { withFileTypes: true })
+        .filter(d => d.isDirectory())
+        .map(d => d.name);
+
+      const violations: string[] = [];
+
+      for (const feature of features) {
+        const presentationPath = path.join(featuresPath, feature, 'presentation');
+        const presentationFiles = getTypeScriptFiles(presentationPath);
+
+        for (const file of presentationFiles) {
+          const imports = getImports(file);
+          const relativePath = path.relative(featuresPath, file);
+
+          for (const imp of imports) {
+            // Presentation should never import repositories directly
+            if (imp.includes('/infrastructure/persistence/')) {
+              violations.push(`${relativePath} imports persistence directly: ${imp}`);
+            }
+          }
+        }
+      }
+
+      expect(violations).toEqual([]);
     });
   });
 
@@ -220,17 +269,13 @@ describe('Hexagonal Architecture Compliance', () => {
         for (const repoFile of repoFiles) {
           const content = fs.readFileSync(path.join(infraPath, repoFile), 'utf-8');
 
-          // Verificar que implementa una interfaz I*Repository
-          if (!content.includes('implements I') && !content.includes('implements ')) {
+          if (!/implements\s+I\w+Repository/.test(content)) {
             repositoriesWithoutPort.push(`${feature}/${repoFile}`);
           }
         }
       }
 
-      // Solo advertencia, no fallo
-      if (repositoriesWithoutPort.length > 0) {
-        console.warn(`Repositories without explicit port implementation:\n${repositoriesWithoutPort.join('\n')}`);
-      }
+      expect(repositoriesWithoutPort).toEqual([]);
     });
   });
 });
