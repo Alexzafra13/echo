@@ -39,10 +39,6 @@ describe('ArtistBannersManagementController', () => {
     );
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('listBanners', () => {
     it('should call manageBanners.list with the correct artistId', async () => {
       const artistId = '550e8400-e29b-41d4-a716-446655440000';

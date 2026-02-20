@@ -36,10 +36,6 @@ describe('LogCleanupService', () => {
     service = module.get<LogCleanupService>(LogCleanupService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('handleCleanup', () => {
     it('debería ejecutar limpieza y loguear resultado cuando hay logs eliminados', async () => {
       // Arrange

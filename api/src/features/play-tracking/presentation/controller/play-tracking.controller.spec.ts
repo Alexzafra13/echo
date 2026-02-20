@@ -55,10 +55,6 @@ describe('PlayTrackingController', () => {
     updatePlaybackStateUseCase = module.get(UpdatePlaybackStateUseCase);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('recordPlay', () => {
     it('should record a play event and return the response', async () => {
       const mockPlayEvent = {

@@ -105,13 +105,10 @@ jobs:
           done
 
       # Unit tests: Fast, use mocks, NO DB connection needed
-      # Run with coverage to track test quality
+      # Coverage thresholds are enforced in jest-unit.config.js
       - name: Run unit tests with coverage
         working-directory: api
         run: pnpm test:unit --coverage --coverageReporters=text --coverageReporters=lcov
-        env:
-          # Coverage thresholds (fail if below these)
-          JEST_COVERAGE_THRESHOLD: '{"global":{"branches":60,"functions":60,"lines":60,"statements":60}}'
 
       # Integration tests: Test real DB/Redis operations
       - name: Run integration tests

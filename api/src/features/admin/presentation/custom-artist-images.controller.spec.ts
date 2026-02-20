@@ -70,10 +70,6 @@ describe('CustomArtistImagesController', () => {
     applyCustomImage = module.get(ApplyCustomArtistImageUseCase);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('listImages', () => {
     it('should call listCustomImages.execute with artistId', async () => {
       const artistId = 'artist-123';

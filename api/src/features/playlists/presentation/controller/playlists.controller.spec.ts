@@ -98,10 +98,6 @@ describe('PlaylistsController', () => {
     reorderPlaylistTracksUseCase = module.get(ReorderPlaylistTracksUseCase);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('createPlaylist', () => {
     it('debería crear una nueva playlist', async () => {
       // Arrange

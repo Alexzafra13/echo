@@ -81,10 +81,6 @@ describe('RadioController', () => {
     deleteFavoriteUseCase = module.get(DeleteFavoriteStationUseCase);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('searchStations', () => {
     it('should search stations with query params', async () => {
       const mockStations = [

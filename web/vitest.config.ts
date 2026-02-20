@@ -14,6 +14,23 @@ export default defineConfig({
         classNameStrategy: 'non-scoped',
       },
     },
+    coverage: {
+      provider: 'v8',
+      exclude: [
+        'node_modules/**',
+        'e2e/**',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/index.ts',
+        'src/main.tsx',
+      ],
+      thresholds: {
+        branches: 30,
+        functions: 30,
+        lines: 35,
+        statements: 35,
+      },
+    },
   },
   resolve: {
     alias: {

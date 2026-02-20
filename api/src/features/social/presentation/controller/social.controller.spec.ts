@@ -66,10 +66,6 @@ describe('SocialController', () => {
     searchUsersUseCase = module.get(SearchUsersUseCase);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('getSocialOverview', () => {
     it('should return the social overview with all sections', async () => {
       const mockFriend = {
@@ -144,7 +140,12 @@ describe('SocialController', () => {
       const result = await controller.sendFriendRequest(req, dto as any);
 
       expect(sendFriendRequestUseCase.execute).toHaveBeenCalledWith('user-1', 'user-2');
-      expect(result).toBeDefined();
+      expect(result).toMatchObject({
+        id: 'fs-1',
+        requesterId: 'user-1',
+        addresseeId: 'user-2',
+        status: 'pending',
+      });
     });
   });
 
@@ -167,7 +168,12 @@ describe('SocialController', () => {
       const result = await controller.acceptFriendRequest(req, params as any);
 
       expect(acceptFriendRequestUseCase.execute).toHaveBeenCalledWith('fs-1', 'user-1');
-      expect(result).toBeDefined();
+      expect(result).toMatchObject({
+        id: 'fs-1',
+        requesterId: 'user-2',
+        addresseeId: 'user-1',
+        status: 'accepted',
+      });
     });
   });
 

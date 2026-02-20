@@ -84,10 +84,6 @@ describe('WaveMixSchedulerService', () => {
     service = module.get<WaveMixSchedulerService>(WaveMixSchedulerService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('onModuleInit', () => {
     it('debería registrar el procesador y programar la regeneración diaria', async () => {
       // Act

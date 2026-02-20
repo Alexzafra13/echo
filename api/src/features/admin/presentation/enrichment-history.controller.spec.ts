@@ -54,10 +54,6 @@ describe('EnrichmentHistoryController', () => {
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('listEnrichmentLogs', () => {
     it('should pass query params to use case and call fromDomain', async () => {
       const query = {

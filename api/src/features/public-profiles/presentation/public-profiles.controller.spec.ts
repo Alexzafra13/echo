@@ -33,10 +33,6 @@ describe('PublicProfilesController', () => {
     controller = module.get<PublicProfilesController>(PublicProfilesController);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('getPublicProfile', () => {
     it('should call getPublicProfileUseCase.execute with correct parameters', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000';

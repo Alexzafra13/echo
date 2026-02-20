@@ -70,10 +70,6 @@ describe('CustomAlbumCoversController', () => {
     applyCustomCover = module.get(ApplyCustomAlbumCoverUseCase);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('listCovers', () => {
     it('should call listCustomCovers.execute with albumId', async () => {
       const albumId = 'album-123';

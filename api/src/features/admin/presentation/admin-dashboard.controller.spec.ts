@@ -40,10 +40,6 @@ describe('AdminDashboardController', () => {
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('getDashboardStats', () => {
     it('should call execute and fromDomain', async () => {
       const mockResult = {

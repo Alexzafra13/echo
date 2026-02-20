@@ -337,8 +337,16 @@ describe('LogsController', () => {
         endDate: undefined,
       });
       expect(result.totalLogs).toBe(1000);
-      expect(result.byLevel).toBeDefined();
-      expect(result.byCategory).toBeDefined();
+      expect(result.byLevel).toEqual({
+        [LogLevel.CRITICAL]: 5,
+        [LogLevel.ERROR]: 50,
+        [LogLevel.WARNING]: 200,
+      });
+      expect(result.byCategory).toEqual({
+        [LogCategory.AUTH]: 100,
+        [LogCategory.SCANNER]: 300,
+        [LogCategory.DATABASE]: 50,
+      });
     });
 
     it('debería filtrar estadísticas por rango de fechas', async () => {
@@ -391,8 +399,6 @@ describe('LogsController', () => {
       const result = controller.getCategories();
 
       // Assert
-      expect(result.categories).toBeDefined();
-      expect(Array.isArray(result.categories)).toBe(true);
       expect(result.categories).toContain(LogCategory.AUTH);
       expect(result.categories).toContain(LogCategory.SCANNER);
       expect(result.categories).toContain(LogCategory.DATABASE);
@@ -418,8 +424,6 @@ describe('LogsController', () => {
       const result = controller.getLevels();
 
       // Assert
-      expect(result.levels).toBeDefined();
-      expect(Array.isArray(result.levels)).toBe(true);
       expect(result.levels).toContain(LogLevel.CRITICAL);
       expect(result.levels).toContain(LogLevel.ERROR);
       expect(result.levels).toContain(LogLevel.WARNING);

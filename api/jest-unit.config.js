@@ -16,11 +16,11 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
 
-  // Excluir tests de integración (están en test/integration/)
+  // Excluir tests de integración y E2E
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/integration/',
-    '/e2e/',
+    '\\.integration-spec\\.ts$',
+    '\\.e2e-spec\\.ts$',
   ],
 
   // NO cargamos setup de BD - los unit tests usan mocks
@@ -37,6 +37,35 @@ module.exports = {
     '!**/*.d.ts',
   ],
   coverageDirectory: '../coverage/unit',
+
+  // Coverage thresholds - fail if below these values
+  coverageThreshold: {
+    global: {
+      branches: 40,
+      functions: 40,
+      lines: 45,
+      statements: 45,
+    },
+    // Critical modules require higher coverage
+    './shared/guards/*.ts': {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+    './features/auth/**/*.ts': {
+      branches: 60,
+      functions: 60,
+      lines: 60,
+      statements: 60,
+    },
+    './features/health/**/*.ts': {
+      branches: 60,
+      functions: 60,
+      lines: 60,
+      statements: 60,
+    },
+  },
 
   // Configuración de transform
   transform: {
@@ -63,6 +92,7 @@ module.exports = {
     '^@shared/(.*)$': '<rootDir>/shared/$1',
     '^@infrastructure/(.*)$': '<rootDir>/infrastructure/$1',
     '^@features/(.*)$': '<rootDir>/features/$1',
+    '^@test/(.*)$': '<rootDir>/../test/$1',
     '^test/(.*)$': '<rootDir>/../test/$1',
     // Mock for music-metadata (pure ES module)
     '^music-metadata$': '<rootDir>/../test/__mocks__/music-metadata.ts',

@@ -61,10 +61,6 @@ describe('RecommendationsController', () => {
     trackRepository = module.get(TRACK_REPOSITORY);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('calculateScore', () => {
     it('should calculate track score and return the result', async () => {
       const mockScore = {

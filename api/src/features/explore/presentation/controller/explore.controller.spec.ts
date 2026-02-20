@@ -39,10 +39,6 @@ describe('ExploreController', () => {
     exploreService = module.get(ExploreService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('getUnplayedAlbums', () => {
     it('should return unplayed albums for the user', async () => {
       const mockResult = {

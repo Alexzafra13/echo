@@ -43,10 +43,6 @@ describe('IcyMetadataService', () => {
     service.onModuleDestroy();
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('parseMetadata', () => {
     // Access private method for testing
     const callParseMetadata = (

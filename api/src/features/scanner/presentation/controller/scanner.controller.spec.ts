@@ -63,10 +63,6 @@ describe('ScannerController', () => {
     libraryCleanup = module.get(LibraryCleanupService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('startScan', () => {
     it('should start a scan and return the result', async () => {
       const mockResult = {

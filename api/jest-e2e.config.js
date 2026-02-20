@@ -1,3 +1,13 @@
+/**
+ * Jest config for E2E tests
+ *
+ * These tests start the FULL NestJS application and make
+ * real HTTP requests via supertest. They require:
+ * - PostgreSQL database
+ * - Redis cache
+ *
+ * Run with: pnpm test:e2e
+ */
 module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
@@ -33,6 +43,7 @@ module.exports = {
     '^@shared/(.*)$': '<rootDir>/src/shared/$1',
     '^@infrastructure/(.*)$': '<rootDir>/src/infrastructure/$1',
     '^@features/(.*)$': '<rootDir>/src/features/$1',
+    '^@test/(.*)$': '<rootDir>/test/$1',
     '^test/(.*)$': '<rootDir>/test/$1',
     // Mock ESM modules that Jest can't handle
     '^music-metadata$': '<rootDir>/test/__mocks__/music-metadata.ts',

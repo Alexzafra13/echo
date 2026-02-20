@@ -43,10 +43,6 @@ describe('UserInteractionsController', () => {
     getItemSummaryUseCase = module.get(GetItemSummaryUseCase);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('setRating', () => {
     it('should set a rating and return the result', async () => {
       const mockResult = {
