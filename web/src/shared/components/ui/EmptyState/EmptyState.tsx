@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { Button } from '../Button';
+import Button from '../Button';
 import styles from './EmptyState.module.css';
 
 export interface EmptyStateProps {
