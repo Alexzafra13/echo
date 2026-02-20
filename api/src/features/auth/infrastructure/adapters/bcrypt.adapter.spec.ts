@@ -1,88 +1,69 @@
-// Mock PRIMERO, antes de cualquier import
 jest.mock('bcrypt');
 
-// Luego importar
 import * as bcrypt from 'bcrypt';
-import { IPasswordService } from '../../domain/ports/password-service.port';
+import { BcryptAdapter } from './bcrypt.adapter';
 
 describe('BcryptAdapter', () => {
-  let adapter: IPasswordService;
+  let adapter: BcryptAdapter;
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Crear una instancia manual sin NestJS
-    adapter = {
-      hash: async (password: string) => {
-        return bcrypt.hash(password, 12) as Promise<string>;
-      },
-      compare: async (password: string, hash: string) => {
-        return bcrypt.compare(password, hash) as Promise<boolean>;
-      },
-    };
+    adapter = new BcryptAdapter();
   });
 
   describe('hash', () => {
-    it('debería hashear una contraseña', async () => {
-      // Arrange
-      const password = 'Pass123!';
+    it('should hash a password with 12 rounds', async () => {
       const hashedPassword = '$2b$12$hashed_password_123';
       (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
 
-      // Act
-      const result = await adapter.hash(password);
+      const result = await adapter.hash('MyPassword123!');
 
-      // Assert
       expect(result).toBe(hashedPassword);
-      expect(bcrypt.hash).toHaveBeenCalledWith(password, 12);
+      expect(bcrypt.hash).toHaveBeenCalledWith('MyPassword123!', 12);
     });
 
-    it('debería usar el número correcto de rounds', async () => {
-      // Arrange
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
+    it('should return different hashes for different passwords', async () => {
+      (bcrypt.hash as jest.Mock)
+        .mockResolvedValueOnce('$2b$12$hash_a')
+        .mockResolvedValueOnce('$2b$12$hash_b');
 
-      // Act
-      await adapter.hash('Pass123!');
+      const hashA = await adapter.hash('passwordA');
+      const hashB = await adapter.hash('passwordB');
 
-      // Assert
-      expect(bcrypt.hash).toHaveBeenCalledWith('Pass123!', 12);
+      expect(hashA).not.toBe(hashB);
+    });
+
+    it('should propagate bcrypt errors', async () => {
+      (bcrypt.hash as jest.Mock).mockRejectedValue(new Error('Hash error'));
+
+      await expect(adapter.hash('password')).rejects.toThrow('Hash error');
     });
   });
 
   describe('compare', () => {
-    it('debería retornar true si passwords coinciden', async () => {
-      // Arrange
+    it('should return true when passwords match', async () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-      // Act
-      const result = await adapter.compare('Pass123!', '$2b$12$hashed');
+      const result = await adapter.compare('MyPassword123!', '$2b$12$hashed');
 
-      // Assert
       expect(result).toBe(true);
-      expect(bcrypt.compare).toHaveBeenCalledWith('Pass123!', '$2b$12$hashed');
+      expect(bcrypt.compare).toHaveBeenCalledWith('MyPassword123!', '$2b$12$hashed');
     });
 
-    it('debería retornar false si passwords no coinciden', async () => {
-      // Arrange
+    it('should return false when passwords do not match', async () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      // Act
-      const result = await adapter.compare('Wrong123!', '$2b$12$hashed');
+      const result = await adapter.compare('WrongPassword!', '$2b$12$hashed');
 
-      // Assert
       expect(result).toBe(false);
     });
 
-    it('debería manejar errores de bcrypt', async () => {
-      // Arrange
-      (bcrypt.compare as jest.Mock).mockRejectedValue(
-        new Error('Bcrypt error'),
-      );
+    it('should propagate bcrypt errors', async () => {
+      (bcrypt.compare as jest.Mock).mockRejectedValue(new Error('Compare error'));
 
-      // Act & Assert
       await expect(
-        adapter.compare('Pass123!', 'invalid_hash'),
-      ).rejects.toThrow('Bcrypt error');
+        adapter.compare('password', 'invalid_hash'),
+      ).rejects.toThrow('Compare error');
     });
   });
 });

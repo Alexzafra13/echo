@@ -1,137 +1,253 @@
-/**
- * RedisService Unit Tests
- *
- * Note: Full integration tests with real Redis should be in redis.integration-spec.ts
- * These unit tests focus on the service's logic without needing a real Redis connection.
- */
+import { RedisService } from './redis.service';
+
+// Mock ioredis
+const mockRedis = {
+  get: jest.fn(),
+  set: jest.fn(),
+  setex: jest.fn(),
+  del: jest.fn(),
+  scan: jest.fn(),
+  flushdb: jest.fn(),
+  ping: jest.fn(),
+  quit: jest.fn(),
+  on: jest.fn(),
+  status: 'ready',
+};
+
+jest.mock('ioredis', () => ({
+  Redis: jest.fn(() => mockRedis),
+}));
+
+jest.mock('@config/cache.config', () => ({
+  cacheConfig: {
+    redis_host: 'localhost',
+    redis_port: 6379,
+    redis_password: '',
+  },
+}));
 
 describe('RedisService', () => {
-  describe('JSON serialization logic', () => {
-    it('should serialize objects to JSON strings', () => {
-      const data = { name: 'test', value: 123 };
-      const serialized = JSON.stringify(data);
+  let service: RedisService;
 
-      expect(serialized).toBe('{"name":"test","value":123}');
+  const mockLogger = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    mockRedis.status = 'ready';
+
+    service = new (RedisService as any)(mockLogger);
+    await service.onModuleInit();
+  });
+
+  describe('onModuleInit', () => {
+    it('should register event handlers on init', async () => {
+      expect(mockRedis.on).toHaveBeenCalledWith('connect', expect.any(Function));
+      expect(mockRedis.on).toHaveBeenCalledWith('ready', expect.any(Function));
+      expect(mockRedis.on).toHaveBeenCalledWith('error', expect.any(Function));
+      expect(mockRedis.on).toHaveBeenCalledWith('close', expect.any(Function));
+      expect(mockRedis.on).toHaveBeenCalledWith('reconnecting', expect.any(Function));
+    });
+  });
+
+  describe('connected', () => {
+    it('should return false initially (no connect event fired)', () => {
+      expect(service.connected).toBe(false);
     });
 
-    it('should deserialize JSON strings to objects', () => {
-      const json = '{"name":"test","value":123}';
-      const parsed = JSON.parse(json);
+    it('should return false when redis status is not ready', () => {
+      mockRedis.status = 'connecting';
+      expect(service.connected).toBe(false);
+    });
+  });
 
-      expect(parsed).toEqual({ name: 'test', value: 123 });
+  describe('onModuleDestroy', () => {
+    it('should call redis.quit()', async () => {
+      await service.onModuleDestroy();
+      expect(mockRedis.quit).toHaveBeenCalled();
+    });
+  });
+
+  describe('get', () => {
+    it('should return parsed JSON for existing key', async () => {
+      mockRedis.get.mockResolvedValue('{"name":"test","value":42}');
+
+      const result = await service.get('my-key');
+
+      expect(result).toEqual({ name: 'test', value: 42 });
+      expect(mockRedis.get).toHaveBeenCalledWith('my-key');
     });
 
-    it('should handle arrays', () => {
-      const data = [1, 2, 3, 'test'];
-      const serialized = JSON.stringify(data);
-      const parsed = JSON.parse(serialized);
+    it('should return null for non-existing key', async () => {
+      mockRedis.get.mockResolvedValue(null);
 
-      expect(parsed).toEqual(data);
-    });
-
-    it('should handle nested objects', () => {
-      const data = {
-        nested: { deep: { value: 42 } },
-        array: [1, 2, 3],
-      };
-      const serialized = JSON.stringify(data);
-      const parsed = JSON.parse(serialized);
-
-      expect(parsed).toEqual(data);
-    });
-
-    it('should return null for null input', () => {
-      const data = null;
-      const result = data ? JSON.parse(data) : null;
+      const result = await service.get('missing-key');
 
       expect(result).toBeNull();
     });
-  });
 
-  describe('batch deletion logic', () => {
-    it('should split keys into batches of 100', () => {
-      const keys = Array.from({ length: 250 }, (_, i) => `key:${i}`);
-      const batchSize = 100;
-      const batches: string[][] = [];
+    it('should return null and log warning on error', async () => {
+      mockRedis.get.mockRejectedValue(new Error('Connection refused'));
 
-      for (let i = 0; i < keys.length; i += batchSize) {
-        batches.push(keys.slice(i, i + batchSize));
-      }
+      const result = await service.get('broken-key');
 
-      expect(batches).toHaveLength(3);
-      expect(batches[0]).toHaveLength(100);
-      expect(batches[1]).toHaveLength(100);
-      expect(batches[2]).toHaveLength(50);
+      expect(result).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        { key: 'broken-key', error: 'Connection refused' },
+        'Redis get failed',
+      );
     });
 
-    it('should not create batches for empty array', () => {
-      const keys: string[] = [];
-      const batchSize = 100;
-      const batches: string[][] = [];
+    it('should handle arrays', async () => {
+      mockRedis.get.mockResolvedValue('[1,2,3]');
 
-      for (let i = 0; i < keys.length; i += batchSize) {
-        batches.push(keys.slice(i, i + batchSize));
-      }
+      const result = await service.get('array-key');
 
-      expect(batches).toHaveLength(0);
-    });
-
-    it('should create single batch for small arrays', () => {
-      const keys = ['key:1', 'key:2', 'key:3'];
-      const batchSize = 100;
-      const batches: string[][] = [];
-
-      for (let i = 0; i < keys.length; i += batchSize) {
-        batches.push(keys.slice(i, i + batchSize));
-      }
-
-      expect(batches).toHaveLength(1);
-      expect(batches[0]).toEqual(keys);
+      expect(result).toEqual([1, 2, 3]);
     });
   });
 
-  describe('TTL handling', () => {
-    it('should use setex when TTL is provided', () => {
-      const ttl = 300;
-      const shouldUseSetex = ttl !== undefined && ttl > 0;
+  describe('set', () => {
+    it('should serialize and store value without TTL', async () => {
+      await service.set('key', { data: 'value' });
 
-      expect(shouldUseSetex).toBe(true);
+      expect(mockRedis.set).toHaveBeenCalledWith('key', '{"data":"value"}');
+      expect(mockRedis.setex).not.toHaveBeenCalled();
     });
 
-    it('should use set when TTL is not provided', () => {
-      const ttl = undefined;
-      const shouldUseSetex = ttl !== undefined && ttl > 0;
+    it('should use setex when TTL is provided', async () => {
+      await service.set('key', { data: 'value' }, 300);
 
-      expect(shouldUseSetex).toBe(false);
+      expect(mockRedis.setex).toHaveBeenCalledWith('key', 300, '{"data":"value"}');
+      expect(mockRedis.set).not.toHaveBeenCalled();
     });
 
-    it('should use set when TTL is 0', () => {
-      const ttl = 0;
-      const shouldUseSetex = ttl !== undefined && ttl > 0;
+    it('should use set (not setex) when TTL is 0', async () => {
+      await service.set('key', 'value', 0);
 
-      expect(shouldUseSetex).toBe(false);
+      expect(mockRedis.set).toHaveBeenCalledWith('key', '"value"');
+      expect(mockRedis.setex).not.toHaveBeenCalled();
+    });
+
+    it('should log warning on error without throwing', async () => {
+      mockRedis.set.mockRejectedValue(new Error('Write failed'));
+
+      await expect(service.set('key', 'value')).resolves.toBeUndefined();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        { key: 'key', error: 'Write failed' },
+        'Redis set failed',
+      );
     });
   });
 
-  describe('scan cursor handling', () => {
-    it('should continue scanning while cursor is not 0', () => {
-      const cursors = ['100', '200', '0'];
-      let index = 0;
-      const keys: string[] = [];
+  describe('del', () => {
+    it('should delete a key', async () => {
+      await service.del('key-to-delete');
 
-      do {
-        keys.push(`batch-${index}`);
-        index++;
-      } while (cursors[index - 1] !== '0' && index < cursors.length);
-
-      expect(keys).toHaveLength(3);
+      expect(mockRedis.del).toHaveBeenCalledWith('key-to-delete');
     });
 
-    it('should stop at first iteration if cursor returns 0', () => {
-      const cursor = '0';
-      const shouldContinue = cursor !== '0';
+    it('should log warning on error without throwing', async () => {
+      mockRedis.del.mockRejectedValue(new Error('Delete failed'));
 
-      expect(shouldContinue).toBe(false);
+      await expect(service.del('key')).resolves.toBeUndefined();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        { key: 'key', error: 'Delete failed' },
+        'Redis del failed',
+      );
+    });
+  });
+
+  describe('delPattern', () => {
+    it('should scan and delete matching keys', async () => {
+      mockRedis.scan
+        .mockResolvedValueOnce(['0', ['albums:1', 'albums:2', 'albums:3']]);
+      mockRedis.del.mockResolvedValue(3);
+
+      await service.delPattern('albums:*');
+
+      expect(mockRedis.scan).toHaveBeenCalledWith('0', 'MATCH', 'albums:*', 'COUNT', 100);
+      expect(mockRedis.del).toHaveBeenCalledWith('albums:1', 'albums:2', 'albums:3');
+    });
+
+    it('should handle multiple scan iterations', async () => {
+      mockRedis.scan
+        .mockResolvedValueOnce(['42', ['key:1', 'key:2']])
+        .mockResolvedValueOnce(['0', ['key:3']]);
+      mockRedis.del.mockResolvedValue(3);
+
+      await service.delPattern('key:*');
+
+      expect(mockRedis.scan).toHaveBeenCalledTimes(2);
+      expect(mockRedis.del).toHaveBeenCalledWith('key:1', 'key:2', 'key:3');
+    });
+
+    it('should not call del when no keys match', async () => {
+      mockRedis.scan.mockResolvedValueOnce(['0', []]);
+
+      await service.delPattern('nonexistent:*');
+
+      expect(mockRedis.del).not.toHaveBeenCalled();
+    });
+
+    it('should batch delete in groups of 100', async () => {
+      const keys = Array.from({ length: 150 }, (_, i) => `key:${i}`);
+      mockRedis.scan.mockResolvedValueOnce(['0', keys]);
+      mockRedis.del.mockResolvedValue(100);
+
+      await service.delPattern('key:*');
+
+      expect(mockRedis.del).toHaveBeenCalledTimes(2);
+      expect(mockRedis.del).toHaveBeenNthCalledWith(1, ...keys.slice(0, 100));
+      expect(mockRedis.del).toHaveBeenNthCalledWith(2, ...keys.slice(100));
+    });
+
+    it('should log warning on error without throwing', async () => {
+      mockRedis.scan.mockRejectedValue(new Error('Scan failed'));
+
+      await expect(service.delPattern('key:*')).resolves.toBeUndefined();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        { pattern: 'key:*', error: 'Scan failed' },
+        'Redis delPattern failed',
+      );
+    });
+  });
+
+  describe('clear', () => {
+    it('should call flushdb', async () => {
+      await service.clear();
+
+      expect(mockRedis.flushdb).toHaveBeenCalled();
+    });
+  });
+
+  describe('ping', () => {
+    it('should return true when redis responds PONG', async () => {
+      mockRedis.ping.mockResolvedValue('PONG');
+
+      const result = await service.ping();
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when redis responds differently', async () => {
+      mockRedis.ping.mockResolvedValue('ERROR');
+
+      const result = await service.ping();
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false on error', async () => {
+      mockRedis.ping.mockRejectedValue(new Error('Connection lost'));
+
+      const result = await service.ping();
+
+      expect(result).toBe(false);
     });
   });
 });
