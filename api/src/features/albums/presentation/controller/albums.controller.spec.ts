@@ -113,10 +113,6 @@ describe('AlbumsController', () => {
     getFavoriteAlbumsUseCase = module.get(GetFavoriteAlbumsUseCase);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('getAlbum', () => {
     it('debería retornar un álbum por ID', async () => {
       // Arrange

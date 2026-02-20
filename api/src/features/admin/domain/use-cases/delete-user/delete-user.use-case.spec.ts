@@ -1,6 +1,6 @@
 import { NotFoundError, ValidationError } from '@shared/errors';
-import { User, UserProps } from '@features/auth/domain/entities/user.entity';
 import { LogService } from '@features/logs/application/log.service';
+import { UserFactory } from 'test/factories';
 import { DeleteUserUseCase } from './delete-user.use-case';
 import {
   MockUserRepository,
@@ -8,27 +8,6 @@ import {
   createMockUserRepository,
   createMockLogService,
 } from '@shared/testing/mock.types';
-
-// Helper to create mock user with all required fields
-const createMockUserProps = (overrides: Partial<UserProps> = {}): UserProps => ({
-  id: 'user-123',
-  username: 'testuser',
-  passwordHash: '$2b$12$hashed',
-  isActive: true,
-  isAdmin: false,
-  mustChangePassword: false,
-  theme: 'dark',
-  language: 'es',
-  isPublicProfile: false,
-  showTopTracks: true,
-  showTopArtists: true,
-  showTopAlbums: true,
-  showPlaylists: true,
-  homeSections: [],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  ...overrides,
-});
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
@@ -45,11 +24,11 @@ describe('DeleteUserUseCase', () => {
   describe('execute', () => {
     it('debería desactivar un usuario normal correctamente', async () => {
       // Arrange
-      const userToDelete = User.reconstruct(createMockUserProps({
+      const userToDelete = UserFactory.create({
         id: 'user-123',
         username: 'juanperez',
         name: 'Juan Pérez',
-      }));
+      });
 
       mockUserRepository.findById.mockResolvedValue(userToDelete);
       mockUserRepository.findAll.mockResolvedValue([userToDelete]);
@@ -75,35 +54,35 @@ describe('DeleteUserUseCase', () => {
 
     it('debería permitir desactivar un admin si hay más admins', async () => {
       // Arrange
-      const systemAdmin = User.reconstruct(createMockUserProps({
+      const systemAdmin = UserFactory.create({
         id: 'admin-000',
         username: 'admin0',
         name: 'System Admin',
         isAdmin: true,
         createdAt: new Date('2020-01-01'), // Oldest admin
-      }));
+      });
 
-      const adminToDelete = User.reconstruct(createMockUserProps({
+      const adminToDelete = UserFactory.create({
         id: 'admin-123',
         username: 'admin1',
         name: 'Admin One',
         isAdmin: true,
         createdAt: new Date('2021-01-01'), // Newer than system admin
-      }));
+      });
 
-      const otherAdmin = User.reconstruct(createMockUserProps({
+      const otherAdmin = UserFactory.create({
         id: 'admin-456',
         username: 'admin2',
         name: 'Admin Two',
         isAdmin: true,
         createdAt: new Date('2022-01-01'), // Newest
-      }));
+      });
 
-      const regularUser = User.reconstruct(createMockUserProps({
+      const regularUser = UserFactory.create({
         id: 'user-789',
         username: 'user1',
         name: 'User One',
-      }));
+      });
 
       mockUserRepository.findById.mockResolvedValue(adminToDelete);
       mockUserRepository.findAll.mockResolvedValue([systemAdmin, adminToDelete, otherAdmin, regularUser]);
@@ -129,34 +108,34 @@ describe('DeleteUserUseCase', () => {
 
     it('debería lanzar error si intenta desactivar el último admin', async () => {
       // Arrange
-      const systemAdmin = User.reconstruct(createMockUserProps({
+      const systemAdmin = UserFactory.create({
         id: 'admin-000',
         username: 'admin0',
         name: 'System Admin',
         isActive: false, // Inactive - oldest admin
         isAdmin: true,
         createdAt: new Date('2020-01-01'), // Oldest admin
-      }));
+      });
 
-      const lastAdmin = User.reconstruct(createMockUserProps({
+      const lastAdmin = UserFactory.create({
         id: 'admin-123',
         username: 'admin',
         name: 'Last Admin',
         isAdmin: true,
         createdAt: new Date('2021-01-01'), // Newer than system admin
-      }));
+      });
 
-      const regularUser1 = User.reconstruct(createMockUserProps({
+      const regularUser1 = UserFactory.create({
         id: 'user-456',
         username: 'user1',
         name: 'User One',
-      }));
+      });
 
-      const regularUser2 = User.reconstruct(createMockUserProps({
+      const regularUser2 = UserFactory.create({
         id: 'user-789',
         username: 'user2',
         name: 'User Two',
-      }));
+      });
 
       mockUserRepository.findById.mockResolvedValue(lastAdmin);
       // System admin exists but is inactive, lastAdmin is the only active admin
@@ -193,11 +172,11 @@ describe('DeleteUserUseCase', () => {
 
     it('debería hacer soft delete (no eliminar físicamente)', async () => {
       // Arrange
-      const userToDelete = User.reconstruct(createMockUserProps({
+      const userToDelete = UserFactory.create({
         id: 'user-123',
         username: 'juanperez',
         name: 'Juan Pérez',
-      }));
+      });
 
       mockUserRepository.findById.mockResolvedValue(userToDelete);
       mockUserRepository.findAll.mockResolvedValue([userToDelete]);
@@ -223,19 +202,19 @@ describe('DeleteUserUseCase', () => {
 
     it('debería desactivar usuarios normales sin verificar límite de admins activos', async () => {
       // Arrange
-      const systemAdmin = User.reconstruct(createMockUserProps({
+      const systemAdmin = UserFactory.create({
         id: 'admin-000',
         username: 'admin0',
         name: 'System Admin',
         isAdmin: true,
         createdAt: new Date('2020-01-01'),
-      }));
+      });
 
-      const regularUser = User.reconstruct(createMockUserProps({
+      const regularUser = UserFactory.create({
         id: 'user-123',
         username: 'juanperez',
         name: 'Juan Pérez',
-      }));
+      });
 
       mockUserRepository.findById.mockResolvedValue(regularUser);
       // findAll is called to check system admin, but admin count check is skipped for non-admins
@@ -263,32 +242,32 @@ describe('DeleteUserUseCase', () => {
 
     it('debería contar solo admins activos al verificar el último admin', async () => {
       // Arrange
-      const systemAdmin = User.reconstruct(createMockUserProps({
+      const systemAdmin = UserFactory.create({
         id: 'admin-000',
         username: 'admin0',
         name: 'System Admin',
         isActive: false, // Inactive
         isAdmin: true,
         createdAt: new Date('2020-01-01'), // Oldest
-      }));
+      });
 
-      const adminToDelete = User.reconstruct(createMockUserProps({
+      const adminToDelete = UserFactory.create({
         id: 'admin-123',
         username: 'admin1',
         name: 'Admin One',
         isAdmin: true,
         createdAt: new Date('2021-01-01'), // Newer than system admin
-      }));
+      });
 
       // Este admin ya está inactivo, no debería contar
-      const inactiveAdmin = User.reconstruct(createMockUserProps({
+      const inactiveAdmin = UserFactory.create({
         id: 'admin-456',
         username: 'admin2',
         name: 'Admin Two',
         isActive: false,
         isAdmin: true,
         createdAt: new Date('2022-01-01'),
-      }));
+      });
 
       mockUserRepository.findById.mockResolvedValue(adminToDelete);
       mockUserRepository.findAll.mockResolvedValue([systemAdmin, adminToDelete, inactiveAdmin]);

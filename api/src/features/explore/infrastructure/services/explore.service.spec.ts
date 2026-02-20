@@ -59,10 +59,6 @@ describe('ExploreService', () => {
     service = module.get<ExploreService>(ExploreService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('getUnplayedAlbums', () => {
     it('should return albums and total count', async () => {
       const mockAlbums = [

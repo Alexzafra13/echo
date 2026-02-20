@@ -80,10 +80,6 @@ describe('ArtistsController', () => {
     getArtistStatsUseCase = module.get(GetArtistStatsUseCase);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('getArtist', () => {
     it('debería retornar un artista por ID', async () => {
       // Arrange

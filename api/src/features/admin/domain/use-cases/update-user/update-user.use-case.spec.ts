@@ -1,16 +1,11 @@
 import { ConflictError, NotFoundError } from '@shared/errors';
-import { User, UserProps } from '@features/auth/domain/entities/user.entity';
+import { User } from '@features/auth/domain/entities/user.entity';
+import { UserFactory } from 'test/factories';
 import { UpdateUserUseCase } from './update-user.use-case';
 import {
   MockUserRepository,
   createMockUserRepository,
-  createMockUserProps,
 } from '@shared/testing/mock.types';
-
-// Helper para crear mock de usuario
-const createMockUser = (overrides: Partial<UserProps> = {}): User => {
-  return User.reconstruct(createMockUserProps(overrides));
-};
 
 describe('UpdateUserUseCase', () => {
   let useCase: UpdateUserUseCase;
@@ -25,7 +20,7 @@ describe('UpdateUserUseCase', () => {
   describe('execute', () => {
     it('debería actualizar el nombre del usuario correctamente', async () => {
       // Arrange
-      const existingUser = createMockUser({
+      const existingUser = UserFactory.create({
         id: 'user-123',
         username: 'juanperez',
         name: 'Juan',
@@ -59,7 +54,7 @@ describe('UpdateUserUseCase', () => {
 
     it('debería actualizar el rol de admin del usuario', async () => {
       // Arrange
-      const existingUser = createMockUser({
+      const existingUser = UserFactory.create({
         id: 'user-123',
         username: 'juanperez',
         name: 'Juan Pérez',
@@ -91,7 +86,7 @@ describe('UpdateUserUseCase', () => {
 
     it('debería actualizar el estado activo del usuario', async () => {
       // Arrange
-      const existingUser = createMockUser({
+      const existingUser = UserFactory.create({
         id: 'user-123',
         username: 'juanperez',
         name: 'Juan Pérez',
@@ -123,7 +118,7 @@ describe('UpdateUserUseCase', () => {
 
     it('debería actualizar múltiples campos a la vez', async () => {
       // Arrange
-      const existingUser = createMockUser({
+      const existingUser = UserFactory.create({
         id: 'user-123',
         username: 'juanperez',
         name: 'Juan',
@@ -173,13 +168,13 @@ describe('UpdateUserUseCase', () => {
 
     it('debería lanzar error si el username ya existe en otro usuario', async () => {
       // Arrange
-      const existingUser = createMockUser({
+      const existingUser = UserFactory.create({
         id: 'user-123',
         username: 'juanperez',
         name: 'Juan Pérez',
       });
 
-      const otherUser = createMockUser({
+      const otherUser = UserFactory.create({
         id: 'user-456',
         username: 'maria',
         name: 'María García',
@@ -201,7 +196,7 @@ describe('UpdateUserUseCase', () => {
 
     it('debería permitir actualizar con el mismo username del usuario', async () => {
       // Arrange
-      const existingUser = createMockUser({
+      const existingUser = UserFactory.create({
         id: 'user-123',
         username: 'juanperez',
         name: 'Juan Pérez',
@@ -221,9 +216,8 @@ describe('UpdateUserUseCase', () => {
       // Act
       const result = await useCase.execute(input);
 
-      // Assert
-      expect(result).toBeDefined();
-      // No debe lanzar ConflictError
+      // Assert - No debe lanzar ConflictError, y debe retornar el usuario
+      expect(result.username).toBe('juanperez');
     });
   });
 });

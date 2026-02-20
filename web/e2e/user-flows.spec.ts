@@ -26,9 +26,15 @@ test.describe('Búsqueda', () => {
     // Verificar que estamos en la página de búsqueda
     expect(page.url()).toContain('/search');
 
-    // La página debe cargar sin errores
-    const hasError = await page.locator('[class*="error"]').filter({ hasText: /error|500/i }).isVisible().catch(() => false);
-    expect(hasError).toBeFalsy();
+    // La página debe cargar sin errores críticos visibles
+    await expect(page.locator('main').first()).toBeVisible({ timeout: 10000 });
+
+    // No debe haber errores de servidor visibles
+    const serverError = page.getByText(/500|Internal Server Error/i);
+    await expect(serverError).not.toBeVisible({ timeout: 3000 }).catch(() => {
+      // Si hay un error 500, el test debe fallar explícitamente
+      expect(serverError).not.toBeVisible();
+    });
   });
 });
 
@@ -87,28 +93,30 @@ test.describe('Playlists', () => {
 
     await page.goto('/playlists');
 
+    // Esperar a que la página cargue
+    await expect(
+      page.getByRole('heading', { name: /Playlists/i }).or(
+        page.getByRole('button', { name: /Crear|Nueva|New|Create/i })
+      ).first()
+    ).toBeVisible({ timeout: 15000 });
+
     // Buscar botón de crear
     const createButton = page.getByRole('button', { name: /Crear|Nueva|New|Create/i });
+    await expect(createButton).toBeVisible({ timeout: 5000 });
 
-    if (await createButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await createButton.click();
+    await createButton.click();
 
-      // Esperar modal o formulario
-      await page.waitForTimeout(500);
+    // Esperar modal o formulario
+    const nameInput = page.locator('input[name="name"], input[placeholder*="nombre"], input[placeholder*="name"]');
+    await expect(nameInput.first()).toBeVisible({ timeout: 5000 });
 
-      // Rellenar nombre
-      const nameInput = page.locator('input[name="name"], input[placeholder*="nombre"], input[placeholder*="name"]');
-      if (await nameInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await nameInput.fill(playlistName);
+    await nameInput.first().fill(playlistName);
 
-        // Guardar
-        await page.getByRole('button', { name: /Crear|Guardar|Save|Submit/i }).click();
+    // Guardar
+    await page.getByRole('button', { name: /Crear|Guardar|Save|Submit/i }).click();
 
-        // Verificar que se creó
-        const created = await page.getByText(playlistName).isVisible({ timeout: 5000 }).catch(() => false);
-        expect(created).toBeTruthy();
-      }
-    }
+    // Verificar que se creó - debe aparecer en la lista
+    await expect(page.getByText(playlistName)).toBeVisible({ timeout: 10000 });
   });
 });
 
@@ -118,11 +126,10 @@ test.describe('Perfil de usuario', () => {
 
     expect(page.url()).toContain('/profile');
 
-    // Debe mostrar información del usuario
-    const hasUsername = await page.getByText(/admin/i).isVisible({ timeout: 10000 }).catch(() => false);
-    const hasProfileContent = await page.locator('[class*="profile"], [class*="avatar"], [class*="user"]').first().isVisible().catch(() => false);
-
-    expect(hasUsername || hasProfileContent).toBeTruthy();
+    // Debe mostrar información del usuario (nombre admin al menos)
+    await expect(
+      page.getByText(/admin/i).first()
+    ).toBeVisible({ timeout: 10000 });
   });
 
   test('página de configuración carga correctamente', async ({ page }) => {

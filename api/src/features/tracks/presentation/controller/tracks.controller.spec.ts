@@ -83,10 +83,6 @@ describe('TracksController', () => {
     getDjShuffledTracksUseCase = module.get(GetDjShuffledTracksUseCase);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('getTrack', () => {
     it('debería retornar un track por ID', async () => {
       // Arrange

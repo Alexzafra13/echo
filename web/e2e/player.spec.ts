@@ -12,9 +12,8 @@ test.describe('Reproductor de Audio', () => {
     // Verificar que estamos en home y la página cargó
     expect(page.url()).toContain('/home');
 
-    // Debe haber algún contenido visible
-    const hasContent = await page.locator('main, [class*="content"], [class*="home"]').first().isVisible({ timeout: 10000 }).catch(() => false);
-    expect(hasContent).toBeTruthy();
+    // Debe haber contenido principal visible
+    await expect(page.locator('main').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('página de álbumes carga correctamente', async ({ page }) => {
@@ -35,40 +34,34 @@ test.describe('Reproductor de Audio', () => {
 
     expect(page.url()).toContain('/artists');
 
-    const hasContent = await page.locator('[class*="artist"], [class*="card"], [class*="grid"], [class*="empty"]').first().isVisible({ timeout: 10000 }).catch(() => false);
-    expect(hasContent).toBeTruthy();
+    // Debe mostrar título, contenido o estado vacío
+    await expect(
+      page.getByRole('heading', { name: /Artistas/i }).or(
+        page.getByText(/Cargando artistas|No hay artistas|Error al cargar/i)
+      ).first()
+    ).toBeVisible({ timeout: 15000 });
   });
 
-  test('click en track muestra en el player', async ({ page }) => {
+  test('click en álbum navega a su detalle', async ({ page }) => {
     await page.goto('/albums');
 
-    // Navegar a un álbum
-    const albumCard = page.locator('[class*="album"], [class*="card"]').filter({ has: page.locator('img') }).first();
+    // Esperar a que carguen los álbumes o el estado vacío
+    await expect(
+      page.getByRole('heading', { name: /Álbumes/i }).or(
+        page.getByText(/No hay álbumes/i)
+      ).first()
+    ).toBeVisible({ timeout: 15000 });
 
-    if (await albumCard.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await albumCard.click();
+    // Solo testear la interacción si hay álbumes disponibles
+    const albumLinks = page.getByRole('link').filter({ has: page.locator('img') });
+    const albumCount = await albumLinks.count();
 
-      // Buscar y hacer click en un track
-      const track = page.locator('[class*="track"], [class*="song"], tr').filter({ has: page.locator('button, [class*="play"]') }).first();
+    if (albumCount > 0) {
+      await albumLinks.first().click();
+      await page.waitForLoadState('networkidle');
 
-      if (await track.isVisible({ timeout: 5000 }).catch(() => false)) {
-        // Click en el track o su botón de play
-        const playButton = track.locator('button, [class*="play"]').first();
-        if (await playButton.isVisible().catch(() => false)) {
-          await playButton.click();
-        } else {
-          await track.click();
-        }
-
-        await page.waitForTimeout(1000);
-
-        // El player debería mostrar algo
-        const player = page.locator('[class*="player"]').first();
-        const hasPlayerContent = await player.isVisible().catch(() => false);
-
-        // No falla si no hay tracks disponibles
-        expect(true).toBeTruthy();
-      }
+      // Debe navegar a la página de detalle del álbum
+      expect(page.url()).toMatch(/\/albums\/|\/album\//);
     }
   });
 });
