@@ -147,7 +147,7 @@ export async function getFriendsActivity(limit?: number): Promise<ActivityItem[]
  * Search users
  */
 export async function searchUsers(query: string, limit?: number): Promise<SearchUserResult[]> {
-  const params: Record<string, any> = { q: query };
+  const params: Record<string, string | number> = { q: query };
   if (limit) params.limit = limit;
   const response = await apiClient.get<SearchUserResult[]>('/social/users/search', { params });
   return response.data;

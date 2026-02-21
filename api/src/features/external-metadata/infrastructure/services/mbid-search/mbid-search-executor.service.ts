@@ -163,7 +163,7 @@ export class MbidSearchExecutorService {
   // PRIVATE HELPERS - Format matches to common interface
   // ============================================
 
-  private formatArtistMatches(matches: any[]): MbidMatch[] {
+  private formatArtistMatches(matches: MusicBrainzArtistMatch[]): MbidMatch[] {
     return matches.slice(0, 5).map((match) => ({
       mbid: match.mbid,
       name: match.name,
@@ -178,7 +178,7 @@ export class MbidSearchExecutorService {
     }));
   }
 
-  private formatAlbumMatches(matches: any[]): MbidMatch[] {
+  private formatAlbumMatches(matches: MusicBrainzAlbumMatch[]): MbidMatch[] {
     return matches.slice(0, 5).map((match) => ({
       mbid: match.mbid,
       name: match.title,
@@ -194,7 +194,7 @@ export class MbidSearchExecutorService {
     }));
   }
 
-  private formatTrackMatches(matches: any[]): MbidMatch[] {
+  private formatTrackMatches(matches: MusicBrainzRecordingMatch[]): MbidMatch[] {
     return matches.slice(0, 5).map((match) => ({
       mbid: match.mbid,
       name: match.title,

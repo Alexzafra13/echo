@@ -1,8 +1,12 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and, desc, sql } from 'drizzle-orm';
-import { metadataConflicts } from '@infrastructure/database/schema';
+import {
+  metadataConflicts,
+  type MetadataConflict,
+  type NewMetadataConflict,
+} from '@infrastructure/database/schema';
 import { NotFoundError, ConflictError } from '@shared/errors';
 import { ConflictChangeApplierService } from './conflicts/conflict-change-applier.service';
 import {
@@ -37,7 +41,7 @@ export interface CreateConflictDto {
   suggestedValue: string;
   source: ConflictSource;
   priority?: ConflictPriority;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -58,7 +62,7 @@ export class MetadataConflictService {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly changeApplier: ConflictChangeApplierService,
-    private readonly enrichment: ConflictEnrichmentService,
+    private readonly enrichment: ConflictEnrichmentService
   ) {}
 
   /**
@@ -77,7 +81,7 @@ export class MetadataConflictService {
       const existing = await this.findExistingConflict(data);
       if (existing) {
         this.logger.debug(
-          `Conflict already exists for ${data.entityType} ${data.entityId}, field ${data.field}`,
+          `Conflict already exists for ${data.entityType} ${data.entityId}, field ${data.field}`
         );
         return this.enrichment.mapConflictWithEntity(existing);
       }
@@ -96,7 +100,7 @@ export class MetadataConflictService {
       entityType?: EntityType;
       source?: ConflictSource;
       priority?: ConflictPriority;
-    },
+    }
   ): Promise<{ conflicts: ConflictWithEntity[]; total: number }> {
     const conditions = [eq(metadataConflicts.status, 'pending')];
 
@@ -137,7 +141,7 @@ export class MetadataConflictService {
    */
   async getConflictsForEntity(
     entityId: string,
-    entityType: EntityType,
+    entityType: EntityType
   ): Promise<ConflictWithEntity[]> {
     const conflicts = await this.drizzle.db
       .select()
@@ -146,8 +150,8 @@ export class MetadataConflictService {
         and(
           eq(metadataConflicts.entityId, entityId),
           eq(metadataConflicts.entityType, entityType),
-          eq(metadataConflicts.status, 'pending'),
-        ),
+          eq(metadataConflicts.status, 'pending')
+        )
       )
       .orderBy(desc(metadataConflicts.priority));
 
@@ -157,7 +161,7 @@ export class MetadataConflictService {
   /**
    * Accept a conflict and apply the suggested value
    */
-  async acceptConflict(conflictId: string, userId?: string): Promise<any> {
+  async acceptConflict(conflictId: string, userId?: string): Promise<unknown> {
     const conflict = await this.getConflictById(conflictId);
 
     if (!conflict) {
@@ -171,15 +175,12 @@ export class MetadataConflictService {
     // Verify entity exists
     const entityExists = await this.enrichment.verifyEntityExists(
       conflict.entityType as EntityType,
-      conflict.entityId,
+      conflict.entityId
     );
 
     if (!entityExists) {
       await this.rejectOrphanedConflict(conflictId, conflict);
-      throw new NotFoundError(
-        conflict.entityType,
-        `${conflict.entityId} (conflict auto-rejected)`,
-      );
+      throw new NotFoundError(conflict.entityType, `${conflict.entityId} (conflict auto-rejected)`);
     }
 
     // Apply the change
@@ -194,9 +195,7 @@ export class MetadataConflictService {
         metadata: conflict.metadata,
       });
     } catch (error) {
-      this.logger.error(
-        `Error applying conflict ${conflictId}: ${(error as Error).message}`,
-      );
+      this.logger.error(`Error applying conflict ${conflictId}: ${(error as Error).message}`);
       throw error;
     }
 
@@ -204,7 +203,7 @@ export class MetadataConflictService {
     await this.updateConflictStatus(conflictId, 'accepted', userId);
 
     this.logger.info(
-      `Accepted conflict ${conflictId}: ${conflict.field} for ${conflict.entityType} ${conflict.entityId}`,
+      `Accepted conflict ${conflictId}: ${conflict.field} for ${conflict.entityType} ${conflict.entityId}`
     );
 
     return updatedEntity;
@@ -236,7 +235,7 @@ export class MetadataConflictService {
   /**
    * Check if updating a field would create a conflict
    */
-  hasConflict(currentValue: any, newValue: any): boolean {
+  hasConflict(currentValue: unknown, newValue: unknown): boolean {
     if (!currentValue && !newValue) return false;
     if (!currentValue && newValue) return false; // Allow filling empty fields
     if (currentValue && !newValue) return false; // Ignore if new is empty
@@ -247,7 +246,7 @@ export class MetadataConflictService {
   // PRIVATE HELPERS
   // ============================================
 
-  private async getConflictById(conflictId: string): Promise<any | null> {
+  private async getConflictById(conflictId: string): Promise<MetadataConflict | null> {
     const results = await this.drizzle.db
       .select()
       .from(metadataConflicts)
@@ -256,7 +255,9 @@ export class MetadataConflictService {
     return results[0] || null;
   }
 
-  private async findExistingCoverConflict(data: CreateConflictDto): Promise<any | null> {
+  private async findExistingCoverConflict(
+    data: CreateConflictDto
+  ): Promise<MetadataConflict | null> {
     const results = await this.drizzle.db
       .select()
       .from(metadataConflicts)
@@ -264,14 +265,14 @@ export class MetadataConflictService {
         and(
           eq(metadataConflicts.entityId, data.entityId),
           eq(metadataConflicts.field, data.field),
-          eq(metadataConflicts.status, 'pending'),
-        ),
+          eq(metadataConflicts.status, 'pending')
+        )
       )
       .limit(1);
     return results[0] || null;
   }
 
-  private async findExistingConflict(data: CreateConflictDto): Promise<any | null> {
+  private async findExistingConflict(data: CreateConflictDto): Promise<MetadataConflict | null> {
     const results = await this.drizzle.db
       .select()
       .from(metadataConflicts)
@@ -280,26 +281,24 @@ export class MetadataConflictService {
           eq(metadataConflicts.entityId, data.entityId),
           eq(metadataConflicts.field, data.field),
           eq(metadataConflicts.source, data.source),
-          eq(metadataConflicts.status, 'pending'),
-        ),
+          eq(metadataConflicts.status, 'pending')
+        )
       )
       .limit(1);
     return results[0] || null;
   }
 
   private async handleExistingCoverConflict(
-    existing: any,
-    data: CreateConflictDto,
+    existing: MetadataConflict,
+    data: CreateConflictDto
   ): Promise<ConflictWithEntity> {
-    const existingMeta = existing.metadata
-      ? (existing.metadata as Record<string, any>)
-      : {};
+    const existingMeta = existing.metadata ? (existing.metadata as Record<string, unknown>) : {};
     const newMeta = data.metadata || {};
 
     if (this.shouldReplaceConflict(existingMeta, newMeta)) {
       const priority = this.determinePriority(data);
 
-      const updateData: any = {
+      const updateData: Partial<NewMetadataConflict> = {
         suggestedValue: data.suggestedValue,
         source: data.source,
         priority,
@@ -316,21 +315,24 @@ export class MetadataConflictService {
         .returning();
 
       this.logger.info(
-        `Updated conflict ${existing.id} with better resolution: ${newMeta.suggestedResolution} from ${data.source}`,
+        `Updated conflict ${existing.id} with better resolution: ${newMeta.suggestedResolution} from ${data.source}`
       );
 
       return this.enrichment.mapConflictWithEntity(updatedResults[0]);
     }
 
     this.logger.debug(
-      `Keeping existing conflict for ${data.entityType} ${data.entityId}: existing resolution is better`,
+      `Keeping existing conflict for ${data.entityType} ${data.entityId}: existing resolution is better`
     );
     return this.enrichment.mapConflictWithEntity(existing);
   }
 
-  private shouldReplaceConflict(existingMeta: any, newMeta: any): boolean {
-    const existingRes = existingMeta.suggestedResolution;
-    const newRes = newMeta.suggestedResolution;
+  private shouldReplaceConflict(
+    existingMeta: Record<string, unknown>,
+    newMeta: Record<string, unknown>
+  ): boolean {
+    const existingRes = existingMeta.suggestedResolution as string | undefined;
+    const newRes = newMeta.suggestedResolution as string | undefined;
 
     if (!existingRes || !newRes || newRes === 'Desconocida') {
       return false;
@@ -348,7 +350,7 @@ export class MetadataConflictService {
   private async insertNewConflict(data: CreateConflictDto): Promise<ConflictWithEntity> {
     const priority = this.determinePriority(data);
 
-    const insertData: any = {
+    const insertData: NewMetadataConflict = {
       entityId: data.entityId,
       entityType: data.entityType,
       field: data.field,
@@ -365,13 +367,10 @@ export class MetadataConflictService {
       insertData.metadata = data.metadata;
     }
 
-    const results = await this.drizzle.db
-      .insert(metadataConflicts)
-      .values(insertData)
-      .returning();
+    const results = await this.drizzle.db.insert(metadataConflicts).values(insertData).returning();
 
     this.logger.info(
-      `Created ${priority === ConflictPriority.HIGH ? 'HIGH' : 'MEDIUM'} priority conflict for ${data.entityType} ${data.entityId}: ${data.field} (source: ${data.source})`,
+      `Created ${priority === ConflictPriority.HIGH ? 'HIGH' : 'MEDIUM'} priority conflict for ${data.entityType} ${data.entityId}: ${data.field} (source: ${data.source})`
     );
 
     return this.enrichment.mapConflictWithEntity(results[0]);
@@ -389,7 +388,7 @@ export class MetadataConflictService {
   private async updateConflictStatus(
     conflictId: string,
     status: ConflictStatus,
-    userId?: string,
+    userId?: string
   ): Promise<void> {
     await this.drizzle.db
       .update(metadataConflicts)
@@ -401,7 +400,10 @@ export class MetadataConflictService {
       .where(eq(metadataConflicts.id, conflictId));
   }
 
-  private async rejectOrphanedConflict(conflictId: string, conflict: any): Promise<void> {
+  private async rejectOrphanedConflict(
+    conflictId: string,
+    conflict: MetadataConflict
+  ): Promise<void> {
     await this.drizzle.db
       .update(metadataConflicts)
       .set({
@@ -412,7 +414,7 @@ export class MetadataConflictService {
       .where(eq(metadataConflicts.id, conflictId));
 
     this.logger.warn(
-      `Conflict ${conflictId} rejected automatically: ${conflict.entityType} ${conflict.entityId} no longer exists`,
+      `Conflict ${conflictId} rejected automatically: ${conflict.entityType} ${conflict.entityId} no longer exists`
     );
   }
 }

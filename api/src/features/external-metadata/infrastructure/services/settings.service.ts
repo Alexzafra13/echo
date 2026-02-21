@@ -9,7 +9,7 @@ import { SettingsRepository } from '../persistence/settings.repository';
 @Injectable()
 export class SettingsService {
   // In-memory cache for settings
-  private readonly cache = new Map<string, any>();
+  private readonly cache = new Map<string, unknown>();
   private cacheInitialized = false;
 
   constructor(
@@ -24,7 +24,7 @@ export class SettingsService {
    * @param defaultValue Default value if not found
    * @returns Setting value with proper type
    */
-  async get<T = any>(key: string, defaultValue?: T): Promise<T> {
+  async get<T = unknown>(key: string, defaultValue?: T): Promise<T> {
     // Initialize cache on first access
     if (!this.cacheInitialized) {
       await this.initializeCache();
@@ -60,10 +60,10 @@ export class SettingsService {
    * @param category Category name
    * @returns Object with setting keys and values
    */
-  async getCategory(category: string): Promise<Record<string, any>> {
+  async getCategory(category: string): Promise<Record<string, unknown>> {
     const settings = await this.repository.findByCategory(category);
 
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
 
     for (const setting of settings) {
       result[setting.key] = this.convertValue(setting.value, setting.type);
@@ -77,7 +77,7 @@ export class SettingsService {
    * @param key Setting key
    * @param value Value (will be converted to string)
    */
-  async set(key: string, value: any): Promise<void> {
+  async set(key: string, value: unknown): Promise<void> {
     const stringValue = this.valueToString(value);
 
     // Check if setting exists to preserve metadata
@@ -113,7 +113,7 @@ export class SettingsService {
    * Set multiple settings at once
    * @param settings Object with key-value pairs
    */
-  async setMultiple(settings: Record<string, any>): Promise<void> {
+  async setMultiple(settings: Record<string, unknown>): Promise<void> {
     for (const [key, value] of Object.entries(settings)) {
       await this.set(key, value);
     }
@@ -227,7 +227,7 @@ export class SettingsService {
   /**
    * Convert string value to proper type
    */
-  private convertValue(value: string, type: string): any {
+  private convertValue(value: string, type: string): unknown {
     switch (type) {
       case 'boolean':
         return value === 'true' || value === '1';
@@ -254,7 +254,7 @@ export class SettingsService {
   /**
    * Convert value to string for storage
    */
-  private valueToString(value: any): string {
+  private valueToString(value: unknown): string {
     if (typeof value === 'boolean') {
       return value ? 'true' : 'false';
     }

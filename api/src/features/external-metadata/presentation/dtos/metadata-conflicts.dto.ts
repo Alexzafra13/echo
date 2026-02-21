@@ -111,7 +111,7 @@ export class ConflictResponseDto {
   priority!: number;
 
   @ApiPropertyOptional({ description: 'Additional metadata' })
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 
   @ApiProperty({ description: 'Creation date' })
   createdAt!: Date;
@@ -125,7 +125,7 @@ export class ConflictResponseDto {
   @ApiPropertyOptional({ description: 'Entity details' })
   entity?: {
     name: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -160,5 +160,5 @@ export class ConflictResolvedResponseDto {
   message!: string;
 
   @ApiPropertyOptional({ description: 'Updated entity (if accepted)' })
-  updatedEntity?: any;
+  updatedEntity?: Record<string, unknown>;
 }

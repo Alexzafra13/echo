@@ -1,25 +1,14 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Query,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { CleanupService } from '../infrastructure/services/cleanup.service';
-import { EnrichmentQueueService, EnrichmentQueueStats } from '../infrastructure/services/enrichment-queue.service';
+import {
+  EnrichmentQueueService,
+  EnrichmentQueueStats,
+} from '../infrastructure/services/enrichment-queue.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists, albums } from '@infrastructure/database/schema';
 import { eq, or, isNotNull, isNull } from 'drizzle-orm';
@@ -41,7 +30,7 @@ export class MaintenanceController {
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
     private readonly enrichmentQueue: EnrichmentQueueService,
-    private readonly config: ConfigService,
+    private readonly config: ConfigService
   ) {}
 
   @Get('storage/stats')
@@ -80,7 +69,10 @@ export class MaintenanceController {
         avgSizePerArtistMB: stats.avgSizePerArtist / 1024 / 1024,
       };
     } catch (error) {
-      this.logger.error(`Error fetching storage stats: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error fetching storage stats: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -141,7 +133,10 @@ export class MaintenanceController {
         dryRun: isDryRun,
       };
     } catch (error) {
-      this.logger.error(`Error during cleanup: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error during cleanup: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -159,7 +154,8 @@ export class MaintenanceController {
     name: 'dryRun',
     required: false,
     type: Boolean,
-    description: 'Preview mode for file deletion - show what would be deleted without actually deleting',
+    description:
+      'Preview mode for file deletion - show what would be deleted without actually deleting',
     example: true,
   })
   @ApiResponse({
@@ -214,7 +210,10 @@ export class MaintenanceController {
         dryRun: isDryRun,
       };
     } catch (error) {
-      this.logger.error(`Error during full cleanup: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error during full cleanup: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -251,7 +250,10 @@ export class MaintenanceController {
         errors: result.errors,
       };
     } catch (error) {
-      this.logger.error(`Error recalculating storage: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error recalculating storage: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -295,7 +297,10 @@ export class MaintenanceController {
         errors: result.errors,
       };
     } catch (error) {
-      this.logger.error(`Error verifying integrity: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error verifying integrity: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -347,8 +352,8 @@ export class MaintenanceController {
             isNotNull(artists.externalProfilePath),
             isNotNull(artists.externalBackgroundPath),
             isNotNull(artists.externalBannerPath),
-            isNotNull(artists.externalLogoPath),
-          ),
+            isNotNull(artists.externalLogoPath)
+          )
         );
 
       this.logger.info(`Found ${artistsWithPaths.length} artists with image URLs`);
@@ -360,31 +365,44 @@ export class MaintenanceController {
           let needsCleaning = false;
 
           // Clean URLs that start with file:// or /api/ (these are incorrect - should be file system paths)
-          if (artist.externalProfilePath && (artist.externalProfilePath.startsWith('file://') || artist.externalProfilePath.startsWith('/api/'))) {
+          if (
+            artist.externalProfilePath &&
+            (artist.externalProfilePath.startsWith('file://') ||
+              artist.externalProfilePath.startsWith('/api/'))
+          ) {
             updates.externalProfilePath = null;
             needsCleaning = true;
           }
 
-          if (artist.externalBackgroundPath && (artist.externalBackgroundPath.startsWith('file://') || artist.externalBackgroundPath.startsWith('/api/'))) {
+          if (
+            artist.externalBackgroundPath &&
+            (artist.externalBackgroundPath.startsWith('file://') ||
+              artist.externalBackgroundPath.startsWith('/api/'))
+          ) {
             updates.externalBackgroundPath = null;
             needsCleaning = true;
           }
 
-          if (artist.externalBannerPath && (artist.externalBannerPath.startsWith('file://') || artist.externalBannerPath.startsWith('/api/'))) {
+          if (
+            artist.externalBannerPath &&
+            (artist.externalBannerPath.startsWith('file://') ||
+              artist.externalBannerPath.startsWith('/api/'))
+          ) {
             updates.externalBannerPath = null;
             needsCleaning = true;
           }
 
-          if (artist.externalLogoPath && (artist.externalLogoPath.startsWith('file://') || artist.externalLogoPath.startsWith('/api/'))) {
+          if (
+            artist.externalLogoPath &&
+            (artist.externalLogoPath.startsWith('file://') ||
+              artist.externalLogoPath.startsWith('/api/'))
+          ) {
             updates.externalLogoPath = null;
             needsCleaning = true;
           }
 
           if (needsCleaning) {
-            await this.drizzle.db
-              .update(artists)
-              .set(updates)
-              .where(eq(artists.id, artist.id));
+            await this.drizzle.db.update(artists).set(updates).where(eq(artists.id, artist.id));
             cleaned++;
             this.logger.debug(`Cleaned: ${artist.name}`);
           }
@@ -397,7 +415,9 @@ export class MaintenanceController {
 
       const duration = Date.now() - startTime;
 
-      this.logger.info(`Cleanup completed: ${cleaned} artists cleaned, ${errors.length} errors in ${duration}ms`);
+      this.logger.info(
+        `Cleanup completed: ${cleaned} artists cleaned, ${errors.length} errors in ${duration}ms`
+      );
 
       return {
         success: errors.length === 0,
@@ -406,7 +426,10 @@ export class MaintenanceController {
         duration,
       };
     } catch (error) {
-      this.logger.error(`Error during artist image URL cleanup: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error during artist image URL cleanup: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -465,9 +488,7 @@ export class MaintenanceController {
       const artistDirs = await fs.readdir(artistsPath, { withFileTypes: true });
 
       // OPTIMIZATION: Batch load all artists to avoid N+1 query
-      const artistIds = artistDirs
-        .filter(dir => dir.isDirectory())
-        .map(dir => dir.name);
+      const artistIds = artistDirs.filter((dir) => dir.isDirectory()).map((dir) => dir.name);
 
       const { inArray } = await import('drizzle-orm');
       const artistsData = await this.drizzle.db
@@ -483,7 +504,7 @@ export class MaintenanceController {
         .where(inArray(artists.id, artistIds));
 
       // Create map for O(1) lookups
-      const artistMap = new Map(artistsData.map(a => [a.id, a]));
+      const artistMap = new Map(artistsData.map((a) => [a.id, a]));
 
       for (const dir of artistDirs) {
         if (!dir.isDirectory()) continue;
@@ -501,7 +522,7 @@ export class MaintenanceController {
           }
 
           // Check for image files
-          const updates: any = {};
+          const updates: Partial<typeof artists.$inferInsert> = {};
           let hasUpdates = false;
 
           const imageFiles = [
@@ -518,7 +539,7 @@ export class MaintenanceController {
             if (exists) {
               filesFound++;
               // Only update if database field is null or empty
-              if (!(artist as any)[field]) {
+              if (!artist[field]) {
                 updates[field] = filePath;
                 hasUpdates = true;
               }
@@ -526,10 +547,7 @@ export class MaintenanceController {
           }
 
           if (hasUpdates) {
-            await this.drizzle.db
-              .update(artists)
-              .set(updates)
-              .where(eq(artists.id, artistId));
+            await this.drizzle.db.update(artists).set(updates).where(eq(artists.id, artistId));
             synced++;
             this.logger.debug(`Synced: ${artist.name} (${Object.keys(updates).length} images)`);
           }
@@ -554,7 +572,10 @@ export class MaintenanceController {
         duration,
       };
     } catch (error) {
-      this.logger.error(`Error during image synchronization: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error during image synchronization: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -592,25 +613,17 @@ export class MaintenanceController {
       const albumsToUpdate = await this.drizzle.db
         .select({ id: albums.id, name: albums.name })
         .from(albums)
-        .where(
-          or(
-            isNull(albums.orderAlbumName),
-            eq(albums.orderAlbumName, ''),
-          ),
-        );
+        .where(or(isNull(albums.orderAlbumName), eq(albums.orderAlbumName, '')));
 
       // Get all artists without orderArtistName
       const artistsToUpdate = await this.drizzle.db
         .select({ id: artists.id, name: artists.name })
         .from(artists)
-        .where(
-          or(
-            isNull(artists.orderArtistName),
-            eq(artists.orderArtistName, ''),
-          ),
-        );
+        .where(or(isNull(artists.orderArtistName), eq(artists.orderArtistName, '')));
 
-      this.logger.info(`Found ${albumsToUpdate.length} albums and ${artistsToUpdate.length} artists to update`);
+      this.logger.info(
+        `Found ${albumsToUpdate.length} albums and ${artistsToUpdate.length} artists to update`
+      );
 
       // Update albums in batches
       let albumsUpdated = 0;
@@ -653,7 +666,10 @@ export class MaintenanceController {
         duration,
       };
     } catch (error) {
-      this.logger.error(`Error populating sort names: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error populating sort names: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -677,7 +693,11 @@ export class MaintenanceController {
         processedInSession: { type: 'number', description: 'Items processed in current session' },
         currentItem: { type: 'string', nullable: true, description: 'Currently processing item' },
         startedAt: { type: 'string', nullable: true, description: 'Session start time' },
-        estimatedTimeRemaining: { type: 'string', nullable: true, description: 'Estimated time remaining' },
+        estimatedTimeRemaining: {
+          type: 'string',
+          nullable: true,
+          description: 'Estimated time remaining',
+        },
       },
     },
   })
@@ -687,7 +707,10 @@ export class MaintenanceController {
       const stats = await this.enrichmentQueue.getQueueStats();
       return stats;
     } catch (error) {
-      this.logger.error(`Error fetching queue stats: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error fetching queue stats: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -719,7 +742,10 @@ export class MaintenanceController {
       const result = await this.enrichmentQueue.startEnrichmentQueue();
       return result;
     } catch (error) {
-      this.logger.error(`Error starting queue: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error starting queue: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -728,7 +754,8 @@ export class MaintenanceController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Stop enrichment queue',
-    description: 'Stops the background enrichment queue. Current processing will complete but no new items will be started (admin only)',
+    description:
+      'Stops the background enrichment queue. Current processing will complete but no new items will be started (admin only)',
   })
   @ApiResponse({
     status: 200,
@@ -751,7 +778,10 @@ export class MaintenanceController {
         message: 'Enrichment queue stopped',
       };
     } catch (error) {
-      this.logger.error(`Error stopping queue: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error stopping queue: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -794,7 +824,10 @@ export class MaintenanceController {
         isReadOnlyMusic: true, // By design, music folder should be read-only
       };
     } catch (error) {
-      this.logger.error(`Error getting storage paths: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error getting storage paths: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }

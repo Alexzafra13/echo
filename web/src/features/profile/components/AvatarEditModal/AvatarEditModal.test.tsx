@@ -50,7 +50,7 @@ describe('AvatarEditModal', () => {
         updateAvatarTimestamp: mockUpdateAvatarTimestamp,
         updateUser: mockUpdateUser,
       };
-      return selector(state as any);
+      return selector(state as unknown as Parameters<typeof selector>[0]);
     });
 
     vi.mocked(avatarHooksModule.useUploadAvatar).mockReturnValue({
@@ -134,7 +134,9 @@ describe('AvatarEditModal', () => {
       fireEvent.change(input, { target: { files: [invalidFile] } });
 
       // Uses useFileUpload hook error message
-      expect(screen.getByText('Tipo de archivo no permitido. Use JPEG, PNG o WebP.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Tipo de archivo no permitido. Use JPEG, PNG o WebP.')
+      ).toBeInTheDocument();
     });
 
     it('should show error for file too large', () => {
@@ -163,7 +165,9 @@ describe('AvatarEditModal', () => {
         result: 'data:image/jpeg;base64,test',
         onloadend: null as (() => void) | null,
       };
-      vi.spyOn(global, 'FileReader').mockImplementation(() => mockFileReader as unknown as FileReader);
+      vi.spyOn(global, 'FileReader').mockImplementation(
+        () => mockFileReader as unknown as FileReader
+      );
 
       fireEvent.change(input, { target: { files: [validFile] } });
 
@@ -189,7 +193,9 @@ describe('AvatarEditModal', () => {
         result: 'data:image/jpeg;base64,test',
         onloadend: null as (() => void) | null,
       };
-      vi.spyOn(global, 'FileReader').mockImplementation(() => mockFileReader as unknown as FileReader);
+      vi.spyOn(global, 'FileReader').mockImplementation(
+        () => mockFileReader as unknown as FileReader
+      );
 
       fireEvent.change(input, { target: { files: [validFile] } });
 
@@ -227,7 +233,9 @@ describe('AvatarEditModal', () => {
         result: 'data:image/jpeg;base64,test',
         onloadend: null as (() => void) | null,
       };
-      vi.spyOn(global, 'FileReader').mockImplementation(() => mockFileReader as unknown as FileReader);
+      vi.spyOn(global, 'FileReader').mockImplementation(
+        () => mockFileReader as unknown as FileReader
+      );
 
       fireEvent.change(input, { target: { files: [validFile] } });
 
