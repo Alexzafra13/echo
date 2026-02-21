@@ -192,7 +192,7 @@ export class MetadataConflictService {
         field: conflict.field,
         suggestedValue: conflict.suggestedValue,
         source: conflict.source,
-        metadata: conflict.metadata,
+        metadata: conflict.metadata as Record<string, unknown> | undefined,
       });
     } catch (error) {
       this.logger.error(`Error applying conflict ${conflictId}: ${(error as Error).message}`);

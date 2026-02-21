@@ -93,7 +93,7 @@ export abstract class BaseCachedRepository<
     protected readonly cache: RedisService,
     protected readonly logger: PinoLogger | null,
     protected readonly config: CachedRepositoryConfig,
-    protected readonly reconstruct: EntityReconstructor<TEntity>,
+    protected readonly reconstruct: EntityReconstructor<TEntity>
   ) {
     this.entityTtl = config.entityTtl ?? 3600;
     this.searchTtl = config.searchTtl ?? 60;
@@ -149,7 +149,7 @@ export abstract class BaseCachedRepository<
     const cached = await this.cache.get(cacheKey);
     if (cached) {
       this.logCacheHit(cacheKey, 'search');
-      return this.reconstructArray(cached);
+      return this.reconstructArray(cached as unknown[]);
     }
 
     this.logCacheMiss(cacheKey, 'search');
@@ -240,7 +240,7 @@ export abstract class BaseCachedRepository<
     cacheKey: string,
     fetcher: () => Promise<T>,
     ttl: number,
-    isArray: boolean = false,
+    isArray: boolean = false
   ): Promise<T> {
     const cached = await this.cache.get(cacheKey);
 
@@ -263,20 +263,10 @@ export abstract class BaseCachedRepository<
     // Store in cache
     if (result !== null && result !== undefined) {
       if (isArray && Array.isArray(result)) {
-        const primitives = (result as unknown as TEntity[]).map((e) =>
-          e.toPrimitives(),
-        );
+        const primitives = (result as unknown as TEntity[]).map((e) => e.toPrimitives());
         await this.cache.set(cacheKey, primitives, ttl);
-      } else if (
-        !isArray &&
-        typeof result === 'object' &&
-        'toPrimitives' in (result as object)
-      ) {
-        await this.cache.set(
-          cacheKey,
-          (result as unknown as TEntity).toPrimitives(),
-          ttl,
-        );
+      } else if (!isArray && typeof result === 'object' && 'toPrimitives' in (result as object)) {
+        await this.cache.set(cacheKey, (result as unknown as TEntity).toPrimitives(), ttl);
       } else {
         await this.cache.set(cacheKey, result, ttl);
       }
@@ -288,11 +278,7 @@ export abstract class BaseCachedRepository<
   /**
    * Cache a value without fetching (useful for storing computed results).
    */
-  protected async cacheValue(
-    cacheKey: string,
-    value: unknown,
-    ttl: number,
-  ): Promise<void> {
+  protected async cacheValue(cacheKey: string, value: unknown, ttl: number): Promise<void> {
     await this.cache.set(cacheKey, value, ttl);
   }
 
@@ -350,9 +336,6 @@ export abstract class BaseCachedRepository<
   }
 
   private logCacheInvalidation(operation: string, id?: string): void {
-    this.logger?.debug(
-      { operation, entityId: id },
-      'Cache invalidated',
-    );
+    this.logger?.debug({ operation, entityId: id }, 'Cache invalidated');
   }
 }

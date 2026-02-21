@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit} from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
@@ -72,7 +72,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     private readonly bullmq: BullmqService,
     private readonly externalMetadataService: ExternalMetadataService,
     private readonly gateway: MetadataEventsService,
-    private readonly settings: SettingsService,
+    private readonly settings: SettingsService
   ) {}
 
   async onModuleInit() {
@@ -221,9 +221,7 @@ export class EnrichmentQueueService implements OnModuleInit {
 
       // Update average processing time
       const processingTime = Date.now() - startTime;
-      this.averageProcessingTime = Math.round(
-        (this.averageProcessingTime + processingTime) / 2
-      );
+      this.averageProcessingTime = Math.round((this.averageProcessingTime + processingTime) / 2);
 
       // Emit progress
       const stats = await this.getQueueStats();
@@ -238,7 +236,6 @@ export class EnrichmentQueueService implements OnModuleInit {
       this.logger.info(
         `✅ Completed ${job.type}: ${job.entityName} (${processingTime}ms, ${stats.totalPending} remaining)`
       );
-
     } catch (error) {
       this.logger.error(
         `❌ Error processing ${job.type} ${job.entityName}: ${(error as Error).message}`
@@ -294,9 +291,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     // No more items - queue complete
     this.isRunning = false;
 
-    const duration = this.sessionStartedAt
-      ? Date.now() - this.sessionStartedAt.getTime()
-      : 0;
+    const duration = this.sessionStartedAt ? Date.now() - this.sessionStartedAt.getTime() : 0;
 
     this.logger.info(
       `🎉 Enrichment queue completed! Processed ${this.processedInSession} items in ${this.formatDuration(duration)}`
@@ -314,16 +309,19 @@ export class EnrichmentQueueService implements OnModuleInit {
   private async enqueueJob(job: EnrichmentJob): Promise<void> {
     const delayMs = await this.getDelayBetweenItems();
 
-    await this.bullmq.addJob(ENRICHMENT_QUEUE, ENRICHMENT_JOB, job, {
-      delay: delayMs,
-      attempts: 1,
-      removeOnComplete: true,
-      removeOnFail: true,
-    });
-
-    this.logger.debug(
-      `Enqueued ${job.type}: ${job.entityName} (delay: ${delayMs}ms)`
+    await this.bullmq.addJob(
+      ENRICHMENT_QUEUE,
+      ENRICHMENT_JOB,
+      job as unknown as Record<string, unknown>,
+      {
+        delay: delayMs,
+        attempts: 1,
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
     );
+
+    this.logger.debug(`Enqueued ${job.type}: ${job.entityName} (delay: ${delayMs}ms)`);
   }
 
   /**
@@ -405,11 +403,13 @@ export class EnrichmentQueueService implements OnModuleInit {
    * @param options Configuration for reset
    * @returns Count of reset items
    */
-  async resetEnrichmentState(options: {
-    resetArtists?: boolean;
-    resetAlbums?: boolean;
-    onlyWithoutExternalData?: boolean; // Only reset items that have no external data
-  } = {}): Promise<{ artistsReset: number; albumsReset: number }> {
+  async resetEnrichmentState(
+    options: {
+      resetArtists?: boolean;
+      resetAlbums?: boolean;
+      onlyWithoutExternalData?: boolean; // Only reset items that have no external data
+    } = {}
+  ): Promise<{ artistsReset: number; albumsReset: number }> {
     const {
       resetArtists = true,
       resetAlbums = true,

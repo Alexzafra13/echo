@@ -60,7 +60,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     @Inject(forwardRef(() => ScannerGateway))
     private readonly scannerGateway: ScannerGateway,
     @InjectPinoLogger(LufsAnalysisQueueService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {
     const envConcurrency = this.configService.get<number>('LUFS_CONCURRENCY');
     this.concurrency = envConcurrency ?? getOptimalConcurrency();
@@ -72,7 +72,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       async (job) => {
         return this.processLufsJob(job.data as LufsAnalysisJob);
       },
-      { concurrency: this.concurrency },
+      { concurrency: this.concurrency }
     );
 
     const cpuCores = os.cpus().length;
@@ -174,8 +174,13 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       const batch = jobs.slice(i, i + BATCH_SIZE);
       await Promise.all(
         batch.map((job) =>
-          this.bullmq.addJob(LUFS_QUEUE, job.name, job.data, job.opts),
-        ),
+          this.bullmq.addJob(
+            LUFS_QUEUE,
+            job.name,
+            job.data as unknown as Record<string, unknown>,
+            job.opts
+          )
+        )
       );
     }
   }
@@ -242,7 +247,9 @@ export class LufsAnalysisQueueService implements OnModuleInit {
           })
           .where(eq(tracks.id, job.trackId));
 
-        this.logger.warn(`⚠️ ${job.trackTitle}: analysis failed, marked as analyzed (no gain data)`);
+        this.logger.warn(
+          `⚠️ ${job.trackTitle}: analysis failed, marked as analyzed (no gain data)`
+        );
       }
 
       this.processedInSession++;
@@ -250,7 +257,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       // Update average processing time
       const processingTime = Date.now() - startTime;
       this.averageProcessingTime = Math.round(
-        (this.averageProcessingTime * 0.9) + (processingTime * 0.1)
+        this.averageProcessingTime * 0.9 + processingTime * 0.1
       );
 
       // Emit WebSocket progress every 10 tracks (or on first track)
@@ -300,9 +307,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         }
 
         // Queue is truly complete
-        const duration = this.sessionStartedAt
-          ? Date.now() - this.sessionStartedAt.getTime()
-          : 0;
+        const duration = this.sessionStartedAt ? Date.now() - this.sessionStartedAt.getTime() : 0;
         this.logger.info(
           `🎉 LUFS track analysis completed! Processed ${this.processedInSession} tracks in ${this.formatDuration(duration)}`
         );
@@ -314,11 +319,8 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         // Emit final progress (completed)
         this.emitProgress();
       }
-
     } catch (error) {
-      this.logger.error(
-        `❌ Error analyzing ${job.trackTitle}: ${(error as Error).message}`
-      );
+      this.logger.error(`❌ Error analyzing ${job.trackTitle}: ${(error as Error).message}`);
 
       // Mark as analyzed to avoid re-processing on next scan
       // Leave gain/peak null to indicate no data available
@@ -342,9 +344,10 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     // Calculate pending based on internal counters
     // This is more accurate for real-time updates since new tracks may be added dynamically
     const pendingTracks = Math.max(0, this.totalToProcess - this.processedInSession);
-    const estimatedTimeRemaining = this.isRunning && pendingTracks > 0
-      ? this.formatDuration((pendingTracks / this.concurrency) * this.averageProcessingTime)
-      : null;
+    const estimatedTimeRemaining =
+      this.isRunning && pendingTracks > 0
+        ? this.formatDuration((pendingTracks / this.concurrency) * this.averageProcessingTime)
+        : null;
 
     this.scannerGateway.emitLufsProgress({
       isRunning: this.isRunning,
@@ -428,13 +431,9 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         updatedAlbums++;
       }
 
-      this.logger.info(
-        `📀 Album gains calculated! Updated ${updatedAlbums} albums`
-      );
+      this.logger.info(`📀 Album gains calculated! Updated ${updatedAlbums} albums`);
     } catch (error) {
-      this.logger.error(
-        `❌ Error calculating album gains: ${(error as Error).message}`
-      );
+      this.logger.error(`❌ Error calculating album gains: ${(error as Error).message}`);
     }
   }
 }

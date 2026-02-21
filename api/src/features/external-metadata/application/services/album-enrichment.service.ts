@@ -465,7 +465,12 @@ export class AlbumEnrichmentService {
     if (!forceRefresh && albumId) {
       const cached = await this.cache.get('album', albumId, 'cover');
       if (cached) {
-        return new AlbumCover(cached.smallUrl, cached.mediumUrl, cached.largeUrl, cached.source);
+        return new AlbumCover(
+          cached.smallUrl as string,
+          cached.mediumUrl as string,
+          cached.largeUrl as string,
+          cached.source as string
+        );
       }
     }
 

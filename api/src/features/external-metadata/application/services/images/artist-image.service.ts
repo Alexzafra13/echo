@@ -205,7 +205,10 @@ export class ArtistImageService {
    * Try to get local image from artist's disk
    */
   private async tryLocalImage(
-    artist: typeof artists.$inferSelect,
+    artist: Pick<
+      typeof artists.$inferSelect,
+      'profileImagePath' | 'backgroundImagePath' | 'bannerImagePath' | 'logoImagePath'
+    >,
     artistId: string,
     imageType: ArtistImageType
   ): Promise<CachedImageResult | null> {
@@ -236,7 +239,10 @@ export class ArtistImageService {
    * Try to get external image downloaded from providers
    */
   private async tryExternalImage(
-    artist: typeof artists.$inferSelect,
+    artist: Pick<
+      typeof artists.$inferSelect,
+      'externalProfilePath' | 'externalBackgroundPath' | 'externalBannerPath' | 'externalLogoPath'
+    >,
     artistId: string,
     imageType: ArtistImageType
   ): Promise<CachedImageResult | null> {
@@ -275,7 +281,20 @@ export class ArtistImageService {
   /**
    * Get artist from database
    */
-  private async getArtist(artistId: string): Promise<typeof artists.$inferSelect | null> {
+  private async getArtist(
+    artistId: string
+  ): Promise<Pick<
+    typeof artists.$inferSelect,
+    | 'id'
+    | 'profileImagePath'
+    | 'backgroundImagePath'
+    | 'bannerImagePath'
+    | 'logoImagePath'
+    | 'externalProfilePath'
+    | 'externalBackgroundPath'
+    | 'externalBannerPath'
+    | 'externalLogoPath'
+  > | null> {
     const result = await this.drizzle.db
       .select({
         id: artists.id,
@@ -292,7 +311,20 @@ export class ArtistImageService {
       .where(eq(artists.id, artistId))
       .limit(1);
 
-    return result[0] || null;
+    return (
+      (result[0] as Pick<
+        typeof artists.$inferSelect,
+        | 'id'
+        | 'profileImagePath'
+        | 'backgroundImagePath'
+        | 'bannerImagePath'
+        | 'logoImagePath'
+        | 'externalProfilePath'
+        | 'externalBackgroundPath'
+        | 'externalBannerPath'
+        | 'externalLogoPath'
+      >) || null
+    );
   }
 
   /**

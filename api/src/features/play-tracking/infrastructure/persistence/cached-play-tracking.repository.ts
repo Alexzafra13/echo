@@ -40,7 +40,7 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
     @InjectPinoLogger(CachedPlayTrackingRepository.name)
     private readonly logger: PinoLogger,
     private readonly baseRepository: DrizzlePlayTrackingRepository,
-    private readonly cache: RedisService,
+    private readonly cache: RedisService
   ) {}
 
   // ===================================
@@ -60,9 +60,14 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
     userId: string,
     trackId: string,
     completionRate: number,
-    playContext: PlayContext,
+    playContext: PlayContext
   ): Promise<PlayEvent> {
-    const result = await this.baseRepository.recordSkip(userId, trackId, completionRate, playContext);
+    const result = await this.baseRepository.recordSkip(
+      userId,
+      trackId,
+      completionRate,
+      playContext
+    );
 
     // Invalidate user-related caches
     await this.invalidateUserCaches(userId);
@@ -74,7 +79,7 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
     userId: string,
     trackId: string,
     playContext: PlayContext,
-    completionRate: number,
+    completionRate: number
   ): Promise<void> {
     await this.baseRepository.updatePlayStats(userId, trackId, playContext, completionRate);
 
@@ -94,7 +99,7 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
     const cacheKey = `${this.KEY_PREFIX}user-stats:${userId}:${itemType || 'all'}`;
 
     // Check cache
-    const cached = await this.cache.get(cacheKey);
+    const cached = await this.cache.get<PlayStats[]>(cacheKey);
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Play stats cache hit');
       return cached;
@@ -116,7 +121,7 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   async getTrackPlayStats(trackId: string): Promise<PlayStats[]> {
     const cacheKey = `${this.KEY_PREFIX}track-stats:${trackId}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached = await this.cache.get<PlayStats[]>(cacheKey);
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Track stats cache hit');
       return cached;
@@ -137,11 +142,14 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   async getUserTopTracks(
     userId: string,
     limit?: number,
-    days?: number,
+    days?: number
   ): Promise<{ trackId: string; playCount: number; weightedPlayCount: number }[]> {
     const cacheKey = `${this.KEY_PREFIX}top-tracks:${userId}:${limit || 50}:${days || 'all'}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached =
+      await this.cache.get<{ trackId: string; playCount: number; weightedPlayCount: number }[]>(
+        cacheKey
+      );
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Top tracks cache hit');
       return cached;
@@ -159,11 +167,11 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   async getUserTopAlbums(
     userId: string,
     limit?: number,
-    days?: number,
+    days?: number
   ): Promise<{ albumId: string; playCount: number }[]> {
     const cacheKey = `${this.KEY_PREFIX}top-albums:${userId}:${limit || 50}:${days || 'all'}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached = await this.cache.get<{ albumId: string; playCount: number }[]>(cacheKey);
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Top albums cache hit');
       return cached;
@@ -181,11 +189,11 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   async getUserTopArtists(
     userId: string,
     limit?: number,
-    days?: number,
+    days?: number
   ): Promise<{ artistId: string; playCount: number }[]> {
     const cacheKey = `${this.KEY_PREFIX}top-artists:${userId}:${limit || 50}:${days || 'all'}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached = await this.cache.get<{ artistId: string; playCount: number }[]>(cacheKey);
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Top artists cache hit');
       return cached;
@@ -206,7 +214,7 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   async getRecentlyPlayed(userId: string, limit?: number): Promise<string[]> {
     const cacheKey = `${this.KEY_PREFIX}recent:${userId}:${limit || 20}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached = await this.cache.get<string[]>(cacheKey);
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Recently played cache hit');
       return cached;
@@ -227,7 +235,7 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   async getUserPlaySummary(userId: string, days?: number): Promise<UserPlaySummary> {
     const cacheKey = `${this.KEY_PREFIX}summary:${userId}:${days || 'all'}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached = await this.cache.get<UserPlaySummary>(cacheKey);
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Play summary cache hit');
       return cached;
@@ -243,7 +251,7 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   async getTrackPlaySummary(trackId: string): Promise<TrackPlaySummary> {
     const cacheKey = `${this.KEY_PREFIX}track-summary:${trackId}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached = await this.cache.get<TrackPlaySummary>(cacheKey);
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Track summary cache hit');
       return cached;
@@ -258,11 +266,11 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
 
   async getListeningTimeByDay(
     userId: string,
-    days?: number,
+    days?: number
   ): Promise<{ date: string; minutes: number }[]> {
     const cacheKey = `${this.KEY_PREFIX}listening-time:${userId}:${days || 30}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached = await this.cache.get<{ date: string; minutes: number }[]>(cacheKey);
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Listening time cache hit');
       return cached;
@@ -294,7 +302,7 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   async updatePlaybackState(
     userId: string,
     isPlaying: boolean,
-    currentTrackId: string | null,
+    currentTrackId: string | null
   ): Promise<void> {
     // Pass-through - no caching needed for real-time playback state
     return this.baseRepository.updatePlaybackState(userId, isPlaying, currentTrackId);
@@ -311,19 +319,32 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   async getArtistTopTracks(
     artistId: string,
     limit?: number,
-    days?: number,
-  ): Promise<{
-    trackId: string;
-    title: string;
-    albumId: string | null;
-    albumName: string | null;
-    duration: number | null;
-    playCount: number;
-    uniqueListeners: number;
-  }[]> {
+    days?: number
+  ): Promise<
+    {
+      trackId: string;
+      title: string;
+      albumId: string | null;
+      albumName: string | null;
+      duration: number | null;
+      playCount: number;
+      uniqueListeners: number;
+    }[]
+  > {
     const cacheKey = `${this.KEY_PREFIX}artist-top-tracks:${artistId}:${limit || 10}:${days || 'all'}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached =
+      await this.cache.get<
+        {
+          trackId: string;
+          title: string;
+          albumId: string | null;
+          albumName: string | null;
+          duration: number | null;
+          playCount: number;
+          uniqueListeners: number;
+        }[]
+      >(cacheKey);
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Artist top tracks cache hit');
       return cached;
@@ -350,7 +371,12 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   }> {
     const cacheKey = `${this.KEY_PREFIX}artist-global-stats:${artistId}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached = await this.cache.get<{
+      totalPlays: number;
+      uniqueListeners: number;
+      avgCompletionRate: number;
+      skipRate: number;
+    }>(cacheKey);
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Artist global stats cache hit');
       return cached;
@@ -369,11 +395,14 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
    */
   async getRelatedArtists(
     artistId: string,
-    limit?: number,
+    limit?: number
   ): Promise<{ artistId: string; score: number; commonListeners: number }[]> {
     const cacheKey = `${this.KEY_PREFIX}related-artists:${artistId}:${limit || 10}`;
 
-    const cached = await this.cache.get(cacheKey);
+    const cached =
+      await this.cache.get<{ artistId: string; score: number; commonListeners: number }[]>(
+        cacheKey
+      );
     if (cached) {
       this.logger.debug({ cacheKey, type: 'HIT' }, 'Related artists cache hit');
       return cached;

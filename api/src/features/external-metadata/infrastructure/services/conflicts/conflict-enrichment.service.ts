@@ -156,7 +156,7 @@ export class ConflictEnrichmentService {
 
       // If not found in metadata, query the database
       if (entityName === 'Unknown') {
-        entityName = await this.getEntityName(conflict.entityType, conflict.entityId);
+        entityName = await this.getEntityName(conflict.entityType as EntityType, conflict.entityId);
       }
     } catch (error) {
       this.logger.warn(
@@ -233,13 +233,13 @@ export class ConflictEnrichmentService {
    */
   private getNameFromMetadata(entityType: string, metadata: Record<string, unknown>): string {
     if (entityType === 'artist' && metadata.artistName) {
-      return metadata.artistName;
+      return metadata.artistName as string;
     }
     if (entityType === 'album' && metadata.albumName) {
-      return metadata.albumName;
+      return metadata.albumName as string;
     }
     if (entityType === 'track' && metadata.trackName) {
-      return metadata.trackName;
+      return metadata.trackName as string;
     }
     return 'Unknown';
   }
@@ -256,15 +256,15 @@ export class ConflictEnrichmentService {
       entityId: conflict.entityId,
       entityType: conflict.entityType as EntityType,
       field: conflict.field as ConflictField,
-      currentValue: conflict.currentValue,
+      currentValue: conflict.currentValue ?? undefined,
       suggestedValue: conflict.suggestedValue,
       source: conflict.source as ConflictSource,
       status: conflict.status as ConflictStatus,
       priority: conflict.priority,
-      metadata: this.parseMetadata(conflict.metadata),
+      metadata: this.parseMetadata(conflict.metadata) ?? undefined,
       createdAt: conflict.createdAt,
-      resolvedAt: conflict.resolvedAt,
-      resolvedBy: conflict.resolvedBy,
+      resolvedAt: conflict.resolvedAt ?? undefined,
+      resolvedBy: conflict.resolvedBy ?? undefined,
       entity,
     };
   }

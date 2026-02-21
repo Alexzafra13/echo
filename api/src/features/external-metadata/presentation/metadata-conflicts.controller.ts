@@ -128,7 +128,7 @@ export class MetadataConflictsController {
       id,
       status: 'accepted',
       message: 'Conflict accepted and changes applied successfully',
-      updatedEntity,
+      updatedEntity: updatedEntity as Record<string, unknown> | undefined,
     };
   }
 
@@ -353,7 +353,7 @@ export class MetadataConflictsController {
       id: conflictId,
       status: 'accepted',
       message: `Applied suggestion #${suggestionIndex}: "${selectedSuggestion.name}" (score: ${selectedSuggestion.score})`,
-      updatedEntity,
+      updatedEntity: updatedEntity as Record<string, unknown> | undefined,
     };
   }
 }

@@ -1,10 +1,13 @@
 import { Module, Global } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+
 import { WsJwtGuard } from './guards/ws-jwt.guard';
 import { WsThrottlerGuard } from './guards/ws-throttler.guard';
 import { WsExceptionFilter } from './filters/ws-exception.filter';
 import { WsLoggingInterceptor } from './interceptors/ws-logging.interceptor';
+
+type ExpiresIn = JwtSignOptions['expiresIn'];
 
 /**
  * WebSocketModule - Módulo global de infraestructura WebSocket
@@ -32,7 +35,7 @@ import { WsLoggingInterceptor } from './interceptors/ws-logging.interceptor';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRATION', '24h'),
+          expiresIn: configService.get<string>('JWT_EXPIRATION', '24h') as ExpiresIn,
         },
       }),
     }),

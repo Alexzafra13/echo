@@ -120,13 +120,13 @@ export class ArtistImageEnrichmentService {
       const cached = await this.cache.get('artist', artistId, 'images');
       if (cached) {
         return new ArtistImages(
-          cached.smallUrl,
-          cached.mediumUrl,
-          cached.largeUrl,
-          cached.backgroundUrl,
-          cached.bannerUrl,
-          cached.logoUrl,
-          cached.source
+          cached.smallUrl as string | null,
+          cached.mediumUrl as string | null,
+          cached.largeUrl as string | null,
+          cached.backgroundUrl as string | null,
+          cached.bannerUrl as string | null,
+          cached.logoUrl as string | null,
+          cached.source as string
         );
       }
     }

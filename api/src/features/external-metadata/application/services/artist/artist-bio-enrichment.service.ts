@@ -97,7 +97,12 @@ export class ArtistBioEnrichmentService {
     if (!forceRefresh && artistId) {
       const cached = await this.cache.get('artist', artistId, 'bio');
       if (cached) {
-        return new ArtistBio(cached.content, cached.summary, cached.url, cached.source);
+        return new ArtistBio(
+          cached.content as string,
+          cached.summary as string | null,
+          cached.url as string | null,
+          cached.source as string
+        );
       }
     }
 

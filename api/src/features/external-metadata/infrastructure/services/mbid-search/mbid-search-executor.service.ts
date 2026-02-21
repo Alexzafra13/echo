@@ -41,7 +41,7 @@ export class MbidSearchExecutorService {
     const cached = await this.searchCache.get(artistName, 'artist');
     if (cached) {
       this.logger.debug(`Using cached results for artist: ${artistName}`);
-      return this.formatArtistMatches(cached);
+      return this.formatArtistMatches(cached as MusicBrainzArtistMatch[]);
     }
 
     // Search MusicBrainz
@@ -60,7 +60,7 @@ export class MbidSearchExecutorService {
       resultCount: matches.length,
     });
 
-    return this.formatArtistMatches(matches);
+    return this.formatArtistMatches(matches as MusicBrainzArtistMatch[]);
   }
 
   /**
@@ -75,7 +75,7 @@ export class MbidSearchExecutorService {
     const cached = await this.searchCache.get(cacheKey, 'album', { artist: artistName });
     if (cached) {
       this.logger.debug(`Using cached results for album: "${albumName}"`);
-      return this.formatAlbumMatches(cached);
+      return this.formatAlbumMatches(cached as MusicBrainzAlbumMatch[]);
     }
 
     // Search MusicBrainz
@@ -95,7 +95,7 @@ export class MbidSearchExecutorService {
       resultCount: matches.length,
     });
 
-    return this.formatAlbumMatches(matches);
+    return this.formatAlbumMatches(matches as MusicBrainzAlbumMatch[]);
   }
 
   /**
@@ -127,7 +127,7 @@ export class MbidSearchExecutorService {
     const cached = await this.searchCache.get(cacheKey, 'recording', searchParams);
     if (cached) {
       this.logger.debug(`Using cached results for track: "${params.title}"`);
-      return this.formatTrackMatches(cached);
+      return this.formatTrackMatches(cached as MusicBrainzRecordingMatch[]);
     }
 
     // Search MusicBrainz
@@ -156,7 +156,7 @@ export class MbidSearchExecutorService {
       resultCount: matches.length,
     });
 
-    return this.formatTrackMatches(matches);
+    return this.formatTrackMatches(matches as MusicBrainzRecordingMatch[]);
   }
 
   // ============================================
