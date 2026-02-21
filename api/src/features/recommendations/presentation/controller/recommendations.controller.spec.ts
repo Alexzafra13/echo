@@ -9,6 +9,12 @@ import {
 } from '../../domain/use-cases';
 import { WaveMixService } from '../../infrastructure/services/wave-mix.service';
 import { TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
+import { RequestWithUser } from '@shared/types/request.types';
+import {
+  CalculateScoreDto,
+  DailyMixConfigDto,
+  SmartPlaylistConfigDto,
+} from '../dtos/recommendations.dto';
 
 describe('RecommendationsController', () => {
   let controller: RecommendationsController;
@@ -75,14 +81,22 @@ describe('RecommendationsController', () => {
         },
       };
 
-      calculateTrackScoreUseCase.execute.mockResolvedValue(mockScore as any);
+      calculateTrackScoreUseCase.execute.mockResolvedValue(
+        mockScore as ReturnType<CalculateTrackScoreUseCase['execute']> extends Promise<infer R>
+          ? R
+          : never
+      );
 
-      const dto = { trackId: 'track-1', artistId: 'artist-1' };
-      const req = { user: mockUser } as any;
+      const dto = { trackId: 'track-1', artistId: 'artist-1' } as CalculateScoreDto;
+      const req = { user: mockUser } as unknown as RequestWithUser;
 
-      const result = await controller.calculateScore(dto as any, req);
+      const result = await controller.calculateScore(dto, req);
 
-      expect(calculateTrackScoreUseCase.execute).toHaveBeenCalledWith('user-1', 'track-1', 'artist-1');
+      expect(calculateTrackScoreUseCase.execute).toHaveBeenCalledWith(
+        'user-1',
+        'track-1',
+        'artist-1'
+      );
       expect(result.trackId).toBe('track-1');
       expect(result.totalScore).toBe(85);
       expect(result.breakdown.explicitFeedback).toBe(30);
@@ -123,7 +137,11 @@ describe('RecommendationsController', () => {
         coverImageUrl: null,
       };
 
-      generateDailyMixUseCase.execute.mockResolvedValue(mockDailyMix as any);
+      generateDailyMixUseCase.execute.mockResolvedValue(
+        mockDailyMix as ReturnType<GenerateDailyMixUseCase['execute']> extends Promise<infer R>
+          ? R
+          : never
+      );
 
       const mockTrack = {
         toPrimitives: () => ({
@@ -142,10 +160,10 @@ describe('RecommendationsController', () => {
       };
       trackRepository.findByIds.mockResolvedValue([mockTrack]);
 
-      const req = { user: mockUser } as any;
-      const config = {};
+      const req = { user: mockUser } as unknown as RequestWithUser;
+      const config = {} as DailyMixConfigDto;
 
-      const result = await controller.getDailyMix(config as any, req);
+      const result = await controller.getDailyMix(config, req);
 
       expect(generateDailyMixUseCase.execute).toHaveBeenCalledWith('user-1', config);
       expect(result.id).toBe('mix-1');
@@ -178,7 +196,11 @@ describe('RecommendationsController', () => {
         },
       };
 
-      generateSmartPlaylistUseCase.execute.mockResolvedValue(mockPlaylist as any);
+      generateSmartPlaylistUseCase.execute.mockResolvedValue(
+        mockPlaylist as ReturnType<GenerateSmartPlaylistUseCase['execute']> extends Promise<infer R>
+          ? R
+          : never
+      );
 
       const mockTrack = {
         toPrimitives: () => ({
@@ -197,10 +219,10 @@ describe('RecommendationsController', () => {
       };
       trackRepository.findByIds.mockResolvedValue([mockTrack]);
 
-      const config = { artistId: 'artist-1', name: 'Artist Mix' };
-      const req = { user: mockUser } as any;
+      const config = { artistId: 'artist-1', name: 'Artist Mix' } as SmartPlaylistConfigDto;
+      const req = { user: mockUser } as unknown as RequestWithUser;
 
-      const result = await controller.generateSmartPlaylist(config as any, req);
+      const result = await controller.generateSmartPlaylist(config, req);
 
       expect(generateSmartPlaylistUseCase.execute).toHaveBeenCalledWith('user-1', config);
       expect(result.tracks).toHaveLength(1);
@@ -226,10 +248,14 @@ describe('RecommendationsController', () => {
         },
       ];
 
-      getAutoPlaylistsUseCase.execute.mockResolvedValue(mockPlaylists as any);
+      getAutoPlaylistsUseCase.execute.mockResolvedValue(
+        mockPlaylists as ReturnType<GetAutoPlaylistsUseCase['execute']> extends Promise<infer R>
+          ? R
+          : never
+      );
       trackRepository.findByIds.mockResolvedValue([]);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getWaveMixPlaylists(req);
 
       expect(getAutoPlaylistsUseCase.execute).toHaveBeenCalledWith('user-1');
@@ -242,7 +268,7 @@ describe('RecommendationsController', () => {
       waveMixService.refreshAutoPlaylists.mockResolvedValue([]);
       trackRepository.findByIds.mockResolvedValue([]);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.refreshWaveMix(req);
 
       expect(waveMixService.refreshAutoPlaylists).toHaveBeenCalledWith('user-1');
@@ -257,10 +283,16 @@ describe('RecommendationsController', () => {
         total: 0,
         hasMore: false,
       };
-      waveMixService.getArtistPlaylistsPaginated.mockResolvedValue(mockResult as any);
+      waveMixService.getArtistPlaylistsPaginated.mockResolvedValue(
+        mockResult as ReturnType<WaveMixService['getArtistPlaylistsPaginated']> extends Promise<
+          infer R
+        >
+          ? R
+          : never
+      );
       trackRepository.findByIds.mockResolvedValue([]);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getWaveMixArtistPlaylists(req, '0', '20');
 
       expect(waveMixService.getArtistPlaylistsPaginated).toHaveBeenCalledWith('user-1', 0, 20);
@@ -276,10 +308,16 @@ describe('RecommendationsController', () => {
         total: 0,
         hasMore: false,
       };
-      waveMixService.getGenrePlaylistsPaginated.mockResolvedValue(mockResult as any);
+      waveMixService.getGenrePlaylistsPaginated.mockResolvedValue(
+        mockResult as ReturnType<WaveMixService['getGenrePlaylistsPaginated']> extends Promise<
+          infer R
+        >
+          ? R
+          : never
+      );
       trackRepository.findByIds.mockResolvedValue([]);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getWaveMixGenrePlaylists(req, '0', '20');
 
       expect(waveMixService.getGenrePlaylistsPaginated).toHaveBeenCalledWith('user-1', 0, 20);

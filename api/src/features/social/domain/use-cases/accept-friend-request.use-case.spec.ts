@@ -22,7 +22,7 @@ describe('AcceptFriendRequestUseCase', () => {
     mockSocialRepo = {
       getFriendshipById: jest.fn(),
       acceptFriendRequest: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<ISocialRepository>;
 
     useCase = new AcceptFriendRequestUseCase(mockSocialRepo);
   });
@@ -57,7 +57,7 @@ describe('AcceptFriendRequestUseCase', () => {
       // user-1 is the requester, not the addressee
       await expect(useCase.execute('friendship-123', 'user-1')).rejects.toThrow(ForbiddenError);
       await expect(useCase.execute('friendship-123', 'user-1')).rejects.toThrow(
-        'You cannot accept this friend request',
+        'You cannot accept this friend request'
       );
     });
 
@@ -77,7 +77,7 @@ describe('AcceptFriendRequestUseCase', () => {
 
       await expect(useCase.execute('friendship-123', 'user-2')).rejects.toThrow(ForbiddenError);
       await expect(useCase.execute('friendship-123', 'user-2')).rejects.toThrow(
-        'This friend request cannot be accepted',
+        'This friend request cannot be accepted'
       );
     });
 

@@ -1,4 +1,5 @@
 import { StreamTokenService } from './stream-token.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 
 describe('StreamTokenService', () => {
   let service: StreamTokenService;
@@ -21,7 +22,7 @@ describe('StreamTokenService', () => {
       },
     };
 
-    service = new StreamTokenService(mockDrizzle as any);
+    service = new StreamTokenService(mockDrizzle as unknown as DrizzleService);
   });
 
   describe('generateToken', () => {
@@ -225,7 +226,7 @@ describe('StreamTokenService', () => {
       // Assert
       expect(mockDrizzle.db.update).toHaveBeenCalled();
       expect(mockSet).toHaveBeenCalledWith(
-        expect.objectContaining({ lastUsedAt: expect.any(Date) }),
+        expect.objectContaining({ lastUsedAt: expect.any(Date) })
       );
     });
   });

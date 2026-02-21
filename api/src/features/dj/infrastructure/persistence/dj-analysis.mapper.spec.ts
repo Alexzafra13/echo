@@ -67,10 +67,10 @@ describe('DjAnalysisMapper', () => {
     });
 
     it('should default invalid status to pending', () => {
-      const invalidStatusRecord = { ...fullDbRecord, status: 'garbage' };
+      const invalidStatusRecord = { ...fullDbRecord, status: 'garbage' } as unknown as DjAnalysisDb;
       const spy = jest.spyOn(console, 'warn').mockImplementation();
 
-      const entity = DjAnalysisMapper.toDomain(invalidStatusRecord as any);
+      const entity = DjAnalysisMapper.toDomain(invalidStatusRecord);
       expect(entity.status).toBe('pending');
 
       spy.mockRestore();
@@ -78,8 +78,8 @@ describe('DjAnalysisMapper', () => {
 
     it('should preserve valid statuses', () => {
       for (const status of ['pending', 'analyzing', 'completed', 'failed']) {
-        const record = { ...fullDbRecord, status };
-        const entity = DjAnalysisMapper.toDomain(record as any);
+        const record = { ...fullDbRecord, status } as DjAnalysisDb;
+        const entity = DjAnalysisMapper.toDomain(record);
         expect(entity.status).toBe(status);
       }
     });
@@ -89,7 +89,7 @@ describe('DjAnalysisMapper', () => {
 
   describe('toDomainArray', () => {
     it('should map an array of DB records', () => {
-      const entities = DjAnalysisMapper.toDomainArray([fullDbRecord, nullableDbRecord] as any[]);
+      const entities = DjAnalysisMapper.toDomainArray([fullDbRecord, nullableDbRecord]);
       expect(entities).toHaveLength(2);
       expect(entities[0].id).toBe('analysis-id-1');
       expect(entities[1].id).toBe('analysis-id-2');

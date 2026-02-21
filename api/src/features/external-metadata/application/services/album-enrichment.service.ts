@@ -13,6 +13,7 @@ import { ImageDownloadService } from '../../infrastructure/services/image-downlo
 import {
   MetadataConflictService,
   ConflictPriority,
+  ConflictSource,
 } from '../../infrastructure/services/metadata-conflict.service';
 import { NotFoundError } from '@shared/errors';
 import { MbidSearchService } from './mbid-search.service';
@@ -476,7 +477,14 @@ export class AlbumEnrichmentService {
 
         // Fanart.tv needs special handling
         if (agentObj.name === 'fanart' && mbzArtistId && mbzAlbumId) {
-          const fanartAgent = agentObj as any;
+          const fanartAgent = agentObj as IAlbumCoverRetriever & {
+            getAlbumCoverByArtist?: (
+              artistMbid: string,
+              albumMbid: string,
+              artistName: string,
+              albumName: string
+            ) => Promise<AlbumCover | null>;
+          };
           if (fanartAgent.getAlbumCoverByArtist) {
             const cover = await fanartAgent.getAlbumCoverByArtist(
               mbzArtistId,

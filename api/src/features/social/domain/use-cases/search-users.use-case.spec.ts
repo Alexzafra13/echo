@@ -6,7 +6,7 @@ describe('SearchUsersUseCase', () => {
   let mockRepo: jest.Mocked<ISocialRepository>;
 
   beforeEach(() => {
-    mockRepo = { searchUsers: jest.fn() } as any;
+    mockRepo = { searchUsers: jest.fn() } as unknown as jest.Mocked<ISocialRepository>;
     useCase = new SearchUsersUseCase(mockRepo);
   });
 
@@ -14,7 +14,9 @@ describe('SearchUsersUseCase', () => {
     const mockResults = [
       { id: 'user-2', username: 'johndoe', name: 'John', avatarPath: null, friendshipStatus: null },
     ];
-    mockRepo.searchUsers.mockResolvedValue(mockResults as any);
+    mockRepo.searchUsers.mockResolvedValue(
+      mockResults as Awaited<ReturnType<ISocialRepository['searchUsers']>>
+    );
 
     const result = await useCase.execute('john', 'user-1');
 

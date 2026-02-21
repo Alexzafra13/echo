@@ -9,7 +9,7 @@ type ParseFFmpegOutput = (output: string) => { inputLufs: number; inputPeak: num
 
 describe('LufsAnalyzerService', () => {
   let service: LufsAnalyzerService;
-  let mockLogger: any;
+  let mockLogger: { debug: jest.Mock; warn: jest.Mock; error: jest.Mock; info: jest.Mock };
 
   // Sample FFmpeg loudnorm output (real format)
   const sampleLoudnormOutput = `
@@ -55,7 +55,9 @@ describe('LufsAnalyzerService', () => {
 
   // Helper to access private parseFFmpegOutput method
   const getParseMethod = (): ParseFFmpegOutput => {
-    return (service as any).parseFFmpegOutput.bind(service);
+    return (service as unknown as Record<string, ParseFFmpegOutput>).parseFFmpegOutput.bind(
+      service
+    );
   };
 
   describe('parseFFmpegOutput', () => {
@@ -65,7 +67,7 @@ describe('LufsAnalyzerService', () => {
 
       expect(result).not.toBeNull();
       expect(result!.inputLufs).toBe(-14.52);
-      expect(result!.inputPeak).toBe(-0.50);
+      expect(result!.inputPeak).toBe(-0.5);
     });
 
     it('should return null for invalid output', () => {
@@ -105,8 +107,8 @@ size=N/A time=00:03:45.32 bitrate=N/A speed=1.2x
       const result = parse(messyOutput);
 
       expect(result).not.toBeNull();
-      expect(result!.inputLufs).toBe(-12.50);
-      expect(result!.inputPeak).toBe(-2.30);
+      expect(result!.inputLufs).toBe(-12.5);
+      expect(result!.inputPeak).toBe(-2.3);
     });
 
     it('should use fallback parsing for simplified JSON', () => {
@@ -119,8 +121,8 @@ Some info after
       const result = parse(simplifiedOutput);
 
       expect(result).not.toBeNull();
-      expect(result!.inputLufs).toBe(-15.00);
-      expect(result!.inputPeak).toBe(-3.00);
+      expect(result!.inputLufs).toBe(-15.0);
+      expect(result!.inputPeak).toBe(-3.0);
     });
 
     it('should handle very loud files (positive peak)', () => {
@@ -142,8 +144,8 @@ Some info after
       const result = parse(loudOutput);
 
       expect(result).not.toBeNull();
-      expect(result!.inputLufs).toBe(-10.00);
-      expect(result!.inputPeak).toBe(2.00);
+      expect(result!.inputLufs).toBe(-10.0);
+      expect(result!.inputPeak).toBe(2.0);
     });
 
     it('should handle very quiet files', () => {
@@ -165,8 +167,8 @@ Some info after
       const result = parse(quietOutput);
 
       expect(result).not.toBeNull();
-      expect(result!.inputLufs).toBe(-30.00);
-      expect(result!.inputPeak).toBe(-20.00);
+      expect(result!.inputLufs).toBe(-30.0);
+      expect(result!.inputPeak).toBe(-20.0);
     });
   });
 
@@ -204,7 +206,7 @@ Some info after
     it('should convert dBTP to linear peak correctly', () => {
       // Formula: trackPeak = 10^(dBTP/20)
       // -0.50 dBTP -> 10^(-0.50/20) = 0.944
-      const inputPeak = -0.50;
+      const inputPeak = -0.5;
       const linearPeak = Math.pow(10, inputPeak / 20);
 
       expect(linearPeak).toBeCloseTo(0.944, 3);
@@ -253,7 +255,7 @@ Some info after
       // Mock a successful analysis
       const mockResult: LufsAnalysisResult = {
         inputLufs: -14.52,
-        inputPeak: -0.50,
+        inputPeak: -0.5,
         trackGain: -1.48,
         trackPeak: 0.944,
       };
@@ -314,7 +316,7 @@ Some info after
     it('should safely handle paths with special characters (via mock)', async () => {
       const mockResult: LufsAnalysisResult = {
         inputLufs: -14.52,
-        inputPeak: -0.50,
+        inputPeak: -0.5,
         trackGain: -1.48,
         trackPeak: 0.944,
       };

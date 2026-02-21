@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { StartScanUseCase, SCAN_PROCESSOR } from './start-scan.use-case';
+import { StartScanUseCase, SCAN_PROCESSOR, IScanProcessor } from './start-scan.use-case';
 import { SCANNER_REPOSITORY, IScannerRepository } from '../../ports/scanner-repository.port';
 import { LibraryScan } from '../../entities/library-scan.entity';
 import { ScannerError } from '@shared/errors';
@@ -7,7 +7,7 @@ import { ScannerError } from '@shared/errors';
 describe('StartScanUseCase', () => {
   let useCase: StartScanUseCase;
   let scannerRepository: jest.Mocked<IScannerRepository>;
-  let scanProcessor: jest.Mocked<any>;
+  let scanProcessor: jest.Mocked<IScanProcessor>;
 
   // Helper para crear mock de scan con valores por defecto
   const createMockScan = (overrides = {}): LibraryScan => {
@@ -114,7 +114,7 @@ describe('StartScanUseCase', () => {
           path: undefined,
           recursive: undefined,
           pruneDeleted: undefined,
-        }),
+        })
       );
     });
 
@@ -162,7 +162,7 @@ describe('StartScanUseCase', () => {
           path: '/music/jazz',
           recursive: false,
           pruneDeleted: true,
-        }),
+        })
       );
     });
   });

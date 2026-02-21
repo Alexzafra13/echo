@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { parseFile } from 'music-metadata';
+import { parseFile, type IAudioMetadata, type ICommonTagsResult } from 'music-metadata';
 
 /**
  * TrackMetadata - Metadatos extraídos de un archivo de música
@@ -52,7 +52,7 @@ export interface TrackMetadata {
 export class MetadataExtractorService {
   constructor(
     @InjectPinoLogger(MetadataExtractorService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   async extractMetadata(filePath: string): Promise<TrackMetadata | null> {
@@ -69,7 +69,7 @@ export class MetadataExtractorService {
     }
   }
 
-  private normalizeMetadata(metadata: any): TrackMetadata {
+  private normalizeMetadata(metadata: IAudioMetadata): TrackMetadata {
     const { common, format } = metadata;
 
     // Extraer ReplayGain si existe
@@ -107,17 +107,12 @@ export class MetadataExtractorService {
 
       // MusicBrainz IDs
       musicBrainzTrackId:
-        common.musicbrainz_recordingid ||
-        this.extractMusicBrainzId(common, 'recording'),
-      musicBrainzAlbumId:
-        common.musicbrainz_albumid ||
-        this.extractMusicBrainzId(common, 'album'),
+        common.musicbrainz_recordingid || this.extractMusicBrainzId(common, 'recording'),
+      musicBrainzAlbumId: common.musicbrainz_albumid || this.extractMusicBrainzId(common, 'album'),
       musicBrainzArtistId:
-        common.musicbrainz_artistid ||
-        this.extractMusicBrainzId(common, 'artist'),
+        common.musicbrainz_artistid || this.extractMusicBrainzId(common, 'artist'),
       musicBrainzAlbumArtistId:
-        common.musicbrainz_albumartistid ||
-        this.extractMusicBrainzId(common, 'albumartist'),
+        common.musicbrainz_albumartistid || this.extractMusicBrainzId(common, 'albumartist'),
 
       // Otros
       comment: this.extractComment(common.comment),
@@ -134,7 +129,7 @@ export class MetadataExtractorService {
    * Extrae valores de ReplayGain de los metadatos
    * music-metadata proporciona estos valores en common.replaygain
    */
-  private extractReplayGain(common: any): {
+  private extractReplayGain(common: ICommonTagsResult): {
     trackGain?: number;
     trackPeak?: number;
     albumGain?: number;
@@ -156,10 +151,11 @@ export class MetadataExtractorService {
   /**
    * Extrae ID de MusicBrainz de diferentes formatos
    */
-  private extractMusicBrainzId(common: any, type: string): string | undefined {
-    const key = `musicbrainz_${type}id`;
-    if (common[key]) {
-      return Array.isArray(common[key]) ? common[key][0] : common[key];
+  private extractMusicBrainzId(common: ICommonTagsResult, type: string): string | undefined {
+    const key = `musicbrainz_${type}id` as keyof ICommonTagsResult;
+    const value = common[key];
+    if (value) {
+      return Array.isArray(value) ? String(value[0]) : String(value);
     }
     return undefined;
   }
@@ -167,7 +163,7 @@ export class MetadataExtractorService {
   /**
    * Extrae comentario (puede venir en diferentes formatos)
    */
-  private extractComment(comment: any): string | undefined {
+  private extractComment(comment: ICommonTagsResult['comment']): string | undefined {
     if (!comment) return undefined;
 
     if (Array.isArray(comment)) {
