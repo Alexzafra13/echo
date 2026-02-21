@@ -204,7 +204,7 @@ export class WaveMixService {
     const cacheKey = `${this.CACHE_KEY_PREFIX}:${userId}`;
 
     if (!forceRefresh) {
-      const cached = await this.redis.get(cacheKey);
+      const cached = await this.redis.get<AutoPlaylist[]>(cacheKey);
       if (cached) {
         this.logger.info({ userId }, 'Serving cached playlists from Redis');
         return cached;

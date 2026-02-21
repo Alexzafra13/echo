@@ -70,7 +70,7 @@ export class ConflictChangeApplierService {
       case 'artistName':
         // For MBID conflicts, apply the MBID from metadata
         if (conflict.metadata?.suggestedMbid) {
-          updateData.mbzArtistId = conflict.metadata.suggestedMbid;
+          updateData.mbzArtistId = conflict.metadata.suggestedMbid as string;
           updateData.mbidSearchedAt = new Date();
           this.logger.info(
             `Applying MBID ${conflict.metadata.suggestedMbid} for artist ${conflict.entityId}`
@@ -105,12 +105,13 @@ export class ConflictChangeApplierService {
   ): void {
     const images = typeof metadata === 'string' ? JSON.parse(metadata) : metadata || {};
 
-    if (images.smallImageUrl) updateData.smallImageUrl = images.smallImageUrl;
-    if (images.mediumImageUrl) updateData.mediumImageUrl = images.mediumImageUrl;
-    if (images.largeImageUrl) updateData.largeImageUrl = images.largeImageUrl;
-    if (images.backgroundImageUrl) updateData.backgroundImageUrl = images.backgroundImageUrl;
-    if (images.bannerImageUrl) updateData.bannerImageUrl = images.bannerImageUrl;
-    if (images.logoImageUrl) updateData.logoImageUrl = images.logoImageUrl;
+    if (images.smallImageUrl) updateData.profileImagePath = images.smallImageUrl as string;
+    if (images.mediumImageUrl) updateData.profileImagePath = images.mediumImageUrl as string;
+    if (images.largeImageUrl) updateData.profileImagePath = images.largeImageUrl as string;
+    if (images.backgroundImageUrl)
+      updateData.backgroundImagePath = images.backgroundImageUrl as string;
+    if (images.bannerImageUrl) updateData.bannerImagePath = images.bannerImageUrl as string;
+    if (images.logoImageUrl) updateData.logoImagePath = images.logoImageUrl as string;
   }
 
   /**

@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and, count, sql } from 'drizzle-orm';
@@ -31,7 +31,7 @@ export class MbidAutoSearchService {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly searchExecutor: MbidSearchExecutorService,
-    private readonly confidenceStrategy: MbidConfidenceStrategyService,
+    private readonly confidenceStrategy: MbidConfidenceStrategyService
   ) {}
 
   /**
@@ -40,7 +40,7 @@ export class MbidAutoSearchService {
   async searchArtistMbid(
     artistId: string,
     artistName: string,
-    createConflictIfNeeded = true,
+    createConflictIfNeeded = true
   ): Promise<MbidSearchResult> {
     try {
       if (!(await this.confidenceStrategy.isEnabled())) {
@@ -52,7 +52,7 @@ export class MbidAutoSearchService {
 
       if (result.action === 'auto-apply' && result.topMatch) {
         this.logger.info(
-          `High confidence match (${result.topMatch.score}) for artist "${artistName}" → "${result.topMatch.name}" (${result.topMatch.mbid})`,
+          `High confidence match (${result.topMatch.score}) for artist "${artistName}" → "${result.topMatch.name}" (${result.topMatch.mbid})`
         );
 
         await this.drizzle.db
@@ -67,14 +67,14 @@ export class MbidAutoSearchService {
             currentValue: artistName,
             metadata: { artistName, searchQuery: artistName },
           },
-          result,
+          result
         );
       }
 
       return result;
     } catch (error) {
       this.logger.error(
-        `Error searching MBID for artist "${artistName}": ${(error as Error).message}`,
+        `Error searching MBID for artist "${artistName}": ${(error as Error).message}`
       );
       return this.confidenceStrategy.buildErrorResult(error as Error);
     }
@@ -87,7 +87,7 @@ export class MbidAutoSearchService {
     albumId: string,
     albumName: string,
     artistName: string,
-    createConflictIfNeeded = true,
+    createConflictIfNeeded = true
   ): Promise<MbidSearchResult> {
     try {
       if (!(await this.confidenceStrategy.isEnabled())) {
@@ -99,14 +99,14 @@ export class MbidAutoSearchService {
 
       if (result.action === 'auto-apply' && result.topMatch) {
         this.logger.info(
-          `High confidence match (${result.topMatch.score}) for album "${albumName}" → "${result.topMatch.name}" (${result.topMatch.mbid})`,
+          `High confidence match (${result.topMatch.score}) for album "${albumName}" → "${result.topMatch.name}" (${result.topMatch.mbid})`
         );
 
         await this.drizzle.db
           .update(albums)
           .set({
             mbzAlbumId: result.topMatch.mbid,
-            mbzAlbumArtistId: result.topMatch.details.artistMbid || undefined,
+            mbzAlbumArtistId: (result.topMatch.details.artistMbid as string | undefined) ?? null,
           })
           .where(eq(albums.id, albumId));
       } else if (result.action === 'create-conflict' && createConflictIfNeeded) {
@@ -121,14 +121,14 @@ export class MbidAutoSearchService {
               searchQuery: `album: "${albumName}" artist: "${artistName}"`,
             },
           },
-          result,
+          result
         );
       }
 
       return result;
     } catch (error) {
       this.logger.error(
-        `Error searching MBID for album "${albumName}": ${(error as Error).message}`,
+        `Error searching MBID for album "${albumName}": ${(error as Error).message}`
       );
       return this.confidenceStrategy.buildErrorResult(error as Error);
     }
@@ -146,7 +146,7 @@ export class MbidAutoSearchService {
       trackNumber?: number;
       duration?: number;
     },
-    createConflictIfNeeded = true,
+    createConflictIfNeeded = true
   ): Promise<MbidSearchResult> {
     try {
       if (!(await this.confidenceStrategy.isEnabled())) {
@@ -158,14 +158,14 @@ export class MbidAutoSearchService {
 
       if (result.action === 'auto-apply' && result.topMatch) {
         this.logger.info(
-          `High confidence match (${result.topMatch.score}) for track "${params.title}" → "${result.topMatch.name}" (${result.topMatch.mbid})`,
+          `High confidence match (${result.topMatch.score}) for track "${params.title}" → "${result.topMatch.name}" (${result.topMatch.mbid})`
         );
 
         await this.drizzle.db
           .update(tracks)
           .set({
             mbzTrackId: result.topMatch.mbid,
-            mbzArtistId: result.topMatch.details.artistMbid || undefined,
+            mbzArtistId: (result.topMatch.details.artistMbid as string | undefined) ?? null,
           })
           .where(eq(tracks.id, trackId));
       } else if (result.action === 'create-conflict' && createConflictIfNeeded) {
@@ -181,14 +181,14 @@ export class MbidAutoSearchService {
               searchQuery: JSON.stringify(params),
             },
           },
-          result,
+          result
         );
       }
 
       return result;
     } catch (error) {
       this.logger.error(
-        `Error searching MBID for track "${params.title}": ${(error as Error).message}`,
+        `Error searching MBID for track "${params.title}": ${(error as Error).message}`
       );
       return this.confidenceStrategy.buildErrorResult(error as Error);
     }
@@ -211,8 +211,8 @@ export class MbidAutoSearchService {
       .where(
         and(
           sql`${metadataConflicts.metadata}->>'autoSearched' = 'true'`,
-          eq(metadataConflicts.status, 'pending'),
-        ),
+          eq(metadataConflicts.status, 'pending')
+        )
       );
 
     // Conflictos aceptados (auto-applied por usuario o auto)
@@ -222,8 +222,8 @@ export class MbidAutoSearchService {
       .where(
         and(
           sql`${metadataConflicts.metadata}->>'autoSearched' = 'true'`,
-          eq(metadataConflicts.status, 'accepted'),
-        ),
+          eq(metadataConflicts.status, 'accepted')
+        )
       );
 
     // Conflictos ignorados/rechazados
@@ -233,8 +233,8 @@ export class MbidAutoSearchService {
       .where(
         and(
           sql`${metadataConflicts.metadata}->>'autoSearched' = 'true'`,
-          sql`${metadataConflicts.status} IN ('rejected', 'ignored')`,
-        ),
+          sql`${metadataConflicts.status} IN ('rejected', 'ignored')`
+        )
       );
 
     // Artistas con MBID asignado (auto-applied silenciosamente)
@@ -250,7 +250,10 @@ export class MbidAutoSearchService {
       .where(sql`${albums.mbzAlbumId} IS NOT NULL`);
 
     const conflictsCreated = pendingConflicts?.count ?? 0;
-    const autoApplied = (artistsWithMbid?.count ?? 0) + (albumsWithMbid?.count ?? 0) + (acceptedConflicts?.count ?? 0);
+    const autoApplied =
+      (artistsWithMbid?.count ?? 0) +
+      (albumsWithMbid?.count ?? 0) +
+      (acceptedConflicts?.count ?? 0);
     const ignored = ignoredConflicts?.count ?? 0;
     const totalAutoSearched = autoApplied + conflictsCreated + ignored;
 
