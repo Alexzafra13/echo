@@ -33,7 +33,7 @@ export class WaveMixSchedulerService implements OnModuleInit {
     private readonly logger: PinoLogger,
     private readonly bullmqService: BullmqService,
     private readonly waveMixService: WaveMixService,
-    private readonly drizzle: DrizzleService,
+    private readonly drizzle: DrizzleService
   ) {}
 
   async onModuleInit() {
@@ -102,7 +102,10 @@ export class WaveMixSchedulerService implements OnModuleInit {
    * Only processes users who have logged in within ACTIVE_USER_DAYS.
    */
   async regenerateAllWaveMixes(): Promise<void> {
-    this.logger.info({ activeDays: ACTIVE_USER_DAYS }, 'Starting daily Wave Mix regeneration for active users');
+    this.logger.info(
+      { activeDays: ACTIVE_USER_DAYS },
+      'Starting daily Wave Mix regeneration for active users'
+    );
 
     // Calculate cutoff date for active users
     const cutoffDate = new Date();
@@ -114,6 +117,7 @@ export class WaveMixSchedulerService implements OnModuleInit {
     let lastId: string | null = null;
 
     // Process users in batches using cursor-based pagination
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       // Build query: active users (logged in within cutoff) with cursor pagination
       const conditions = [gte(users.lastLoginAt, cutoffDate)];
@@ -160,11 +164,14 @@ export class WaveMixSchedulerService implements OnModuleInit {
 
       // Log progress every 100 users
       if (totalProcessed % 100 === 0) {
-        this.logger.info({ processed: totalProcessed, success: successCount, errors: errorCount }, 'Wave Mix regeneration progress');
+        this.logger.info(
+          { processed: totalProcessed, success: successCount, errors: errorCount },
+          'Wave Mix regeneration progress'
+        );
       }
 
       // Small delay between batches to reduce system load
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     this.logger.info(

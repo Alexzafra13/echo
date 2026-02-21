@@ -24,7 +24,7 @@ export class ApplyCustomArtistImageUseCase {
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEventsService,
+    private readonly metadataGateway: MetadataEventsService
   ) {}
 
   async execute(input: ApplyCustomArtistImageInput): Promise<ApplyCustomArtistImageOutput> {
@@ -58,7 +58,7 @@ export class ApplyCustomArtistImageUseCase {
     }
 
     this.logger.info(
-      `Applying custom ${customImage.imageType} image for artist: ${customImage.artist.name}`,
+      `Applying custom ${customImage.imageType} image for artist: ${customImage.artist.name}`
     );
 
     const typeConfig = getArtistImageTypeBasicConfig(customImage.imageType);
@@ -73,8 +73,8 @@ export class ApplyCustomArtistImageUseCase {
           and(
             eq(customArtistImages.artistId, input.artistId),
             eq(customArtistImages.imageType, customImage.imageType),
-            eq(customArtistImages.isActive, true),
-          ),
+            eq(customArtistImages.isActive, true)
+          )
         );
 
       // Activate this custom image
@@ -84,7 +84,7 @@ export class ApplyCustomArtistImageUseCase {
         .where(eq(customArtistImages.id, input.customImageId));
 
       // Update artist record to use this custom image (local path)
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         [typeConfig.localPathField]: customImage.filePath,
         [typeConfig.localUpdatedField]: new Date(),
         // Clear external image references (custom takes precedence)
@@ -93,10 +93,7 @@ export class ApplyCustomArtistImageUseCase {
         [typeConfig.externalUpdatedField]: null,
       };
 
-      await tx
-        .update(artists)
-        .set(updateData)
-        .where(eq(artists.id, input.artistId));
+      await tx.update(artists).set(updateData).where(eq(artists.id, input.artistId));
     });
 
     // Invalidate caches
@@ -107,12 +104,12 @@ export class ApplyCustomArtistImageUseCase {
     this.metadataGateway.emitArtistImagesUpdated({
       artistId: input.artistId,
       artistName: customImage.artist.name,
-      imageType: customImage.imageType as any,
+      imageType: customImage.imageType as 'profile' | 'background' | 'banner' | 'logo',
       updatedAt: new Date(),
     });
 
     this.logger.info(
-      `✅ Successfully applied custom ${customImage.imageType} image for ${customImage.artist.name}`,
+      `✅ Successfully applied custom ${customImage.imageType} image for ${customImage.artist.name}`
     );
 
     return {

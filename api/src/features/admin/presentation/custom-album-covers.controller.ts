@@ -13,7 +13,14 @@ import {
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { MultipartFile } from '@fastify/multipart';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { UploadCustomAlbumCoverUseCase } from '../infrastructure/use-cases/upload-custom-album-cover';
@@ -30,7 +37,7 @@ export class CustomAlbumCoversController {
     private readonly uploadCustomCover: UploadCustomAlbumCoverUseCase,
     private readonly listCustomCovers: ListCustomAlbumCoversUseCase,
     private readonly deleteCustomCover: DeleteCustomAlbumCoverUseCase,
-    private readonly applyCustomCover: ApplyCustomAlbumCoverUseCase,
+    private readonly applyCustomCover: ApplyCustomAlbumCoverUseCase
   ) {}
 
   @Get(':albumId')
@@ -82,7 +89,8 @@ export class CustomAlbumCoversController {
   })
   async uploadCover(
     @Param('albumId', ParseUUIDPipe) albumId: string,
-    @Req() request: FastifyRequest & { file: () => Promise<MultipartFile> } & { user: any },
+    @Req()
+    request: FastifyRequest & { file: () => Promise<MultipartFile> } & { user: { id: string } }
   ) {
     // Fastify multipart - get uploaded file
     const data = await request.file();
@@ -105,7 +113,7 @@ export class CustomAlbumCoversController {
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedMimeTypes.includes(data.mimetype)) {
       throw new BadRequestException(
-        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`,
+        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`
       );
     }
 
@@ -128,7 +136,7 @@ export class CustomAlbumCoversController {
   })
   async applyCover(
     @Param('albumId', ParseUUIDPipe) albumId: string,
-    @Param('customCoverId', ParseUUIDPipe) customCoverId: string,
+    @Param('customCoverId', ParseUUIDPipe) customCoverId: string
   ) {
     return await this.applyCustomCover.execute({
       albumId,
@@ -143,7 +151,7 @@ export class CustomAlbumCoversController {
   })
   async deleteCover(
     @Param('albumId', ParseUUIDPipe) albumId: string,
-    @Param('customCoverId', ParseUUIDPipe) customCoverId: string,
+    @Param('customCoverId', ParseUUIDPipe) customCoverId: string
   ) {
     return await this.deleteCustomCover.execute({
       albumId,

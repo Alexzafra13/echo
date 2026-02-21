@@ -1,5 +1,6 @@
 // Cargar .env solo en desarrollo
 if (process.env.NODE_ENV !== 'production') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   require('dotenv/config');
 }
 
@@ -15,6 +16,7 @@ import { MustChangePasswordInterceptor } from '@shared/interceptors/must-change-
 import { getVersion } from '@shared/utils/version.util';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
+import { networkInterfaces as osNetworkInterfaces } from 'os';
 
 async function bootstrap() {
   const fastifyAdapter = new FastifyAdapter();
@@ -27,7 +29,7 @@ async function bootstrap() {
   app.useLogger(logger);
 
   const maxFileSize = parseInt(process.env.MAX_UPLOAD_SIZE || '10485760', 10); // Default: 10MB
-  await app.register(require('@fastify/multipart'), {
+  await app.register((await import('@fastify/multipart')).default, {
     limits: {
       fileSize: maxFileSize,
     },
@@ -35,7 +37,7 @@ async function bootstrap() {
 
   // Compresión solo en desarrollo; en producción la maneja el proxy reverso
   if (process.env.NODE_ENV !== 'production') {
-    await app.register(require('@fastify/compress'), {
+    await app.register((await import('@fastify/compress')).default, {
       encodings: ['gzip', 'deflate'],
       threshold: 1024,
       customTypes: /^(?!audio\/|video\/|image\/).*$/,
@@ -45,7 +47,7 @@ async function bootstrap() {
     logger.log('Compression disabled - handled by reverse proxy');
   }
 
-  await app.register(require('@fastify/helmet'), {
+  await app.register((await import('@fastify/helmet')).default, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -84,7 +86,7 @@ async function bootstrap() {
   );
 
   // Serialización de BigInt para respuestas JSON
-  // @ts-ignore
+  // @ts-expect-error
   BigInt.prototype.toJSON = function () {
     return this.toString();
   };
@@ -144,7 +146,7 @@ async function bootstrap() {
     const fastify = app.getHttpAdapter().getInstance();
     const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
 
-    await fastify.register(require('@fastify/static'), {
+    await fastify.register((await import('@fastify/static')).default, {
       root: frontendPath,
       prefix: '/',
       decorateReply: false,
@@ -180,11 +182,12 @@ async function bootstrap() {
 
   await app.listen(appConfig.port, '0.0.0.0');
 
-  const networkInterfaces = require('os').networkInterfaces();
+  const netInterfaces = osNetworkInterfaces();
   const networkIPs: string[] = [];
 
-  for (const interfaceName in networkInterfaces) {
-    const interfaces = networkInterfaces[interfaceName];
+  for (const interfaceName in netInterfaces) {
+    const interfaces = netInterfaces[interfaceName];
+    if (!interfaces) continue;
     for (const iface of interfaces) {
       if (iface.family === 'IPv4' && !iface.internal) {
         networkIPs.push(iface.address);

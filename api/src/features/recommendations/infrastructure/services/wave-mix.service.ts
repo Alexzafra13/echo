@@ -54,7 +54,7 @@ export class WaveMixService {
     private readonly shuffleService: PlaylistShuffleService,
     private readonly coverService: PlaylistCoverService,
     private readonly artistPlaylistService: ArtistPlaylistService,
-    private readonly genrePlaylistService: GenrePlaylistService,
+    private readonly genrePlaylistService: GenrePlaylistService
   ) {}
 
   /**
@@ -90,11 +90,18 @@ export class WaveMixService {
     const trackArtistMap = new Map(tracksResult.map((t) => [t.id, t.artistId || '']));
 
     // Calculate scores
-    const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIds, trackArtistMap);
-    this.logger.info({ userId, scoredTracksCount: scoredTracks.length }, 'Calculated scores for tracks');
+    const scoredTracks = await this.scoringService.calculateAndRankTracks(
+      userId,
+      trackIds,
+      trackArtistMap
+    );
+    this.logger.info(
+      { userId, scoredTracksCount: scoredTracks.length },
+      'Calculated scores for tracks'
+    );
 
     // Select best tracks
-    let qualifiedTracks = this.selectQualifiedTracks(scoredTracks, finalConfig);
+    const qualifiedTracks = this.selectQualifiedTracks(scoredTracks, finalConfig);
 
     if (qualifiedTracks.length === 0) {
       this.logger.info({ userId }, 'No tracks available, returning empty mix');
@@ -102,13 +109,20 @@ export class WaveMixService {
     }
 
     const finalTracks = qualifiedTracks.slice(0, finalConfig.maxTracks);
-    this.logger.info({ userId, selectedTracks: finalTracks.length }, 'Selected tracks for Wave Mix');
+    this.logger.info(
+      { userId, selectedTracks: finalTracks.length },
+      'Selected tracks for Wave Mix'
+    );
 
     // Intelligent shuffle (uses DJ analysis for harmonic flow when available)
     const shuffledTracks = await this.shuffleService.intelligentShuffle(finalTracks, tracksResult);
 
     // Calculate metadata
-    const metadata = await this.shuffleService.calculateMetadata(userId, shuffledTracks, tracksResult);
+    const metadata = await this.shuffleService.calculateMetadata(
+      userId,
+      shuffledTracks,
+      tracksResult
+    );
 
     // Create Wave Mix
     const now = new Date();
@@ -120,7 +134,8 @@ export class WaveMixService {
       type: 'wave-mix',
       userId,
       name: 'Wave Mix',
-      description: 'Recomendaciones personalizadas basadas en tus gustos musicales y tu atmósfera favorita en echo',
+      description:
+        'Recomendaciones personalizadas basadas en tus gustos musicales y tu atmósfera favorita en echo',
       tracks: shuffledTracks,
       createdAt: now,
       expiresAt,
@@ -135,18 +150,24 @@ export class WaveMixService {
   private selectQualifiedTracks(scoredTracks: TrackScore[], config: WaveMixConfig): TrackScore[] {
     let qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= config.minScore);
 
-    this.logger.info({
-      qualifiedCount: qualifiedTracks.length,
-      minScore: config.minScore,
-      targetTracks: config.maxTracks,
-    }, 'Tracks qualified above minimum score');
+    this.logger.info(
+      {
+        qualifiedCount: qualifiedTracks.length,
+        minScore: config.minScore,
+        targetTracks: config.maxTracks,
+      },
+      'Tracks qualified above minimum score'
+    );
 
     // Fallback with lower threshold
     if (qualifiedTracks.length < config.maxTracks && scoredTracks.length > 0) {
       if (qualifiedTracks.length < config.maxTracks) {
         const fallbackMinScore = config.minScore * 0.5;
         qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= fallbackMinScore);
-        this.logger.info({ fallbackMinScore, qualifiedCount: qualifiedTracks.length }, 'Applied fallback threshold');
+        this.logger.info(
+          { fallbackMinScore, qualifiedCount: qualifiedTracks.length },
+          'Applied fallback threshold'
+        );
       }
 
       // Final fallback: take all available
@@ -176,7 +197,10 @@ export class WaveMixService {
   /**
    * Get all auto playlists with caching
    */
-  async getAllAutoPlaylists(userId: string, forceRefresh: boolean = false): Promise<AutoPlaylist[]> {
+  async getAllAutoPlaylists(
+    userId: string,
+    forceRefresh: boolean = false
+  ): Promise<AutoPlaylist[]> {
     const cacheKey = `${this.CACHE_KEY_PREFIX}:${userId}`;
 
     if (!forceRefresh) {
@@ -196,16 +220,20 @@ export class WaveMixService {
 
     const playlists = [waveMix, ...artistPlaylists, ...genrePlaylists];
 
-    const hasContent = waveMix.tracks.length > 0 || artistPlaylists.length > 0 || genrePlaylists.length > 0;
+    const hasContent =
+      waveMix.tracks.length > 0 || artistPlaylists.length > 0 || genrePlaylists.length > 0;
     if (hasContent) {
       await this.redis.set(cacheKey, playlists, this.CACHE_TTL_SECONDS);
-      this.logger.info({
-        userId,
-        ttlSeconds: this.CACHE_TTL_SECONDS,
-        waveMixTracks: waveMix.tracks.length,
-        artistPlaylists: artistPlaylists.length,
-        genrePlaylists: genrePlaylists.length,
-      }, 'Cached playlists in Redis');
+      this.logger.info(
+        {
+          userId,
+          ttlSeconds: this.CACHE_TTL_SECONDS,
+          waveMixTracks: waveMix.tracks.length,
+          artistPlaylists: artistPlaylists.length,
+          genrePlaylists: genrePlaylists.length,
+        },
+        'Cached playlists in Redis'
+      );
     } else {
       this.logger.info({ userId }, 'Skipping cache - playlists are empty');
     }

@@ -181,9 +181,7 @@ describe('GetArtistsUseCase', () => {
         updatedAt: new Date('2025-01-02'),
       });
 
-      (artistRepository.findAll as jest.Mock).mockResolvedValue([
-        artistWithAllFields,
-      ]);
+      (artistRepository.findAll as jest.Mock).mockResolvedValue([artistWithAllFields]);
       (artistRepository.count as jest.Mock).mockResolvedValue(1);
 
       // Act
@@ -208,7 +206,7 @@ describe('GetArtistsUseCase', () => {
       (artistRepository.count as jest.Mock).mockResolvedValue(50);
 
       // Act
-      const result = await useCase.execute({} as any);
+      const result = await useCase.execute({} as unknown as { skip: number; take: number });
 
       // Assert
       expect(artistRepository.findAll).toHaveBeenCalledWith(0, 10);

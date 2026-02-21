@@ -269,11 +269,15 @@ describe('Auth E2E', () => {
     it('debería retornar hasAvatar=true si usuario tiene avatar', async () => {
       // Actualizar usuario con avatar
       const user = await getUserByUsername(drizzle, 'testuser');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const authSchema = require('../../src/infrastructure/database/schema');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { eq } = require('drizzle-orm');
       await drizzle.db
-        .update(require('../../src/infrastructure/database/schema').users)
+        .update(authSchema.users)
         .set({ avatarPath: '/avatars/testuser.jpg' })
-        .where(require('drizzle-orm').eq(
-          require('../../src/infrastructure/database/schema').users.id,
+        .where(eq(
+          authSchema.users.id,
           user.id,
         ));
 

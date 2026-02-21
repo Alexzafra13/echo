@@ -16,7 +16,7 @@ export class ActivityStatsService {
 
   constructor(
     private readonly drizzle: DrizzleService,
-    private readonly cache: RedisService,
+    private readonly cache: RedisService
   ) {}
 
   async getStats(): Promise<ActivityStats> {
@@ -44,7 +44,7 @@ export class ActivityStatsService {
           .select({ count: count() })
           .from(users)
           .where(and(eq(users.isActive, true), gte(users.lastAccessAt, last7d))),
-      ],
+      ]
     );
 
     const stats: ActivityStats = {
@@ -87,8 +87,8 @@ export class ActivityStatsService {
             and(
               gte(enrichmentLogs.createdAt, date),
               lt(enrichmentLogs.createdAt, nextDate),
-              inArray(enrichmentLogs.status, ['success', 'completed']),
-            ),
+              inArray(enrichmentLogs.status, ['success', 'completed'])
+            )
           ),
         this.drizzle.db
           .select({ count: count() })
@@ -97,8 +97,8 @@ export class ActivityStatsService {
             and(
               gte(enrichmentLogs.createdAt, date),
               lt(enrichmentLogs.createdAt, nextDate),
-              inArray(enrichmentLogs.status, ['failed', 'error']),
-            ),
+              inArray(enrichmentLogs.status, ['failed', 'error'])
+            )
           ),
       ]);
 
@@ -118,7 +118,7 @@ export class ActivityStatsService {
     const cacheKey = 'dashboard:recent-activities';
     const cached = await this.cache.get<RecentActivity[]>(cacheKey);
     if (cached) {
-      return cached.map((a: any) => ({ ...a, timestamp: new Date(a.timestamp) }));
+      return cached.map((a: RecentActivity) => ({ ...a, timestamp: new Date(a.timestamp) }));
     }
 
     const activities: RecentActivity[] = [];
@@ -136,7 +136,8 @@ export class ActivityStatsService {
         action: 'Escaneo de librería',
         details: `${scan.tracksAdded} agregadas, ${scan.tracksUpdated} actualizadas, ${scan.tracksDeleted} eliminadas`,
         timestamp: scan.startedAt,
-        status: scan.status === 'completed' ? 'success' : scan.status === 'failed' ? 'error' : 'warning',
+        status:
+          scan.status === 'completed' ? 'success' : scan.status === 'failed' ? 'error' : 'warning',
       });
     });
 
@@ -157,7 +158,10 @@ export class ActivityStatsService {
         action: `${entityTypeLabel} enriquecido`,
         details: `${metadataTypeLabel} de "${enrichment.entityName}" desde ${enrichment.provider}`,
         timestamp: enrichment.createdAt,
-        status: enrichment.status === 'success' || enrichment.status === 'completed' ? 'success' : 'error',
+        status:
+          enrichment.status === 'success' || enrichment.status === 'completed'
+            ? 'success'
+            : 'error',
       });
     });
 

@@ -6,7 +6,7 @@ describe('GetRecentlyPlayedUseCase', () => {
   let mockRepo: jest.Mocked<IPlayTrackingRepository>;
 
   beforeEach(() => {
-    mockRepo = { getRecentlyPlayed: jest.fn() } as any;
+    mockRepo = { getRecentlyPlayed: jest.fn() } as unknown as jest.Mocked<IPlayTrackingRepository>;
     useCase = new GetRecentlyPlayedUseCase(mockRepo);
   });
 

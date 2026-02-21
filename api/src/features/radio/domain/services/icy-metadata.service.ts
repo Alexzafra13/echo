@@ -16,7 +16,7 @@ export interface RadioMetadata {
 export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @InjectPinoLogger(IcyMetadataService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   private activeStreams = new Map<string, IcecastParser>();
@@ -32,7 +32,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
     if (isIcecastError) {
       this.logger.error(
         `[SAFETY NET] Caught unhandled icecast-parser error: ${error.message}. ` +
-          `Server crash prevented. This indicates a race condition in error handling.`,
+          `Server crash prevented. This indicates a race condition in error handling.`
       );
       return;
     }
@@ -50,9 +50,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
 
     // Handler por defecto para evitar crash si no hay listener de errores
     emitter.on('error', (error: Error) => {
-      this.logger.debug(
-        `Unhandled error for subscriber ${stationUuid}: ${error.message}`,
-      );
+      this.logger.debug(`Unhandled error for subscriber ${stationUuid}: ${error.message}`);
     });
 
     if (!this.streamListeners.has(stationUuid)) {
@@ -65,7 +63,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
     }
 
     this.logger.info(
-      `Client subscribed to ${stationUuid}. Active listeners: ${this.streamListeners.get(stationUuid)!.size}`,
+      `Client subscribed to ${stationUuid}. Active listeners: ${this.streamListeners.get(stationUuid)!.size}`
     );
 
     return emitter;
@@ -77,7 +75,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
       listeners.delete(emitter);
 
       this.logger.info(
-        `Client unsubscribed from ${stationUuid}. Active listeners: ${listeners.size}`,
+        `Client unsubscribed from ${stationUuid}. Active listeners: ${listeners.size}`
       );
 
       if (listeners.size === 0) {
@@ -123,22 +121,20 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
         if (isDnsError) {
           this.logger.warn(
             `DNS resolution failed for ${stationUuid} (${streamUrl}): ${error.message}. ` +
-              `The stream host could not be resolved. Will retry later.`,
+              `The stream host could not be resolved. Will retry later.`
           );
         } else if (isSslError && isHttps) {
           this.logger.warn(
             `SSL certificate error for ${stationUuid} (${streamUrl}): ${error.message}. ` +
-              `This stream uses HTTPS with an untrusted certificate. Metadata will not be available.`,
+              `This stream uses HTTPS with an untrusted certificate. Metadata will not be available.`
           );
         } else if (isNetworkError) {
           this.logger.warn(
             `Network error for ${stationUuid} (${streamUrl}): ${error.message}. ` +
-              `The stream is unreachable. Will retry later.`,
+              `The stream is unreachable. Will retry later.`
           );
         } else {
-          this.logger.error(
-            `ICY parser error for ${stationUuid}: ${error.message}`,
-          );
+          this.logger.error(`ICY parser error for ${stationUuid}: ${error.message}`);
         }
 
         this.broadcastError(stationUuid, error);
@@ -176,17 +172,14 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
 
       this.logger.info(`ICY parser created successfully for ${stationUuid}`);
     } catch (error) {
-      this.logger.error(
-        `Failed to create ICY parser for ${stationUuid}:`,
-        error,
-      );
+      this.logger.error(`Failed to create ICY parser for ${stationUuid}:`, error);
 
       // Clean up partially created parser if it exists
       if (radioStation) {
         try {
           radioStation.removeAllListeners();
-          if (typeof (radioStation as any).destroy === 'function') {
-            (radioStation as any).destroy();
+          if (typeof (radioStation as unknown as { destroy?: () => void }).destroy === 'function') {
+            (radioStation as unknown as { destroy: () => void }).destroy();
           }
         } catch (cleanupError) {
           // Ignore cleanup errors
@@ -194,10 +187,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
       }
 
       // Emit error to all listeners
-      this.broadcastError(
-        stationUuid,
-        error instanceof Error ? error : new Error(String(error)),
-      );
+      this.broadcastError(stationUuid, error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -213,8 +203,8 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
 
         // Destroy the parser if it has a destroy method
         // This closes the underlying HTTP connection
-        if (typeof (stream as any).destroy === 'function') {
-          (stream as any).destroy();
+        if (typeof (stream as unknown as { destroy?: () => void }).destroy === 'function') {
+          (stream as unknown as { destroy: () => void }).destroy();
         }
       } catch (error) {
         this.logger.error(`Error closing stream ${stationUuid}:`, error);
@@ -230,10 +220,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
   /**
    * Parse raw ICY metadata into structured format
    */
-  private parseMetadata(
-    stationUuid: string,
-    metadata: Map<string, string>,
-  ): RadioMetadata {
+  private parseMetadata(stationUuid: string, metadata: Map<string, string>): RadioMetadata {
     const result: RadioMetadata = {
       stationUuid,
       timestamp: Date.now(),
@@ -266,14 +253,11 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
   /**
    * Broadcast metadata to all listeners of a station
    */
-  private broadcastMetadata(
-    stationUuid: string,
-    metadata: RadioMetadata,
-  ): void {
+  private broadcastMetadata(stationUuid: string, metadata: RadioMetadata): void {
     const listeners = this.streamListeners.get(stationUuid);
     if (listeners) {
       this.logger.info(
-        `Broadcasting metadata for ${stationUuid} to ${listeners.size} listeners: ${metadata.title}`,
+        `Broadcasting metadata for ${stationUuid} to ${listeners.size} listeners: ${metadata.title}`
       );
 
       listeners.forEach((emitter) => {
@@ -319,14 +303,12 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
       activeStreams: this.activeStreams.size,
       totalListeners: Array.from(this.streamListeners.values()).reduce(
         (sum, listeners) => sum + listeners.size,
-        0,
+        0
       ),
-      streamDetails: Array.from(this.streamListeners.entries()).map(
-        ([stationUuid, listeners]) => ({
-          stationUuid,
-          listeners: listeners.size,
-        }),
-      ),
+      streamDetails: Array.from(this.streamListeners.entries()).map(([stationUuid, listeners]) => ({
+        stationUuid,
+        listeners: listeners.size,
+      })),
     };
   }
 }

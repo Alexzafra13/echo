@@ -9,26 +9,26 @@ import { systemLogs } from '@infrastructure/database/schema';
  */
 export enum LogLevel {
   CRITICAL = 'critical', // Critical errors requiring immediate attention
-  ERROR = 'error',       // Errors affecting functionality
-  WARNING = 'warning',   // Warnings that don't block operation
-  INFO = 'info',         // General information
-  DEBUG = 'debug',       // Debugging information
+  ERROR = 'error', // Errors affecting functionality
+  WARNING = 'warning', // Warnings that don't block operation
+  INFO = 'info', // General information
+  DEBUG = 'debug', // Debugging information
 }
 
 /**
  * Log categories for filtering
  */
 export enum LogCategory {
-  SCANNER = 'scanner',         // Library scanning
-  METADATA = 'metadata',       // Metadata enrichment
-  AUTH = 'auth',              // Authentication and authorization
-  API = 'api',                // HTTP requests
-  STORAGE = 'storage',        // Storage operations
-  CLEANUP = 'cleanup',        // Orphan file cleanup
-  STREAM = 'stream',          // Audio streaming
-  DATABASE = 'database',      // Database operations
-  CACHE = 'cache',            // Cache operations
-  EXTERNAL_API = 'external',  // External API calls
+  SCANNER = 'scanner', // Library scanning
+  METADATA = 'metadata', // Metadata enrichment
+  AUTH = 'auth', // Authentication and authorization
+  API = 'api', // HTTP requests
+  STORAGE = 'storage', // Storage operations
+  CLEANUP = 'cleanup', // Orphan file cleanup
+  STREAM = 'stream', // Audio streaming
+  DATABASE = 'database', // Database operations
+  CACHE = 'cache', // Cache operations
+  EXTERNAL_API = 'external', // External API calls
 }
 
 /**
@@ -41,7 +41,7 @@ export interface LogMetadata {
   requestId?: string;
   ipAddress?: string;
   userAgent?: string;
-  [key: string]: any; // Allow additional fields
+  [key: string]: string | number | boolean | null | undefined; // Allow additional fields
 }
 
 /**
@@ -58,16 +58,12 @@ export interface LogMetadata {
 export class LogService {
   // Only persist important logs to DB (critical, error, warning)
   // INFO and DEBUG go only to console to reduce database noise
-  private readonly PERSIST_LEVELS = new Set([
-    LogLevel.CRITICAL,
-    LogLevel.ERROR,
-    LogLevel.WARNING,
-  ]);
+  private readonly PERSIST_LEVELS = new Set([LogLevel.CRITICAL, LogLevel.ERROR, LogLevel.WARNING]);
 
   constructor(
     @InjectPinoLogger(LogService.name)
     private readonly logger: PinoLogger,
-    private readonly drizzle: DrizzleService,
+    private readonly drizzle: DrizzleService
   ) {}
 
   /**
@@ -77,7 +73,7 @@ export class LogService {
     category: LogCategory,
     message: string,
     metadata?: LogMetadata,
-    error?: Error,
+    error?: Error
   ): Promise<void> {
     await this.log(LogLevel.CRITICAL, category, message, metadata, error);
   }
@@ -89,7 +85,7 @@ export class LogService {
     category: LogCategory,
     message: string,
     metadata?: LogMetadata,
-    error?: Error,
+    error?: Error
   ): Promise<void> {
     await this.log(LogLevel.ERROR, category, message, metadata, error);
   }
@@ -97,33 +93,21 @@ export class LogService {
   /**
    * Warning log
    */
-  async warning(
-    category: LogCategory,
-    message: string,
-    metadata?: LogMetadata,
-  ): Promise<void> {
+  async warning(category: LogCategory, message: string, metadata?: LogMetadata): Promise<void> {
     await this.log(LogLevel.WARNING, category, message, metadata);
   }
 
   /**
    * Info log
    */
-  async info(
-    category: LogCategory,
-    message: string,
-    metadata?: LogMetadata,
-  ): Promise<void> {
+  async info(category: LogCategory, message: string, metadata?: LogMetadata): Promise<void> {
     await this.log(LogLevel.INFO, category, message, metadata);
   }
 
   /**
    * Debug log
    */
-  async debug(
-    category: LogCategory,
-    message: string,
-    metadata?: LogMetadata,
-  ): Promise<void> {
+  async debug(category: LogCategory, message: string, metadata?: LogMetadata): Promise<void> {
     await this.log(LogLevel.DEBUG, category, message, metadata);
   }
 
@@ -135,7 +119,7 @@ export class LogService {
     category: LogCategory,
     message: string,
     metadata?: LogMetadata,
-    error?: Error,
+    error?: Error
   ): Promise<void> {
     try {
       // 1. Console logging (always)
@@ -159,7 +143,7 @@ export class LogService {
     category: LogCategory,
     message: string,
     metadata?: LogMetadata,
-    error?: Error,
+    error?: Error
   ): void {
     const logContext = {
       category,
@@ -192,27 +176,25 @@ export class LogService {
     category: LogCategory,
     message: string,
     metadata?: LogMetadata,
-    error?: Error,
+    error?: Error
   ): Promise<void> {
     try {
       // Prepare details as JSON
       const details = metadata ? JSON.stringify(metadata, null, 2) : null;
 
-      await this.drizzle.db
-        .insert(systemLogs)
-        .values({
-          level,
-          category,
-          message,
-          details,
-          userId: metadata?.userId,
-          entityId: metadata?.entityId,
-          entityType: metadata?.entityType,
-          requestId: metadata?.requestId,
-          ipAddress: metadata?.ipAddress,
-          userAgent: metadata?.userAgent,
-          stackTrace: error?.stack,
-        });
+      await this.drizzle.db.insert(systemLogs).values({
+        level,
+        category,
+        message,
+        details,
+        userId: metadata?.userId,
+        entityId: metadata?.entityId,
+        entityType: metadata?.entityType,
+        requestId: metadata?.requestId,
+        ipAddress: metadata?.ipAddress,
+        userAgent: metadata?.userAgent,
+        stackTrace: error?.stack,
+      });
     } catch (dbError) {
       // Fallback to console if DB fails
       this.logger.error({ error: dbError }, 'Failed to persist log to database');
@@ -262,10 +244,7 @@ export class LogService {
         .orderBy(desc(systemLogs.createdAt))
         .limit(Math.min(limit, 500)) // Max 500
         .offset(offset),
-      this.drizzle.db
-        .select({ count: count() })
-        .from(systemLogs)
-        .where(whereCondition),
+      this.drizzle.db.select({ count: count() }).from(systemLogs).where(whereCondition),
     ]);
 
     return {
@@ -279,10 +258,7 @@ export class LogService {
   /**
    * Get log statistics
    */
-  async getLogStats(params?: {
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<{
+  async getLogStats(params?: { startDate?: Date; endDate?: Date }): Promise<{
     totalLogs: number;
     byLevel: Record<string, number>;
     byCategory: Record<string, number>;
@@ -294,10 +270,7 @@ export class LogService {
     const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [totalResult, byLevelResult, byCategoryResult] = await Promise.all([
-      this.drizzle.db
-        .select({ count: count() })
-        .from(systemLogs)
-        .where(whereCondition),
+      this.drizzle.db.select({ count: count() }).from(systemLogs).where(whereCondition),
       this.drizzle.db
         .select({
           level: systemLogs.level,
@@ -335,10 +308,7 @@ export class LogService {
       .where(lte(systemLogs.createdAt, cutoffDate))
       .returning();
 
-    this.logger.info(
-      { count: result.length, daysToKeep, cutoffDate },
-      'Cleaned up old logs',
-    );
+    this.logger.info({ count: result.length, daysToKeep, cutoffDate }, 'Cleaned up old logs');
 
     return result.length;
   }

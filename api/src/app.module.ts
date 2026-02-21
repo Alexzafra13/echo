@@ -50,26 +50,27 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
 
     LoggerModule.forRoot({
       pinoHttp: {
-        transport: process.env.NODE_ENV !== 'production'
-          ? {
-              target: 'pino-pretty',
-              options: {
-                colorize: true,
-                translateTime: 'HH:MM:ss Z',
-                ignore: 'pid,hostname',
-                singleLine: false,
-              },
-            }
-          : undefined,
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  translateTime: 'HH:MM:ss Z',
+                  ignore: 'pid,hostname',
+                  singleLine: false,
+                },
+              }
+            : undefined,
         level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
         serializers: {
-          req: (req: any) => ({
+          req: (req: Record<string, unknown>) => ({
             method: req.method,
             url: req.url,
-            params: sanitizeParams(req.params),
-            query: sanitizeQueryParams(req.query),
+            params: sanitizeParams(req.params as Record<string, string>),
+            query: sanitizeQueryParams(req.query as Record<string, string>),
           }),
-          res: (res: any) => ({
+          res: (res: Record<string, unknown>) => ({
             statusCode: res.statusCode,
           }),
         },
@@ -77,10 +78,12 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
     }),
 
     // Rate limiting: 300 req/min por IP
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 300,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 300,
+      },
+    ]),
 
     ScheduleModule.forRoot(),
 

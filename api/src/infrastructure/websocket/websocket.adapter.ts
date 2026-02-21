@@ -25,7 +25,9 @@ export class WebSocketAdapter extends IoAdapter {
     if (this.secretsService) {
       try {
         return this.secretsService.jwtSecret;
-      } catch {}
+      } catch {
+        // intentionally empty - fall through to env var
+      }
     }
 
     return process.env.JWT_SECRET;
@@ -107,7 +109,13 @@ export class WebSocketAdapter extends IoAdapter {
    * Extrae token JWT del handshake
    * Soporta: query param, auth object, Authorization header
    */
-  private extractToken(socket: { handshake: { query?: { token?: string | string[] }; auth?: { token?: string }; headers?: { authorization?: string } } }): string | undefined {
+  private extractToken(socket: {
+    handshake: {
+      query?: { token?: string | string[] };
+      auth?: { token?: string };
+      headers?: { authorization?: string };
+    };
+  }): string | undefined {
     // 1. Desde query params: ?token=xxx
     if (socket.handshake.query?.token) {
       return Array.isArray(socket.handshake.query.token)

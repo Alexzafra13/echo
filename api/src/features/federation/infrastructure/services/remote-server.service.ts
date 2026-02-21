@@ -1,6 +1,9 @@
 import { Injectable, Inject, HttpException, HttpStatus, forwardRef } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../../domain/ports/federation.repository';
+import {
+  IFederationRepository,
+  FEDERATION_REPOSITORY,
+} from '../../domain/ports/federation.repository';
 import { ConnectedServer } from '../../domain/types';
 import { FederationTokenService } from '../../domain/services/federation-token.service';
 
@@ -64,7 +67,7 @@ export class RemoteServerService {
     @Inject(FEDERATION_REPOSITORY)
     private readonly repository: IFederationRepository,
     @Inject(forwardRef(() => FederationTokenService))
-    private readonly tokenService: FederationTokenService,
+    private readonly tokenService: FederationTokenService
   ) {}
 
   async connectToServer(
@@ -73,7 +76,7 @@ export class RemoteServerService {
     invitationToken: string,
     serverName?: string,
     localServerUrl?: string,
-    requestMutual = false,
+    requestMutual = false
   ): Promise<ConnectedServer> {
     const normalizedUrl = this.normalizeUrl(serverUrl);
 
@@ -85,7 +88,7 @@ export class RemoteServerService {
     if (requestMutual && !localServerUrl) {
       throw new HttpException(
         'Local server URL is required for mutual federation',
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.BAD_REQUEST
       );
     }
 
@@ -95,7 +98,7 @@ export class RemoteServerService {
         userId,
         `Mutual federation with ${normalizedUrl}`,
         7, // 7 days expiration
-        1, // Single use
+        1 // Single use
       );
       mutualInvitationToken = token.token;
     }
@@ -132,31 +135,27 @@ export class RemoteServerService {
 
       this.logger.info(
         { serverId: connectedServer.id, serverUrl: normalizedUrl, requestMutual },
-        'Successfully connected to remote server',
+        'Successfully connected to remote server'
       );
 
       return connectedServer;
     } catch (error) {
       this.logger.error(
         { error: error instanceof Error ? error.message : error, serverUrl: normalizedUrl },
-        'Failed to connect to remote server',
+        'Failed to connect to remote server'
       );
       throw new HttpException(
         `Failed to connect to server: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        HttpStatus.BAD_GATEWAY,
+        HttpStatus.BAD_GATEWAY
       );
     }
   }
 
-  async getRemoteLibrary(
-    server: ConnectedServer,
-    page = 1,
-    limit = 50,
-  ): Promise<RemoteLibrary> {
+  async getRemoteLibrary(server: ConnectedServer, page = 1, limit = 50): Promise<RemoteLibrary> {
     try {
       const response = await this.makeAuthenticatedRequest<RemoteLibrary>(
         server,
-        `/api/federation/library?page=${page}&limit=${limit}`,
+        `/api/federation/library?page=${page}&limit=${limit}`
       );
 
       await this.repository.updateConnectedServer(server.id, {
@@ -179,7 +178,7 @@ export class RemoteServerService {
     server: ConnectedServer,
     page = 1,
     limit = 50,
-    search?: string,
+    search?: string
   ): Promise<{ albums: RemoteAlbum[]; total: number }> {
     try {
       const params = new URLSearchParams({
@@ -192,7 +191,7 @@ export class RemoteServerService {
 
       return await this.makeAuthenticatedRequest<{ albums: RemoteAlbum[]; total: number }>(
         server,
-        `/api/federation/albums?${params}`,
+        `/api/federation/albums?${params}`
       );
     } catch (error) {
       await this.handleServerError(server, error);
@@ -202,12 +201,12 @@ export class RemoteServerService {
 
   async getRemoteAlbum(
     server: ConnectedServer,
-    albumId: string,
+    albumId: string
   ): Promise<RemoteAlbum & { tracks: RemoteTrack[] }> {
     try {
       return await this.makeAuthenticatedRequest<RemoteAlbum & { tracks: RemoteTrack[] }>(
         server,
-        `/api/federation/albums/${albumId}`,
+        `/api/federation/albums/${albumId}`
       );
     } catch (error) {
       await this.handleServerError(server, error);
@@ -217,15 +216,12 @@ export class RemoteServerService {
 
   async getRemoteAlbumCover(
     server: ConnectedServer,
-    albumId: string,
+    albumId: string
   ): Promise<{ buffer: Buffer; contentType: string } | null> {
     try {
       const url = `${server.baseUrl}/api/federation/albums/${albumId}/cover`;
 
-      this.logger.debug(
-        { url, serverId: server.id, albumId },
-        'Fetching remote album cover',
-      );
+      this.logger.debug({ url, serverId: server.id, albumId }, 'Fetching remote album cover');
 
       this.validateUrl(url);
 
@@ -244,7 +240,7 @@ export class RemoteServerService {
         if (!response.ok) {
           this.logger.warn(
             { url, status: response.status, albumId },
-            'Remote server returned error for album cover',
+            'Remote server returned error for album cover'
           );
           if (response.status === 404) {
             return null;
@@ -257,7 +253,7 @@ export class RemoteServerService {
 
         this.logger.debug(
           { albumId, contentType, size: arrayBuffer.byteLength },
-          'Successfully fetched remote album cover',
+          'Successfully fetched remote album cover'
         );
 
         return {
@@ -270,7 +266,7 @@ export class RemoteServerService {
     } catch (error) {
       this.logger.warn(
         { serverId: server.id, albumId, error: error instanceof Error ? error.message : error },
-        'Failed to fetch remote album cover',
+        'Failed to fetch remote album cover'
       );
       return null;
     }
@@ -279,7 +275,7 @@ export class RemoteServerService {
   async streamRemoteTrack(
     server: ConnectedServer,
     trackId: string,
-    range?: string,
+    range?: string
   ): Promise<{
     stream: NodeJS.ReadableStream;
     headers: Record<string, string>;
@@ -332,7 +328,7 @@ export class RemoteServerService {
         }
 
         const { Readable } = await import('stream');
-        const nodeStream = Readable.fromWeb(response.body as any);
+        const nodeStream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
 
         return {
           stream: nodeStream,
@@ -345,7 +341,7 @@ export class RemoteServerService {
     } catch (error) {
       this.logger.error(
         { serverId: server.id, trackId, error: error instanceof Error ? error.message : error },
-        'Failed to stream remote track',
+        'Failed to stream remote track'
       );
       return null;
     }
@@ -354,10 +350,7 @@ export class RemoteServerService {
   async pingServer(server: ConnectedServer): Promise<boolean> {
     const now = new Date();
     try {
-      await this.makeAuthenticatedRequest<{ ok: boolean }>(
-        server,
-        '/api/federation/ping',
-      );
+      await this.makeAuthenticatedRequest<{ ok: boolean }>(server, '/api/federation/ping');
 
       await this.repository.updateConnectedServer(server.id, {
         isOnline: true,
@@ -386,7 +379,7 @@ export class RemoteServerService {
     await Promise.all(
       servers.map(async (server) => {
         await this.pingServer(server);
-      }),
+      })
     );
 
     return this.repository.findConnectedServersByUserId(userId);
@@ -396,7 +389,7 @@ export class RemoteServerService {
     try {
       const info = await this.makeAuthenticatedRequest<RemoteServerInfo>(
         server,
-        '/api/federation/info',
+        '/api/federation/info'
       );
 
       return (await this.repository.updateConnectedServer(server.id, {
@@ -420,12 +413,10 @@ export class RemoteServerService {
     }
 
     try {
-      await this.makeAuthenticatedRequest(
-        server,
-        '/api/federation/disconnect',
-        { method: 'POST' },
-      );
-    } catch {}
+      await this.makeAuthenticatedRequest(server, '/api/federation/disconnect', { method: 'POST' });
+    } catch {
+      // intentionally empty - best-effort disconnect notification
+    }
 
     return this.repository.deleteConnectedServer(serverId);
   }
@@ -438,7 +429,7 @@ export class RemoteServerService {
     }
 
     const message = error.message.toLowerCase();
-    const cause = (error as any).cause;
+    const cause = (error as Error & { cause?: { code?: string; message?: string } }).cause;
 
     if (cause?.code) {
       switch (cause.code) {
@@ -520,7 +511,7 @@ export class RemoteServerService {
   private async makeRequest<T>(
     baseUrl: string,
     path: string,
-    options: RequestInit = {},
+    options: RequestInit = {}
   ): Promise<T> {
     const url = `${baseUrl}${path}`;
 
@@ -550,13 +541,17 @@ export class RemoteServerService {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new HttpException(
           `Request to ${baseUrl} timed out after ${RemoteServerService.REQUEST_TIMEOUT / 1000}s`,
-          HttpStatus.GATEWAY_TIMEOUT,
+          HttpStatus.GATEWAY_TIMEOUT
         );
       }
       const errorMessage = this.getNetworkErrorMessage(error, url);
       this.logger.debug(
-        { url, originalError: error instanceof Error ? error.message : error, cause: (error as any)?.cause },
-        'Network request failed with detailed info',
+        {
+          url,
+          originalError: error instanceof Error ? error.message : error,
+          cause: (error as Error & { cause?: unknown })?.cause,
+        },
+        'Network request failed with detailed info'
       );
       throw new HttpException(errorMessage, HttpStatus.BAD_GATEWAY);
     } finally {
@@ -567,7 +562,7 @@ export class RemoteServerService {
   private async makeAuthenticatedRequest<T>(
     server: ConnectedServer,
     path: string,
-    options: RequestInit = {},
+    options: RequestInit = {}
   ): Promise<T> {
     return this.makeRequest<T>(server.baseUrl, path, {
       ...options,
@@ -586,7 +581,7 @@ export class RemoteServerService {
     });
     this.logger.error(
       { serverId: server.id, serverUrl: server.baseUrl, error: errorMessage },
-      'Error communicating with remote server',
+      'Error communicating with remote server'
     );
   }
 }

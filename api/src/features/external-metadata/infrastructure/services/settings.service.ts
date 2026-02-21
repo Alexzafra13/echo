@@ -12,9 +12,11 @@ export class SettingsService {
   private readonly cache = new Map<string, any>();
   private cacheInitialized = false;
 
-  constructor(@InjectPinoLogger(SettingsService.name)
+  constructor(
+    @InjectPinoLogger(SettingsService.name)
     private readonly logger: PinoLogger,
-    private readonly repository: SettingsRepository) {}
+    private readonly repository: SettingsRepository
+  ) {}
 
   /**
    * Get a setting value with type conversion
@@ -88,7 +90,8 @@ export class SettingsService {
       // Create new setting with sensible defaults
       // Extract category from key (e.g., "metadata.auto_search_mbid.enabled" -> "metadata")
       const category = key.split('.')[0] || 'general';
-      const type = typeof value === 'boolean' ? 'boolean' : typeof value === 'number' ? 'number' : 'string';
+      const type =
+        typeof value === 'boolean' ? 'boolean' : typeof value === 'number' ? 'number' : 'string';
 
       await this.repository.upsert({
         key,
@@ -181,7 +184,10 @@ export class SettingsService {
           throw new BadRequestException(`Unknown service: ${service}`);
       }
     } catch (error) {
-      this.logger.error(`Error validating ${service} API key: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error validating ${service} API key: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       return false;
     }
   }
@@ -201,7 +207,10 @@ export class SettingsService {
       this.cacheInitialized = true;
       this.logger.info(`Initialized settings cache with ${allSettings.length} settings`);
     } catch (error) {
-      this.logger.error(`Error initializing settings cache: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error initializing settings cache: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       this.cacheInitialized = false;
     }
   }
@@ -223,9 +232,10 @@ export class SettingsService {
       case 'boolean':
         return value === 'true' || value === '1';
 
-      case 'number':
+      case 'number': {
         const num = parseFloat(value);
         return isNaN(num) ? 0 : num;
+      }
 
       case 'json':
         try {
@@ -291,8 +301,8 @@ export class SettingsService {
 
       const response = await fetch(url, {
         headers: {
-          'api-key': apiKey
-        }
+          'api-key': apiKey,
+        },
       });
 
       // 200 = valid key, 401 = invalid key, 404 = valid key but artist not found
@@ -502,7 +512,9 @@ export class SettingsService {
             spaceAvailable = 'Write test failed';
           }
         } catch (error) {
-          this.logger.warn(`Could not determine space for ${normalizedPath}: ${(error as Error).message}`);
+          this.logger.warn(
+            `Could not determine space for ${normalizedPath}: ${(error as Error).message}`
+          );
         }
       }
 

@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { IArtistBioRetriever } from '../../domain/interfaces';
 import { ArtistBio } from '../../domain/entities';
@@ -31,43 +31,105 @@ export class WikipediaAgent implements IArtistBioRetriever {
 
   // Search suffixes to try for disambiguation (in order of preference)
   private readonly musicDisambiguationSuffixes = [
-    '(banda)',           // Spanish: band
-    '(band)',            // English: band
-    '(grupo musical)',   // Spanish: musical group
-    '(musical group)',   // English: musical group
-    '(músico)',          // Spanish: musician
-    '(musician)',        // English: musician
-    '(cantante)',        // Spanish: singer
-    '(singer)',          // English: singer
-    '(rapero)',          // Spanish: rapper
-    '(rapper)',          // English: rapper
-    '',                  // No suffix (fallback)
+    '(banda)', // Spanish: band
+    '(band)', // English: band
+    '(grupo musical)', // Spanish: musical group
+    '(musical group)', // English: musical group
+    '(músico)', // Spanish: musician
+    '(musician)', // English: musician
+    '(cantante)', // Spanish: singer
+    '(singer)', // English: singer
+    '(rapero)', // Spanish: rapper
+    '(rapper)', // English: rapper
+    '', // No suffix (fallback)
   ];
 
   // Keywords that indicate the article is about a musician/band
   private readonly musicKeywords = [
     // General music terms
-    'album', 'álbum', 'disco', 'discografía', 'discography',
-    'canción', 'canciones', 'song', 'songs', 'track', 'tracks',
-    'sencillo', 'single', 'singles', 'ep', 'lp',
-    'gira', 'tour', 'concierto', 'concert', 'live',
+    'album',
+    'álbum',
+    'disco',
+    'discografía',
+    'discography',
+    'canción',
+    'canciones',
+    'song',
+    'songs',
+    'track',
+    'tracks',
+    'sencillo',
+    'single',
+    'singles',
+    'ep',
+    'lp',
+    'gira',
+    'tour',
+    'concierto',
+    'concert',
+    'live',
     // Genres
-    'rock', 'pop', 'metal', 'jazz', 'hip hop', 'hip-hop', 'rap',
-    'electrónica', 'electronic', 'indie', 'punk', 'folk', 'blues',
-    'reggae', 'soul', 'r&b', 'country', 'clásica', 'classical',
+    'rock',
+    'pop',
+    'metal',
+    'jazz',
+    'hip hop',
+    'hip-hop',
+    'rap',
+    'electrónica',
+    'electronic',
+    'indie',
+    'punk',
+    'folk',
+    'blues',
+    'reggae',
+    'soul',
+    'r&b',
+    'country',
+    'clásica',
+    'classical',
     // Roles
-    'banda', 'band', 'grupo', 'group', 'músico', 'musician',
-    'cantante', 'singer', 'vocalista', 'vocalist', 'guitarrista', 'guitarist',
-    'baterista', 'drummer', 'bajista', 'bassist', 'tecladista', 'keyboardist',
-    'compositor', 'songwriter', 'producer', 'productor', 'dj',
+    'banda',
+    'band',
+    'grupo',
+    'group',
+    'músico',
+    'musician',
+    'cantante',
+    'singer',
+    'vocalista',
+    'vocalist',
+    'guitarrista',
+    'guitarist',
+    'baterista',
+    'drummer',
+    'bajista',
+    'bassist',
+    'tecladista',
+    'keyboardist',
+    'compositor',
+    'songwriter',
+    'producer',
+    'productor',
+    'dj',
     // Record labels and industry
-    'sello discográfico', 'record label', 'disquera', 'grammy', 'billboard',
-    'mtv', 'spotify', 'música', 'music', 'musical',
+    'sello discográfico',
+    'record label',
+    'disquera',
+    'grammy',
+    'billboard',
+    'mtv',
+    'spotify',
+    'música',
+    'music',
+    'musical',
   ];
 
-  constructor(@InjectPinoLogger(WikipediaAgent.name)
+  constructor(
+    @InjectPinoLogger(WikipediaAgent.name)
     private readonly logger: PinoLogger,
-    private readonly rateLimiter: RateLimiterService) {}
+    private readonly rateLimiter: RateLimiterService
+  ) {}
 
   isEnabled(): boolean {
     return true; // Always enabled - no API key required
@@ -113,10 +175,7 @@ export class WikipediaAgent implements IArtistBioRetriever {
    * @param lang Language code (es, en, etc.)
    * @returns ArtistBio or null
    */
-  private async getBioInLanguage(
-    artistName: string,
-    lang: string
-  ): Promise<ArtistBio | null> {
+  private async getBioInLanguage(artistName: string, lang: string): Promise<ArtistBio | null> {
     // Try each disambiguation suffix
     for (const suffix of this.musicDisambiguationSuffixes) {
       const searchQuery = suffix ? `${artistName} ${suffix}` : artistName;
@@ -138,10 +197,14 @@ export class WikipediaAgent implements IArtistBioRetriever {
 
       // Step 3: Verify it's about a musician
       if (this.isMusicRelatedContent(summary.content)) {
-        this.logger.debug(`Found music article for "${artistName}" with suffix "${suffix || 'none'}"`);
+        this.logger.debug(
+          `Found music article for "${artistName}" with suffix "${suffix || 'none'}"`
+        );
         return summary;
       } else {
-        this.logger.debug(`Article "${pageTitle}" doesn't appear to be about a musician, trying next suffix`);
+        this.logger.debug(
+          `Article "${pageTitle}" doesn't appear to be about a musician, trying next suffix`
+        );
       }
     }
 
@@ -157,7 +220,7 @@ export class WikipediaAgent implements IArtistBioRetriever {
     const loweredContent = content.toLowerCase();
 
     // Count how many music keywords are present
-    const matchCount = this.musicKeywords.filter(keyword =>
+    const matchCount = this.musicKeywords.filter((keyword) =>
       loweredContent.includes(keyword.toLowerCase())
     ).length;
 
@@ -189,7 +252,7 @@ export class WikipediaAgent implements IArtistBioRetriever {
 
     const url = `${baseUrl}?${params.toString()}`;
     const response = await fetchWithTimeout(url, {
-        timeout: 8000, // 8 second timeout
+      timeout: 8000, // 8 second timeout
       headers: { 'User-Agent': this.userAgent },
     });
 
@@ -229,12 +292,27 @@ export class WikipediaAgent implements IArtistBioRetriever {
     const combined = `${title} ${desc}`.toLowerCase();
 
     const musicIndicators = [
-      'band', 'banda', 'grupo', 'group', 'musician', 'músico',
-      'singer', 'cantante', 'album', 'álbum', 'song', 'canción',
-      'rock', 'pop', 'metal', 'hip hop', 'rapper', 'dj',
+      'band',
+      'banda',
+      'grupo',
+      'group',
+      'musician',
+      'músico',
+      'singer',
+      'cantante',
+      'album',
+      'álbum',
+      'song',
+      'canción',
+      'rock',
+      'pop',
+      'metal',
+      'hip hop',
+      'rapper',
+      'dj',
     ];
 
-    return musicIndicators.some(indicator => combined.includes(indicator));
+    return musicIndicators.some((indicator) => combined.includes(indicator));
   }
 
   /**
@@ -249,10 +327,10 @@ export class WikipediaAgent implements IArtistBioRetriever {
     const url = `${baseUrl}/page/summary/${encodedTitle}`;
 
     const response = await fetchWithTimeout(url, {
-        timeout: 8000, // 8 second timeout
+      timeout: 8000, // 8 second timeout
       headers: {
         'User-Agent': this.userAgent,
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
     });
 
@@ -294,15 +372,17 @@ export class WikipediaAgent implements IArtistBioRetriever {
    * @returns Cleaned text
    */
   private cleanContent(text: string): string {
-    return text
-      // Remove pronunciation guides like "(pronunciación: ...)"
-      .replace(/\s*\([^)]*pronunciación[^)]*\)/gi, '')
-      // Remove IPA pronunciations
-      .replace(/\s*\([^)]*[\/\[].*?[\/\]][^)]*\)/g, '')
-      // Remove parenthetical dates at start (common in Spanish)
-      .replace(/^\s*\([^)]+\)\s*/, '')
-      // Clean up multiple spaces
-      .replace(/\s+/g, ' ')
-      .trim();
+    return (
+      text
+        // Remove pronunciation guides like "(pronunciación: ...)"
+        .replace(/\s*\([^)]*pronunciación[^)]*\)/gi, '')
+        // Remove IPA pronunciations
+        .replace(/\s*\([^)]*[/[].*?[/\]][^)]*\)/g, '')
+        // Remove parenthetical dates at start (common in Spanish)
+        .replace(/^\s*\([^)]+\)\s*/, '')
+        // Clean up multiple spaces
+        .replace(/\s+/g, ' ')
+        .trim()
+    );
   }
 }

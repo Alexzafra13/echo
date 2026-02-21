@@ -1,11 +1,18 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { metadataConflicts, artists, albums, tracks } from '@infrastructure/database/schema';
 
 export type EntityType = 'track' | 'album' | 'artist';
-export type ConflictField = 'cover' | 'externalCover' | 'year' | 'biography' | 'images' | 'artistName' | 'albumName';
+export type ConflictField =
+  | 'cover'
+  | 'externalCover'
+  | 'year'
+  | 'biography'
+  | 'images'
+  | 'artistName'
+  | 'albumName';
 export type ConflictSource = 'musicbrainz' | 'lastfm' | 'fanart' | 'coverartarchive';
 export type ConflictStatus = 'pending' | 'accepted' | 'rejected' | 'ignored';
 
@@ -35,9 +42,11 @@ export interface ConflictWithEntity {
  */
 @Injectable()
 export class ConflictEnrichmentService {
-  constructor(@InjectPinoLogger(ConflictEnrichmentService.name)
+  constructor(
+    @InjectPinoLogger(ConflictEnrichmentService.name)
     private readonly logger: PinoLogger,
-    private readonly drizzle: DrizzleService) {}
+    private readonly drizzle: DrizzleService
+  ) {}
 
   /**
    * Verify if an entity still exists in the database
@@ -45,37 +54,38 @@ export class ConflictEnrichmentService {
   async verifyEntityExists(entityType: EntityType, entityId: string): Promise<boolean> {
     try {
       switch (entityType) {
-        case 'artist':
+        case 'artist': {
           const artistResults = await this.drizzle.db
             .select({ id: artists.id })
             .from(artists)
             .where(eq(artists.id, entityId))
             .limit(1);
           return artistResults.length > 0;
+        }
 
-        case 'album':
+        case 'album': {
           const albumResults = await this.drizzle.db
             .select({ id: albums.id })
             .from(albums)
             .where(eq(albums.id, entityId))
             .limit(1);
           return albumResults.length > 0;
+        }
 
-        case 'track':
+        case 'track': {
           const trackResults = await this.drizzle.db
             .select({ id: tracks.id })
             .from(tracks)
             .where(eq(tracks.id, entityId))
             .limit(1);
           return trackResults.length > 0;
+        }
 
         default:
           return false;
       }
     } catch (error) {
-      this.logger.error(
-        `Error verifying entity existence: ${(error as Error).message}`,
-      );
+      this.logger.error(`Error verifying entity existence: ${(error as Error).message}`);
       return false;
     }
   }
@@ -86,36 +96,39 @@ export class ConflictEnrichmentService {
   async getEntityName(entityType: EntityType, entityId: string): Promise<string> {
     try {
       switch (entityType) {
-        case 'artist':
+        case 'artist': {
           const artistResults = await this.drizzle.db
             .select({ name: artists.name })
             .from(artists)
             .where(eq(artists.id, entityId))
             .limit(1);
           return artistResults[0]?.name || 'Unknown Artist';
+        }
 
-        case 'album':
+        case 'album': {
           const albumResults = await this.drizzle.db
             .select({ name: albums.name })
             .from(albums)
             .where(eq(albums.id, entityId))
             .limit(1);
           return albumResults[0]?.name || 'Unknown Album';
+        }
 
-        case 'track':
+        case 'track': {
           const trackResults = await this.drizzle.db
             .select({ title: tracks.title })
             .from(tracks)
             .where(eq(tracks.id, entityId))
             .limit(1);
           return trackResults[0]?.title || 'Unknown Track';
+        }
 
         default:
           return 'Unknown';
       }
     } catch (error) {
       this.logger.warn(
-        `Failed to fetch entity name for ${entityType} ${entityId}: ${(error as Error).message}`,
+        `Failed to fetch entity name for ${entityType} ${entityId}: ${(error as Error).message}`
       );
       return 'Unknown';
     }
@@ -142,7 +155,7 @@ export class ConflictEnrichmentService {
       }
     } catch (error) {
       this.logger.warn(
-        `Failed to fetch entity name for conflict ${conflict.id}: ${(error as Error).message}`,
+        `Failed to fetch entity name for conflict ${conflict.id}: ${(error as Error).message}`
       );
     }
 
@@ -174,7 +187,7 @@ export class ConflictEnrichmentService {
     for (const conflict of pendingConflicts) {
       const exists = await this.verifyEntityExists(
         conflict.entityType as EntityType,
-        conflict.entityId,
+        conflict.entityId
       );
 
       if (!exists) {
@@ -189,7 +202,7 @@ export class ConflictEnrichmentService {
 
         orphanedCount++;
         this.logger.debug(
-          `Cleaned up orphaned conflict ${conflict.id} for deleted ${conflict.entityType} ${conflict.entityId}`,
+          `Cleaned up orphaned conflict ${conflict.id} for deleted ${conflict.entityType} ${conflict.entityId}`
         );
       }
     }

@@ -1,4 +1,5 @@
 import { PlayStatsCalculatorService } from './play-stats-calculator.service';
+import { PlayContext } from '../entities/play-event.entity';
 
 describe('PlayStatsCalculatorService', () => {
   let service: PlayStatsCalculatorService;
@@ -129,7 +130,7 @@ describe('PlayStatsCalculatorService', () => {
     });
 
     it('should return the most common context', () => {
-      const contexts = ['playlist', 'direct', 'playlist', 'playlist', 'direct'] as any[];
+      const contexts: PlayContext[] = ['playlist', 'direct', 'playlist', 'playlist', 'direct'];
       expect(service.getMostCommonContext(contexts)).toBe('playlist');
     });
 

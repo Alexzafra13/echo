@@ -14,7 +14,14 @@ import {
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { MultipartFile } from '@fastify/multipart';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { UploadCustomArtistImageUseCase } from '../infrastructure/use-cases/upload-custom-artist-image';
@@ -31,7 +38,7 @@ export class CustomArtistImagesController {
     private readonly uploadCustomImage: UploadCustomArtistImageUseCase,
     private readonly listCustomImages: ListCustomArtistImagesUseCase,
     private readonly deleteCustomImage: DeleteCustomArtistImageUseCase,
-    private readonly applyCustomImage: ApplyCustomArtistImageUseCase,
+    private readonly applyCustomImage: ApplyCustomArtistImageUseCase
   ) {}
 
   @Get(':artistId')
@@ -88,7 +95,8 @@ export class CustomArtistImagesController {
   })
   async uploadImage(
     @Param('artistId', ParseUUIDPipe) artistId: string,
-    @Req() request: FastifyRequest & { file: () => Promise<MultipartFile> } & { user: any },
+    @Req()
+    request: FastifyRequest & { file: () => Promise<MultipartFile> } & { user: { id: string } }
   ) {
     // Fastify multipart - get uploaded file
     const data = await request.file();
@@ -111,7 +119,7 @@ export class CustomArtistImagesController {
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedMimeTypes.includes(data.mimetype)) {
       throw new BadRequestException(
-        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`,
+        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`
       );
     }
 
@@ -126,7 +134,7 @@ export class CustomArtistImagesController {
     const validImageTypes = ['profile', 'background', 'banner', 'logo'];
     if (!validImageTypes.includes(imageType)) {
       throw new BadRequestException(
-        `Invalid imageType. Allowed values: ${validImageTypes.join(', ')}`,
+        `Invalid imageType. Allowed values: ${validImageTypes.join(', ')}`
       );
     }
 
@@ -150,7 +158,7 @@ export class CustomArtistImagesController {
   })
   async applyImage(
     @Param('artistId', ParseUUIDPipe) artistId: string,
-    @Param('customImageId', ParseUUIDPipe) customImageId: string,
+    @Param('customImageId', ParseUUIDPipe) customImageId: string
   ) {
     return await this.applyCustomImage.execute({
       artistId,
@@ -165,7 +173,7 @@ export class CustomArtistImagesController {
   })
   async deleteImage(
     @Param('artistId', ParseUUIDPipe) artistId: string,
-    @Param('customImageId', ParseUUIDPipe) customImageId: string,
+    @Param('customImageId', ParseUUIDPipe) customImageId: string
   ) {
     return await this.deleteCustomImage.execute({
       artistId,

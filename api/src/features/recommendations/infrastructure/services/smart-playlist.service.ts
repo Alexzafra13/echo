@@ -10,14 +10,17 @@ import { tracks, trackGenres, playHistory } from '@infrastructure/database/schem
 export class SmartPlaylistService {
   constructor(
     private readonly scoringService: ScoringService,
-    private readonly drizzle: DrizzleService,
+    private readonly drizzle: DrizzleService
   ) {}
 
   /**
    * Generate smart playlist based on configuration
    * Can be filtered by artist, genre, or mood
    */
-  async generateSmartPlaylist(userId: string, config: SmartPlaylistConfig): Promise<SmartPlaylistResult> {
+  async generateSmartPlaylist(
+    userId: string,
+    config: SmartPlaylistConfig
+  ): Promise<SmartPlaylistResult> {
     const maxTracks = config.maxTracks || 50;
     const minScore = config.minScore || 20;
 
@@ -57,7 +60,11 @@ export class SmartPlaylistService {
     const trackArtistMap = new Map(tracksResult.map((t) => [t.id, t.artistId || '']));
 
     // Calculate scores
-    const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIds, trackArtistMap);
+    const scoredTracks = await this.scoringService.calculateAndRankTracks(
+      userId,
+      trackIds,
+      trackArtistMap
+    );
 
     // Filter by minimum score
     let filteredTracks = scoredTracks.filter((t) => t.totalScore >= minScore);
@@ -69,9 +76,10 @@ export class SmartPlaylistService {
     filteredTracks = filteredTracks.slice(0, maxTracks);
 
     // Calculate metadata
-    const avgScore = filteredTracks.length > 0
-      ? filteredTracks.reduce((sum, t) => sum + t.totalScore, 0) / filteredTracks.length
-      : 0;
+    const avgScore =
+      filteredTracks.length > 0
+        ? filteredTracks.reduce((sum, t) => sum + t.totalScore, 0) / filteredTracks.length
+        : 0;
 
     return {
       tracks: filteredTracks,
@@ -122,7 +130,10 @@ export class SmartPlaylistService {
   /**
    * Sort tracks according to sort type
    */
-  private sortTracks(tracks: TrackScore[], sortBy: 'score' | 'popularity' | 'recent' | 'random'): TrackScore[] {
+  private sortTracks(
+    tracks: TrackScore[],
+    sortBy: 'score' | 'popularity' | 'recent' | 'random'
+  ): TrackScore[] {
     switch (sortBy) {
       case 'score':
         return tracks.sort((a, b) => b.totalScore - a.totalScore);
@@ -135,7 +146,7 @@ export class SmartPlaylistService {
         // Sort by recency
         return tracks.sort((a, b) => b.breakdown.recency - a.breakdown.recency);
 
-      case 'random':
+      case 'random': {
         // Fisher-Yates shuffle
         const shuffled = [...tracks];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -143,6 +154,7 @@ export class SmartPlaylistService {
           [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
         return shuffled;
+      }
 
       default:
         return tracks;

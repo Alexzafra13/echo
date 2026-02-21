@@ -110,7 +110,9 @@ describe('TrackRepository Integration', () => {
         {
           provide: DrizzleService,
           useFactory: () => {
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
             const { Pool } = require('pg');
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
             const { drizzle } = require('drizzle-orm/node-postgres');
 
             const pool = new Pool({

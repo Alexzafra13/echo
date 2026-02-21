@@ -13,13 +13,7 @@ import {
   Req,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { RequestWithUser } from '@shared/types/request.types';
 import {
@@ -61,7 +55,7 @@ export class PlaylistsController {
     private readonly addTrackToPlaylistUseCase: AddTrackToPlaylistUseCase,
     private readonly removeTrackFromPlaylistUseCase: RemoveTrackFromPlaylistUseCase,
     private readonly getPlaylistTracksUseCase: GetPlaylistTracksUseCase,
-    private readonly reorderPlaylistTracksUseCase: ReorderPlaylistTracksUseCase,
+    private readonly reorderPlaylistTracksUseCase: ReorderPlaylistTracksUseCase
   ) {}
 
   @Post()
@@ -75,7 +69,7 @@ export class PlaylistsController {
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Datos inválidos' })
   async createPlaylist(
     @Body() dto: CreatePlaylistDto,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<PlaylistResponseDto> {
     const userId = req.user.id;
 
@@ -101,7 +95,7 @@ export class PlaylistsController {
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'No tienes acceso a esta playlist' })
   async getPlaylist(
     @Param('id', ParseUUIDPipe) id: string,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<PlaylistResponseDto> {
     const result = await this.getPlaylistUseCase.execute({
       id,
@@ -142,7 +136,7 @@ export class PlaylistsController {
     @Query('skip') skip?: number,
     @Query('take') take?: number,
     @Query('publicOnly') publicOnly?: boolean,
-    @Req() req?: any,
+    @Req() req?: RequestWithUser
   ): Promise<PlaylistsListResponseDto> {
     const userId = req?.user?.id;
 
@@ -185,7 +179,7 @@ export class PlaylistsController {
   async getPlaylistsByArtist(
     @Param('artistId', ParseUUIDPipe) artistId: string,
     @Query('skip') skip?: number,
-    @Query('take') take?: number,
+    @Query('take') take?: number
   ): Promise<PlaylistsListResponseDto> {
     const { skip: skipNum, take: takeNum } = validatePagination(skip, take, {
       maxTake: 100,
@@ -213,7 +207,7 @@ export class PlaylistsController {
   async updatePlaylist(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePlaylistDto,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<PlaylistResponseDto> {
     const userId = req.user.id;
 
@@ -239,7 +233,7 @@ export class PlaylistsController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
   async deletePlaylist(
     @Param('id', ParseUUIDPipe) id: string,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<void> {
     const userId = req.user.id;
     await this.deletePlaylistUseCase.execute({ id, userId });
@@ -255,7 +249,7 @@ export class PlaylistsController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
   async getPlaylistTracks(
     @Param('id', ParseUUIDPipe) id: string,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<PlaylistTracksResponseDto> {
     const result = await this.getPlaylistTracksUseCase.execute({
       playlistId: id,
@@ -277,7 +271,7 @@ export class PlaylistsController {
   async addTrackToPlaylist(
     @Param('id', ParseUUIDPipe) playlistId: string,
     @Body() dto: AddTrackToPlaylistDto,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<AddTrackToPlaylistResponseDto> {
     const userId = req.user.id;
     const result = await this.addTrackToPlaylistUseCase.execute({
@@ -305,7 +299,7 @@ export class PlaylistsController {
   async removeTrackFromPlaylist(
     @Param('id', ParseUUIDPipe) playlistId: string,
     @Param('trackId', ParseUUIDPipe) trackId: string,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<{ success: boolean; message: string }> {
     const userId = req.user.id;
     return this.removeTrackFromPlaylistUseCase.execute({
@@ -334,7 +328,7 @@ export class PlaylistsController {
   async reorderPlaylistTracks(
     @Param('id', ParseUUIDPipe) playlistId: string,
     @Body() dto: ReorderTracksDto,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<{ success: boolean; message: string; playlistId: string }> {
     const userId = req.user.id;
     return this.reorderPlaylistTracksUseCase.execute({

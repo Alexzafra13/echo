@@ -1,7 +1,9 @@
 import { RecordPlayUseCase } from './record-play.use-case';
 import { PlayEvent, PlayContext } from '../entities/play-event.entity';
 import { PlayStatsCalculatorService } from '../services/play-stats-calculator.service';
+import { IPlayTrackingRepository } from '../ports';
 import { createMockPinoLogger } from '@shared/testing/mock.types';
+import { PinoLogger } from 'nestjs-pino';
 
 describe('RecordPlayUseCase', () => {
   let useCase: RecordPlayUseCase;
@@ -33,9 +35,9 @@ describe('RecordPlayUseCase', () => {
     mockStatsCalculator = new PlayStatsCalculatorService();
 
     useCase = new RecordPlayUseCase(
-      mockLogger as any,
-      mockRepository as any,
-      mockStatsCalculator,
+      mockLogger as unknown as PinoLogger,
+      mockRepository as unknown as IPlayTrackingRepository,
+      mockStatsCalculator
     );
   });
 
@@ -91,7 +93,7 @@ describe('RecordPlayUseCase', () => {
         expect.objectContaining({
           completionRate: 0.3,
           skipped: true,
-        }),
+        })
       );
     });
 
@@ -113,7 +115,7 @@ describe('RecordPlayUseCase', () => {
         expect.objectContaining({
           completionRate: 1.0,
           skipped: false,
-        }),
+        })
       );
     });
 
@@ -140,7 +142,7 @@ describe('RecordPlayUseCase', () => {
         expect.objectContaining({
           sourceId: 'playlist-789',
           sourceType: 'playlist',
-        }),
+        })
       );
     });
 
@@ -164,15 +166,22 @@ describe('RecordPlayUseCase', () => {
       expect(mockRepository.recordPlay).toHaveBeenCalledWith(
         expect.objectContaining({
           client: 'web-app',
-        }),
+        })
       );
     });
 
     it('debería manejar diferentes contextos de reproducción', async () => {
       // Arrange
       const contexts: PlayContext[] = [
-        'direct', 'album', 'playlist', 'artist',
-        'shuffle', 'radio', 'recommendation', 'search', 'queue',
+        'direct',
+        'album',
+        'playlist',
+        'artist',
+        'shuffle',
+        'radio',
+        'recommendation',
+        'search',
+        'queue',
       ];
 
       for (const context of contexts) {
@@ -191,7 +200,7 @@ describe('RecordPlayUseCase', () => {
         expect(mockRepository.recordPlay).toHaveBeenLastCalledWith(
           expect.objectContaining({
             playContext: context,
-          }),
+          })
         );
       }
     });
@@ -217,7 +226,7 @@ describe('RecordPlayUseCase', () => {
       expect(mockRepository.recordPlay).toHaveBeenCalledWith(
         expect.objectContaining({
           skipped: false,
-        }),
+        })
       );
     });
 
@@ -242,7 +251,7 @@ describe('RecordPlayUseCase', () => {
       expect(mockRepository.recordPlay).toHaveBeenCalledWith(
         expect.objectContaining({
           skipped: true,
-        }),
+        })
       );
     });
 
@@ -252,7 +261,7 @@ describe('RecordPlayUseCase', () => {
       mockRepository.recordPlay.mockResolvedValue(mockPlayEvent);
       // Delay the stats update to simulate async behavior
       mockRepository.updatePlayStats.mockImplementation(
-        () => new Promise(resolve => setTimeout(resolve, 100)),
+        () => new Promise((resolve) => setTimeout(resolve, 100))
       );
 
       // Act
@@ -283,7 +292,7 @@ describe('RecordPlayUseCase', () => {
       });
 
       // Wait for async retry logic
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Assert - Should not throw, but log error
       expect(mockRepository.recordPlay).toHaveBeenCalled();

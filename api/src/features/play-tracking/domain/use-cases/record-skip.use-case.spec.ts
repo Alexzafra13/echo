@@ -1,5 +1,6 @@
 import { RecordSkipUseCase } from './record-skip.use-case';
 import { PlayEvent, PlayContext } from '../entities/play-event.entity';
+import { IPlayTrackingRepository } from '../ports';
 
 describe('RecordSkipUseCase', () => {
   let useCase: RecordSkipUseCase;
@@ -24,7 +25,7 @@ describe('RecordSkipUseCase', () => {
       recordSkip: jest.fn(),
     };
 
-    useCase = new RecordSkipUseCase(mockRepository as any);
+    useCase = new RecordSkipUseCase(mockRepository as unknown as IPlayTrackingRepository);
   });
 
   describe('execute', () => {
@@ -34,21 +35,11 @@ describe('RecordSkipUseCase', () => {
       mockRepository.recordSkip.mockResolvedValue(mockPlayEvent);
 
       // Act
-      const result = await useCase.execute(
-        'user-123',
-        'track-456',
-        0.2,
-        'album',
-      );
+      const result = await useCase.execute('user-123', 'track-456', 0.2, 'album');
 
       // Assert
       expect(result).toEqual(mockPlayEvent);
-      expect(mockRepository.recordSkip).toHaveBeenCalledWith(
-        'user-123',
-        'track-456',
-        0.2,
-        'album',
-      );
+      expect(mockRepository.recordSkip).toHaveBeenCalledWith('user-123', 'track-456', 0.2, 'album');
     });
 
     it('debería manejar skip inmediato (completionRate = 0)', async () => {
@@ -59,28 +50,25 @@ describe('RecordSkipUseCase', () => {
       mockRepository.recordSkip.mockResolvedValue(mockPlayEvent);
 
       // Act
-      const result = await useCase.execute(
-        'user-123',
-        'track-456',
-        0,
-        'shuffle',
-      );
+      const result = await useCase.execute('user-123', 'track-456', 0, 'shuffle');
 
       // Assert
       expect(result.completionRate).toBe(0);
-      expect(mockRepository.recordSkip).toHaveBeenCalledWith(
-        'user-123',
-        'track-456',
-        0,
-        'shuffle',
-      );
+      expect(mockRepository.recordSkip).toHaveBeenCalledWith('user-123', 'track-456', 0, 'shuffle');
     });
 
     it('debería funcionar con diferentes contextos', async () => {
       // Arrange
       const contexts: PlayContext[] = [
-        'direct', 'album', 'playlist', 'artist',
-        'shuffle', 'radio', 'recommendation', 'search', 'queue',
+        'direct',
+        'album',
+        'playlist',
+        'artist',
+        'shuffle',
+        'radio',
+        'recommendation',
+        'search',
+        'queue',
       ];
 
       for (const context of contexts) {
@@ -95,7 +83,7 @@ describe('RecordSkipUseCase', () => {
           'user-123',
           'track-456',
           0.3,
-          context,
+          context
         );
       }
     });
@@ -108,12 +96,7 @@ describe('RecordSkipUseCase', () => {
       mockRepository.recordSkip.mockResolvedValue(mockPlayEvent);
 
       // Act
-      const result = await useCase.execute(
-        'user-123',
-        'track-456',
-        0.1,
-        'playlist',
-      );
+      const result = await useCase.execute('user-123', 'track-456', 0.1, 'playlist');
 
       // Assert
       expect(result.skipped).toBe(true);
@@ -128,12 +111,7 @@ describe('RecordSkipUseCase', () => {
       mockRepository.recordSkip.mockResolvedValue(mockPlayEvent);
 
       // Act
-      const result = await useCase.execute(
-        'user-123',
-        'track-456',
-        0.4,
-        'radio',
-      );
+      const result = await useCase.execute('user-123', 'track-456', 0.4, 'radio');
 
       // Assert
       expect(result.completionRate).toBe(0.4);
@@ -148,12 +126,7 @@ describe('RecordSkipUseCase', () => {
       mockRepository.recordSkip.mockResolvedValue(mockPlayEvent);
 
       // Act
-      const result = await useCase.execute(
-        'user-123',
-        'specific-track',
-        0.25,
-        'direct',
-      );
+      const result = await useCase.execute('user-123', 'specific-track', 0.25, 'direct');
 
       // Assert
       expect(result.id).toBe('unique-skip-id');

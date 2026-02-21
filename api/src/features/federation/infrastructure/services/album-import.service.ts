@@ -8,7 +8,10 @@ import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { albums, artists, tracks, settings } from '@infrastructure/database/schema';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../../domain/ports/federation.repository';
+import {
+  IFederationRepository,
+  FEDERATION_REPOSITORY,
+} from '../../domain/ports/federation.repository';
 import { AlbumImportQueue, ConnectedServer } from '../../domain/types';
 import { ImportProgressService } from './import-progress.service';
 
@@ -96,44 +99,40 @@ export class AlbumImportService {
     @Inject(FEDERATION_REPOSITORY)
     private readonly repository: IFederationRepository,
     private readonly drizzle: DrizzleService,
-    private readonly importProgressService: ImportProgressService,
+    private readonly importProgressService: ImportProgressService
   ) {}
 
   async startImport(
     userId: string,
     server: ConnectedServer,
-    remoteAlbumId: string,
+    remoteAlbumId: string
   ): Promise<AlbumImportQueue> {
     const metadata = await this.fetchAlbumMetadata(server, remoteAlbumId);
 
     const existingAlbum = await this.checkForDuplicateAlbum(
       metadata.album.name,
-      metadata.album.artistName,
+      metadata.album.artistName
     );
 
     if (existingAlbum) {
       this.logger.warn(
         { albumName: metadata.album.name, artistName: metadata.album.artistName },
-        'Album already exists in library',
+        'Album already exists in library'
       );
       throw new ConflictException(
-        `El álbum "${metadata.album.name}" de "${metadata.album.artistName}" ya existe en tu biblioteca`,
+        `El álbum "${metadata.album.name}" de "${metadata.album.artistName}" ya existe en tu biblioteca`
       );
     }
 
-    const existingImport = await this.checkForPendingImport(
-      userId,
-      server.id,
-      remoteAlbumId,
-    );
+    const existingImport = await this.checkForPendingImport(userId, server.id, remoteAlbumId);
 
     if (existingImport) {
       this.logger.warn(
         { importId: existingImport.id, albumName: metadata.album.name },
-        'Import already in progress',
+        'Import already in progress'
       );
       throw new ConflictException(
-        `Ya hay una importación en progreso para "${metadata.album.name}"`,
+        `Ya hay una importación en progreso para "${metadata.album.name}"`
       );
     }
 
@@ -153,13 +152,13 @@ export class AlbumImportService {
 
     this.logger.info(
       { importId: importEntry.id, albumName: metadata.album.name },
-      'Album import queued',
+      'Album import queued'
     );
 
     this.processImport(importEntry.id, server, metadata).catch((error) => {
       this.logger.error(
         { importId: importEntry.id, error: error instanceof Error ? error.message : error },
-        'Album import failed',
+        'Album import failed'
       );
     });
 
@@ -186,18 +185,13 @@ export class AlbumImportService {
 
   private async checkForDuplicateAlbum(
     albumName: string,
-    artistName: string,
+    artistName: string
   ): Promise<{ id: string } | null> {
     const [existing] = await this.drizzle.db
       .select({ id: albums.id })
       .from(albums)
       .innerJoin(artists, eq(albums.albumArtistId, artists.id))
-      .where(
-        and(
-          ilike(albums.name, albumName),
-          ilike(artists.name, artistName),
-        ),
-      )
+      .where(and(ilike(albums.name, albumName), ilike(artists.name, artistName)))
       .limit(1);
 
     return existing ?? null;
@@ -206,7 +200,7 @@ export class AlbumImportService {
   private async checkForPendingImport(
     userId: string,
     serverId: string,
-    remoteAlbumId: string,
+    remoteAlbumId: string
   ): Promise<AlbumImportQueue | null> {
     const userImports = await this.repository.findAlbumImportsByUserId(userId);
 
@@ -214,7 +208,7 @@ export class AlbumImportService {
       (imp) =>
         imp.connectedServerId === serverId &&
         imp.remoteAlbumId === remoteAlbumId &&
-        (imp.status === 'pending' || imp.status === 'downloading'),
+        (imp.status === 'pending' || imp.status === 'downloading')
     );
 
     return pendingImport ?? null;
@@ -225,13 +219,13 @@ export class AlbumImportService {
 
   private async fetchAlbumMetadata(
     server: ConnectedServer,
-    albumId: string,
+    albumId: string
   ): Promise<ExportedAlbumMetadata> {
     const url = `${server.baseUrl}/api/federation/albums/${albumId}/export`;
 
     this.logger.info(
       { serverId: server.id, albumId, url },
-      'Fetching album metadata from remote server',
+      'Fetching album metadata from remote server'
     );
 
     const controller = new AbortController();
@@ -250,7 +244,7 @@ export class AlbumImportService {
         const errorText = await response.text().catch(() => 'No response body');
         this.logger.error(
           { serverId: server.id, albumId, status: response.status, error: errorText },
-          'Failed to fetch album metadata from remote server',
+          'Failed to fetch album metadata from remote server'
         );
         throw new Error(`Failed to fetch album metadata: ${response.status} - ${errorText}`);
       }
@@ -260,7 +254,7 @@ export class AlbumImportService {
       if (error instanceof Error && error.name === 'AbortError') {
         this.logger.error(
           { serverId: server.id, albumId, timeout: AlbumImportService.METADATA_TIMEOUT },
-          'Metadata request timed out',
+          'Metadata request timed out'
         );
         throw new Error(`Request timed out after ${AlbumImportService.METADATA_TIMEOUT / 1000}s`);
       }
@@ -269,8 +263,13 @@ export class AlbumImportService {
       }
       const errorMessage = this.getNetworkErrorMessage(error, url);
       this.logger.error(
-        { serverId: server.id, albumId, error: errorMessage, cause: (error as any)?.cause?.code },
-        'Network error fetching album metadata',
+        {
+          serverId: server.id,
+          albumId,
+          error: errorMessage,
+          cause: (error as Error & { cause?: { code?: string } })?.cause?.code,
+        },
+        'Network error fetching album metadata'
       );
       throw new Error(`Cannot connect to remote server: ${errorMessage}`);
     } finally {
@@ -283,7 +282,7 @@ export class AlbumImportService {
       return 'Unknown network error';
     }
 
-    const cause = (error as any).cause;
+    const cause = (error as Error & { cause?: { code?: string; message?: string } }).cause;
     if (cause?.code) {
       switch (cause.code) {
         case 'ECONNREFUSED':
@@ -317,7 +316,7 @@ export class AlbumImportService {
   private async processImport(
     importId: string,
     server: ConnectedServer,
-    metadata: ExportedAlbumMetadata,
+    metadata: ExportedAlbumMetadata
   ): Promise<void> {
     const importEntry = await this.repository.findAlbumImportById(importId);
     if (!importEntry) {
@@ -346,10 +345,7 @@ export class AlbumImportService {
 
       await fs.mkdir(albumPath, { recursive: true });
 
-      this.logger.info(
-        { importId, albumPath },
-        'Created album folder',
-      );
+      this.logger.info({ importId, albumPath }, 'Created album folder');
 
       const artistId = await this.findOrCreateArtist(metadata.album.artistName);
       const albumId = await this.createAlbumRecord(metadata.album, artistId, albumPath);
@@ -368,7 +364,7 @@ export class AlbumImportService {
           albumPath,
           albumId,
           artistId,
-          metadata.album,
+          metadata.album
         );
 
         downloadedTracks++;
@@ -385,13 +381,10 @@ export class AlbumImportService {
           { ...importEntry, progress, downloadedTracks, downloadedSize },
           'downloading',
           downloadedTracks,
-          downloadedSize,
+          downloadedSize
         );
 
-        this.logger.debug(
-          { importId, track: track.title, progress },
-          'Track downloaded',
-        );
+        this.logger.debug({ importId, track: track.title, progress }, 'Track downloaded');
       }
 
       await this.repository.updateAlbumImportStatus(importId, 'completed');
@@ -399,13 +392,10 @@ export class AlbumImportService {
         { ...importEntry, progress: 100, downloadedTracks, downloadedSize },
         'completed',
         downloadedTracks,
-        downloadedSize,
+        downloadedSize
       );
 
-      this.logger.info(
-        { importId, albumName: metadata.album.name },
-        'Album import completed',
-      );
+      this.logger.info({ importId, albumName: metadata.album.name }, 'Album import completed');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       await this.repository.updateAlbumImportStatus(importId, 'failed', errorMessage);
@@ -414,7 +404,7 @@ export class AlbumImportService {
         'failed',
         importEntry.downloadedTracks,
         importEntry.downloadedSize,
-        errorMessage,
+        errorMessage
       );
       throw error;
     }
@@ -455,7 +445,7 @@ export class AlbumImportService {
   private async createAlbumRecord(
     albumMeta: ExportedAlbumMetadata['album'],
     artistId: string,
-    albumPath: string,
+    albumPath: string
   ): Promise<string> {
     const [newAlbum] = await this.drizzle.db
       .insert(albums)
@@ -488,7 +478,7 @@ export class AlbumImportService {
     server: ConnectedServer,
     coverUrl: string,
     albumPath: string,
-    albumId: string,
+    albumId: string
   ): Promise<void> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), AlbumImportService.METADATA_TIMEOUT);
@@ -520,13 +510,11 @@ export class AlbumImportService {
 
       this.logger.debug({ albumId, coverPath }, 'Cover downloaded');
     } catch (error) {
-      const errorMessage = error instanceof Error && error.name === 'AbortError'
-        ? 'Cover download timed out'
-        : this.getNetworkErrorMessage(error, coverUrl);
-      this.logger.warn(
-        { error: errorMessage },
-        'Failed to download cover, continuing without it',
-      );
+      const errorMessage =
+        error instanceof Error && error.name === 'AbortError'
+          ? 'Cover download timed out'
+          : this.getNetworkErrorMessage(error, coverUrl);
+      this.logger.warn({ error: errorMessage }, 'Failed to download cover, continuing without it');
     } finally {
       clearTimeout(timeoutId);
     }
@@ -538,7 +526,7 @@ export class AlbumImportService {
     albumPath: string,
     albumId: string,
     artistId: string,
-    albumMeta: ExportedAlbumMetadata['album'],
+    albumMeta: ExportedAlbumMetadata['album']
   ): Promise<string> {
     const trackNum = String(trackMeta.trackNumber || 0).padStart(2, '0');
     const safeTitle = this.sanitizeFileName(trackMeta.title);
@@ -575,7 +563,9 @@ export class AlbumImportService {
       await pipeline(body, fileStream);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Track download timed out after ${AlbumImportService.DOWNLOAD_TIMEOUT / 1000}s`);
+        throw new Error(
+          `Track download timed out after ${AlbumImportService.DOWNLOAD_TIMEOUT / 1000}s`
+        );
       }
       if (error instanceof Error && error.message.startsWith('Failed to download track')) {
         throw error;
@@ -632,7 +622,7 @@ export class AlbumImportService {
     status: 'downloading' | 'completed' | 'failed',
     currentTrack: number,
     downloadedSize: number,
-    error?: string,
+    error?: string
   ): void {
     const event: AlbumImportProgressEvent = {
       importId: importEntry.id,

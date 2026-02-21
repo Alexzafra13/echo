@@ -1,9 +1,25 @@
-import { Controller, Get, Post, Param, Query, Body, HttpCode, HttpStatus, UseGuards, BadRequestException, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  BadRequestException,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MetadataConflictService } from '../infrastructure/services/metadata-conflict.service';
-import { EntityType, ConflictSource, ConflictWithEntity } from '../infrastructure/services/conflicts/conflict-enrichment.service';
+import {
+  EntityType,
+  ConflictSource,
+  ConflictWithEntity,
+} from '../infrastructure/services/conflicts/conflict-enrichment.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { metadataConflicts, artists, albums, tracks } from '@infrastructure/database/schema';
 import { eq } from 'drizzle-orm';
@@ -24,14 +40,15 @@ import {
 export class MetadataConflictsController {
   constructor(
     private readonly conflictService: MetadataConflictService,
-    private readonly drizzle: DrizzleService,
+    private readonly drizzle: DrizzleService
   ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'List pending metadata conflicts',
-    description: 'Retrieve paginated list of pending conflicts with optional filters by entity type, source, or priority',
+    description:
+      'Retrieve paginated list of pending conflicts with optional filters by entity type, source, or priority',
   })
   @ApiResponse({
     status: 200,
@@ -89,7 +106,8 @@ export class MetadataConflictsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Accept metadata suggestion',
-    description: 'Accept the suggested value and apply it to the entity. MusicBrainz suggestions are auto-applied.',
+    description:
+      'Accept the suggested value and apply it to the entity. MusicBrainz suggestions are auto-applied.',
   })
   @ApiResponse({
     status: 200,
@@ -102,7 +120,7 @@ export class MetadataConflictsController {
   })
   async acceptConflict(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ResolveConflictDto,
+    @Body() dto: ResolveConflictDto
   ): Promise<ConflictResolvedResponseDto> {
     const updatedEntity = await this.conflictService.acceptConflict(id, dto.userId);
 
@@ -131,7 +149,7 @@ export class MetadataConflictsController {
   })
   async rejectConflict(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ResolveConflictDto,
+    @Body() dto: ResolveConflictDto
   ): Promise<ConflictResolvedResponseDto> {
     await this.conflictService.rejectConflict(id, dto.userId);
 
@@ -159,7 +177,7 @@ export class MetadataConflictsController {
   })
   async ignoreConflict(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ResolveConflictDto,
+    @Body() dto: ResolveConflictDto
   ): Promise<ConflictResolvedResponseDto> {
     await this.conflictService.ignoreConflict(id, dto.userId);
 
@@ -183,9 +201,12 @@ export class MetadataConflictsController {
   })
   async getEntityConflicts(
     @Param('entityType') entityType: string,
-    @Param('entityId', ParseUUIDPipe) entityId: string,
+    @Param('entityId', ParseUUIDPipe) entityId: string
   ): Promise<ConflictResponseDto[]> {
-    const conflicts = await this.conflictService.getConflictsForEntity(entityId, entityType as EntityType);
+    const conflicts = await this.conflictService.getConflictsForEntity(
+      entityId,
+      entityType as EntityType
+    );
     return conflicts as ConflictResponseDto[];
   }
 
@@ -226,7 +247,7 @@ export class MetadataConflictsController {
   })
   async applySuggestion(
     @Param('id', ParseUUIDPipe) conflictId: string,
-    @Body() body: { suggestionIndex: number; userId?: string },
+    @Body() body: { suggestionIndex: number; userId?: string }
   ): Promise<ConflictResolvedResponseDto> {
     // Get the conflict
     const conflictResult = await this.drizzle.db
@@ -249,7 +270,7 @@ export class MetadataConflictsController {
 
     if (!metadata || !metadata.suggestions || !Array.isArray(metadata.suggestions)) {
       throw new BadRequestException(
-        'This conflict does not have multiple suggestions. Use /accept endpoint instead.',
+        'This conflict does not have multiple suggestions. Use /accept endpoint instead.'
       );
     }
 
@@ -261,7 +282,7 @@ export class MetadataConflictsController {
       !Number.isInteger(suggestionIndex)
     ) {
       throw new BadRequestException(
-        `Invalid suggestion index: ${suggestionIndex}. Must be between 0 and ${metadata.suggestions.length - 1}`,
+        `Invalid suggestion index: ${suggestionIndex}. Must be between 0 and ${metadata.suggestions.length - 1}`
       );
     }
 
@@ -271,7 +292,7 @@ export class MetadataConflictsController {
     // Apply MBID based on entity type
     let updatedEntity;
     switch (conflict.entityType) {
-      case 'artist':
+      case 'artist': {
         const artistResult = await this.drizzle.db
           .update(artists)
           .set({ mbzArtistId: selectedSuggestion.mbid })
@@ -279,8 +300,9 @@ export class MetadataConflictsController {
           .returning();
         updatedEntity = artistResult[0];
         break;
+      }
 
-      case 'album':
+      case 'album': {
         const albumResult = await this.drizzle.db
           .update(albums)
           .set({
@@ -291,8 +313,9 @@ export class MetadataConflictsController {
           .returning();
         updatedEntity = albumResult[0];
         break;
+      }
 
-      case 'track':
+      case 'track': {
         const trackResult = await this.drizzle.db
           .update(tracks)
           .set({
@@ -303,6 +326,7 @@ export class MetadataConflictsController {
           .returning();
         updatedEntity = trackResult[0];
         break;
+      }
 
       default:
         throw new BadRequestException(`Unsupported entity type: ${conflict.entityType}`);

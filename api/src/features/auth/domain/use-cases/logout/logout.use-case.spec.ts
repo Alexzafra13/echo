@@ -17,10 +17,7 @@ describe('LogoutUseCase', () => {
       info: jest.fn(),
     };
 
-    useCase = new LogoutUseCase(
-      mockTokenBlacklist,
-      mockLogService as any,
-    );
+    useCase = new LogoutUseCase(mockTokenBlacklist, mockLogService as unknown as LogService);
   });
 
   it('should add token to blacklist with expiration', async () => {
@@ -45,7 +42,7 @@ describe('LogoutUseCase', () => {
     expect(mockLogService.info).toHaveBeenCalledWith(
       LogCategory.AUTH,
       'User logged out: testuser',
-      { userId: 'user-1', username: 'testuser' },
+      { userId: 'user-1', username: 'testuser' }
     );
   });
 
@@ -58,7 +55,7 @@ describe('LogoutUseCase', () => {
         userId: 'user-1',
         username: 'testuser',
         tokenExp: 1700000000,
-      }),
+      })
     ).rejects.toThrow('Redis down');
   });
 });

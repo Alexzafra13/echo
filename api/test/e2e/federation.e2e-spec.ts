@@ -133,10 +133,12 @@ describe('Federation E2E', () => {
           .expect(204);
 
         // Verificar que se eliminó
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { eq: eqOp } = require('drizzle-orm');
         const remaining = await drizzle.db
           .select()
           .from(schema.federationTokens)
-          .where(require('drizzle-orm').eq(schema.federationTokens.id, token.id));
+          .where(eqOp(schema.federationTokens.id, token.id));
 
         expect(remaining.length).toBe(0);
       });
@@ -204,10 +206,12 @@ describe('Federation E2E', () => {
           .expect(204);
 
         // Verificar que está revocado (isActive = false)
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { eq: eqOp2 } = require('drizzle-orm');
         const [updated] = await drizzle.db
           .select()
           .from(schema.federationAccessTokens)
-          .where(require('drizzle-orm').eq(schema.federationAccessTokens.id, fedToken.id));
+          .where(eqOp2(schema.federationAccessTokens.id, fedToken.id));
 
         expect(updated.isActive).toBe(false);
       });
@@ -222,10 +226,12 @@ describe('Federation E2E', () => {
           .expect(204);
 
         // Verificar que se eliminó
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { eq: eqOp3 } = require('drizzle-orm');
         const remaining = await drizzle.db
           .select()
           .from(schema.federationAccessTokens)
-          .where(require('drizzle-orm').eq(schema.federationAccessTokens.id, fedToken.id));
+          .where(eqOp3(schema.federationAccessTokens.id, fedToken.id));
 
         expect(remaining.length).toBe(0);
       });
@@ -455,10 +461,12 @@ describe('Federation E2E', () => {
         expect(response.body.ok).toBe(true);
 
         // Verificar que el token está revocado
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { eq: eqOp4 } = require('drizzle-orm');
         const [updated] = await drizzle.db
           .select()
           .from(schema.federationAccessTokens)
-          .where(require('drizzle-orm').eq(schema.federationAccessTokens.id, fedToken.id));
+          .where(eqOp4(schema.federationAccessTokens.id, fedToken.id));
 
         expect(updated.isActive).toBe(false);
       });
@@ -499,10 +507,12 @@ describe('Federation E2E', () => {
           .expect(204);
 
         // Verificar eliminación
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { eq: eqOp5 } = require('drizzle-orm');
         const remaining = await drizzle.db
           .select()
           .from(schema.connectedServers)
-          .where(require('drizzle-orm').eq(schema.connectedServers.id, server.id));
+          .where(eqOp5(schema.connectedServers.id, server.id));
 
         expect(remaining.length).toBe(0);
       });
