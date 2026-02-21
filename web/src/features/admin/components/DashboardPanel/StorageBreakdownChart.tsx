@@ -1,4 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import type { PieLabelRenderProps } from 'recharts';
 import { HardDrive } from 'lucide-react';
 import { formatBytes } from '@shared/utils/format';
 import styles from './StorageBreakdownChart.module.css';
@@ -42,8 +43,8 @@ export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
     },
   ];
 
-  const renderCustomLabel = (entry: { percentage: string }) => {
-    return `${entry.percentage}%`;
+  const renderCustomLabel = (props: PieLabelRenderProps & { percentage?: string }) => {
+    return `${props.percentage}%`;
   };
 
   return (
@@ -85,7 +86,7 @@ export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
             <Legend
               wrapperStyle={{ color: '#b8bcc8', fontSize: 13 }}
               iconType="circle"
-              formatter={(value, entry: { payload?: { value: number } }) =>
+              formatter={(value, entry: { payload?: { value?: number } }) =>
                 `${value}: ${formatBytes(entry.payload?.value ?? 0)}`
               }
             />
