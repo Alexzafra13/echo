@@ -6,28 +6,13 @@ onlyBuiltDependencies:
   - ffmpeg-static
 
 overrides:
-  # Fastify ecosystem (same major, patch-level security fixes)
-  '@fastify/middie@<=9.0.3': '>=9.1.0'
-  '@nestjs/platform-fastify@<11.1.10': '>=11.1.11'
-  fastify@<5.7.2: '>=5.7.2'
+  # Fastify ecosystem - used by echo-api
   fastify@<=5.7.2: '>=5.7.3'
-  # Same-major security patches
-  '@isaacs/brace-expansion@<=5.0.0': '>=5.0.1'
+  '@nestjs/platform-fastify@<11.1.10': '>=11.1.11'
+  # Axios - used by echo-web
   axios@>=1.0.0 <=1.13.4: '>=1.13.5'
-  body-parser@>=2.2.0 <2.2.1: '>=2.2.1'
-  diff@>=4.0.0 <4.0.4: '>=4.0.4'
-  glob@>=11.0.0 <11.1.0: '>=11.1.0'
-  hono@<4.10.3: '>=4.10.3'
-  hono@<4.11.10: '>=4.11.10'
-  hono@<4.11.4: '>=4.11.4'
-  hono@<4.11.7: '>=4.11.7'
-  hono@<4.9.7: '>=4.9.7'
-  hono@>=1.1.0 <4.10.2: '>=4.10.2'
-  js-yaml@>=4.0.0 <4.1.1: '>=4.1.1'
+  # Transitive deps of @lhci/cli (devDependency)
   lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
   qs@>=6.7.0 <=6.14.1: '>=6.14.2'
+  js-yaml@>=4.0.0 <4.1.1: '>=4.1.1'
   tmp@<=0.2.3: '>=0.2.4'
-  valibot@>=0.31.0 <1.2.0: '>=1.2.0'
-  validator@<13.15.22: '>=13.15.22'
-  webpack@>=5.49.0 <5.104.0: '>=5.104.0'
-  webpack@>=5.49.0 <=5.104.0: '>=5.104.1'
