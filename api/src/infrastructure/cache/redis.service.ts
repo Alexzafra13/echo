@@ -10,7 +10,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @InjectPinoLogger(RedisService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   async onModuleInit() {
@@ -42,10 +42,13 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
     this.redis.on('connect', () => {
       this.isConnected = true;
-      this.logger.info({
-        host: cacheConfig.redis_host,
-        port: cacheConfig.redis_port,
-      }, 'Redis connected');
+      this.logger.info(
+        {
+          host: cacheConfig.redis_host,
+          port: cacheConfig.redis_port,
+        },
+        'Redis connected'
+      );
     });
 
     this.redis.on('ready', () => {
@@ -53,11 +56,14 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.redis.on('error', (err) => {
-      this.logger.error({
-        error: err.message,
-        host: cacheConfig.redis_host,
-        port: cacheConfig.redis_port,
-      }, 'Redis error');
+      this.logger.error(
+        {
+          error: err.message,
+          host: cacheConfig.redis_host,
+          port: cacheConfig.redis_port,
+        },
+        'Redis error'
+      );
     });
 
     this.redis.on('close', () => {
@@ -81,7 +87,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     await this.redis.quit();
   }
 
-  async get<T = any>(key: string): Promise<T | null> {
+  async get<T = unknown>(key: string): Promise<T | null> {
     try {
       const data = await this.redis.get(key);
       return data ? (JSON.parse(data) as T) : null;
@@ -92,7 +98,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async set<T = any>(key: string, value: T, ttl?: number): Promise<void> {
+  async set<T = unknown>(key: string, value: T, ttl?: number): Promise<void> {
     try {
       const serialized = JSON.stringify(value);
       if (ttl) {
@@ -126,13 +132,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
       // Usar SCAN para iterar de forma non-blocking
       do {
-        const [nextCursor, keys] = await this.redis.scan(
-          cursor,
-          'MATCH',
-          pattern,
-          'COUNT',
-          100,
-        );
+        const [nextCursor, keys] = await this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
         cursor = nextCursor;
         keysToDelete.push(...keys);
       } while (cursor !== '0');

@@ -6,7 +6,9 @@ describe('GetUserInteractionsUseCase', () => {
   let mockRepo: jest.Mocked<IUserInteractionsRepository>;
 
   beforeEach(() => {
-    mockRepo = { getUserInteractions: jest.fn() } as any;
+    mockRepo = {
+      getUserInteractions: jest.fn(),
+    } as unknown as jest.Mocked<IUserInteractionsRepository>;
     useCase = new GetUserInteractionsUseCase(mockRepo);
   });
 

@@ -4,7 +4,12 @@ import { BackgroundPositionModal } from './BackgroundPositionModal';
 
 // Mock UI components
 vi.mock('@shared/components/ui', () => ({
-  Button: ({ children, onClick, disabled, variant }: {
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    variant,
+  }: {
     children: React.ReactNode;
     onClick?: () => void;
     disabled?: boolean;
@@ -31,7 +36,7 @@ vi.mock('@shared/utils/logger', () => ({
 }));
 
 // Mock Image loading
-const mockImageOnLoad = vi.fn();
+const _mockImageOnLoad = vi.fn();
 const originalImage = global.Image;
 
 beforeEach(() => {
@@ -92,7 +97,8 @@ describe('BackgroundPositionModal', () => {
     it('should call onClose when overlay clicked', () => {
       render(<BackgroundPositionModal {...defaultProps} />);
       // Click on overlay (the outer div)
-      const overlay = screen.getByText('Ajustar posición del fondo').closest('div')?.parentElement?.parentElement;
+      const overlay = screen.getByText('Ajustar posición del fondo').closest('div')
+        ?.parentElement?.parentElement;
       if (overlay) {
         fireEvent.click(overlay);
         expect(defaultProps.onClose).toHaveBeenCalled();
@@ -208,12 +214,7 @@ describe('BackgroundPositionModal', () => {
 
   describe('Initial Position', () => {
     it('should accept initial position prop', () => {
-      render(
-        <BackgroundPositionModal
-          {...defaultProps}
-          initialPosition="center center"
-        />
-      );
+      render(<BackgroundPositionModal {...defaultProps} initialPosition="center center" />);
 
       expect(screen.getByText('Ajustar posición del fondo')).toBeInTheDocument();
     });
@@ -237,7 +238,10 @@ describe('BackgroundPositionModal', () => {
   describe('Accessibility', () => {
     it('should have close button with aria-label', () => {
       render(<BackgroundPositionModal {...defaultProps} />);
-      expect(screen.getByRole('button', { name: 'Cerrar' })).toHaveAttribute('aria-label', 'Cerrar');
+      expect(screen.getByRole('button', { name: 'Cerrar' })).toHaveAttribute(
+        'aria-label',
+        'Cerrar'
+      );
     });
   });
 });

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GetAlbumsUseCase } from './get-albums.use-case';
+import { GetAlbumsInput } from './get-albums.dto';
 import { ALBUM_REPOSITORY, IAlbumRepository } from '../../ports/album-repository.port';
 import { Album } from '../../entities/album.entity';
 
@@ -192,9 +193,7 @@ describe('GetAlbumsUseCase', () => {
         updatedAt: new Date('2025-01-02'),
       });
 
-      (albumRepository.findAll as jest.Mock).mockResolvedValue([
-        albumWithAllFields,
-      ]);
+      (albumRepository.findAll as jest.Mock).mockResolvedValue([albumWithAllFields]);
       (albumRepository.count as jest.Mock).mockResolvedValue(1);
 
       // Act
@@ -222,7 +221,7 @@ describe('GetAlbumsUseCase', () => {
       (albumRepository.count as jest.Mock).mockResolvedValue(50);
 
       // Act
-      const result = await useCase.execute({} as any);
+      const result = await useCase.execute({} as unknown as GetAlbumsInput);
 
       // Assert
       expect(albumRepository.findAll).toHaveBeenCalledWith(0, 10);

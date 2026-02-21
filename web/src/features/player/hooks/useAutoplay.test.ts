@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useAutoplay } from './useAutoplay';
 
 // Mock logger
@@ -164,7 +164,7 @@ describe('useAutoplay', () => {
     it('should return empty when already loading', async () => {
       // Make the service slow
       vi.mocked(artistsService.getRelatedArtists).mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve(mockRelatedArtists), 1000))
+        () => new Promise((resolve) => setTimeout(() => resolve(mockRelatedArtists), 1000))
       );
 
       const { result } = renderHook(() => useAutoplay());
@@ -194,14 +194,11 @@ describe('useAutoplay', () => {
 
       let loadResult: { tracks: any[] } = { tracks: [] };
       await act(async () => {
-        loadResult = await result.current.loadSimilarArtistTracks(
-          'current-artist-id',
-          excludeIds
-        );
+        loadResult = await result.current.loadSimilarArtistTracks('current-artist-id', excludeIds);
       });
 
       // track-1 should be excluded
-      const hasExcludedTrack = loadResult.tracks.some(t => t.id === 'track-1');
+      const hasExcludedTrack = loadResult.tracks.some((t) => t.id === 'track-1');
       expect(hasExcludedTrack).toBe(false);
     });
 
@@ -262,7 +259,7 @@ describe('useAutoplay', () => {
     it('should not prefetch if already prefetching', async () => {
       // Make prefetch slow
       vi.mocked(artistsService.getRelatedArtists).mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve(mockRelatedArtists), 500))
+        () => new Promise((resolve) => setTimeout(() => resolve(mockRelatedArtists), 500))
       );
 
       const { result } = renderHook(() => useAutoplay());

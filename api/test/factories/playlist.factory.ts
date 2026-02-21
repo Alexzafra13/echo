@@ -45,7 +45,7 @@ export class PlaylistFactory {
   /**
    * Crea una playlist pública
    */
-  static createPublic(overrides?: Partial<any>): Playlist {
+  static createPublic(overrides?: Partial<Record<string, unknown>>): Playlist {
     return PlaylistFactory.create({
       public: true,
       ...overrides,
@@ -55,7 +55,7 @@ export class PlaylistFactory {
   /**
    * Crea múltiples playlists
    */
-  static createMany(count: number, overridesFn?: (index: number) => Partial<any>): Playlist[] {
+  static createMany(count: number, overridesFn?: (index: number) => Partial<Record<string, unknown>>): Playlist[] {
     return Array.from({ length: count }, (_, i) =>
       PlaylistFactory.create(overridesFn ? overridesFn(i) : {
         id: `playlist-${i}`,

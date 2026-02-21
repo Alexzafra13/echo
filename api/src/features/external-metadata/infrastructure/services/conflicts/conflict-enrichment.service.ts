@@ -26,15 +26,20 @@ export interface ConflictWithEntity {
   source: ConflictSource;
   status: ConflictStatus;
   priority: number;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   createdAt: Date;
   resolvedAt?: Date;
   resolvedBy?: string;
   entity?: {
     name: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
+
+/**
+ * Type alias for a metadata conflict row from the database
+ */
+type MetadataConflictRow = typeof metadataConflicts.$inferSelect;
 
 /**
  * Service for enriching conflicts with entity data and verification
@@ -138,7 +143,7 @@ export class ConflictEnrichmentService {
    * Enrich conflict with entity name
    * First tries to get the name from conflict metadata, then falls back to database query
    */
-  async enrichConflictWithEntity(conflict: any): Promise<ConflictWithEntity> {
+  async enrichConflictWithEntity(conflict: MetadataConflictRow): Promise<ConflictWithEntity> {
     let entityName = 'Unknown';
 
     try {
@@ -165,7 +170,7 @@ export class ConflictEnrichmentService {
   /**
    * Enrich multiple conflicts with entity data
    */
-  async enrichConflicts(conflicts: any[]): Promise<ConflictWithEntity[]> {
+  async enrichConflicts(conflicts: MetadataConflictRow[]): Promise<ConflictWithEntity[]> {
     return Promise.all(conflicts.map((c) => this.enrichConflictWithEntity(c)));
   }
 
@@ -217,15 +222,16 @@ export class ConflictEnrichmentService {
   /**
    * Parse metadata from conflict
    */
-  private parseMetadata(metadata: any): any | null {
+  private parseMetadata(metadata: unknown): Record<string, unknown> | null {
     if (!metadata) return null;
-    return typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+    if (typeof metadata === 'string') return JSON.parse(metadata) as Record<string, unknown>;
+    return metadata as Record<string, unknown>;
   }
 
   /**
    * Get entity name from metadata
    */
-  private getNameFromMetadata(entityType: string, metadata: any): string {
+  private getNameFromMetadata(entityType: string, metadata: Record<string, unknown>): string {
     if (entityType === 'artist' && metadata.artistName) {
       return metadata.artistName;
     }
@@ -241,7 +247,10 @@ export class ConflictEnrichmentService {
   /**
    * Map database conflict to ConflictWithEntity
    */
-  mapConflictWithEntity(conflict: any, entity?: { name: string }): ConflictWithEntity {
+  mapConflictWithEntity(
+    conflict: MetadataConflictRow,
+    entity?: { name: string }
+  ): ConflictWithEntity {
     return {
       id: conflict.id,
       entityId: conflict.entityId,

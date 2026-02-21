@@ -1,7 +1,41 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { AgentRegistryService } from '../../infrastructure/services/agent-registry.service';
 import { IArtistImageRetriever, IAlbumCoverRetriever } from '../../domain/interfaces';
+import { AlbumCover } from '../../domain/entities';
+
+/**
+ * Extended Fanart.tv artist image retriever with variant support
+ */
+interface FanartArtistAgent extends IArtistImageRetriever {
+  getAllArtistImageVariants?: (
+    mbid: string | null,
+    name: string
+  ) => Promise<{
+    artistthumbs: string[];
+    backgrounds: string[];
+    banners: string[];
+    logos: string[];
+  } | null>;
+}
+
+/**
+ * Extended Fanart.tv album cover retriever with variant and artist-based support
+ */
+interface FanartAlbumAgent extends IAlbumCoverRetriever {
+  getAllAlbumCoverVariants?: (
+    artistMbid: string,
+    albumMbid: string,
+    artistName: string,
+    albumName: string
+  ) => Promise<string[] | null>;
+  getAlbumCoverByArtist?: (
+    artistMbid: string,
+    albumMbid: string,
+    artistName: string,
+    albumName: string
+  ) => Promise<AlbumCover | null>;
+}
 
 /**
  * Common image option structure
@@ -75,9 +109,11 @@ interface ImageInputOption {
  */
 @Injectable()
 export class ImageSearchOrchestratorService {
-  constructor(@InjectPinoLogger(ImageSearchOrchestratorService.name)
+  constructor(
+    @InjectPinoLogger(ImageSearchOrchestratorService.name)
     private readonly logger: PinoLogger,
-    private readonly agentRegistry: AgentRegistryService) {}
+    private readonly agentRegistry: AgentRegistryService
+  ) {}
 
   /**
    * Search for artist images across all providers
@@ -87,17 +123,15 @@ export class ImageSearchOrchestratorService {
 
     this.logger.info(`Searching images for artist: ${artistName}`);
 
-    const agents = this.agentRegistry.getAgentsFor<IArtistImageRetriever>(
-      'IArtistImageRetriever',
-    );
+    const agents = this.agentRegistry.getAgentsFor<IArtistImageRetriever>('IArtistImageRetriever');
 
     const allImages: ImageOption[] = [];
     const seenUrls = new Set<string>();
 
     const results = await Promise.allSettled(
       agents.map((agent) =>
-        this.fetchArtistImagesFromAgent(agent, artistName, mbzArtistId, seenUrls),
-      ),
+        this.fetchArtistImagesFromAgent(agent, artistName, mbzArtistId, seenUrls)
+      )
     );
 
     for (const result of results) {
@@ -106,9 +140,7 @@ export class ImageSearchOrchestratorService {
       }
     }
 
-    this.logger.info(
-      `Found ${allImages.length} image options from ${agents.length} providers`,
-    );
+    this.logger.info(`Found ${allImages.length} image options from ${agents.length} providers`);
 
     return allImages;
   }
@@ -121,9 +153,7 @@ export class ImageSearchOrchestratorService {
 
     this.logger.info(`Searching covers for album: ${albumName} by ${artistName}`);
 
-    const agents = this.agentRegistry.getAgentsFor<IAlbumCoverRetriever>(
-      'IAlbumCoverRetriever',
-    );
+    const agents = this.agentRegistry.getAgentsFor<IAlbumCoverRetriever>('IAlbumCoverRetriever');
 
     const allCovers: ImageOption[] = [];
     const seenUrls = new Set<string>();
@@ -136,9 +166,9 @@ export class ImageSearchOrchestratorService {
           artistName,
           mbzAlbumId,
           mbzArtistId,
-          seenUrls,
-        ),
-      ),
+          seenUrls
+        )
+      )
     );
 
     for (const result of results) {
@@ -147,9 +177,7 @@ export class ImageSearchOrchestratorService {
       }
     }
 
-    this.logger.info(
-      `Found ${allCovers.length} cover options from ${agents.length} providers`,
-    );
+    this.logger.info(`Found ${allCovers.length} cover options from ${agents.length} providers`);
 
     return allCovers;
   }
@@ -161,7 +189,7 @@ export class ImageSearchOrchestratorService {
     agent: IArtistImageRetriever,
     artistName: string,
     mbzArtistId: string | null,
-    seenUrls: Set<string>,
+    seenUrls: Set<string>
   ): Promise<ImageOption[]> {
     try {
       this.logger.debug(`Trying agent "${agent.name}" for artist images`);
@@ -173,7 +201,7 @@ export class ImageSearchOrchestratorService {
           agent,
           artistName,
           mbzArtistId,
-          seenUrls,
+          seenUrls
         );
         if (fanartImages.length > 0) {
           return fanartImages;
@@ -252,9 +280,9 @@ export class ImageSearchOrchestratorService {
     agent: IArtistImageRetriever,
     artistName: string,
     mbzArtistId: string,
-    seenUrls: Set<string>,
+    seenUrls: Set<string>
   ): Promise<ImageOption[]> {
-    const fanartAgent = agent as any;
+    const fanartAgent = agent as FanartArtistAgent;
     if (!fanartAgent.getAllArtistImageVariants) return [];
 
     const variants = await fanartAgent.getAllArtistImageVariants(mbzArtistId, artistName);
@@ -315,7 +343,7 @@ export class ImageSearchOrchestratorService {
     artistName: string,
     mbzAlbumId: string | null,
     mbzArtistId: string | null,
-    seenUrls: Set<string>,
+    seenUrls: Set<string>
   ): Promise<ImageOption[]> {
     try {
       this.logger.debug(`Trying agent "${agent.name}" for album covers`);
@@ -329,7 +357,7 @@ export class ImageSearchOrchestratorService {
           artistName,
           mbzAlbumId,
           mbzArtistId,
-          seenUrls,
+          seenUrls
         );
         if (fanartCovers.length > 0) {
           return fanartCovers;
@@ -339,13 +367,13 @@ export class ImageSearchOrchestratorService {
       // Standard handling
       let cover;
       if (agent.name === 'fanart' && mbzArtistId && mbzAlbumId) {
-        const fanartAgent = agent as any;
+        const fanartAgent = agent as FanartAlbumAgent;
         if (fanartAgent.getAlbumCoverByArtist) {
           cover = await fanartAgent.getAlbumCoverByArtist(
             mbzArtistId,
             mbzAlbumId,
             artistName,
-            albumName,
+            albumName
           );
         }
       } else {
@@ -403,16 +431,16 @@ export class ImageSearchOrchestratorService {
     artistName: string,
     mbzAlbumId: string,
     mbzArtistId: string,
-    seenUrls: Set<string>,
+    seenUrls: Set<string>
   ): Promise<ImageOption[]> {
-    const fanartAgent = agent as any;
+    const fanartAgent = agent as FanartAlbumAgent;
     if (!fanartAgent.getAllAlbumCoverVariants) return [];
 
     const variants = await fanartAgent.getAllAlbumCoverVariants(
       mbzArtistId,
       mbzAlbumId,
       artistName,
-      albumName,
+      albumName
     );
 
     if (!variants || variants.length === 0) return [];
@@ -438,7 +466,7 @@ export class ImageSearchOrchestratorService {
   private addImageIfNew(
     images: ImageOption[],
     seenUrls: Set<string>,
-    option: ImageInputOption,
+    option: ImageInputOption
   ): void {
     if (!option.url || seenUrls.has(option.url)) return;
 

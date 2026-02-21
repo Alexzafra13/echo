@@ -1,13 +1,20 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
+import {
+  USER_REPOSITORY,
+  IUserRepository,
+  UserUpdateableFields,
+} from '@features/auth/domain/ports';
 import { NotFoundError } from '@shared/errors';
-import { UpdatePrivacySettingsInput, UpdatePrivacySettingsOutput } from './update-privacy-settings.dto';
+import {
+  UpdatePrivacySettingsInput,
+  UpdatePrivacySettingsOutput,
+} from './update-privacy-settings.dto';
 
 @Injectable()
 export class UpdatePrivacySettingsUseCase {
   constructor(
     @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
+    private readonly userRepository: IUserRepository
   ) {}
 
   async execute(input: UpdatePrivacySettingsInput): Promise<UpdatePrivacySettingsOutput> {
@@ -16,7 +23,7 @@ export class UpdatePrivacySettingsUseCase {
       throw new NotFoundError('User', input.userId);
     }
 
-    const updateData: Record<string, any> = {};
+    const updateData: Partial<UserUpdateableFields> = {};
 
     if (input.isPublicProfile !== undefined) {
       updateData.isPublicProfile = input.isPublicProfile;

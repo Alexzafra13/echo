@@ -1,6 +1,7 @@
 import { ReorderPlaylistTracksUseCase } from './reorder-playlist-tracks.use-case';
 import { IPlaylistRepository } from '../../ports';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
+import { Playlist } from '../../entities';
 
 describe('ReorderPlaylistTracksUseCase', () => {
   let useCase: ReorderPlaylistTracksUseCase;
@@ -17,13 +18,13 @@ describe('ReorderPlaylistTracksUseCase', () => {
       findById: jest.fn(),
       reorderTracks: jest.fn(),
       isTrackInPlaylist: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<IPlaylistRepository>;
 
     useCase = new ReorderPlaylistTracksUseCase(mockRepo);
   });
 
   it('should reorder tracks successfully', async () => {
-    mockRepo.findById.mockResolvedValue(mockPlaylist as any);
+    mockRepo.findById.mockResolvedValue(mockPlaylist as unknown as Playlist);
     mockRepo.isTrackInPlaylist.mockResolvedValue(true);
     mockRepo.reorderTracks.mockResolvedValue(true);
 
@@ -50,7 +51,7 @@ describe('ReorderPlaylistTracksUseCase', () => {
         playlistId: '',
         userId: 'user-1',
         trackOrders: [{ trackId: 'track-1', order: 0 }],
-      }),
+      })
     ).rejects.toThrow(ValidationError);
   });
 
@@ -60,7 +61,7 @@ describe('ReorderPlaylistTracksUseCase', () => {
         playlistId: '   ',
         userId: 'user-1',
         trackOrders: [{ trackId: 'track-1', order: 0 }],
-      }),
+      })
     ).rejects.toThrow(ValidationError);
   });
 
@@ -70,7 +71,7 @@ describe('ReorderPlaylistTracksUseCase', () => {
         playlistId: 'playlist-1',
         userId: 'user-1',
         trackOrders: [],
-      }),
+      })
     ).rejects.toThrow(ValidationError);
   });
 
@@ -82,48 +83,48 @@ describe('ReorderPlaylistTracksUseCase', () => {
         playlistId: 'nonexistent',
         userId: 'user-1',
         trackOrders: [{ trackId: 'track-1', order: 0 }],
-      }),
+      })
     ).rejects.toThrow(NotFoundError);
   });
 
   it('should throw ForbiddenError when user is not the owner', async () => {
-    mockRepo.findById.mockResolvedValue(mockPlaylist as any);
+    mockRepo.findById.mockResolvedValue(mockPlaylist as unknown as Playlist);
 
     await expect(
       useCase.execute({
         playlistId: 'playlist-1',
         userId: 'other-user',
         trackOrders: [{ trackId: 'track-1', order: 0 }],
-      }),
+      })
     ).rejects.toThrow(ForbiddenError);
   });
 
   it('should throw ValidationError when trackId is empty in trackOrders', async () => {
-    mockRepo.findById.mockResolvedValue(mockPlaylist as any);
+    mockRepo.findById.mockResolvedValue(mockPlaylist as unknown as Playlist);
 
     await expect(
       useCase.execute({
         playlistId: 'playlist-1',
         userId: 'user-1',
         trackOrders: [{ trackId: '', order: 0 }],
-      }),
+      })
     ).rejects.toThrow(ValidationError);
   });
 
   it('should throw ValidationError when order is negative', async () => {
-    mockRepo.findById.mockResolvedValue(mockPlaylist as any);
+    mockRepo.findById.mockResolvedValue(mockPlaylist as unknown as Playlist);
 
     await expect(
       useCase.execute({
         playlistId: 'playlist-1',
         userId: 'user-1',
         trackOrders: [{ trackId: 'track-1', order: -1 }],
-      }),
+      })
     ).rejects.toThrow(ValidationError);
   });
 
   it('should throw NotFoundError when track is not in playlist', async () => {
-    mockRepo.findById.mockResolvedValue(mockPlaylist as any);
+    mockRepo.findById.mockResolvedValue(mockPlaylist as unknown as Playlist);
     mockRepo.isTrackInPlaylist.mockResolvedValue(false);
 
     await expect(
@@ -131,12 +132,12 @@ describe('ReorderPlaylistTracksUseCase', () => {
         playlistId: 'playlist-1',
         userId: 'user-1',
         trackOrders: [{ trackId: 'track-999', order: 0 }],
-      }),
+      })
     ).rejects.toThrow(NotFoundError);
   });
 
   it('should throw ValidationError when reorderTracks fails', async () => {
-    mockRepo.findById.mockResolvedValue(mockPlaylist as any);
+    mockRepo.findById.mockResolvedValue(mockPlaylist as unknown as Playlist);
     mockRepo.isTrackInPlaylist.mockResolvedValue(true);
     mockRepo.reorderTracks.mockResolvedValue(false);
 
@@ -145,15 +146,13 @@ describe('ReorderPlaylistTracksUseCase', () => {
         playlistId: 'playlist-1',
         userId: 'user-1',
         trackOrders: [{ trackId: 'track-1', order: 0 }],
-      }),
+      })
     ).rejects.toThrow(ValidationError);
   });
 
   it('should validate all tracks before reordering', async () => {
-    mockRepo.findById.mockResolvedValue(mockPlaylist as any);
-    mockRepo.isTrackInPlaylist
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(false);
+    mockRepo.findById.mockResolvedValue(mockPlaylist as unknown as Playlist);
+    mockRepo.isTrackInPlaylist.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
 
     await expect(
       useCase.execute({
@@ -163,7 +162,7 @@ describe('ReorderPlaylistTracksUseCase', () => {
           { trackId: 'track-1', order: 0 },
           { trackId: 'track-missing', order: 1 },
         ],
-      }),
+      })
     ).rejects.toThrow(NotFoundError);
 
     expect(mockRepo.reorderTracks).not.toHaveBeenCalled();

@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { StorageService } from './storage.service';
 import probe from 'probe-image-size';
@@ -23,9 +23,11 @@ export class ImageDownloadService {
   // Max image size (10 MB)
   private readonly MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
-  constructor(@InjectPinoLogger(ImageDownloadService.name)
+  constructor(
+    @InjectPinoLogger(ImageDownloadService.name)
     private readonly logger: PinoLogger,
-    private readonly storage: StorageService) {}
+    private readonly storage: StorageService
+  ) {}
 
   /**
    * Download an image from a URL
@@ -81,7 +83,10 @@ export class ImageDownloadService {
       this.logger.debug(`Downloaded image: ${buffer.length} bytes`);
       return buffer;
     } catch (error) {
-      this.logger.error(`Error downloading image from ${url}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error downloading image from ${url}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -217,7 +222,9 @@ export class ImageDownloadService {
       const result = await probe(fileStream);
       await stream.close();
 
-      this.logger.info(`✓ Got dimensions from file: ${result.width}×${result.height} (${result.type}) - ${filePath.substring(filePath.lastIndexOf('/') + 1)}`);
+      this.logger.info(
+        `✓ Got dimensions from file: ${result.width}×${result.height} (${result.type}) - ${filePath.substring(filePath.lastIndexOf('/') + 1)}`
+      );
 
       return {
         width: result.width,
@@ -225,11 +232,13 @@ export class ImageDownloadService {
         type: result.type,
       };
     } catch (error) {
-      const errorCode = (error as any).code;
+      const errorCode = (error as NodeJS.ErrnoException).code;
       if (errorCode === 'ENOENT') {
         this.logger.warn(`✗ File not found: ${filePath}`);
       } else {
-        this.logger.warn(`✗ Failed to get dimensions from file ${filePath}: ${(error as Error).message}`);
+        this.logger.warn(
+          `✗ Failed to get dimensions from file ${filePath}: ${(error as Error).message}`
+        );
       }
       return null;
     }
@@ -248,11 +257,13 @@ export class ImageDownloadService {
         timeout: 20000, // 20 second timeout (increased for slow servers)
         headers: {
           'User-Agent': 'Echo-Music-Server/1.0.0',
-          'Accept': 'image/*',
+          Accept: 'image/*',
         },
       });
 
-      this.logger.info(`✓ Got dimensions from URL: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`);
+      this.logger.info(
+        `✓ Got dimensions from URL: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`
+      );
 
       return {
         width: result.width,
@@ -260,7 +271,9 @@ export class ImageDownloadService {
         type: result.type,
       };
     } catch (error) {
-      this.logger.warn(`⚠️ Direct probe failed: ${(error as Error).message} - trying buffer probe fallback...`);
+      this.logger.warn(
+        `⚠️ Direct probe failed: ${(error as Error).message} - trying buffer probe fallback...`
+      );
 
       // Fallback 1: Download first ~50KB and probe the buffer
       // This works better for URLs with redirects or special handling
@@ -274,7 +287,7 @@ export class ImageDownloadService {
           signal: controller.signal,
           headers: {
             'User-Agent': 'Echo-Music-Server/1.0.0',
-            'Accept': 'image/*',
+            Accept: 'image/*',
           },
         });
 
@@ -307,7 +320,7 @@ export class ImageDownloadService {
         reader.cancel();
 
         // Combine chunks into single buffer
-        const buffer = Buffer.concat(chunks.map(chunk => Buffer.from(chunk)));
+        const buffer = Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)));
 
         // Create a stream from the buffer
         const { Readable } = await import('stream');
@@ -316,7 +329,9 @@ export class ImageDownloadService {
         // Probe the buffer stream
         const result = await probe(bufferStream);
 
-        this.logger.info(`✓ Got dimensions from buffer probe: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`);
+        this.logger.info(
+          `✓ Got dimensions from buffer probe: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`
+        );
 
         return {
           width: result.width,
@@ -337,7 +352,9 @@ export class ImageDownloadService {
 
           if (response.ok) {
             const contentType = response.headers.get('content-type');
-            this.logger.warn(`✗ Image exists (${contentType}) but couldn't probe dimensions - ${url.substring(0, 80)}...`);
+            this.logger.warn(
+              `✗ Image exists (${contentType}) but couldn't probe dimensions - ${url.substring(0, 80)}...`
+            );
           }
         } catch (fetchError) {
           this.logger.error(`✗ Image URL not accessible: ${(fetchError as Error).message}`);
@@ -356,11 +373,7 @@ export class ImageDownloadService {
    * @param minHeight Minimum height (default 1000px)
    * @returns true if high quality
    */
-  isHighQuality(
-    dimensions: ImageDimensions,
-    minWidth = 1000,
-    minHeight = 1000
-  ): boolean {
+  isHighQuality(dimensions: ImageDimensions, minWidth = 1000, minHeight = 1000): boolean {
     return dimensions.width >= minWidth && dimensions.height >= minHeight;
   }
 
@@ -404,12 +417,7 @@ export class ImageDownloadService {
     }
 
     // PNG: 89 50 4E 47
-    if (
-      buffer[0] === 0x89 &&
-      buffer[1] === 0x50 &&
-      buffer[2] === 0x4e &&
-      buffer[3] === 0x47
-    ) {
+    if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
       return true;
     }
 
@@ -426,12 +434,7 @@ export class ImageDownloadService {
       buffer[3] === 0x46 &&
       buffer.length >= 12
     ) {
-      if (
-        buffer[8] === 0x57 &&
-        buffer[9] === 0x45 &&
-        buffer[10] === 0x42 &&
-        buffer[11] === 0x50
-      ) {
+      if (buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) {
         return true;
       }
     }
@@ -455,12 +458,7 @@ export class ImageDownloadService {
     }
 
     // PNG
-    if (
-      buffer[0] === 0x89 &&
-      buffer[1] === 0x50 &&
-      buffer[2] === 0x4e &&
-      buffer[3] === 0x47
-    ) {
+    if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
       return 'png';
     }
 

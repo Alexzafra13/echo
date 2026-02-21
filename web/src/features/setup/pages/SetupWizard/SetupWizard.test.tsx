@@ -37,7 +37,7 @@ vi.mock('@shared/components/ui', () => ({
     error,
     placeholder,
     type,
-    leftIcon,
+    leftIcon: _leftIcon,
     ...rest
   }: {
     label: string;
@@ -327,7 +327,9 @@ describe('SetupWizard', () => {
       render(<SetupWizard />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /completar configuración/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: /completar configuración/i })
+        ).toBeInTheDocument();
       });
     });
 
@@ -337,7 +339,9 @@ describe('SetupWizard', () => {
       render(<SetupWizard />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /completar configuración/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: /completar configuración/i })
+        ).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByRole('button', { name: /completar configuración/i }));
@@ -361,7 +365,9 @@ describe('SetupWizard', () => {
       render(<SetupWizard />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /completar configuración/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: /completar configuración/i })
+        ).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByRole('button', { name: /completar configuración/i }));
@@ -383,7 +389,9 @@ describe('SetupWizard', () => {
       render(<SetupWizard />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /completar configuración/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: /completar configuración/i })
+        ).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByRole('button', { name: /completar configuración/i }));
@@ -431,7 +439,9 @@ describe('SetupWizard', () => {
       render(<SetupWizard />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /completar configuración/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: /completar configuración/i })
+        ).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByRole('button', { name: /completar configuración/i }));

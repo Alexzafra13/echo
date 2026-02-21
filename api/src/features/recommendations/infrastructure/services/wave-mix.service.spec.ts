@@ -2,13 +2,30 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PinoLogger } from 'nestjs-pino';
 import { WaveMixService } from './wave-mix.service';
 import { ScoringService } from '../../domain/services/scoring.service';
-import { PLAY_TRACKING_REPOSITORY } from '@features/play-tracking/domain/ports';
+import {
+  PLAY_TRACKING_REPOSITORY,
+  IPlayTrackingRepository,
+} from '@features/play-tracking/domain/ports';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { PlaylistShuffleService } from '../../domain/services/playlists';
 import { PlaylistCoverService } from './playlists/playlist-cover.service';
 import { ArtistPlaylistService } from './playlists/artist-playlist.service';
 import { GenrePlaylistService } from './playlists/genre-playlist.service';
+
+interface MockLogger {
+  info: jest.Mock;
+  debug: jest.Mock;
+  warn: jest.Mock;
+  error: jest.Mock;
+}
+
+interface MockDbTrack {
+  id: string;
+  artistId: string;
+  albumId: string;
+  title: string;
+}
 
 /**
  * WaveMixService Unit Tests
@@ -18,18 +35,18 @@ import { GenrePlaylistService } from './playlists/genre-playlist.service';
  */
 describe('WaveMixService', () => {
   let service: WaveMixService;
-  let mockLogger: any;
-  let mockScoringService: any;
-  let mockPlayTrackingRepo: any;
-  let mockDrizzle: any;
-  let mockRedis: any;
-  let mockShuffleService: any;
-  let mockCoverService: any;
-  let mockArtistPlaylistService: any;
-  let mockGenrePlaylistService: any;
+  let mockLogger: MockLogger;
+  let mockScoringService: Partial<jest.Mocked<ScoringService>>;
+  let mockPlayTrackingRepo: Partial<jest.Mocked<IPlayTrackingRepository>>;
+  let mockDrizzle: Partial<DrizzleService>;
+  let mockRedis: Partial<jest.Mocked<RedisService>>;
+  let mockShuffleService: Partial<jest.Mocked<PlaylistShuffleService>>;
+  let mockCoverService: Partial<jest.Mocked<PlaylistCoverService>>;
+  let mockArtistPlaylistService: Partial<jest.Mocked<ArtistPlaylistService>>;
+  let mockGenrePlaylistService: Partial<jest.Mocked<GenrePlaylistService>>;
 
   // Mock data holders
-  let mockTracksData: any[] = [];
+  let mockTracksData: MockDbTrack[] = [];
 
   beforeEach(async () => {
     // Reset mock data
@@ -318,10 +335,7 @@ describe('WaveMixService', () => {
       expect(result.length).toBeGreaterThan(0);
       // No debería cachear playlists vacías (usuario sin historial)
       expect(mockRedis.set).not.toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        { userId },
-        'Generating fresh playlists'
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith({ userId }, 'Generating fresh playlists');
       expect(mockLogger.info).toHaveBeenCalledWith(
         { userId },
         'Skipping cache - playlists are empty'

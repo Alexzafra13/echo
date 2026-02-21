@@ -4,6 +4,7 @@ import { BaseError } from '@shared/errors/base.error';
 import { ValidationError } from '@shared/errors/validation.error';
 import { NotFoundError } from '@shared/errors/not-found.error';
 import { UnauthorizedError } from '@shared/errors/unauthorized.error';
+import { PinoLogger } from 'nestjs-pino';
 
 describe('HttpExceptionFilter', () => {
   let filter: HttpExceptionFilter;
@@ -48,7 +49,7 @@ describe('HttpExceptionFilter', () => {
       }),
     } as unknown as ArgumentsHost;
 
-    filter = new HttpExceptionFilter(mockLogger as any);
+    filter = new HttpExceptionFilter(mockLogger as unknown as PinoLogger);
   });
 
   describe('BaseError handling (custom domain errors)', () => {
@@ -64,7 +65,7 @@ describe('HttpExceptionFilter', () => {
           message: 'Invalid input data',
           error: 'VALIDATION_ERROR',
           path: '/test/path',
-        }),
+        })
       );
       expect(mockLogger.warn).toHaveBeenCalled();
     });
@@ -80,7 +81,7 @@ describe('HttpExceptionFilter', () => {
           statusCode: HttpStatus.NOT_FOUND,
           message: 'User with id 123 not found',
           error: 'NOT_FOUND',
-        }),
+        })
       );
       expect(mockLogger.warn).toHaveBeenCalled();
     });
@@ -96,7 +97,7 @@ describe('HttpExceptionFilter', () => {
           statusCode: HttpStatus.UNAUTHORIZED,
           message: 'Invalid credentials',
           error: 'UNAUTHORIZED',
-        }),
+        })
       );
       expect(mockLogger.warn).toHaveBeenCalled();
     });
@@ -113,7 +114,7 @@ describe('HttpExceptionFilter', () => {
         expect.objectContaining({
           statusCode: HttpStatus.FORBIDDEN,
           message: 'Not allowed',
-        }),
+        })
       );
       expect(mockLogger.warn).toHaveBeenCalled();
     });
@@ -121,7 +122,7 @@ describe('HttpExceptionFilter', () => {
     it('should handle HttpException with object response', () => {
       const error = new HttpException(
         { message: 'Resource forbidden', error: 'ForbiddenError' },
-        HttpStatus.FORBIDDEN,
+        HttpStatus.FORBIDDEN
       );
 
       filter.catch(error, mockHost);
@@ -132,14 +133,14 @@ describe('HttpExceptionFilter', () => {
           statusCode: HttpStatus.FORBIDDEN,
           message: 'Resource forbidden',
           error: 'ForbiddenError',
-        }),
+        })
       );
     });
 
     it('should handle HttpException with message array', () => {
       const error = new HttpException(
         { message: ['Field1 is required', 'Field2 is invalid'] },
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.BAD_REQUEST
       );
 
       filter.catch(error, mockHost);
@@ -148,7 +149,7 @@ describe('HttpExceptionFilter', () => {
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           statusCode: HttpStatus.BAD_REQUEST,
-        }),
+        })
       );
     });
   });
@@ -159,15 +160,13 @@ describe('HttpExceptionFilter', () => {
 
       filter.catch(error, mockHost);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Internal server error',
           error: 'InternalServerError',
-        }),
+        })
       );
       expect(mockLogger.error).toHaveBeenCalled();
     });
@@ -177,29 +176,25 @@ describe('HttpExceptionFilter', () => {
 
       filter.catch(error, mockHost);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Internal server error',
           error: 'UnknownError',
-        }),
+        })
       );
     });
 
     it('should handle null/undefined exceptions', () => {
       filter.catch(null, mockHost);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Internal server error',
-        }),
+        })
       );
     });
   });
@@ -215,10 +210,7 @@ describe('HttpExceptionFilter', () => {
     });
 
     it('should log as error for server errors (5xx)', () => {
-      const error = new HttpException(
-        'Server error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      const error = new HttpException('Server error', HttpStatus.INTERNAL_SERVER_ERROR);
 
       filter.catch(error, mockHost);
 
@@ -241,7 +233,7 @@ describe('HttpExceptionFilter', () => {
           }),
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         }),
-        expect.any(String),
+        expect.any(String)
       );
     });
   });
@@ -255,7 +247,7 @@ describe('HttpExceptionFilter', () => {
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           timestamp: expect.any(String),
-        }),
+        })
       );
     });
 
@@ -267,7 +259,7 @@ describe('HttpExceptionFilter', () => {
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           path: '/test/path',
-        }),
+        })
       );
     });
 
@@ -283,7 +275,7 @@ describe('HttpExceptionFilter', () => {
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           stack: expect.any(String),
-        }),
+        })
       );
 
       process.env.NODE_ENV = originalEnv;

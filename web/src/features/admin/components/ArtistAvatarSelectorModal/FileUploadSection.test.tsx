@@ -1,10 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { FileUploadSection } from './FileUploadSection';
 
 // Mock UI components
 vi.mock('@shared/components/ui', () => ({
-  Button: ({ children, onClick, disabled, loading, fullWidth, size, variant }: {
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    loading,
+    fullWidth,
+    size,
+    variant,
+  }: {
     children: React.ReactNode;
     onClick?: () => void;
     disabled?: boolean;
@@ -37,7 +45,7 @@ const mockFileUploadState = {
 };
 
 vi.mock('@shared/hooks/useFileUpload', () => ({
-  useFileUpload: ({ onError }: { onError?: (error: string) => void }) => ({
+  useFileUpload: ({ onError: _onError }: { onError?: (error: string) => void }) => ({
     selectedFile: mockFileUploadState.selectedFile,
     previewUrl: mockFileUploadState.previewUrl,
     error: mockFileUploadState.error,
@@ -192,7 +200,7 @@ describe('FileUploadSection', () => {
 
       // Find button with X icon (first button without text)
       const buttons = screen.getAllByRole('button');
-      const cancelButton = buttons.find(btn => !btn.textContent?.trim());
+      const cancelButton = buttons.find((btn) => !btn.textContent?.trim());
       if (cancelButton) {
         fireEvent.click(cancelButton);
         expect(mockResetInput).toHaveBeenCalled();
@@ -261,7 +269,13 @@ describe('FileUploadSection', () => {
   describe('Custom Images List', () => {
     it('should render custom images section when images exist', () => {
       mockState.customImages = [
-        { id: 'img-1', fileName: 'custom1.jpg', fileSize: '1024', imageType: 'profile', isActive: false },
+        {
+          id: 'img-1',
+          fileName: 'custom1.jpg',
+          fileSize: '1024',
+          imageType: 'profile',
+          isActive: false,
+        },
       ];
 
       render(<FileUploadSection {...defaultProps} />);
@@ -271,8 +285,20 @@ describe('FileUploadSection', () => {
 
     it('should display custom images count', () => {
       mockState.customImages = [
-        { id: 'img-1', fileName: 'custom1.jpg', fileSize: '1024', imageType: 'profile', isActive: false },
-        { id: 'img-2', fileName: 'custom2.jpg', fileSize: '2048', imageType: 'profile', isActive: false },
+        {
+          id: 'img-1',
+          fileName: 'custom1.jpg',
+          fileSize: '1024',
+          imageType: 'profile',
+          isActive: false,
+        },
+        {
+          id: 'img-2',
+          fileName: 'custom2.jpg',
+          fileSize: '2048',
+          imageType: 'profile',
+          isActive: false,
+        },
       ];
 
       render(<FileUploadSection {...defaultProps} />);
@@ -282,7 +308,13 @@ describe('FileUploadSection', () => {
 
     it('should display custom image file names', () => {
       mockState.customImages = [
-        { id: 'img-1', fileName: 'my-custom-image.jpg', fileSize: '1024', imageType: 'profile', isActive: false },
+        {
+          id: 'img-1',
+          fileName: 'my-custom-image.jpg',
+          fileSize: '1024',
+          imageType: 'profile',
+          isActive: false,
+        },
       ];
 
       render(<FileUploadSection {...defaultProps} />);
@@ -292,7 +324,13 @@ describe('FileUploadSection', () => {
 
     it('should show active badge for active image', () => {
       mockState.customImages = [
-        { id: 'img-1', fileName: 'custom1.jpg', fileSize: '1024', imageType: 'profile', isActive: true },
+        {
+          id: 'img-1',
+          fileName: 'custom1.jpg',
+          fileSize: '1024',
+          imageType: 'profile',
+          isActive: true,
+        },
       ];
 
       render(<FileUploadSection {...defaultProps} />);
@@ -302,7 +340,13 @@ describe('FileUploadSection', () => {
 
     it('should show apply button for inactive images', () => {
       mockState.customImages = [
-        { id: 'img-1', fileName: 'custom1.jpg', fileSize: '1024', imageType: 'profile', isActive: false },
+        {
+          id: 'img-1',
+          fileName: 'custom1.jpg',
+          fileSize: '1024',
+          imageType: 'profile',
+          isActive: false,
+        },
       ];
 
       render(<FileUploadSection {...defaultProps} />);
@@ -312,7 +356,13 @@ describe('FileUploadSection', () => {
 
     it('should not show apply button for active image', () => {
       mockState.customImages = [
-        { id: 'img-1', fileName: 'custom1.jpg', fileSize: '1024', imageType: 'profile', isActive: true },
+        {
+          id: 'img-1',
+          fileName: 'custom1.jpg',
+          fileSize: '1024',
+          imageType: 'profile',
+          isActive: true,
+        },
       ];
 
       render(<FileUploadSection {...defaultProps} />);
@@ -322,7 +372,13 @@ describe('FileUploadSection', () => {
 
     it('should call applyImage when apply clicked', () => {
       mockState.customImages = [
-        { id: 'img-1', fileName: 'custom1.jpg', fileSize: '1024', imageType: 'profile', isActive: false },
+        {
+          id: 'img-1',
+          fileName: 'custom1.jpg',
+          fileSize: '1024',
+          imageType: 'profile',
+          isActive: false,
+        },
       ];
 
       render(<FileUploadSection {...defaultProps} />);
@@ -340,7 +396,13 @@ describe('FileUploadSection', () => {
 
     it('should show delete button for custom images', () => {
       mockState.customImages = [
-        { id: 'img-1', fileName: 'custom1.jpg', fileSize: '1024', imageType: 'profile', isActive: false },
+        {
+          id: 'img-1',
+          fileName: 'custom1.jpg',
+          fileSize: '1024',
+          imageType: 'profile',
+          isActive: false,
+        },
       ];
 
       render(<FileUploadSection {...defaultProps} />);
@@ -362,8 +424,20 @@ describe('FileUploadSection', () => {
   describe('Image Type Filtering', () => {
     it('should only show images of matching type', () => {
       mockState.customImages = [
-        { id: 'img-1', fileName: 'profile.jpg', fileSize: '1024', imageType: 'profile', isActive: false },
-        { id: 'img-2', fileName: 'background.jpg', fileSize: '2048', imageType: 'background', isActive: false },
+        {
+          id: 'img-1',
+          fileName: 'profile.jpg',
+          fileSize: '1024',
+          imageType: 'profile',
+          isActive: false,
+        },
+        {
+          id: 'img-2',
+          fileName: 'background.jpg',
+          fileSize: '2048',
+          imageType: 'background',
+          isActive: false,
+        },
       ];
 
       render(<FileUploadSection {...defaultProps} imageType="profile" />);

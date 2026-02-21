@@ -6,9 +6,12 @@ import { GetUserFavoritesUseCase } from '../domain/use-cases/get-user-favorites/
 import { DeleteFavoriteStationUseCase } from '../domain/use-cases/delete-favorite-station/delete-favorite-station.use-case';
 import { SearchStationsUseCase } from '../domain/use-cases/search-stations/search-stations.use-case';
 import { IcyMetadataService } from '../domain/services/icy-metadata.service';
-import { RadioStation } from '../domain/entities/radio-station.entity';
+import { RadioStation, RadioStationProps } from '../domain/entities/radio-station.entity';
+import { SearchStationsDto } from './dto/search-stations.dto';
+import { SaveApiStationDto } from './dto/save-api-station.dto';
+import { CreateCustomStationDto } from './dto/create-custom-station.dto';
 
-const createMockStation = (overrides: Partial<any> = {}) =>
+const createMockStation = (overrides: Partial<RadioStationProps> = {}) =>
   RadioStation.reconstruct({
     id: 'station-1',
     userId: 'user-1',
@@ -28,8 +31,6 @@ describe('RadioController', () => {
   let saveFavoriteUseCase: jest.Mocked<SaveFavoriteStationUseCase>;
   let getUserFavoritesUseCase: jest.Mocked<GetUserFavoritesUseCase>;
   let deleteFavoriteUseCase: jest.Mocked<DeleteFavoriteStationUseCase>;
-
-  const mockUser = { id: 'user-1', username: 'testuser' };
 
   const mockLogger = {
     debug: jest.fn(),
@@ -83,13 +84,11 @@ describe('RadioController', () => {
 
   describe('searchStations', () => {
     it('should search stations with query params', async () => {
-      const mockStations = [
-        { name: 'Rock FM', url: 'http://rock.fm/stream', tags: 'rock' },
-      ];
+      const mockStations = [{ name: 'Rock FM', url: 'http://rock.fm/stream', tags: 'rock' }];
       searchStationsUseCase.execute.mockResolvedValue(mockStations);
 
-      const query = { name: 'Rock', limit: 10 };
-      const result = await controller.searchStations(query as any);
+      const query = { name: 'Rock', limit: 10 } as SearchStationsDto;
+      const result = await controller.searchStations(query);
 
       expect(searchStationsUseCase.execute).toHaveBeenCalledWith(query);
       expect(result).toHaveLength(1);
@@ -100,7 +99,7 @@ describe('RadioController', () => {
   describe('getTopVoted', () => {
     it('should return top voted stations', async () => {
       const mockStations = [{ name: 'Best FM' }];
-      (searchStationsUseCase as any).getTopVoted.mockResolvedValue(mockStations);
+      searchStationsUseCase.getTopVoted.mockResolvedValue(mockStations);
 
       const result = await controller.getTopVoted(10);
 
@@ -109,7 +108,7 @@ describe('RadioController', () => {
     });
 
     it('should default to 20 if no limit provided', async () => {
-      (searchStationsUseCase as any).getTopVoted.mockResolvedValue([]);
+      searchStationsUseCase.getTopVoted.mockResolvedValue([]);
 
       await controller.getTopVoted(undefined);
 
@@ -119,7 +118,7 @@ describe('RadioController', () => {
 
   describe('getPopular', () => {
     it('should return popular stations', async () => {
-      (searchStationsUseCase as any).getPopular.mockResolvedValue([]);
+      searchStationsUseCase.getPopular.mockResolvedValue([]);
 
       const result = await controller.getPopular(15);
 
@@ -131,7 +130,7 @@ describe('RadioController', () => {
   describe('getByCountry', () => {
     it('should return stations by country code', async () => {
       const mockStations = [{ name: 'Local FM', country: 'US' }];
-      (searchStationsUseCase as any).getByCountry.mockResolvedValue(mockStations);
+      searchStationsUseCase.getByCountry.mockResolvedValue(mockStations);
 
       const result = await controller.getByCountry('US', 50);
 
@@ -142,7 +141,7 @@ describe('RadioController', () => {
 
   describe('getByTag', () => {
     it('should return stations by tag', async () => {
-      (searchStationsUseCase as any).getByTag.mockResolvedValue([]);
+      searchStationsUseCase.getByTag.mockResolvedValue([]);
 
       const result = await controller.getByTag('jazz', 30);
 
@@ -154,7 +153,7 @@ describe('RadioController', () => {
   describe('getTags', () => {
     it('should return available tags', async () => {
       const mockTags = [{ name: 'rock', stationcount: 1000 }];
-      (searchStationsUseCase as any).getTags.mockResolvedValue(mockTags);
+      searchStationsUseCase.getTags.mockResolvedValue(mockTags);
 
       const result = await controller.getTags(100);
 
@@ -166,7 +165,7 @@ describe('RadioController', () => {
   describe('getCountries', () => {
     it('should return available countries', async () => {
       const mockCountries = [{ name: 'United States', stationcount: 5000 }];
-      (searchStationsUseCase as any).getCountries.mockResolvedValue(mockCountries);
+      searchStationsUseCase.getCountries.mockResolvedValue(mockCountries);
 
       const result = await controller.getCountries();
 
@@ -178,7 +177,7 @@ describe('RadioController', () => {
   describe('getFavorites', () => {
     it('should return user favorite stations', async () => {
       const mockStations = [createMockStation()];
-      getUserFavoritesUseCase.execute.mockResolvedValue(mockStations as any);
+      getUserFavoritesUseCase.execute.mockResolvedValue(mockStations);
 
       const result = await controller.getFavorites('user-1');
 
@@ -191,15 +190,15 @@ describe('RadioController', () => {
   describe('saveFavoriteFromApi', () => {
     it('should save a station from Radio Browser as favorite', async () => {
       const mockStation = createMockStation({ name: 'Saved Station' });
-      saveFavoriteUseCase.execute.mockResolvedValue(mockStation as any);
+      saveFavoriteUseCase.execute.mockResolvedValue(mockStation);
 
       const dto = {
         stationuuid: 'ext-123',
         name: 'Saved Station',
         url: 'http://stream.example.com',
-      };
+      } as SaveApiStationDto;
 
-      const result = await controller.saveFavoriteFromApi('user-1', dto as any);
+      const result = await controller.saveFavoriteFromApi('user-1', dto);
 
       expect(saveFavoriteUseCase.execute).toHaveBeenCalledWith({
         userId: 'user-1',
@@ -212,15 +211,19 @@ describe('RadioController', () => {
 
   describe('saveFavoriteCustom', () => {
     it('should save a custom station as favorite', async () => {
-      const mockStation = createMockStation({ id: 'station-2', name: 'Custom Station', source: 'custom' as const });
-      saveFavoriteUseCase.execute.mockResolvedValue(mockStation as any);
+      const mockStation = createMockStation({
+        id: 'station-2',
+        name: 'Custom Station',
+        source: 'custom' as const,
+      });
+      saveFavoriteUseCase.execute.mockResolvedValue(mockStation);
 
       const dto = {
         name: 'Custom Station',
         url: 'http://custom.example.com/stream',
-      };
+      } as CreateCustomStationDto;
 
-      const result = await controller.saveFavoriteCustom('user-1', dto as any);
+      const result = await controller.saveFavoriteCustom('user-1', dto);
 
       expect(saveFavoriteUseCase.execute).toHaveBeenCalledWith({
         userId: 'user-1',

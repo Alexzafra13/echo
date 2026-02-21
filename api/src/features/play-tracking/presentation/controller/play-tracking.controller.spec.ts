@@ -10,6 +10,8 @@ import {
   GetUserPlaySummaryUseCase,
   UpdatePlaybackStateUseCase,
 } from '../../domain/use-cases';
+import { RequestWithUser } from '@shared/types/request.types';
+import { RecordPlayDto, RecordSkipDto, UpdatePlaybackStateDto } from '../dtos/play-tracking.dto';
 
 describe('PlayTrackingController', () => {
   let controller: PlayTrackingController;
@@ -80,9 +82,12 @@ describe('PlayTrackingController', () => {
         sourceId: 'album-1',
         sourceType: 'album',
       };
-      const req = { user: mockUser, headers: { 'user-agent': 'test-agent' } } as any;
+      const req = {
+        user: mockUser,
+        headers: { 'user-agent': 'test-agent' },
+      } as unknown as RequestWithUser;
 
-      const result = await controller.recordPlay(dto as any, req);
+      const result = await controller.recordPlay(dto as RecordPlayDto, req);
 
       expect(recordPlayUseCase.execute).toHaveBeenCalledWith({
         userId: 'user-1',
@@ -117,16 +122,11 @@ describe('PlayTrackingController', () => {
       recordSkipUseCase.execute.mockResolvedValue(mockSkipEvent);
 
       const dto = { trackId: 'track-1', completionRate: 0.2, playContext: 'playlist' };
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
 
-      const result = await controller.recordSkip(dto as any, req);
+      const result = await controller.recordSkip(dto as RecordSkipDto, req);
 
-      expect(recordSkipUseCase.execute).toHaveBeenCalledWith(
-        'user-1',
-        'track-1',
-        0.2,
-        'playlist',
-      );
+      expect(recordSkipUseCase.execute).toHaveBeenCalledWith('user-1', 'track-1', 0.2, 'playlist');
       expect(result.skipped).toBe(true);
     });
   });
@@ -151,7 +151,7 @@ describe('PlayTrackingController', () => {
 
       getUserPlayHistoryUseCase.execute.mockResolvedValue(mockHistory);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getPlayHistory(50, 0, req);
 
       expect(getUserPlayHistoryUseCase.execute).toHaveBeenCalledWith('user-1', 50, 0);
@@ -168,7 +168,7 @@ describe('PlayTrackingController', () => {
 
       getUserTopTracksUseCase.execute.mockResolvedValue(mockTopTracks);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getTopTracks(req, 50, undefined);
 
       expect(getUserTopTracksUseCase.execute).toHaveBeenCalledWith('user-1', 50, undefined);
@@ -180,7 +180,7 @@ describe('PlayTrackingController', () => {
     it('should return recently played track IDs', async () => {
       getRecentlyPlayedUseCase.execute.mockResolvedValue(['track-1', 'track-2']);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getRecentlyPlayed(20, req);
 
       expect(getRecentlyPlayedUseCase.execute).toHaveBeenCalledWith('user-1', 20);
@@ -201,7 +201,7 @@ describe('PlayTrackingController', () => {
 
       getUserPlaySummaryUseCase.execute.mockResolvedValue(mockSummary);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getPlaySummary(30, req);
 
       expect(getUserPlaySummaryUseCase.execute).toHaveBeenCalledWith('user-1', 30);
@@ -215,9 +215,9 @@ describe('PlayTrackingController', () => {
       updatePlaybackStateUseCase.execute.mockResolvedValue(undefined);
 
       const dto = { isPlaying: true, currentTrackId: 'track-1' };
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
 
-      await controller.updatePlaybackState(dto as any, req);
+      await controller.updatePlaybackState(dto as UpdatePlaybackStateDto, req);
 
       expect(updatePlaybackStateUseCase.execute).toHaveBeenCalledWith({
         userId: 'user-1',

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { parseFile, type IAudioMetadata, type ICommonTagsResult } from 'music-metadata';
+import { parseFile, type IAudioMetadata } from 'music-metadata';
 
 /**
  * TrackMetadata - Metadatos extraídos de un archivo de música
@@ -110,9 +110,9 @@ export class MetadataExtractorService {
         common.musicbrainz_recordingid || this.extractMusicBrainzId(common, 'recording'),
       musicBrainzAlbumId: common.musicbrainz_albumid || this.extractMusicBrainzId(common, 'album'),
       musicBrainzArtistId:
-        common.musicbrainz_artistid || this.extractMusicBrainzId(common, 'artist'),
+        common.musicbrainz_artistid?.[0] || this.extractMusicBrainzId(common, 'artist'),
       musicBrainzAlbumArtistId:
-        common.musicbrainz_albumartistid || this.extractMusicBrainzId(common, 'albumartist'),
+        common.musicbrainz_albumartistid?.[0] || this.extractMusicBrainzId(common, 'albumartist'),
 
       // Otros
       comment: this.extractComment(common.comment),
@@ -129,30 +129,27 @@ export class MetadataExtractorService {
    * Extrae valores de ReplayGain de los metadatos
    * music-metadata proporciona estos valores en common.replaygain
    */
-  private extractReplayGain(common: ICommonTagsResult): {
+  private extractReplayGain(common: IAudioMetadata['common']): {
     trackGain?: number;
     trackPeak?: number;
     albumGain?: number;
     albumPeak?: number;
   } {
-    const rg = common.replaygain;
-    if (!rg) return {};
-
     return {
-      // Track gain/peak
-      trackGain: rg.track?.dB ?? undefined,
-      trackPeak: rg.track?.ratio ?? undefined,
+      // Track gain/peak - music-metadata exposes these as IRatio with dB and ratio
+      trackGain: common.replaygain_track_gain?.dB ?? undefined,
+      trackPeak: common.replaygain_track_peak?.ratio ?? undefined,
       // Album gain/peak
-      albumGain: rg.album?.dB ?? undefined,
-      albumPeak: rg.album?.ratio ?? undefined,
+      albumGain: common.replaygain_album_gain?.dB ?? undefined,
+      albumPeak: common.replaygain_album_peak?.ratio ?? undefined,
     };
   }
 
   /**
    * Extrae ID de MusicBrainz de diferentes formatos
    */
-  private extractMusicBrainzId(common: ICommonTagsResult, type: string): string | undefined {
-    const key = `musicbrainz_${type}id` as keyof ICommonTagsResult;
+  private extractMusicBrainzId(common: IAudioMetadata['common'], type: string): string | undefined {
+    const key = `musicbrainz_${type}id` as keyof IAudioMetadata['common'];
     const value = common[key];
     if (value) {
       return Array.isArray(value) ? String(value[0]) : String(value);
@@ -163,18 +160,17 @@ export class MetadataExtractorService {
   /**
    * Extrae comentario (puede venir en diferentes formatos)
    */
-  private extractComment(comment: ICommonTagsResult['comment']): string | undefined {
+  private extractComment(comment: IAudioMetadata['common']['comment']): string | undefined {
     if (!comment) return undefined;
 
     if (Array.isArray(comment)) {
-      return comment[0]?.text || comment[0] || undefined;
+      const first = comment[0];
+      if (!first) return undefined;
+      if (typeof first === 'string') return first;
+      return first.text || undefined;
     }
 
-    if (typeof comment === 'object') {
-      return comment.text || undefined;
-    }
-
-    return comment;
+    return undefined;
   }
 
   /**

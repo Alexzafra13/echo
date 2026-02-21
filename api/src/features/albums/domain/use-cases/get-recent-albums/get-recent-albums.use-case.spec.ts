@@ -18,7 +18,7 @@ describe('GetRecentAlbumsUseCase', () => {
   });
 
   beforeEach(() => {
-    mockRepo = { findRecent: jest.fn() } as any;
+    mockRepo = { findRecent: jest.fn() } as unknown as jest.Mocked<IAlbumRepository>;
     useCase = new GetRecentAlbumsUseCase(mockRepo);
   });
 

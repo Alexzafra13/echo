@@ -89,7 +89,7 @@ describe('useCrossfadeLogic', () => {
       return ++rafId;
     });
 
-    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id) => {
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((_id) => {
       // Just clear the callback
     });
 
@@ -103,7 +103,7 @@ describe('useCrossfadeLogic', () => {
       // Execute all pending animation frames
       const callbacks = [...rafCallbacks];
       rafCallbacks = [];
-      callbacks.forEach(cb => cb(time));
+      callbacks.forEach((cb) => cb(time));
     };
   });
 
@@ -540,7 +540,7 @@ describe('useCrossfadeLogic', () => {
       const mockAudioA = mockAudioElements.audioRefA.current!;
       const addEventListenerCalls = vi.mocked(mockAudioA.addEventListener).mock.calls;
       const timeUpdateHandler = addEventListenerCalls.find(
-        call => call[0] === 'timeupdate'
+        (call) => call[0] === 'timeupdate'
       )?.[1] as EventListener;
 
       if (timeUpdateHandler) {

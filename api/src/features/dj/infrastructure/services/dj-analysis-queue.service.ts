@@ -34,7 +34,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
     private readonly drizzle: DrizzleService,
     private readonly analyzer: EssentiaAnalyzerService,
     @Inject(forwardRef(() => ScannerGateway))
-    private readonly scannerGateway: ScannerGateway,
+    private readonly scannerGateway: ScannerGateway
   ) {
     // Match BullMQ concurrency to the Essentia worker pool size
     this.concurrency = this.analyzer.getPoolSize();
@@ -47,7 +47,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
       async (job) => {
         return this.processAnalysisJob(job.data as DjAnalysisJob);
       },
-      { concurrency: this.concurrency },
+      { concurrency: this.concurrency }
     );
 
     // Resume any pending/stale analyses from a previous run (e.g. after restart or Redis flush)
@@ -81,7 +81,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
 
       this.logger.info(
         { count: pendingTracks.length },
-        'Resuming pending DJ analyses from previous session',
+        'Resuming pending DJ analyses from previous session'
       );
 
       this.isRunning = true;
@@ -99,7 +99,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
     } catch (error) {
       this.logger.error(
         { error: error instanceof Error ? error.message : 'Unknown' },
-        'Failed to resume pending DJ analyses',
+        'Failed to resume pending DJ analyses'
       );
     }
   }
@@ -146,10 +146,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
     this.sessionStartedAt = new Date();
     this.totalToProcess = pendingTracks.length;
 
-    this.logger.info(
-      { trackCount: pendingTracks.length },
-      'Starting DJ analysis queue',
-    );
+    this.logger.info({ trackCount: pendingTracks.length }, 'Starting DJ analysis queue');
 
     // Emit initial progress
     this.emitProgress();
@@ -173,7 +170,9 @@ export class DjAnalysisQueueService implements OnModuleInit {
   /**
    * Start analysis queue for specific tracks
    */
-  async startAnalysisQueueForTracks(trackList: Array<{ id: string; title: string; path: string }>): Promise<void> {
+  async startAnalysisQueueForTracks(
+    trackList: Array<{ id: string; title: string; path: string }>
+  ): Promise<void> {
     if (trackList.length === 0) {
       return;
     }
@@ -185,7 +184,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
 
     this.logger.info(
       { trackCount: trackList.length },
-      'Starting DJ analysis queue for specific tracks',
+      'Starting DJ analysis queue for specific tracks'
     );
 
     // Emit initial progress
@@ -212,10 +211,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
   private async processAnalysisJob(job: DjAnalysisJob): Promise<void> {
     const startTime = Date.now();
 
-    this.logger.debug(
-      { trackId: job.trackId, title: job.trackTitle },
-      'Processing DJ analysis',
-    );
+    this.logger.debug({ trackId: job.trackId, title: job.trackTitle }, 'Processing DJ analysis');
 
     try {
       // Use transaction to avoid TOCTOU race condition
@@ -227,8 +223,14 @@ export class DjAnalysisQueueService implements OnModuleInit {
           .where(eq(djAnalysis.trackId, job.trackId))
           .limit(1);
 
-        if (existing.length > 0 && (existing[0].status === 'completed' || existing[0].status === 'analyzing')) {
-          this.logger.debug({ trackId: job.trackId, status: existing[0].status }, 'Analysis already in progress or completed');
+        if (
+          existing.length > 0 &&
+          (existing[0].status === 'completed' || existing[0].status === 'analyzing')
+        ) {
+          this.logger.debug(
+            { trackId: job.trackId, status: existing[0].status },
+            'Analysis already in progress or completed'
+          );
           return null; // Skip processing
         }
 
@@ -287,7 +289,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
       } catch (error) {
         this.logger.warn(
           { trackId: job.trackId, error: error instanceof Error ? error.message : 'Unknown' },
-          'Audio analysis failed, using defaults (bpm=0, key=Unknown, energy=0.5)',
+          'Audio analysis failed, using defaults (bpm=0, key=Unknown, energy=0.5)'
         );
       }
 
@@ -313,7 +315,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
 
         this.logger.warn(
           { trackId: job.trackId },
-          'DJ analysis produced no useful data, marked as failed for retry',
+          'DJ analysis produced no useful data, marked as failed for retry'
         );
         return;
       }
@@ -354,7 +356,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
         this.recalibrateEnergy().catch((err) => {
           this.logger.warn(
             { error: err instanceof Error ? err.message : 'Unknown' },
-            'Energy recalibration failed (non-critical)',
+            'Energy recalibration failed (non-critical)'
           );
         });
       }
@@ -376,12 +378,12 @@ export class DjAnalysisQueueService implements OnModuleInit {
           bpmSource,
           keySource,
         },
-        'DJ analysis completed',
+        'DJ analysis completed'
       );
     } catch (error) {
       this.logger.error(
         { trackId: job.trackId, error: error instanceof Error ? error.message : 'Unknown' },
-        'DJ analysis failed',
+        'DJ analysis failed'
       );
 
       // Update status to failed
@@ -413,8 +415,8 @@ export class DjAnalysisQueueService implements OnModuleInit {
       .where(inArray(djAnalysis.status, ['pending', 'analyzing']))
       .groupBy(djAnalysis.status);
 
-    const pendingCount = statusCounts.find(r => r.status === 'pending')?.value ?? 0;
-    const analyzingCount = statusCounts.find(r => r.status === 'analyzing')?.value ?? 0;
+    const pendingCount = statusCounts.find((r) => r.status === 'pending')?.value ?? 0;
+    const analyzingCount = statusCounts.find((r) => r.status === 'analyzing')?.value ?? 0;
 
     // Use DB state (survives restarts) — if tracks are pending or analyzing, work is happening
     const hasWork = pendingCount > 0 || analyzingCount > 0;
@@ -440,9 +442,10 @@ export class DjAnalysisQueueService implements OnModuleInit {
    */
   private emitProgress(): void {
     const pendingTracks = Math.max(0, this.totalToProcess - this.processedInSession);
-    const estimatedTimeRemaining = this.isRunning && pendingTracks > 0
-      ? this.formatDuration((pendingTracks / this.concurrency) * this.averageProcessingTime)
-      : null;
+    const estimatedTimeRemaining =
+      this.isRunning && pendingTracks > 0
+        ? this.formatDuration((pendingTracks / this.concurrency) * this.averageProcessingTime)
+        : null;
 
     try {
       this.scannerGateway.emitDjProgress({
@@ -455,7 +458,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
       // WebSocket may be unavailable, don't let it crash the queue
       this.logger.debug(
         { error: error instanceof Error ? error.message : 'Unknown' },
-        'Failed to emit DJ progress via WebSocket',
+        'Failed to emit DJ progress via WebSocket'
       );
     }
   }
@@ -532,10 +535,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
       this.totalToProcess += failedAnalyses.length;
     }
 
-    this.logger.info(
-      { count: failedAnalyses.length },
-      'Retrying failed DJ analyses',
-    );
+    this.logger.info({ count: failedAnalyses.length }, 'Retrying failed DJ analyses');
 
     return {
       retried: failedAnalyses.length,
@@ -568,7 +568,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
     if (totalCompleted < 20) {
       this.logger.debug(
         { totalCompleted },
-        'Skipping energy recalibration — need at least 20 completed tracks',
+        'Skipping energy recalibration — need at least 20 completed tracks'
       );
       return;
     }
@@ -577,10 +577,13 @@ export class DjAnalysisQueueService implements OnModuleInit {
     const medianResult = await this.drizzle.db.execute(
       sql`SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY raw_energy) AS median
           FROM dj_analysis
-          WHERE status = 'completed' AND raw_energy IS NOT NULL`,
+          WHERE status = 'completed' AND raw_energy IS NOT NULL`
     );
 
-    const median = parseFloat((medianResult as any).rows?.[0]?.median ?? (medianResult as any)[0]?.median);
+    const rawResult = medianResult as unknown as {
+      rows?: Array<{ median?: string | number }>;
+    } & Array<{ median?: string | number }>;
+    const median = parseFloat(String(rawResult.rows?.[0]?.median ?? rawResult[0]?.median));
     if (isNaN(median) || median <= 0 || median >= 1) {
       this.logger.debug({ median }, 'Skipping recalibration — invalid median');
       return;
@@ -592,12 +595,12 @@ export class DjAnalysisQueueService implements OnModuleInit {
       sql`UPDATE dj_analysis
           SET energy = 1.0 / (1.0 + exp(-12.0 * (raw_energy - ${median}))),
               updated_at = NOW()
-          WHERE status = 'completed' AND raw_energy IS NOT NULL`,
+          WHERE status = 'completed' AND raw_energy IS NOT NULL`
     );
 
     this.logger.info(
       { median: median.toFixed(4), totalCompleted },
-      'Energy recalibrated using library median',
+      'Energy recalibrated using library median'
     );
   }
 

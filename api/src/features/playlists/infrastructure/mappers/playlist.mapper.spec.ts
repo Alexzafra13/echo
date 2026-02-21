@@ -1,8 +1,12 @@
 import { PlaylistMapper } from './playlist.mapper';
 import { Playlist, PlaylistTrack } from '../../domain/entities';
+import {
+  Playlist as PlaylistDb,
+  PlaylistTrack as PlaylistTrackDb,
+} from '@infrastructure/database/schema/playlists';
 
 describe('PlaylistMapper', () => {
-  const mockDbPlaylist = {
+  const mockDbPlaylist: PlaylistDb = {
     id: 'pl-1',
     name: 'My Playlist',
     description: 'Cool songs',
@@ -20,7 +24,7 @@ describe('PlaylistMapper', () => {
 
   describe('toDomain', () => {
     it('should convert DB playlist to domain Playlist', () => {
-      const playlist = PlaylistMapper.toDomain(mockDbPlaylist as any);
+      const playlist = PlaylistMapper.toDomain(mockDbPlaylist);
 
       expect(playlist).toBeInstanceOf(Playlist);
       expect(playlist.id).toBe('pl-1');
@@ -39,7 +43,7 @@ describe('PlaylistMapper', () => {
         description: null,
         coverImageUrl: null,
         path: null,
-      } as any);
+      });
 
       expect(playlist.description).toBeUndefined();
       expect(playlist.coverImageUrl).toBeUndefined();
@@ -49,7 +53,7 @@ describe('PlaylistMapper', () => {
 
   describe('toPersistence', () => {
     it('should convert domain playlist to persistence', () => {
-      const playlist = PlaylistMapper.toDomain(mockDbPlaylist as any);
+      const playlist = PlaylistMapper.toDomain(mockDbPlaylist);
       const persistence = PlaylistMapper.toPersistence(playlist);
 
       expect(persistence.id).toBe('pl-1');
@@ -65,7 +69,7 @@ describe('PlaylistMapper', () => {
         description: null,
         coverImageUrl: null,
         path: null,
-      } as any);
+      });
       const persistence = PlaylistMapper.toPersistence(playlist);
 
       expect(persistence.description).toBeNull();
@@ -76,7 +80,7 @@ describe('PlaylistMapper', () => {
 
   describe('toDomainArray', () => {
     it('should convert array of DB playlists', () => {
-      const playlists = PlaylistMapper.toDomainArray([mockDbPlaylist, mockDbPlaylist] as any);
+      const playlists = PlaylistMapper.toDomainArray([mockDbPlaylist, mockDbPlaylist]);
       expect(playlists).toHaveLength(2);
       expect(playlists[0]).toBeInstanceOf(Playlist);
     });
@@ -88,7 +92,7 @@ describe('PlaylistMapper', () => {
 
   describe('playlistTrackToDomain', () => {
     it('should convert DB playlist track to domain', () => {
-      const mockDbTrack = {
+      const mockDbTrack: PlaylistTrackDb = {
         id: 'pt-1',
         playlistId: 'pl-1',
         trackId: 'track-1',
@@ -96,7 +100,7 @@ describe('PlaylistMapper', () => {
         createdAt: new Date('2024-01-01'),
       };
 
-      const track = PlaylistMapper.playlistTrackToDomain(mockDbTrack as any);
+      const track = PlaylistMapper.playlistTrackToDomain(mockDbTrack);
 
       expect(track).toBeInstanceOf(PlaylistTrack);
       expect(track.id).toBe('pt-1');

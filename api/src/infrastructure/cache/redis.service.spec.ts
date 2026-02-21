@@ -40,7 +40,9 @@ describe('RedisService', () => {
     jest.clearAllMocks();
     mockRedis.status = 'ready';
 
-    service = new (RedisService as any)(mockLogger);
+    service = new (RedisService as unknown as new (logger: typeof mockLogger) => RedisService)(
+      mockLogger
+    );
     await service.onModuleInit();
   });
 
@@ -98,7 +100,7 @@ describe('RedisService', () => {
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         { key: 'broken-key', error: 'Connection refused' },
-        'Redis get failed',
+        'Redis get failed'
       );
     });
 
@@ -139,7 +141,7 @@ describe('RedisService', () => {
       await expect(service.set('key', 'value')).resolves.toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         { key: 'key', error: 'Write failed' },
-        'Redis set failed',
+        'Redis set failed'
       );
     });
   });
@@ -157,15 +159,14 @@ describe('RedisService', () => {
       await expect(service.del('key')).resolves.toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         { key: 'key', error: 'Delete failed' },
-        'Redis del failed',
+        'Redis del failed'
       );
     });
   });
 
   describe('delPattern', () => {
     it('should scan and delete matching keys', async () => {
-      mockRedis.scan
-        .mockResolvedValueOnce(['0', ['albums:1', 'albums:2', 'albums:3']]);
+      mockRedis.scan.mockResolvedValueOnce(['0', ['albums:1', 'albums:2', 'albums:3']]);
       mockRedis.del.mockResolvedValue(3);
 
       await service.delPattern('albums:*');
@@ -212,7 +213,7 @@ describe('RedisService', () => {
       await expect(service.delPattern('key:*')).resolves.toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         { pattern: 'key:*', error: 'Scan failed' },
-        'Redis delPattern failed',
+        'Redis delPattern failed'
       );
     });
   });

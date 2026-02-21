@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import * as path from 'path';
@@ -40,7 +40,7 @@ export class ArtistImageEnrichmentService {
     private readonly cache: MetadataCacheService,
     private readonly storage: StorageService,
     private readonly imageDownload: ImageDownloadService,
-    private readonly enrichmentLog: EnrichmentLogService,
+    private readonly enrichmentLog: EnrichmentLogService
   ) {}
 
   /**
@@ -57,7 +57,7 @@ export class ArtistImageEnrichmentService {
       externalLogoPath?: string | null;
     },
     forceRefresh: boolean,
-    startTime: number,
+    startTime: number
   ): Promise<ImageEnrichmentResult> {
     const needsImages =
       forceRefresh ||
@@ -68,7 +68,12 @@ export class ArtistImageEnrichmentService {
 
     if (!needsImages) return { updated: false, totalSize: 0 };
 
-    const images = await this.getArtistImages(artist.mbzArtistId, artist.name, forceRefresh, artistId);
+    const images = await this.getArtistImages(
+      artist.mbzArtistId,
+      artist.name,
+      forceRefresh,
+      artistId
+    );
     if (!images) return { updated: false, totalSize: 0 };
 
     const localPaths = await this.downloadArtistImages(artistId, images);
@@ -87,7 +92,9 @@ export class ArtistImageEnrichmentService {
         artist.name,
         images.source,
         'images',
-        Object.keys(updateData).filter(key => key.includes('Path') || key === 'metadataStorageSize'),
+        Object.keys(updateData).filter(
+          (key) => key.includes('Path') || key === 'metadataStorageSize'
+        ),
         Date.now() - startTime,
         `/api/images/artists/${artistId}/profile`
       );
@@ -140,7 +147,9 @@ export class ArtistImageEnrichmentService {
           }
         }
       } catch (error) {
-        this.logger.warn(`Agent "${agent.name}" failed for images ${name}: ${(error as Error).message}`);
+        this.logger.warn(
+          `Agent "${agent.name}" failed for images ${name}: ${(error as Error).message}`
+        );
       }
     }
 
@@ -264,8 +273,8 @@ export class ArtistImageEnrichmentService {
     localPaths: ImageDownloadResult,
     source: string,
     forceRefresh: boolean
-  ): Record<string, any> {
-    const updateData: Record<string, any> = {};
+  ): Partial<typeof artists.$inferInsert> {
+    const updateData: Partial<typeof artists.$inferInsert> = {};
     const now = new Date();
 
     if ((forceRefresh || !artist.externalProfilePath) && localPaths.profileUrl) {

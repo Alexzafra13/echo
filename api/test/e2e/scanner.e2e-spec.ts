@@ -252,7 +252,7 @@ describe('Scanner E2E', () => {
         .expect(200);
 
       expect(historyRes.body.scans.length).toBeGreaterThan(0);
-      expect(historyRes.body.scans.some((s: any) => s.id === scanId)).toBe(true);
+      expect(historyRes.body.scans.some((s: { id: string }) => s.id === scanId)).toBe(true);
     });
   });
 });

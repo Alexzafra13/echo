@@ -23,7 +23,7 @@ export class ArtistImageService {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
-    private readonly cache: ImageCacheService,
+    private readonly cache: ImageCacheService
   ) {}
 
   /**
@@ -79,10 +79,7 @@ export class ArtistImageService {
       .select()
       .from(customArtistImages)
       .where(
-        and(
-          eq(customArtistImages.id, customImageId),
-          eq(customArtistImages.artistId, artistId),
-        ),
+        and(eq(customArtistImages.id, customImageId), eq(customArtistImages.artistId, artistId))
       )
       .limit(1);
 
@@ -126,7 +123,7 @@ export class ArtistImageService {
     logo?: CachedImageResult;
   }> {
     const imageTypes: ArtistImageType[] = ['profile', 'background', 'banner', 'logo'];
-    const results: any = {};
+    const results: Partial<Record<ArtistImageType, CachedImageResult>> = {};
 
     for (const imageType of imageTypes) {
       try {
@@ -154,7 +151,10 @@ export class ArtistImageService {
   /**
    * Try to get custom uploaded image
    */
-  private async tryCustomImage(artistId: string, imageType: ArtistImageType): Promise<CachedImageResult | null> {
+  private async tryCustomImage(
+    artistId: string,
+    imageType: ArtistImageType
+  ): Promise<CachedImageResult | null> {
     const result = await this.drizzle.db
       .select()
       .from(customArtistImages)
@@ -162,8 +162,8 @@ export class ArtistImageService {
         and(
           eq(customArtistImages.artistId, artistId),
           eq(customArtistImages.imageType, imageType),
-          eq(customArtistImages.isActive, true),
-        ),
+          eq(customArtistImages.isActive, true)
+        )
       )
       .orderBy(desc(customArtistImages.updatedAt))
       .limit(1);
@@ -190,7 +190,9 @@ export class ArtistImageService {
       };
     } catch {
       // Custom file no longer exists, deactivate in DB
-      this.logger.warn(`Custom ${imageType} image not found, deactivating: ${customImage.filePath}`);
+      this.logger.warn(
+        `Custom ${imageType} image not found, deactivating: ${customImage.filePath}`
+      );
       await this.drizzle.db
         .update(customArtistImages)
         .set({ isActive: false })
@@ -202,7 +204,11 @@ export class ArtistImageService {
   /**
    * Try to get local image from artist's disk
    */
-  private async tryLocalImage(artist: any, artistId: string, imageType: ArtistImageType): Promise<CachedImageResult | null> {
+  private async tryLocalImage(
+    artist: typeof artists.$inferSelect,
+    artistId: string,
+    imageType: ArtistImageType
+  ): Promise<CachedImageResult | null> {
     const localPath = artist[`${imageType}ImagePath`];
     if (!localPath) return null;
 
@@ -229,9 +235,15 @@ export class ArtistImageService {
   /**
    * Try to get external image downloaded from providers
    */
-  private async tryExternalImage(artist: any, artistId: string, imageType: ArtistImageType): Promise<CachedImageResult | null> {
+  private async tryExternalImage(
+    artist: typeof artists.$inferSelect,
+    artistId: string,
+    imageType: ArtistImageType
+  ): Promise<CachedImageResult | null> {
     const capitalizedType = imageType.charAt(0).toUpperCase() + imageType.slice(1);
-    const externalFilename = artist[`external${capitalizedType}Path` as keyof typeof artist] as string | null;
+    const externalFilename = artist[`external${capitalizedType}Path` as keyof typeof artist] as
+      | string
+      | null;
 
     if (!externalFilename) return null;
 
@@ -263,7 +275,7 @@ export class ArtistImageService {
   /**
    * Get artist from database
    */
-  private async getArtist(artistId: string): Promise<any | null> {
+  private async getArtist(artistId: string): Promise<typeof artists.$inferSelect | null> {
     const result = await this.drizzle.db
       .select({
         id: artists.id,
@@ -301,7 +313,9 @@ export class ArtistImageService {
         .set({ [fields.path]: null, [fields.updatedAt]: null })
         .where(eq(artists.id, artistId));
     } catch (error) {
-      this.logger.error(`Failed to clear local ${imageType} for ${artistId}: ${(error as Error).message}`);
+      this.logger.error(
+        `Failed to clear local ${imageType} for ${artistId}: ${(error as Error).message}`
+      );
     }
   }
 
@@ -320,7 +334,9 @@ export class ArtistImageService {
         })
         .where(eq(artists.id, artistId));
     } catch (error) {
-      this.logger.error(`Failed to clear external ${imageType} for ${artistId}: ${(error as Error).message}`);
+      this.logger.error(
+        `Failed to clear external ${imageType} for ${artistId}: ${(error as Error).message}`
+      );
     }
   }
 }

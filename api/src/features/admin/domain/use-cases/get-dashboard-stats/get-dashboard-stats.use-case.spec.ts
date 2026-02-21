@@ -67,7 +67,12 @@ describe('GetDashboardStatsUseCase', () => {
     today: { total: 10, successful: 8, failed: 2, byProvider: { lastfm: 5, fanart: 3 } },
     week: { total: 50, successful: 45, failed: 5, byProvider: { lastfm: 25, fanart: 20 } },
     month: { total: 200, successful: 180, failed: 20, byProvider: { lastfm: 100, fanart: 80 } },
-    allTime: { total: 1000, successful: 900, failed: 100, byProvider: { lastfm: 500, fanart: 400 } },
+    allTime: {
+      total: 1000,
+      successful: 900,
+      failed: 100,
+      byProvider: { lastfm: 500, fanart: 400 },
+    },
   };
 
   const activityStatsData = {
@@ -112,8 +117,22 @@ describe('GetDashboardStatsUseCase', () => {
   ];
 
   const recentActivitiesData = [
-    { id: '1', type: 'scan', action: 'Library scan', details: '100 tracks added', timestamp: '2024-01-15T10:00:00Z', status: 'success' },
-    { id: '2', type: 'enrichment', action: 'Artist enriched', details: 'Avatar for Beatles', timestamp: '2024-01-15T09:30:00Z', status: 'success' },
+    {
+      id: '1',
+      type: 'scan',
+      action: 'Library scan',
+      details: '100 tracks added',
+      timestamp: '2024-01-15T10:00:00Z',
+      status: 'success',
+    },
+    {
+      id: '2',
+      type: 'enrichment',
+      action: 'Artist enriched',
+      details: 'Avatar for Beatles',
+      timestamp: '2024-01-15T09:30:00Z',
+      status: 'success',
+    },
   ];
 
   beforeEach(() => {
@@ -123,33 +142,33 @@ describe('GetDashboardStatsUseCase', () => {
 
     mockLibraryStats = {
       get: jest.fn().mockResolvedValue(libraryStatsData),
-    } as any;
+    } as unknown as jest.Mocked<ILibraryStatsProvider>;
 
     mockStorageBreakdown = {
       get: jest.fn().mockResolvedValue(storageBreakdownData),
-    } as any;
+    } as unknown as jest.Mocked<IStorageBreakdownProvider>;
 
     mockSystemHealth = {
       check: jest.fn().mockResolvedValue(systemHealthData),
-    } as any;
+    } as unknown as jest.Mocked<ISystemHealthChecker>;
 
     mockEnrichmentStats = {
       get: jest.fn().mockResolvedValue(enrichmentStatsData),
-    } as any;
+    } as unknown as jest.Mocked<IEnrichmentStatsProvider>;
 
     mockActivityStats = {
       getStats: jest.fn().mockResolvedValue(activityStatsData),
       getTimeline: jest.fn().mockResolvedValue(activityTimelineData),
       getRecentActivities: jest.fn().mockResolvedValue(recentActivitiesData),
-    } as any;
+    } as unknown as jest.Mocked<IActivityStatsProvider>;
 
     mockScanStats = {
       get: jest.fn().mockResolvedValue(scanStatsData),
-    } as any;
+    } as unknown as jest.Mocked<IScanStatsProvider>;
 
     mockAlerts = {
       get: jest.fn().mockResolvedValue(activeAlertsData),
-    } as any;
+    } as unknown as jest.Mocked<IAlertsProvider>;
 
     useCase = new GetDashboardStatsUseCase(
       mockLogger,
@@ -159,7 +178,7 @@ describe('GetDashboardStatsUseCase', () => {
       mockEnrichmentStats,
       mockActivityStats,
       mockScanStats,
-      mockAlerts,
+      mockAlerts
     );
   });
 
@@ -220,9 +239,7 @@ describe('GetDashboardStatsUseCase', () => {
       await useCase.execute({});
 
       // storageBreakdown should be called before systemHealth
-      expect(callOrder.indexOf('storageBreakdown')).toBeLessThan(
-        callOrder.indexOf('systemHealth'),
-      );
+      expect(callOrder.indexOf('storageBreakdown')).toBeLessThan(callOrder.indexOf('systemHealth'));
     });
 
     it('should return library stats from service', async () => {

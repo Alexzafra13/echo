@@ -215,9 +215,7 @@ describe('GetTracksUseCase', () => {
         updatedAt: new Date('2025-01-02'),
       });
 
-      (trackRepository.findAll as jest.Mock).mockResolvedValue([
-        trackWithAllFields,
-      ]);
+      (trackRepository.findAll as jest.Mock).mockResolvedValue([trackWithAllFields]);
       (trackRepository.count as jest.Mock).mockResolvedValue(1);
 
       // Act
@@ -252,7 +250,7 @@ describe('GetTracksUseCase', () => {
       (trackRepository.count as jest.Mock).mockResolvedValue(50);
 
       // Act
-      const result = await useCase.execute({} as any);
+      const result = await useCase.execute({} as unknown as { skip: number; take: number });
 
       // Assert
       expect(trackRepository.findAll).toHaveBeenCalledWith(0, 10);

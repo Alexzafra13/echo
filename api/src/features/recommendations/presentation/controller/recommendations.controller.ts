@@ -46,15 +46,15 @@ import { WaveMixService } from '../../infrastructure/services/wave-mix.service';
 interface TrackEnrichmentData {
   id: string;
   title: string;
-  artistName: string | null;
-  albumName: string | null;
-  duration: number | null;
-  albumId: string | null;
-  artistId: string | null;
-  rgTrackGain: number | null;
-  rgTrackPeak: number | null;
-  rgAlbumGain: number | null;
-  rgAlbumPeak: number | null;
+  artistName: string | null | undefined;
+  albumName: string | null | undefined;
+  duration: number | null | undefined;
+  albumId: string | null | undefined;
+  artistId: string | null | undefined;
+  rgTrackGain: number | null | undefined;
+  rgTrackPeak: number | null | undefined;
+  rgAlbumGain: number | null | undefined;
+  rgAlbumPeak: number | null | undefined;
 }
 
 @ApiTags('recommendations')

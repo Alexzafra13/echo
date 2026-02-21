@@ -12,15 +12,14 @@ import { tap } from 'rxjs/operators';
 export const CACHE_TTL_KEY = 'cache_ttl';
 
 // Decorador para añadir Cache-Control a las respuestas. Ej: @CacheControl(300)
-export const CacheControl = (ttlSeconds: number = 60) =>
-  SetMetadata(CACHE_TTL_KEY, ttlSeconds);
+export const CacheControl = (ttlSeconds: number = 60) => SetMetadata(CACHE_TTL_KEY, ttlSeconds);
 
 // Interceptor que aplica el header Cache-Control si el endpoint usa @CacheControl()
 @Injectable()
 export class CacheControlInterceptor implements NestInterceptor {
   constructor(private reflector: Reflector) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const ttl = this.reflector.get<number>(CACHE_TTL_KEY, context.getHandler());
 
     if (!ttl) {
@@ -32,7 +31,7 @@ export class CacheControlInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(() => {
         response.header('Cache-Control', `public, max-age=${ttl}`);
-      }),
+      })
     );
   }
 }

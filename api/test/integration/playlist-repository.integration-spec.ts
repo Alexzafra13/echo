@@ -564,7 +564,7 @@ describe('PlaylistRepository Integration', () => {
 
         // Contar cuántas fueron exitosas
         const successfulResults = results
-          .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
+          .filter((r): r is PromiseFulfilledResult<PlaylistTrack> => r.status === 'fulfilled')
           .map(r => r.value);
 
         // Al menos algunas deberían ser exitosas

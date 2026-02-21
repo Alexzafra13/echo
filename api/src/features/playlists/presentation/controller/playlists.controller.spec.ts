@@ -14,6 +14,7 @@ import {
 } from '../../domain/use-cases';
 import { Playlist } from '../../domain/entities/playlist.entity';
 import { Track } from '@features/tracks/domain/entities/track.entity';
+import { RequestWithUser } from '@shared/types/request.types';
 
 describe('PlaylistsController', () => {
   let controller: PlaylistsController;
@@ -110,7 +111,7 @@ describe('PlaylistsController', () => {
           description: 'A collection of my favorite songs',
           public: true,
         },
-        mockRequestWithUser as any,
+        mockRequestWithUser as unknown as RequestWithUser
       );
 
       // Assert
@@ -132,7 +133,10 @@ describe('PlaylistsController', () => {
       getPlaylistUseCase.execute.mockResolvedValue(mockPlaylist);
 
       // Act
-      const result = await controller.getPlaylist('playlist-1', mockRequestWithUser as any);
+      const result = await controller.getPlaylist(
+        'playlist-1',
+        mockRequestWithUser as unknown as RequestWithUser
+      );
 
       // Assert
       expect(getPlaylistUseCase.execute).toHaveBeenCalledWith({
@@ -252,7 +256,7 @@ describe('PlaylistsController', () => {
       const result = await controller.updatePlaylist(
         'playlist-1',
         { name: 'Updated Name' },
-        mockRequestWithUser as any,
+        mockRequestWithUser as unknown as RequestWithUser
       );
 
       // Assert
@@ -274,7 +278,10 @@ describe('PlaylistsController', () => {
       deletePlaylistUseCase.execute.mockResolvedValue(undefined);
 
       // Act
-      await controller.deletePlaylist('playlist-1', mockRequestWithUser as any);
+      await controller.deletePlaylist(
+        'playlist-1',
+        mockRequestWithUser as unknown as RequestWithUser
+      );
 
       // Assert
       expect(deletePlaylistUseCase.execute).toHaveBeenCalledWith({
@@ -294,12 +301,15 @@ describe('PlaylistsController', () => {
       });
 
       // Act
-      const result = await controller.getPlaylistTracks('playlist-1', mockRequestWithUser as any); 
+      const result = await controller.getPlaylistTracks(
+        'playlist-1',
+        mockRequestWithUser as unknown as RequestWithUser
+      );
 
       // Assert
       expect(getPlaylistTracksUseCase.execute).toHaveBeenCalledWith({
         playlistId: 'playlist-1',
-        requesterId: 'user-1', 
+        requesterId: 'user-1',
       });
       expect(result.tracks).toHaveLength(1);
     });
@@ -320,7 +330,7 @@ describe('PlaylistsController', () => {
       const result = await controller.addTrackToPlaylist(
         'playlist-1',
         { trackId: 'track-1' },
-        mockRequestWithUser as any,
+        mockRequestWithUser as unknown as RequestWithUser
       );
 
       // Assert
@@ -345,7 +355,7 @@ describe('PlaylistsController', () => {
       const result = await controller.removeTrackFromPlaylist(
         'playlist-1',
         'track-1',
-        mockRequestWithUser as any,
+        mockRequestWithUser as unknown as RequestWithUser
       );
 
       // Assert
@@ -370,14 +380,22 @@ describe('PlaylistsController', () => {
       // Act
       const result = await controller.reorderPlaylistTracks(
         'playlist-1',
-        { trackOrders: [{ trackId: 'track-1', order: 2 }, { trackId: 'track-2', order: 1 }] },
-        mockRequestWithUser as any,
+        {
+          trackOrders: [
+            { trackId: 'track-1', order: 2 },
+            { trackId: 'track-2', order: 1 },
+          ],
+        },
+        mockRequestWithUser as unknown as RequestWithUser
       );
 
       // Assert
       expect(reorderPlaylistTracksUseCase.execute).toHaveBeenCalledWith({
         playlistId: 'playlist-1',
-        trackOrders: [{ trackId: 'track-1', order: 2 }, { trackId: 'track-2', order: 1 }],
+        trackOrders: [
+          { trackId: 'track-1', order: 2 },
+          { trackId: 'track-2', order: 1 },
+        ],
         userId: 'user-1',
       });
       expect(result.success).toBe(true);

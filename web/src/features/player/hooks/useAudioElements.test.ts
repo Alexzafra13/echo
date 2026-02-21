@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useAudioElements, AudioElementsCallbacks } from './useAudioElements';
+import { renderHook, act } from '@testing-library/react';
+import { useAudioElements } from './useAudioElements';
 
 // Mock logger to avoid console noise
 vi.mock('@shared/utils/logger', () => ({
@@ -24,26 +24,28 @@ function createMockAudio(): HTMLAudioElement {
     src: '',
     readyState: 0,
 
-    play: vi.fn().mockImplementation(function(this: typeof mockAudio) {
+    play: vi.fn().mockImplementation(function (this: typeof mockAudio) {
       this.paused = false;
       // Trigger play event
-      eventListeners['play']?.forEach(listener => listener(new Event('play')));
+      eventListeners['play']?.forEach((listener) => listener(new Event('play')));
       return Promise.resolve();
     }),
 
-    pause: vi.fn().mockImplementation(function(this: typeof mockAudio) {
+    pause: vi.fn().mockImplementation(function (this: typeof mockAudio) {
       this.paused = true;
-      eventListeners['pause']?.forEach(listener => listener(new Event('pause')));
+      eventListeners['pause']?.forEach((listener) => listener(new Event('pause')));
     }),
 
     load: vi.fn(),
 
-    addEventListener: vi.fn((event: string, handler: EventListener, options?: AddEventListenerOptions) => {
-      if (!eventListeners[event]) {
-        eventListeners[event] = new Set();
+    addEventListener: vi.fn(
+      (event: string, handler: EventListener, _options?: AddEventListenerOptions) => {
+        if (!eventListeners[event]) {
+          eventListeners[event] = new Set();
+        }
+        eventListeners[event].add(handler);
       }
-      eventListeners[event].add(handler);
-    }),
+    ),
 
     removeEventListener: vi.fn((event: string, handler: EventListener) => {
       eventListeners[event]?.delete(handler);
@@ -51,13 +53,13 @@ function createMockAudio(): HTMLAudioElement {
 
     // Helper to trigger events in tests
     _triggerEvent: (event: string, eventObj?: Event) => {
-      eventListeners[event]?.forEach(listener => {
+      eventListeners[event]?.forEach((listener) => {
         listener(eventObj || new Event(event));
         // Handle { once: true } option
       });
     },
 
-    _setReadyState: function(state: number) {
+    _setReadyState: function (state: number) {
       this.readyState = state;
       if (state >= 4) {
         this._triggerEvent('canplaythrough');
@@ -488,9 +490,7 @@ describe('useAudioElements', () => {
   describe('callbacks', () => {
     it('should call onPlay when audio starts playing', async () => {
       const onPlay = vi.fn();
-      const { result } = renderHook(() =>
-        useAudioElements({ callbacks: { onPlay } })
-      );
+      const { result } = renderHook(() => useAudioElements({ callbacks: { onPlay } }));
 
       (mockAudioInstances[0] as any).readyState = 4;
 
@@ -503,9 +503,7 @@ describe('useAudioElements', () => {
 
     it('should call onPause when both audios are paused', () => {
       const onPause = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onPause } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onPause } }));
 
       // Simulate both paused
       mockAudioInstances[0].paused = true;
@@ -519,9 +517,7 @@ describe('useAudioElements', () => {
 
     it('should NOT call onPause during crossfade (one still playing)', () => {
       const onPause = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onPause } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onPause } }));
 
       // Simulate crossfade - A paused, B playing
       mockAudioInstances[0].paused = true;
@@ -535,9 +531,7 @@ describe('useAudioElements', () => {
 
     it('should call onEnded when track ends', () => {
       const onEnded = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onEnded } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onEnded } }));
 
       (mockAudioInstances[0] as any)._triggerEvent('ended');
 
@@ -546,9 +540,7 @@ describe('useAudioElements', () => {
 
     it('should call onTimeUpdate only for active audio', () => {
       const onTimeUpdate = vi.fn();
-      const { result } = renderHook(() =>
-        useAudioElements({ callbacks: { onTimeUpdate } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onTimeUpdate } }));
 
       mockAudioInstances[0].currentTime = 15;
       (mockAudioInstances[0] as any)._triggerEvent('timeupdate');
@@ -565,9 +557,7 @@ describe('useAudioElements', () => {
 
     it('should call onDurationChange only for active audio', () => {
       const onDurationChange = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onDurationChange } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onDurationChange } }));
 
       (mockAudioInstances[0] as any).duration = 200;
       (mockAudioInstances[0] as any)._triggerEvent('loadedmetadata');
@@ -577,9 +567,7 @@ describe('useAudioElements', () => {
 
     it('should call onError when error occurs', () => {
       const onError = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onError } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onError } }));
 
       const errorEvent = new Event('error');
       (mockAudioInstances[0] as any)._triggerEvent('error', errorEvent);
@@ -589,9 +577,7 @@ describe('useAudioElements', () => {
 
     it('should call onWaiting when buffering', () => {
       const onWaiting = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onWaiting } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onWaiting } }));
 
       (mockAudioInstances[0] as any)._triggerEvent('waiting');
 
@@ -600,9 +586,7 @@ describe('useAudioElements', () => {
 
     it('should call onPlaying when playback resumes', () => {
       const onPlaying = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onPlaying } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onPlaying } }));
 
       (mockAudioInstances[0] as any)._triggerEvent('playing');
 
@@ -611,9 +595,7 @@ describe('useAudioElements', () => {
 
     it('should call onStalled when playback stalls', () => {
       const onStalled = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onStalled } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onStalled } }));
 
       (mockAudioInstances[0] as any)._triggerEvent('stalled');
 

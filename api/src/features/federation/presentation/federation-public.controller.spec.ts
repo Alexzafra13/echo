@@ -1,9 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  NotFoundException,
-  ForbiddenException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { NotFoundException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { FederationPublicController } from './federation-public.controller';
 import { FederationTokenService } from '../domain/services';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
@@ -52,10 +48,11 @@ describe('FederationPublicController', () => {
     updatedAt: new Date(),
   };
 
-  const createMockRequest = (accessToken?: FederationAccessToken): FastifyRequest => ({
-    ip: '192.168.1.1',
-    federationAccessToken: accessToken,
-  } as any);
+  const createMockRequest = (accessToken?: FederationAccessToken): FastifyRequest =>
+    ({
+      ip: '192.168.1.1',
+      federationAccessToken: accessToken,
+    }) as unknown as FastifyRequest;
 
   const createMockReply = (): FastifyReply => {
     const reply = {
@@ -67,11 +64,11 @@ describe('FederationPublicController', () => {
         destroyed: false,
       },
     };
-    return reply as any;
+    return reply as unknown as FastifyReply;
   };
 
   // Mock Drizzle query builder
-  const createMockQueryBuilder = (result: any) => ({
+  const createMockQueryBuilder = (result: unknown) => ({
     select: jest.fn().mockReturnThis(),
     from: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
@@ -165,7 +162,7 @@ describe('FederationPublicController', () => {
         dto.serverName,
         dto.serverUrl,
         request.ip,
-        undefined,
+        undefined
       );
     });
 
@@ -195,7 +192,7 @@ describe('FederationPublicController', () => {
         dto.serverName,
         dto.serverUrl,
         request.ip,
-        dto.mutualInvitationToken,
+        dto.mutualInvitationToken
       );
     });
 
@@ -209,9 +206,7 @@ describe('FederationPublicController', () => {
 
       const request = createMockRequest();
 
-      await expect(controller.connect(dto, request)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(controller.connect(dto, request)).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -452,9 +447,7 @@ describe('FederationPublicController', () => {
 
       const request = createMockRequest(mockAccessToken);
 
-      await expect(controller.getAlbum('non-existent', request)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(controller.getAlbum('non-existent', request)).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException without browse permission', async () => {
@@ -465,9 +458,7 @@ describe('FederationPublicController', () => {
 
       const request = createMockRequest(noPermToken);
 
-      await expect(controller.getAlbum('album-1', request)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(controller.getAlbum('album-1', request)).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -564,7 +555,7 @@ describe('FederationPublicController', () => {
           'Content-Type': expect.any(String),
           'Content-Length': '5000000',
           'Accept-Ranges': 'bytes',
-        }),
+        })
       );
       expect(mockStream.pipe).toHaveBeenCalledWith(reply.raw);
     });
@@ -595,7 +586,7 @@ describe('FederationPublicController', () => {
         expect.objectContaining({
           'Content-Range': 'bytes 0-999999/5000000',
           'Content-Length': '1000000',
-        }),
+        })
       );
     });
 
@@ -764,7 +755,7 @@ describe('FederationPublicController', () => {
       const request = createMockRequest(mockAccessToken);
 
       await expect(controller.exportAlbumMetadata('non-existent', request)).rejects.toThrow(
-        NotFoundException,
+        NotFoundException
       );
     });
 
@@ -777,7 +768,7 @@ describe('FederationPublicController', () => {
       const request = createMockRequest(noPermToken);
 
       await expect(controller.exportAlbumMetadata('album-1', request)).rejects.toThrow(
-        ForbiddenException,
+        ForbiddenException
       );
     });
   });
@@ -839,7 +830,7 @@ describe('FederationPublicController', () => {
             cover: '/api/federation/albums/album-1/cover',
             tracks: expect.any(Array),
           }),
-        }),
+        })
       );
     });
 

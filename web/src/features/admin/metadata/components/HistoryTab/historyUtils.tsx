@@ -49,7 +49,12 @@ export function getEntityIcon(type: string) {
 /**
  * Build complete image URL for preview
  */
-export function buildImageUrl(log: any): string | null {
+export function buildImageUrl(log: {
+  previewUrl?: string;
+  entityType?: string;
+  entityId?: string;
+  id?: string;
+}): string | null {
   const value = log.previewUrl;
   if (!value) return null;
 

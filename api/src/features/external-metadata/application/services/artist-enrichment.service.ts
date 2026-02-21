@@ -1,11 +1,19 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists } from '@infrastructure/database/schema';
-import { IArtistBioRetriever, IArtistImageRetriever, MusicBrainzArtistMatch } from '../../domain/interfaces';
+import {
+  IArtistBioRetriever,
+  IArtistImageRetriever,
+  MusicBrainzArtistMatch,
+} from '../../domain/interfaces';
 import { AgentRegistryService } from '../../infrastructure/services/agent-registry.service';
-import { MetadataConflictService, ConflictPriority } from '../../infrastructure/services/metadata-conflict.service';
+import {
+  MetadataConflictService,
+  ConflictPriority,
+  ConflictSource,
+} from '../../infrastructure/services/metadata-conflict.service';
 import { NotFoundError } from '@shared/errors';
 import { MbidSearchService } from './mbid-search.service';
 import { GenreEnrichmentService } from './genre-enrichment.service';
@@ -35,7 +43,7 @@ export class ArtistEnrichmentService {
     private readonly genreEnrichment: GenreEnrichmentService,
     private readonly enrichmentLog: EnrichmentLogService,
     private readonly bioEnrichment: ArtistBioEnrichmentService,
-    private readonly imageEnrichment: ArtistImageEnrichmentService,
+    private readonly imageEnrichment: ArtistImageEnrichmentService
   ) {}
 
   /**
@@ -51,9 +59,13 @@ export class ArtistEnrichmentService {
     if (!this.hasEnrichmentAgents()) {
       this.logger.warn(
         `No enrichment agents available for artist ${artistId}. ` +
-        `Configure API keys (Last.fm, Fanart.tv) to enable metadata enrichment.`
+          `Configure API keys (Last.fm, Fanart.tv) to enable metadata enrichment.`
       );
-      return { bioUpdated: false, imagesUpdated: false, errors: ['No enrichment agents configured'] };
+      return {
+        bioUpdated: false,
+        imagesUpdated: false,
+        errors: ['No enrichment agents configured'],
+      };
     }
 
     try {
@@ -107,7 +119,10 @@ export class ArtistEnrichmentService {
 
       return { bioUpdated, imagesUpdated, errors };
     } catch (error) {
-      this.logger.error(`Error enriching artist ${artistId}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error enriching artist ${artistId}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       errors.push((error as Error).message);
 
       await this.logEnrichmentError(artistId, error as Error, startTime);
@@ -121,14 +136,15 @@ export class ArtistEnrichmentService {
    */
   private hasEnrichmentAgents(): boolean {
     const bioAgents = this.agentRegistry.getAgentsFor<IArtistBioRetriever>('IArtistBioRetriever');
-    const imageAgents = this.agentRegistry.getAgentsFor<IArtistImageRetriever>('IArtistImageRetriever');
+    const imageAgents =
+      this.agentRegistry.getAgentsFor<IArtistImageRetriever>('IArtistImageRetriever');
     return bioAgents.length > 0 || imageAgents.length > 0;
   }
 
   /**
    * Get artist from database
    */
-  private async getArtist(artistId: string): Promise<any | null> {
+  private async getArtist(artistId: string): Promise<typeof artists.$inferSelect | null> {
     const result = await this.drizzle.db
       .select()
       .from(artists)
@@ -142,7 +158,7 @@ export class ArtistEnrichmentService {
    */
   private async ensureMbid(
     artistId: string,
-    artist: any,
+    artist: typeof artists.$inferSelect,
     errors: string[]
   ): Promise<string | null> {
     if (artist.mbzArtistId) {
@@ -164,7 +180,11 @@ export class ArtistEnrichmentService {
   /**
    * Handle MBID search and auto-apply or create conflict
    */
-  private async handleMbidSearch(artistId: string, artistName: string, errors: string[]): Promise<void> {
+  private async handleMbidSearch(
+    artistId: string,
+    artistName: string,
+    errors: string[]
+  ): Promise<void> {
     this.logger.info(`Artist "${artistName}" missing MBID, searching MusicBrainz...`);
     try {
       const mbMatches = await this.mbidSearch.searchArtist(artistName);
@@ -224,9 +244,13 @@ export class ArtistEnrichmentService {
     matches: MusicBrainzArtistMatch[]
   ): Promise<void> {
     const topMatch = matches[0];
-    const suggestions = matches.slice(0, 3).map((m) =>
-      `${m.name}${m.disambiguation ? ` (${m.disambiguation})` : ''} - MBID: ${m.mbid} (score: ${m.score})`
-    ).join('\n');
+    const suggestions = matches
+      .slice(0, 3)
+      .map(
+        (m) =>
+          `${m.name}${m.disambiguation ? ` (${m.disambiguation})` : ''} - MBID: ${m.mbid} (score: ${m.score})`
+      )
+      .join('\n');
 
     await this.conflictService.createConflict({
       entityId: artistId,
@@ -234,7 +258,7 @@ export class ArtistEnrichmentService {
       field: 'artistName',
       currentValue: artistName,
       suggestedValue: `${topMatch.name}${topMatch.disambiguation ? ` (${topMatch.disambiguation})` : ''}`,
-      source: 'musicbrainz' as any,
+      source: 'musicbrainz' as ConflictSource,
       priority: ConflictPriority.MEDIUM,
       metadata: {
         artistName,
@@ -304,7 +328,11 @@ export class ArtistEnrichmentService {
   /**
    * Log enrichment error
    */
-  private async logEnrichmentError(artistId: string, error: Error, startTime: number): Promise<void> {
+  private async logEnrichmentError(
+    artistId: string,
+    error: Error,
+    startTime: number
+  ): Promise<void> {
     try {
       const artistResult = await this.drizzle.db
         .select({ name: artists.name })

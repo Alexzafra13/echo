@@ -49,7 +49,7 @@ export class TrackFactory {
   /**
    * Crea múltiples tracks
    */
-  static createMany(count: number, overridesFn?: (index: number) => Partial<any>): Track[] {
+  static createMany(count: number, overridesFn?: (index: number) => Partial<Record<string, unknown>>): Track[] {
     return Array.from({ length: count }, (_, i) =>
       TrackFactory.create(overridesFn ? overridesFn(i) : {
         id: `track-${i}`,

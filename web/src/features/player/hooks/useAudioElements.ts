@@ -123,104 +123,119 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   /**
    * Load a source on the active audio element
    */
-  const loadOnActive = useCallback((src: string) => {
-    const audio = getActiveAudio();
-    if (audio) {
-      audio.src = src;
-      audio.load();
-    }
-  }, [getActiveAudio]);
+  const loadOnActive = useCallback(
+    (src: string) => {
+      const audio = getActiveAudio();
+      if (audio) {
+        audio.src = src;
+        audio.load();
+      }
+    },
+    [getActiveAudio]
+  );
 
   /**
    * Load a source on the inactive audio element (for crossfade preloading)
    */
-  const loadOnInactive = useCallback((src: string) => {
-    const audio = getInactiveAudio();
-    if (audio) {
-      audio.src = src;
-      audio.volume = 0; // Start at 0 for crossfade
-      audio.load();
-    }
-  }, [getInactiveAudio]);
+  const loadOnInactive = useCallback(
+    (src: string) => {
+      const audio = getInactiveAudio();
+      if (audio) {
+        audio.src = src;
+        audio.volume = 0; // Start at 0 for crossfade
+        audio.load();
+      }
+    },
+    [getInactiveAudio]
+  );
 
   /**
    * Wait for audio to be ready to play without interruption
    * This prevents crackling when starting playback before buffer is ready
    */
-  const waitForAudioReady = useCallback((audio: HTMLAudioElement, timeout: number = 3000): Promise<boolean> => {
-    return new Promise((resolve) => {
-      // If already ready to play through, resolve immediately
-      if (audio.readyState >= 4) { // HAVE_ENOUGH_DATA
-        resolve(true);
-        return;
-      }
+  const waitForAudioReady = useCallback(
+    (audio: HTMLAudioElement, timeout: number = 3000): Promise<boolean> => {
+      return new Promise((resolve) => {
+        // If already ready to play through, resolve immediately
+        if (audio.readyState >= 4) {
+          // HAVE_ENOUGH_DATA
+          resolve(true);
+          return;
+        }
 
-      let timeoutId: number;
+        const cleanup = () => {
+          audio.removeEventListener('canplaythrough', handleCanPlayThrough);
+          audio.removeEventListener('error', handleError);
+          clearTimeout(timeoutId);
+        };
 
-      const handleCanPlayThrough = () => {
-        clearTimeout(timeoutId);
-        audio.removeEventListener('canplaythrough', handleCanPlayThrough);
-        audio.removeEventListener('error', handleError);
-        resolve(true);
-      };
+        const handleCanPlayThrough = () => {
+          cleanup();
+          resolve(true);
+        };
 
-      const handleError = () => {
-        clearTimeout(timeoutId);
-        audio.removeEventListener('canplaythrough', handleCanPlayThrough);
-        audio.removeEventListener('error', handleError);
-        resolve(false);
-      };
+        const handleError = () => {
+          cleanup();
+          resolve(false);
+        };
 
-      // Timeout fallback - don't block forever
-      timeoutId = window.setTimeout(() => {
-        audio.removeEventListener('canplaythrough', handleCanPlayThrough);
-        audio.removeEventListener('error', handleError);
-        // Resolve true anyway - let the browser handle buffering
-        resolve(true);
-      }, timeout);
+        // Timeout fallback - don't block forever
+        const timeoutId = window.setTimeout(() => {
+          cleanup();
+          // Resolve true anyway - let the browser handle buffering
+          resolve(true);
+        }, timeout);
 
-      audio.addEventListener('canplaythrough', handleCanPlayThrough, { once: true });
-      audio.addEventListener('error', handleError, { once: true });
-    });
-  }, []);
+        audio.addEventListener('canplaythrough', handleCanPlayThrough, { once: true });
+        audio.addEventListener('error', handleError, { once: true });
+      });
+    },
+    []
+  );
 
   /**
    * Play the active audio element, waiting for buffer if needed
    */
-  const playActive = useCallback(async (waitForBuffer: boolean = true) => {
-    const audio = getActiveAudio();
-    if (audio) {
-      try {
-        // Wait for enough buffer to prevent crackling on mobile/PWA
-        if (waitForBuffer) {
-          await waitForAudioReady(audio);
+  const playActive = useCallback(
+    async (waitForBuffer: boolean = true) => {
+      const audio = getActiveAudio();
+      if (audio) {
+        try {
+          // Wait for enough buffer to prevent crackling on mobile/PWA
+          if (waitForBuffer) {
+            await waitForAudioReady(audio);
+          }
+          await audio.play();
+        } catch (error) {
+          logger.error('[AudioElements] Failed to play:', (error as Error).message);
+          throw error;
         }
-        await audio.play();
-      } catch (error) {
-        logger.error('[AudioElements] Failed to play:', (error as Error).message);
-        throw error;
       }
-    }
-  }, [getActiveAudio, waitForAudioReady]);
+    },
+    [getActiveAudio, waitForAudioReady]
+  );
 
   /**
    * Play the inactive audio element (for crossfade), waiting for buffer if needed
    */
-  const playInactive = useCallback(async (waitForBuffer: boolean = true) => {
-    const audio = getInactiveAudio();
-    if (audio) {
-      try {
-        // Wait for enough buffer to prevent crackling during crossfade
-        if (waitForBuffer) {
-          await waitForAudioReady(audio);
+  const playInactive = useCallback(
+    async (waitForBuffer: boolean = true) => {
+      const audio = getInactiveAudio();
+      if (audio) {
+        try {
+          // Wait for enough buffer to prevent crackling during crossfade
+          if (waitForBuffer) {
+            await waitForAudioReady(audio);
+          }
+          await audio.play();
+        } catch (error) {
+          logger.error('[AudioElements] Failed to play inactive:', (error as Error).message);
+          throw error;
         }
-        await audio.play();
-      } catch (error) {
-        logger.error('[AudioElements] Failed to play inactive:', (error as Error).message);
-        throw error;
       }
-    }
-  }, [getInactiveAudio, waitForAudioReady]);
+    },
+    [getInactiveAudio, waitForAudioReady]
+  );
 
   /**
    * Pause the active audio element
@@ -242,34 +257,37 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
    * Fade out an audio element to prevent clicks/pops
    * Returns a promise that resolves when fade is complete
    */
-  const fadeOutAudio = useCallback((audio: HTMLAudioElement, duration: number = 50): Promise<void> => {
-    return new Promise((resolve) => {
-      if (!audio || audio.paused || audio.volume === 0) {
-        resolve();
-        return;
-      }
-
-      const startVolume = audio.volume;
-      const startTime = performance.now();
-
-      const animateFadeOut = (currentTime: number) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(1, elapsed / duration);
-
-        // Use exponential curve for quick but smooth fade
-        audio.volume = startVolume * (1 - progress);
-
-        if (progress < 1) {
-          requestAnimationFrame(animateFadeOut);
-        } else {
-          audio.volume = 0;
+  const fadeOutAudio = useCallback(
+    (audio: HTMLAudioElement, duration: number = 50): Promise<void> => {
+      return new Promise((resolve) => {
+        if (!audio || audio.paused || audio.volume === 0) {
           resolve();
+          return;
         }
-      };
 
-      requestAnimationFrame(animateFadeOut);
-    });
-  }, []);
+        const startVolume = audio.volume;
+        const startTime = performance.now();
+
+        const animateFadeOut = (currentTime: number) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(1, elapsed / duration);
+
+          // Use exponential curve for quick but smooth fade
+          audio.volume = startVolume * (1 - progress);
+
+          if (progress < 1) {
+            requestAnimationFrame(animateFadeOut);
+          } else {
+            audio.volume = 0;
+            resolve();
+          }
+        };
+
+        requestAnimationFrame(animateFadeOut);
+      });
+    },
+    []
+  );
 
   /**
    * Stop and clear both audio elements with fade-out to prevent pops
@@ -301,42 +319,51 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   /**
    * Stop and clear the active audio element with optional fade-out
    */
-  const stopActive = useCallback(async (withFade: boolean = false) => {
-    const audio = getActiveAudio();
-    if (audio) {
-      if (withFade && !audio.paused) {
-        await fadeOutAudio(audio);
+  const stopActive = useCallback(
+    async (withFade: boolean = false) => {
+      const audio = getActiveAudio();
+      if (audio) {
+        if (withFade && !audio.paused) {
+          await fadeOutAudio(audio);
+        }
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = '';
       }
-      audio.pause();
-      audio.currentTime = 0;
-      audio.src = '';
-    }
-  }, [getActiveAudio, fadeOutAudio]);
+    },
+    [getActiveAudio, fadeOutAudio]
+  );
 
   /**
    * Stop and clear the inactive audio element with optional fade-out
    */
-  const stopInactive = useCallback(async (withFade: boolean = false) => {
-    const audio = getInactiveAudio();
-    if (audio) {
-      if (withFade && !audio.paused) {
-        await fadeOutAudio(audio);
+  const stopInactive = useCallback(
+    async (withFade: boolean = false) => {
+      const audio = getInactiveAudio();
+      if (audio) {
+        if (withFade && !audio.paused) {
+          await fadeOutAudio(audio);
+        }
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = '';
       }
-      audio.pause();
-      audio.currentTime = 0;
-      audio.src = '';
-    }
-  }, [getInactiveAudio, fadeOutAudio]);
+    },
+    [getInactiveAudio, fadeOutAudio]
+  );
 
   /**
    * Seek to a specific time on the active audio
    */
-  const seek = useCallback((time: number) => {
-    const audio = getActiveAudio();
-    if (audio) {
-      audio.currentTime = time;
-    }
-  }, [getActiveAudio]);
+  const seek = useCallback(
+    (time: number) => {
+      const audio = getActiveAudio();
+      if (audio) {
+        audio.currentTime = time;
+      }
+    },
+    [getActiveAudio]
+  );
 
   /**
    * Get current time of active audio

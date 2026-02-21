@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
@@ -14,7 +14,7 @@ export interface ConflictData {
   field: string;
   suggestedValue: string;
   source: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -28,13 +28,17 @@ export class ConflictChangeApplierService {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly imageDownload: ImageDownloadService,
-    private readonly storage: StorageService,
+    private readonly storage: StorageService
   ) {}
 
   /**
    * Apply a conflict change to the appropriate entity
    */
-  async applyChange(conflict: ConflictData): Promise<any> {
+  async applyChange(
+    conflict: ConflictData
+  ): Promise<
+    typeof artists.$inferSelect | typeof albums.$inferSelect | typeof tracks.$inferSelect | null
+  > {
     switch (conflict.entityType) {
       case 'artist':
         return this.applyArtistChange(conflict);
@@ -50,8 +54,10 @@ export class ConflictChangeApplierService {
   /**
    * Apply artist metadata change
    */
-  private async applyArtistChange(conflict: ConflictData): Promise<any> {
-    const updateData: Record<string, any> = {};
+  private async applyArtistChange(
+    conflict: ConflictData
+  ): Promise<typeof artists.$inferSelect | null> {
+    const updateData: Partial<typeof artists.$inferInsert> = {};
 
     switch (conflict.field) {
       case 'biography':
@@ -67,7 +73,7 @@ export class ConflictChangeApplierService {
           updateData.mbzArtistId = conflict.metadata.suggestedMbid;
           updateData.mbidSearchedAt = new Date();
           this.logger.info(
-            `Applying MBID ${conflict.metadata.suggestedMbid} for artist ${conflict.entityId}`,
+            `Applying MBID ${conflict.metadata.suggestedMbid} for artist ${conflict.entityId}`
           );
         }
         break;
@@ -93,7 +99,10 @@ export class ConflictChangeApplierService {
   /**
    * Apply artist images from metadata
    */
-  private applyArtistImages(updateData: Record<string, any>, metadata: any): void {
+  private applyArtistImages(
+    updateData: Partial<typeof artists.$inferInsert>,
+    metadata: Record<string, unknown> | undefined
+  ): void {
     const images = typeof metadata === 'string' ? JSON.parse(metadata) : metadata || {};
 
     if (images.smallImageUrl) updateData.smallImageUrl = images.smallImageUrl;
@@ -107,8 +116,10 @@ export class ConflictChangeApplierService {
   /**
    * Apply album metadata change
    */
-  private async applyAlbumChange(conflict: ConflictData): Promise<any> {
-    const updateData: Record<string, any> = {};
+  private async applyAlbumChange(
+    conflict: ConflictData
+  ): Promise<typeof albums.$inferSelect | null> {
+    const updateData: Partial<typeof albums.$inferInsert> = {};
 
     switch (conflict.field) {
       case 'externalCover':
@@ -141,11 +152,11 @@ export class ConflictChangeApplierService {
    */
   private async downloadAndApplyAlbumCover(
     conflict: ConflictData,
-    updateData: Record<string, any>,
+    updateData: Partial<typeof albums.$inferInsert>
   ): Promise<void> {
     const coverUrl = conflict.suggestedValue;
     this.logger.info(
-      `Downloading cover for album ${conflict.entityId} from ${conflict.source}: ${coverUrl}`,
+      `Downloading cover for album ${conflict.entityId} from ${conflict.source}: ${coverUrl}`
     );
 
     try {
@@ -159,11 +170,11 @@ export class ConflictChangeApplierService {
       updateData.externalInfoUpdatedAt = new Date();
 
       this.logger.info(
-        `Successfully downloaded cover for album ${conflict.entityId}: ${coverPath}`,
+        `Successfully downloaded cover for album ${conflict.entityId}: ${coverPath}`
       );
     } catch (error) {
       this.logger.error(
-        `Error downloading cover for album ${conflict.entityId}: ${(error as Error).message}`,
+        `Error downloading cover for album ${conflict.entityId}: ${(error as Error).message}`
       );
       throw error;
     }
@@ -172,8 +183,10 @@ export class ConflictChangeApplierService {
   /**
    * Apply track metadata change
    */
-  private async applyTrackChange(conflict: ConflictData): Promise<any> {
-    const updateData: Record<string, any> = {};
+  private async applyTrackChange(
+    conflict: ConflictData
+  ): Promise<typeof tracks.$inferSelect | null> {
+    const updateData: Partial<typeof tracks.$inferInsert> = {};
 
     switch (conflict.field) {
       case 'year':

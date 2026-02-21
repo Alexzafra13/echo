@@ -328,7 +328,7 @@ export class RemoteServerService {
         }
 
         const { Readable } = await import('stream');
-        const nodeStream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
+        const nodeStream = Readable.fromWeb(response.body as ReadableStream);
 
         return {
           stream: nodeStream,

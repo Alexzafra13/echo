@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
@@ -18,7 +18,7 @@ export class GenreEnrichmentService {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly agentRegistry: AgentRegistryService,
-    private readonly mbidSearch: MbidSearchService,
+    private readonly mbidSearch: MbidSearchService
   ) {}
 
   /**
@@ -33,7 +33,7 @@ export class GenreEnrichmentService {
   async enrichArtistGenres(
     artistId: string,
     mbzArtistId: string,
-    artistName?: string,
+    artistName?: string
   ): Promise<number> {
     try {
       let tagsToSave: Array<{ name: string; count: number }> = [];
@@ -53,9 +53,7 @@ export class GenreEnrichmentService {
       if (tagsToSave.length === 0 && mbzArtistId) {
         const artistData = await this.mbidSearch.getArtistByMbid(mbzArtistId);
         if (artistData?.tags && artistData.tags.length > 0) {
-          tagsToSave = artistData.tags
-            .filter((tag: any) => tag.count >= 3)
-            .slice(0, 10);
+          tagsToSave = artistData.tags.filter((tag) => tag.count >= 3).slice(0, 10);
           source = 'MusicBrainz';
         }
       }
@@ -64,11 +62,7 @@ export class GenreEnrichmentService {
         return 0;
       }
 
-      const savedCount = await this.saveGenresForEntity(
-        tagsToSave,
-        artistId,
-        'artist',
-      );
+      const savedCount = await this.saveGenresForEntity(tagsToSave, artistId, 'artist');
 
       this.logger.debug(`Saved ${savedCount} genres for artist ${artistId} from ${source}`);
       return savedCount;
@@ -92,9 +86,7 @@ export class GenreEnrichmentService {
         return 0;
       }
 
-      const topTags = albumData.tags
-        .filter((tag: any) => tag.count >= 3)
-        .slice(0, 10);
+      const topTags = albumData.tags.filter((tag) => tag.count >= 3).slice(0, 10);
 
       if (topTags.length === 0) {
         return 0;
@@ -116,7 +108,7 @@ export class GenreEnrichmentService {
   private async saveGenresForEntity(
     tags: Array<{ name: string; count: number }>,
     entityId: string,
-    entityType: 'artist' | 'album',
+    entityType: 'artist' | 'album'
   ): Promise<number> {
     let savedCount = 0;
 

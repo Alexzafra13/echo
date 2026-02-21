@@ -28,13 +28,26 @@ vi.mock('@shared/hooks', () => ({
 
 // Mock UI components
 vi.mock('@shared/components/ui', () => ({
-  Button: ({ children, onClick, disabled, leftIcon }: any) => (
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    leftIcon,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+    leftIcon?: React.ReactNode;
+  }) => (
     <button onClick={onClick} disabled={disabled}>
-      {leftIcon}{children}
+      {leftIcon}
+      {children}
     </button>
   ),
-  InlineNotification: ({ message, onDismiss }: any) => (
-    <div data-testid="notification" onClick={onDismiss}>{message}</div>
+  InlineNotification: ({ message, onDismiss }: { message: string; onDismiss?: () => void }) => (
+    <div data-testid="notification" onClick={onDismiss}>
+      {message}
+    </div>
   ),
   ConfirmDialog: () => null,
 }));
@@ -45,11 +58,21 @@ vi.mock('./ConnectServerModal', () => ({
 }));
 
 vi.mock('./CreateInvitationModal', () => ({
-  CreateInvitationModal: () => <div data-testid="create-invitation-modal">Create Invitation Modal</div>,
+  CreateInvitationModal: () => (
+    <div data-testid="create-invitation-modal">Create Invitation Modal</div>
+  ),
 }));
 
 vi.mock('./ServerCard', () => ({
-  ServerCard: ({ server, onSync, onDisconnect }: any) => (
+  ServerCard: ({
+    server,
+    onSync,
+    onDisconnect,
+  }: {
+    server: { id: string; name: string };
+    onSync: (s: { id: string; name: string }) => void;
+    onDisconnect: (s: { id: string; name: string }) => void;
+  }) => (
     <div data-testid={`server-${server.id}`}>
       <span>{server.name}</span>
       <button onClick={() => onSync(server)}>Sync</button>
@@ -59,7 +82,15 @@ vi.mock('./ServerCard', () => ({
 }));
 
 vi.mock('./InvitationCard', () => ({
-  InvitationCard: ({ invitation, onCopyToken, onDelete }: any) => (
+  InvitationCard: ({
+    invitation,
+    onCopyToken,
+    onDelete,
+  }: {
+    invitation: { id: string; label: string; token: string };
+    onCopyToken: (token: string) => void;
+    onDelete: (inv: { id: string }) => void;
+  }) => (
     <div data-testid={`invitation-${invitation.id}`}>
       <span>{invitation.label}</span>
       <button onClick={() => onCopyToken(invitation.token)}>Copy</button>
@@ -69,7 +100,17 @@ vi.mock('./InvitationCard', () => ({
 }));
 
 vi.mock('./AccessCard', () => ({
-  AccessCard: ({ token, onRevoke, onReactivate, onDelete }: any) => (
+  AccessCard: ({
+    token,
+    onRevoke,
+    onReactivate,
+    onDelete,
+  }: {
+    token: { id: string; serverName: string };
+    onRevoke: (t: { id: string }) => void;
+    onReactivate: (t: { id: string }) => void;
+    onDelete: (t: { id: string }) => void;
+  }) => (
     <div data-testid={`access-${token.id}`}>
       <span>{token.serverName}</span>
       <button onClick={() => onRevoke(token)}>Revoke</button>
@@ -80,10 +121,18 @@ vi.mock('./AccessCard', () => ({
 }));
 
 vi.mock('./MutualRequestsBanner', () => ({
-  MutualRequestsBanner: ({ requests, onApprove, onReject }: any) => (
+  MutualRequestsBanner: ({
+    requests,
+    onApprove,
+    onReject,
+  }: {
+    requests: { id: string; serverName: string }[];
+    onApprove: (r: { id: string }) => void;
+    onReject: (r: { id: string }) => void;
+  }) =>
     requests.length > 0 ? (
       <div data-testid="mutual-requests">
-        {requests.map((r: any) => (
+        {requests.map((r: { id: string; serverName: string }) => (
           <div key={r.id}>
             <span>{r.serverName}</span>
             <button onClick={() => onApprove(r)}>Approve</button>
@@ -91,8 +140,7 @@ vi.mock('./MutualRequestsBanner', () => ({
           </div>
         ))}
       </div>
-    ) : null
-  ),
+    ) : null,
 }));
 
 // Mock federation hooks
@@ -107,12 +155,15 @@ const mockInvitations = [
 ];
 
 const mockAccessTokens = [
-  { id: 'acc1', serverName: 'Friend Server', permissions: { canBrowse: true, canStream: true, canDownload: false }, status: 'active' },
+  {
+    id: 'acc1',
+    serverName: 'Friend Server',
+    permissions: { canBrowse: true, canStream: true, canDownload: false },
+    status: 'active',
+  },
 ];
 
-const mockPendingRequests = [
-  { id: 'req1', serverName: 'New Friend', permissions: {} },
-];
+const mockPendingRequests = [{ id: 'req1', serverName: 'New Friend', permissions: {} }];
 
 const mockHooksState = {
   servers: mockServers,
@@ -125,20 +176,35 @@ const mockHooksState = {
 };
 
 vi.mock('../../hooks/useFederation', () => ({
-  useConnectedServers: () => ({ data: mockHooksState.servers, isLoading: mockHooksState.serversLoading }),
-  useInvitationTokens: () => ({ data: mockHooksState.invitations, isLoading: mockHooksState.invitationsLoading }),
-  useAccessTokens: () => ({ data: mockHooksState.accessTokens, isLoading: mockHooksState.accessLoading }),
+  useConnectedServers: () => ({
+    data: mockHooksState.servers,
+    isLoading: mockHooksState.serversLoading,
+  }),
+  useInvitationTokens: () => ({
+    data: mockHooksState.invitations,
+    isLoading: mockHooksState.invitationsLoading,
+  }),
+  useAccessTokens: () => ({
+    data: mockHooksState.accessTokens,
+    isLoading: mockHooksState.accessLoading,
+  }),
   usePendingMutualRequests: () => ({ data: mockHooksState.pendingRequests }),
   useDisconnectFromServer: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
   useSyncServer: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
   useDeleteInvitation: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
   useRevokeAccessToken: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
-  useCheckAllServersHealth: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
+  useCheckAllServersHealth: () => ({
+    mutateAsync: vi.fn().mockResolvedValue({}),
+    isPending: false,
+  }),
   useApproveMutualRequest: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
   useRejectMutualRequest: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
   useUpdatePermissions: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
   useDeleteAccessToken: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
-  useReactivateAccessToken: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
+  useReactivateAccessToken: () => ({
+    mutateAsync: vi.fn().mockResolvedValue({}),
+    isPending: false,
+  }),
 }));
 
 describe('FederationPanel', () => {
@@ -206,7 +272,9 @@ describe('FederationPanel', () => {
       render(<FederationPanel />);
 
       expect(screen.getByText('No hay servidores conectados')).toBeInTheDocument();
-      expect(screen.getByText('Conecta con el servidor de un amigo para ver su biblioteca')).toBeInTheDocument();
+      expect(
+        screen.getByText('Conecta con el servidor de un amigo para ver su biblioteca')
+      ).toBeInTheDocument();
     });
 
     it('should have connect server button', () => {

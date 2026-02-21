@@ -6,7 +6,7 @@ describe('RemoveRatingUseCase', () => {
   let mockRepo: jest.Mocked<IUserInteractionsRepository>;
 
   beforeEach(() => {
-    mockRepo = { removeRating: jest.fn() } as any;
+    mockRepo = { removeRating: jest.fn() } as unknown as jest.Mocked<IUserInteractionsRepository>;
     useCase = new RemoveRatingUseCase(mockRepo);
   });
 

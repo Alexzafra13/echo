@@ -30,11 +30,19 @@ export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
   // Note: "avatars" = user profile pictures (not artist images)
   const chartData = [
     { name: 'Música', value: data.music, percentage: ((data.music / data.total) * 100).toFixed(1) },
-    { name: 'Imágenes (Artistas/Álbumes)', value: data.metadata, percentage: ((data.metadata / data.total) * 100).toFixed(1) },
-    { name: 'Avatares de Usuario', value: data.avatars, percentage: ((data.avatars / data.total) * 100).toFixed(1) },
+    {
+      name: 'Imágenes (Artistas/Álbumes)',
+      value: data.metadata,
+      percentage: ((data.metadata / data.total) * 100).toFixed(1),
+    },
+    {
+      name: 'Avatares de Usuario',
+      value: data.avatars,
+      percentage: ((data.avatars / data.total) * 100).toFixed(1),
+    },
   ];
 
-  const renderCustomLabel = (entry: any) => {
+  const renderCustomLabel = (entry: { percentage: string }) => {
     return `${entry.percentage}%`;
   };
 
@@ -77,7 +85,9 @@ export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
             <Legend
               wrapperStyle={{ color: '#b8bcc8', fontSize: 13 }}
               iconType="circle"
-              formatter={(value, entry: any) => `${value}: ${formatBytes(entry.payload.value)}`}
+              formatter={(value, entry: { payload?: { value: number } }) =>
+                `${value}: ${formatBytes(entry.payload?.value ?? 0)}`
+              }
             />
           </PieChart>
         </ResponsiveContainer>

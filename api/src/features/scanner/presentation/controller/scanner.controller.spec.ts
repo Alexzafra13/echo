@@ -233,7 +233,7 @@ describe('ScannerController', () => {
         trackDeleted: false,
         albumDeleted: false,
         artistDeleted: false,
-      } as any);
+      } as unknown as TrackMissingResult);
 
       const result = await controller.deleteMissingTrack('nonexistent');
 
@@ -243,7 +243,7 @@ describe('ScannerController', () => {
 
   describe('getPurgeMode', () => {
     it('should return current purge mode', async () => {
-      libraryCleanup.getPurgeMode.mockResolvedValue('never' as any);
+      libraryCleanup.getPurgeMode.mockResolvedValue('never' as PurgeMode);
 
       const result = await controller.getPurgeMode();
 

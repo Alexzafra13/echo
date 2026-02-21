@@ -14,7 +14,17 @@ import {
 } from '../../domain/use-cases';
 import { ListeningNowService } from '../../domain/services/listening-now.service';
 import { SecuritySecretsService } from '@config/security-secrets.service';
-import { SocialMapper } from '../../infrastructure/mappers/social.mapper';
+import {
+  SendFriendRequestDto,
+  FriendshipIdParamDto,
+  SearchUsersQueryDto,
+  ActivityQueryDto,
+} from '../dtos/social.dto';
+
+/** Request type matching the controller's internal RequestWithUser interface */
+interface RequestWithUser {
+  user: { id: string };
+}
 
 describe('SocialController', () => {
   let controller: SocialController;
@@ -87,7 +97,7 @@ describe('SocialController', () => {
       getListeningFriendsUseCase.execute.mockResolvedValue([]);
       getFriendsActivityUseCase.execute.mockResolvedValue([]);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getSocialOverview(req);
 
       expect(getFriendsUseCase.execute).toHaveBeenCalledWith('user-1');
@@ -113,7 +123,7 @@ describe('SocialController', () => {
 
       getFriendsUseCase.execute.mockResolvedValue([mockFriend]);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getFriends(req);
 
       expect(getFriendsUseCase.execute).toHaveBeenCalledWith('user-1');
@@ -134,10 +144,10 @@ describe('SocialController', () => {
 
       sendFriendRequestUseCase.execute.mockResolvedValue(mockFriendship);
 
-      const req = { user: mockUser } as any;
-      const dto = { addresseeId: 'user-2' };
+      const req = { user: mockUser } as unknown as RequestWithUser;
+      const dto = { addresseeId: 'user-2' } as SendFriendRequestDto;
 
-      const result = await controller.sendFriendRequest(req, dto as any);
+      const result = await controller.sendFriendRequest(req, dto);
 
       expect(sendFriendRequestUseCase.execute).toHaveBeenCalledWith('user-1', 'user-2');
       expect(result).toMatchObject({
@@ -162,10 +172,10 @@ describe('SocialController', () => {
 
       acceptFriendRequestUseCase.execute.mockResolvedValue(mockFriendship);
 
-      const req = { user: mockUser } as any;
-      const params = { friendshipId: 'fs-1' };
+      const req = { user: mockUser } as unknown as RequestWithUser;
+      const params = { friendshipId: 'fs-1' } as FriendshipIdParamDto;
 
-      const result = await controller.acceptFriendRequest(req, params as any);
+      const result = await controller.acceptFriendRequest(req, params);
 
       expect(acceptFriendRequestUseCase.execute).toHaveBeenCalledWith('fs-1', 'user-1');
       expect(result).toMatchObject({
@@ -181,10 +191,10 @@ describe('SocialController', () => {
     it('should remove a friendship and return success', async () => {
       removeFriendshipUseCase.execute.mockResolvedValue(undefined);
 
-      const req = { user: mockUser } as any;
-      const params = { friendshipId: 'fs-1' };
+      const req = { user: mockUser } as unknown as RequestWithUser;
+      const params = { friendshipId: 'fs-1' } as FriendshipIdParamDto;
 
-      const result = await controller.removeFriendship(req, params as any);
+      const result = await controller.removeFriendship(req, params);
 
       expect(removeFriendshipUseCase.execute).toHaveBeenCalledWith('fs-1', 'user-1');
       expect(result).toEqual({ success: true });
@@ -199,7 +209,7 @@ describe('SocialController', () => {
         count: 0,
       });
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getPendingRequests(req);
 
       expect(getPendingRequestsUseCase.execute).toHaveBeenCalledWith('user-1');
@@ -211,7 +221,7 @@ describe('SocialController', () => {
     it('should return friends currently listening', async () => {
       getListeningFriendsUseCase.execute.mockResolvedValue([]);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const result = await controller.getListeningFriends(req);
 
       expect(getListeningFriendsUseCase.execute).toHaveBeenCalledWith('user-1');
@@ -223,10 +233,10 @@ describe('SocialController', () => {
     it('should return friends activity feed', async () => {
       getFriendsActivityUseCase.execute.mockResolvedValue([]);
 
-      const req = { user: mockUser } as any;
-      const query = { limit: 20 };
+      const req = { user: mockUser } as unknown as RequestWithUser;
+      const query = { limit: 20 } as ActivityQueryDto;
 
-      const result = await controller.getFriendsActivity(req, query as any);
+      const result = await controller.getFriendsActivity(req, query);
 
       expect(getFriendsActivityUseCase.execute).toHaveBeenCalledWith('user-1', 20);
       expect(result).toEqual([]);
@@ -247,10 +257,10 @@ describe('SocialController', () => {
 
       searchUsersUseCase.execute.mockResolvedValue([mockSearchResult]);
 
-      const req = { user: mockUser } as any;
-      const query = { q: 'other', limit: 10 };
+      const req = { user: mockUser } as unknown as RequestWithUser;
+      const query = { q: 'other', limit: 10 } as SearchUsersQueryDto;
 
-      const result = await controller.searchUsers(req, query as any);
+      const result = await controller.searchUsers(req, query);
 
       expect(searchUsersUseCase.execute).toHaveBeenCalledWith('other', 'user-1', 10);
       expect(result).toHaveLength(1);

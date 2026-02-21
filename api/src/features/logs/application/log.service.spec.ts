@@ -194,9 +194,7 @@ describe('LogService', () => {
   describe('getLogs', () => {
     it('debería retornar logs con valores por defecto', async () => {
       // Arrange
-      const mockLogs = [
-        { id: 'log-1', level: LogLevel.ERROR, message: 'Error 1' },
-      ];
+      const mockLogs = [{ id: 'log-1', level: LogLevel.ERROR, message: 'Error 1' }];
       const mockCount = [{ count: 1 }];
 
       // Create chainable mock
@@ -229,7 +227,7 @@ describe('LogService', () => {
 
     it('debería aplicar límite máximo de 500', async () => {
       // Arrange
-      const mockLogs: any[] = [];
+      const mockLogs: Record<string, unknown>[] = [];
       const mockCount = [{ count: 0 }];
 
       const offsetMock = jest.fn().mockResolvedValue(mockLogs);
@@ -350,9 +348,7 @@ describe('LogService', () => {
       });
 
       // Act & Assert - should not throw
-      await expect(
-        service.error(LogCategory.DATABASE, 'Test error')
-      ).resolves.not.toThrow();
+      await expect(service.error(LogCategory.DATABASE, 'Test error')).resolves.not.toThrow();
     });
 
     it('debería loggear error de persistencia a consola', async () => {

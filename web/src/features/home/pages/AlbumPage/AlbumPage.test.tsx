@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import AlbumPage from './AlbumPage';
 
 // Mock wouter
@@ -26,7 +26,9 @@ vi.mock('../../hooks/useAlbums', () => ({
 vi.mock('../../hooks', () => ({
   useAlbumCoverMetadata: vi.fn(),
   getAlbumCoverUrl: vi.fn((id, tag) => `/api/albums/${id}/cover${tag ? `?tag=${tag}` : ''}`),
-  getArtistImageUrl: vi.fn((id, type, tag) => `/api/artists/${id}/images/${type}${tag ? `?tag=${tag}` : ''}`),
+  getArtistImageUrl: vi.fn(
+    (id, type, tag) => `/api/artists/${id}/images/${type}${tag ? `?tag=${tag}` : ''}`
+  ),
   useArtistImages: vi.fn(),
 }));
 
@@ -60,14 +62,28 @@ vi.mock('@shared/components/layout/Header', () => ({
 
 vi.mock('../../components', () => ({
   Sidebar: () => <aside data-testid="sidebar">Sidebar</aside>,
-  TrackList: ({ tracks, onTrackPlay }: { tracks: unknown[]; onTrackPlay: (track: unknown) => void }) => (
+  TrackList: ({
+    tracks,
+    onTrackPlay,
+  }: {
+    tracks: unknown[];
+    onTrackPlay: (track: unknown) => void;
+  }) => (
     <div data-testid="track-list">
       {(tracks as Array<{ id: string; title: string }>).map((t) => (
-        <button key={t.id} onClick={() => onTrackPlay(t)}>{t.title}</button>
+        <button key={t.id} onClick={() => onTrackPlay(t)}>
+          {t.title}
+        </button>
       ))}
     </div>
   ),
-  AlbumOptionsMenu: ({ onShowInfo, onChangeCover }: { onShowInfo: () => void; onChangeCover: () => void }) => (
+  AlbumOptionsMenu: ({
+    onShowInfo,
+    onChangeCover,
+  }: {
+    onShowInfo: () => void;
+    onChangeCover: () => void;
+  }) => (
     <div data-testid="album-options">
       <button onClick={onShowInfo}>Show Info</button>
       <button onClick={onChangeCover}>Change Cover</button>
@@ -79,12 +95,20 @@ vi.mock('../../components', () => ({
     </div>
   ),
   AlbumCard: ({ title, onClick }: { title: string; onClick: () => void }) => (
-    <div data-testid="album-card" onClick={onClick}>{title}</div>
+    <div data-testid="album-card" onClick={onClick}>
+      {title}
+    </div>
   ),
 }));
 
 vi.mock('@features/admin/components/AlbumCoverSelectorModal', () => ({
-  AlbumCoverSelectorModal: ({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) => (
+  AlbumCoverSelectorModal: ({
+    onClose,
+    onSuccess,
+  }: {
+    onClose: () => void;
+    onSuccess: () => void;
+  }) => (
     <div data-testid="cover-selector-modal">
       <button onClick={onClose}>Close</button>
       <button onClick={onSuccess}>Save</button>
@@ -93,8 +117,19 @@ vi.mock('@features/admin/components/AlbumCoverSelectorModal', () => ({
 }));
 
 vi.mock('@shared/components/ui', () => ({
-  Button: ({ children, onClick, leftIcon }: { children: React.ReactNode; onClick: () => void; leftIcon?: React.ReactNode }) => (
-    <button onClick={onClick}>{leftIcon}{children}</button>
+  Button: ({
+    children,
+    onClick,
+    leftIcon,
+  }: {
+    children: React.ReactNode;
+    onClick: () => void;
+    leftIcon?: React.ReactNode;
+  }) => (
+    <button onClick={onClick}>
+      {leftIcon}
+      {children}
+    </button>
   ),
 }));
 

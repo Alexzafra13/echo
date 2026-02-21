@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import HomePage from './HomePage';
 
 // Mock wouter
@@ -94,11 +94,23 @@ vi.mock('@shared/components/ActionCardsRow', () => ({
 
 // Mock home components
 vi.mock('../../components', () => ({
-  HeroSection: ({ item, onNext, onPrevious }: { item: { data: { name: string } }; onNext: () => void; onPrevious: () => void }) => (
+  HeroSection: ({
+    item,
+    onNext,
+    onPrevious,
+  }: {
+    item: { data: { name: string } };
+    onNext: () => void;
+    onPrevious: () => void;
+  }) => (
     <div data-testid="hero-section">
       <span>{item?.data?.name}</span>
-      <button onClick={onPrevious} data-testid="hero-prev">Prev</button>
-      <button onClick={onNext} data-testid="hero-next">Next</button>
+      <button onClick={onPrevious} data-testid="hero-prev">
+        Prev
+      </button>
+      <button onClick={onNext} data-testid="hero-next">
+        Next
+      </button>
     </div>
   ),
   AlbumGrid: ({ title, albums }: { title: string; albums: unknown[] }) => (
@@ -318,9 +330,7 @@ describe('HomePage', () => {
 
     it('should render artist mix section when enabled', () => {
       vi.mocked(homeHooks.useAutoPlaylists).mockReturnValue({
-        data: [
-          { id: 'artist-1', name: 'Artist Mix', type: 'artist', tracks: [] },
-        ],
+        data: [{ id: 'artist-1', name: 'Artist Mix', type: 'artist', tracks: [] }],
       } as ReturnType<typeof homeHooks.useAutoPlaylists>);
 
       vi.mocked(homeHooks.categorizeAutoPlaylists).mockReturnValue({
@@ -380,9 +390,7 @@ describe('HomePage', () => {
     it('should render user playlists when enabled', () => {
       vi.mocked(settingsHooks.useHomePreferences).mockReturnValue({
         data: {
-          homeSections: [
-            { id: 'my-playlists', enabled: true, order: 0 },
-          ],
+          homeSections: [{ id: 'my-playlists', enabled: true, order: 0 }],
         },
       } as ReturnType<typeof settingsHooks.useHomePreferences>);
 
@@ -395,9 +403,7 @@ describe('HomePage', () => {
     it('should navigate to playlist on click', () => {
       vi.mocked(settingsHooks.useHomePreferences).mockReturnValue({
         data: {
-          homeSections: [
-            { id: 'my-playlists', enabled: true, order: 0 },
-          ],
+          homeSections: [{ id: 'my-playlists', enabled: true, order: 0 }],
         },
       } as ReturnType<typeof settingsHooks.useHomePreferences>);
 
@@ -411,9 +417,7 @@ describe('HomePage', () => {
     it('should navigate to playlists page on view all', () => {
       vi.mocked(settingsHooks.useHomePreferences).mockReturnValue({
         data: {
-          homeSections: [
-            { id: 'my-playlists', enabled: true, order: 0 },
-          ],
+          homeSections: [{ id: 'my-playlists', enabled: true, order: 0 }],
         },
       } as ReturnType<typeof settingsHooks.useHomePreferences>);
 
@@ -427,9 +431,7 @@ describe('HomePage', () => {
     it('should not render when no playlists', () => {
       vi.mocked(settingsHooks.useHomePreferences).mockReturnValue({
         data: {
-          homeSections: [
-            { id: 'my-playlists', enabled: true, order: 0 },
-          ],
+          homeSections: [{ id: 'my-playlists', enabled: true, order: 0 }],
         },
       } as ReturnType<typeof settingsHooks.useHomePreferences>);
 
@@ -447,16 +449,12 @@ describe('HomePage', () => {
     it('should render favorite radios when enabled and has stations', () => {
       vi.mocked(settingsHooks.useHomePreferences).mockReturnValue({
         data: {
-          homeSections: [
-            { id: 'favorite-radios', enabled: true, order: 0 },
-          ],
+          homeSections: [{ id: 'favorite-radios', enabled: true, order: 0 }],
         },
       } as ReturnType<typeof settingsHooks.useHomePreferences>);
 
       vi.mocked(radioHooks.useFavoriteStations).mockReturnValue({
-        data: [
-          { id: 'radio-1', name: 'Radio One', url: 'http://radio1.com' },
-        ],
+        data: [{ id: 'radio-1', name: 'Radio One', url: 'http://radio1.com' }],
       } as ReturnType<typeof radioHooks.useFavoriteStations>);
 
       render(<HomePage />);
@@ -468,9 +466,7 @@ describe('HomePage', () => {
     it('should not render when no favorite stations', () => {
       vi.mocked(settingsHooks.useHomePreferences).mockReturnValue({
         data: {
-          homeSections: [
-            { id: 'favorite-radios', enabled: true, order: 0 },
-          ],
+          homeSections: [{ id: 'favorite-radios', enabled: true, order: 0 }],
         },
       } as ReturnType<typeof settingsHooks.useHomePreferences>);
 
@@ -484,9 +480,7 @@ describe('HomePage', () => {
     it('should render surprise me section with random albums', () => {
       vi.mocked(settingsHooks.useHomePreferences).mockReturnValue({
         data: {
-          homeSections: [
-            { id: 'surprise-me', enabled: true, order: 0 },
-          ],
+          homeSections: [{ id: 'surprise-me', enabled: true, order: 0 }],
         },
       } as ReturnType<typeof settingsHooks.useHomePreferences>);
 
@@ -498,9 +492,7 @@ describe('HomePage', () => {
     it('should not render when no random albums', () => {
       vi.mocked(settingsHooks.useHomePreferences).mockReturnValue({
         data: {
-          homeSections: [
-            { id: 'surprise-me', enabled: true, order: 0 },
-          ],
+          homeSections: [{ id: 'surprise-me', enabled: true, order: 0 }],
         },
       } as ReturnType<typeof settingsHooks.useHomePreferences>);
 
@@ -518,9 +510,7 @@ describe('HomePage', () => {
     it('should render shared albums section', () => {
       vi.mocked(settingsHooks.useHomePreferences).mockReturnValue({
         data: {
-          homeSections: [
-            { id: 'shared-albums', enabled: true, order: 0 },
-          ],
+          homeSections: [{ id: 'shared-albums', enabled: true, order: 0 }],
         },
       } as ReturnType<typeof settingsHooks.useHomePreferences>);
 

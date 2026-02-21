@@ -5,10 +5,30 @@ import { StreamTrackUseCase } from '../domain/use-cases';
 import { StreamTokenGuard } from './guards';
 import { NotFoundError } from '@shared/errors';
 import { Readable } from 'stream';
+import { FastifyReply } from 'fastify';
+import { ReadStream } from 'fs';
 import * as fs from 'fs';
 
 // Mock fs module
 jest.mock('fs');
+
+interface MockRawResponse {
+  writeHead: jest.Mock;
+  destroyed: boolean;
+  destroy: jest.Mock;
+  on: jest.Mock;
+  once: jest.Mock;
+  emit: jest.Mock;
+  write: jest.Mock;
+  end: jest.Mock;
+}
+
+interface MockResponse {
+  raw: MockRawResponse;
+  status: jest.Mock;
+  header: jest.Mock;
+  send: jest.Mock;
+}
 
 describe('StreamingController', () => {
   let controller: StreamingController;
@@ -78,14 +98,15 @@ describe('StreamingController', () => {
       // Arrange
       streamTrackUseCase.execute.mockResolvedValue(mockMetadata);
 
-      const mockRes = {
+      const mockRes: MockResponse = {
+        raw: {} as MockRawResponse,
         header: jest.fn().mockReturnThis(),
         status: jest.fn().mockReturnThis(),
         send: jest.fn(),
       };
 
       // Act
-      await controller.getStreamMetadata('track-123', mockRes as any);
+      await controller.getStreamMetadata('track-123', mockRes as unknown as FastifyReply);
 
       // Assert
       expect(streamTrackUseCase.execute).toHaveBeenCalledWith({ trackId: 'track-123' });
@@ -101,22 +122,23 @@ describe('StreamingController', () => {
       // Arrange
       streamTrackUseCase.execute.mockRejectedValue(new NotFoundError('Track', 'nonexistent'));
 
-      const mockRes = {
+      const mockRes: MockResponse = {
+        raw: {} as MockRawResponse,
         header: jest.fn().mockReturnThis(),
         status: jest.fn().mockReturnThis(),
         send: jest.fn(),
       };
 
       // Act & Assert
-      await expect(controller.getStreamMetadata('nonexistent', mockRes as any)).rejects.toThrow(
-        NotFoundError
-      );
+      await expect(
+        controller.getStreamMetadata('nonexistent', mockRes as unknown as FastifyReply)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 
   describe('streamTrack (GET)', () => {
-    const createMockResponse = () => {
-      const mockRaw = {
+    const createMockResponse = (): MockResponse => {
+      const mockRaw: MockRawResponse = {
         writeHead: jest.fn(),
         destroyed: false,
         destroy: jest.fn(),
@@ -141,8 +163,8 @@ describe('StreamingController', () => {
           this.push(null); // End stream immediately
         },
       });
-      // Cast to any to add pipe method that returns the stream
-      (mockStream as any).pipe = jest.fn().mockReturnThis();
+      // Override pipe to return the stream for chaining
+      (mockStream as unknown as { pipe: jest.Mock }).pipe = jest.fn().mockReturnThis();
       return mockStream;
     };
 
@@ -157,7 +179,7 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.streamTrack('track-123', undefined, mockRes as any);
+      await controller.streamTrack('track-123', undefined, mockRes as unknown as FastifyReply);
 
       // Assert
       expect(streamTrackUseCase.execute).toHaveBeenCalledWith({
@@ -179,7 +201,7 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.streamTrack('track-123', 'bytes=0-1023', mockRes as any);
+      await controller.streamTrack('track-123', 'bytes=0-1023', mockRes as unknown as FastifyReply);
 
       // Assert
       expect(mockRes.raw.writeHead).toHaveBeenCalledWith(HttpStatus.PARTIAL_CONTENT, {
@@ -201,7 +223,7 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.streamTrack('track-123', 'bytes=1000-', mockRes as any);
+      await controller.streamTrack('track-123', 'bytes=1000-', mockRes as unknown as FastifyReply);
 
       // Assert
       expect(mockRes.raw.writeHead).toHaveBeenCalledWith(HttpStatus.PARTIAL_CONTENT, {
@@ -219,7 +241,11 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.streamTrack('track-123', 'bytes=10000000-', mockRes as any);
+      await controller.streamTrack(
+        'track-123',
+        'bytes=10000000-',
+        mockRes as unknown as FastifyReply
+      );
 
       // Assert
       expect(mockRes.status).toHaveBeenCalledWith(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
@@ -233,7 +259,11 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.streamTrack('track-123', 'bytes=1000-500', mockRes as any);
+      await controller.streamTrack(
+        'track-123',
+        'bytes=1000-500',
+        mockRes as unknown as FastifyReply
+      );
 
       // Assert
       expect(mockRes.status).toHaveBeenCalledWith(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
@@ -246,14 +276,14 @@ describe('StreamingController', () => {
 
       // Act & Assert
       await expect(
-        controller.streamTrack('nonexistent', undefined, mockRes as any)
+        controller.streamTrack('nonexistent', undefined, mockRes as unknown as FastifyReply)
       ).rejects.toThrow(NotFoundError);
     });
   });
 
   describe('downloadTrack (GET)', () => {
-    const createMockResponse = () => {
-      const mockRaw = {
+    const createMockResponse = (): { raw: MockRawResponse } => {
+      const mockRaw: MockRawResponse = {
         writeHead: jest.fn(),
         destroyed: false,
         destroy: jest.fn(),
@@ -275,7 +305,7 @@ describe('StreamingController', () => {
           this.push(null);
         },
       });
-      (mockStream as any).pipe = jest.fn().mockReturnThis();
+      (mockStream as unknown as { pipe: jest.Mock }).pipe = jest.fn().mockReturnThis();
       return mockStream;
     };
 
@@ -289,7 +319,7 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.downloadTrack('track-123', mockRes as any);
+      await controller.downloadTrack('track-123', mockRes as unknown as FastifyReply);
 
       // Assert
       expect(streamTrackUseCase.execute).toHaveBeenCalledWith({ trackId: 'track-123' });
@@ -311,7 +341,7 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.downloadTrack('track-123', mockRes as any);
+      await controller.downloadTrack('track-123', mockRes as unknown as FastifyReply);
 
       // Assert
       expect(mockRes.raw.writeHead).toHaveBeenCalledWith(
@@ -328,9 +358,9 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act & Assert
-      await expect(controller.downloadTrack('nonexistent', mockRes as any)).rejects.toThrow(
-        NotFoundError
-      );
+      await expect(
+        controller.downloadTrack('nonexistent', mockRes as unknown as FastifyReply)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -342,10 +372,11 @@ describe('StreamingController', () => {
       const mockStream3 = { destroyed: true, destroy: jest.fn() }; // Already destroyed
 
       // Access private activeStreams using type assertion
-      const activeStreams = (controller as any).activeStreams as Set<any>;
-      activeStreams.add(mockStream1);
-      activeStreams.add(mockStream2);
-      activeStreams.add(mockStream3);
+      const activeStreams = (controller as unknown as { activeStreams: Set<ReadStream> })
+        .activeStreams;
+      activeStreams.add(mockStream1 as unknown as ReadStream);
+      activeStreams.add(mockStream2 as unknown as ReadStream);
+      activeStreams.add(mockStream3 as unknown as ReadStream);
 
       // Act
       controller.onModuleDestroy();

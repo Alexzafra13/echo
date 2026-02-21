@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { SettingsService } from '../settings.service';
 import { MetadataConflictService, ConflictPriority } from '../metadata-conflict.service';
@@ -22,7 +22,7 @@ export interface ConflictParams {
   entityId: string;
   entityType: EntityType;
   currentValue: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -35,7 +35,7 @@ export class MbidConfidenceStrategyService {
     @InjectPinoLogger(MbidConfidenceStrategyService.name)
     private readonly logger: PinoLogger,
     private readonly settingsService: SettingsService,
-    private readonly conflictService: MetadataConflictService,
+    private readonly conflictService: MetadataConflictService
   ) {}
 
   /**
@@ -55,10 +55,7 @@ export class MbidConfidenceStrategyService {
   /**
    * Determine action based on matches and confidence
    */
-  async determineAction(
-    matches: MbidMatch[],
-    entityName: string,
-  ): Promise<MbidSearchResult> {
+  async determineAction(matches: MbidMatch[], entityName: string): Promise<MbidSearchResult> {
     if (!matches || matches.length === 0) {
       return {
         topMatch: null,
@@ -98,14 +95,11 @@ export class MbidConfidenceStrategyService {
   /**
    * Create a conflict for medium-confidence matches
    */
-  async createMbidConflict(
-    params: ConflictParams,
-    result: MbidSearchResult,
-  ): Promise<void> {
+  async createMbidConflict(params: ConflictParams, result: MbidSearchResult): Promise<void> {
     if (!result.topMatch) return;
 
     this.logger.info(
-      `Creating MBID conflict for ${params.entityType} "${params.currentValue}" with ${result.suggestions.length} suggestions`,
+      `Creating MBID conflict for ${params.entityType} "${params.currentValue}" with ${result.suggestions.length} suggestions`
     );
 
     await this.conflictService.createConflict({

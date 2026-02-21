@@ -1,5 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc, User, Image, Volume2, Music2 } from 'lucide-react';
+import {
+  Play,
+  RefreshCw,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Music,
+  Disc,
+  User,
+  Image,
+  Volume2,
+  Music2,
+} from 'lucide-react';
 import { CollapsibleInfo } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
 import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
@@ -99,11 +112,7 @@ export function ScannerPanel() {
             Escanea tu carpeta de música para importar canciones, álbumes y artistas
           </p>
         </div>
-        <button
-          className={styles.scanButton}
-          onClick={handleStartScan}
-          disabled={isScanning}
-        >
+        <button className={styles.scanButton} onClick={handleStartScan} disabled={isScanning}>
           {isScanning ? (
             <>
               <RefreshCw size={16} className={styles.scanButton__spinner} />
@@ -133,10 +142,7 @@ export function ScannerPanel() {
 
           {/* Progress Bar */}
           <div className={styles.progressBar}>
-            <div
-              className={styles.progressFill}
-              style={{ width: `${progress.progress}%` }}
-            />
+            <div className={styles.progressFill} style={{ width: `${progress.progress}%` }} />
             <span className={styles.progressText}>{progress.progress}%</span>
           </div>
 
@@ -180,7 +186,9 @@ export function ScannerPanel() {
           {progress.currentFile && (
             <div className={styles.currentFile}>
               <span className={styles.currentFileLabel}>Procesando:</span>
-              <span className={styles.currentFileName}>{progress.currentFile.split(/[/\\]/).pop()}</span>
+              <span className={styles.currentFileName}>
+                {progress.currentFile.split(/[/\\]/).pop()}
+              </span>
             </div>
           )}
         </div>
@@ -192,33 +200,23 @@ export function ScannerPanel() {
           <div className={styles.statusHeader}>
             {getStatusIcon(latestScan.status)}
             <div className={styles.statusInfo}>
-              <h3 className={styles.statusTitle}>
-                {getStatusText(latestScan.status)}
-              </h3>
-              <p className={styles.statusDate}>
-                {formatDateShort(latestScan.startedAt)}
-              </p>
+              <h3 className={styles.statusTitle}>{getStatusText(latestScan.status)}</h3>
+              <p className={styles.statusDate}>{formatDateShort(latestScan.startedAt)}</p>
             </div>
           </div>
 
           {latestScan.status === 'completed' && (
             <div className={styles.stats}>
               <div className={styles.statItem}>
-                <span className={styles.statValue}>
-                  {latestScan.tracksAdded || 0}
-                </span>
+                <span className={styles.statValue}>{latestScan.tracksAdded || 0}</span>
                 <span className={styles.statLabel}>Añadidos</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statValue}>
-                  {latestScan.tracksUpdated || 0}
-                </span>
+                <span className={styles.statValue}>{latestScan.tracksUpdated || 0}</span>
                 <span className={styles.statLabel}>Actualizados</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statValue}>
-                  {latestScan.tracksDeleted || 0}
-                </span>
+                <span className={styles.statValue}>{latestScan.tracksDeleted || 0}</span>
                 <span className={styles.statLabel}>Eliminados</span>
               </div>
             </div>
@@ -236,12 +234,22 @@ export function ScannerPanel() {
       {/* LUFS Analysis Status - Compact */}
       {lufsProgress && (lufsProgress.isRunning || lufsProgress.pendingTracks > 0) && (
         <div className={styles.lufsBar}>
-          <Volume2 size={14} className={lufsProgress.isRunning ? styles.lufsIconRunning : styles.lufsIcon} />
+          <Volume2
+            size={14}
+            className={lufsProgress.isRunning ? styles.lufsIconRunning : styles.lufsIcon}
+          />
           <span className={styles.lufsText}>
-            LUFS: {lufsProgress.processedInSession}/{lufsProgress.processedInSession + lufsProgress.pendingTracks}
+            LUFS: {lufsProgress.processedInSession}/
+            {lufsProgress.processedInSession + lufsProgress.pendingTracks}
             {lufsProgress.processedInSession + lufsProgress.pendingTracks > 0 && (
               <span className={styles.lufsPercent}>
-                ({Math.round((lufsProgress.processedInSession / (lufsProgress.processedInSession + lufsProgress.pendingTracks)) * 100)}%)
+                (
+                {Math.round(
+                  (lufsProgress.processedInSession /
+                    (lufsProgress.processedInSession + lufsProgress.pendingTracks)) *
+                    100
+                )}
+                %)
               </span>
             )}
           </span>
@@ -253,7 +261,7 @@ export function ScannerPanel() {
               <div
                 className={styles.lufsProgressFill}
                 style={{
-                  width: `${Math.round((lufsProgress.processedInSession / (lufsProgress.processedInSession + lufsProgress.pendingTracks)) * 100)}%`
+                  width: `${Math.round((lufsProgress.processedInSession / (lufsProgress.processedInSession + lufsProgress.pendingTracks)) * 100)}%`,
                 }}
               />
             </div>
@@ -264,12 +272,22 @@ export function ScannerPanel() {
       {/* DJ Analysis Status - Compact */}
       {djProgress && (djProgress.isRunning || djProgress.pendingTracks > 0) && (
         <div className={styles.djBar}>
-          <Music2 size={14} className={djProgress.isRunning ? styles.djIconRunning : styles.djIcon} />
+          <Music2
+            size={14}
+            className={djProgress.isRunning ? styles.djIconRunning : styles.djIcon}
+          />
           <span className={styles.djText}>
-            DJ: {djProgress.processedInSession}/{djProgress.processedInSession + djProgress.pendingTracks}
+            DJ: {djProgress.processedInSession}/
+            {djProgress.processedInSession + djProgress.pendingTracks}
             {djProgress.processedInSession + djProgress.pendingTracks > 0 && (
               <span className={styles.djPercent}>
-                ({Math.round((djProgress.processedInSession / (djProgress.processedInSession + djProgress.pendingTracks)) * 100)}%)
+                (
+                {Math.round(
+                  (djProgress.processedInSession /
+                    (djProgress.processedInSession + djProgress.pendingTracks)) *
+                    100
+                )}
+                %)
               </span>
             )}
           </span>
@@ -281,7 +299,7 @@ export function ScannerPanel() {
               <div
                 className={styles.djProgressFill}
                 style={{
-                  width: `${Math.round((djProgress.processedInSession / (djProgress.processedInSession + djProgress.pendingTracks)) * 100)}%`
+                  width: `${Math.round((djProgress.processedInSession / (djProgress.processedInSession + djProgress.pendingTracks)) * 100)}%`,
                 }}
               />
             </div>
@@ -292,7 +310,8 @@ export function ScannerPanel() {
       {/* Info Box */}
       <CollapsibleInfo title="Escaneo de música">
         <p>
-          El servidor escaneará la carpeta configurada en UPLOAD_PATH (por defecto: <code>./uploads/music</code>).
+          El servidor escaneará la carpeta configurada en UPLOAD_PATH (por defecto:{' '}
+          <code>./uploads/music</code>).
         </p>
         <p>
           Asegúrate de que la carpeta contiene archivos MP3, FLAC, M4A u otros formatos soportados.
@@ -300,10 +319,7 @@ export function ScannerPanel() {
       </CollapsibleInfo>
 
       {/* History Toggle */}
-      <button
-        className={styles.historyToggle}
-        onClick={() => setShowHistory(!showHistory)}
-      >
+      <button className={styles.historyToggle} onClick={() => setShowHistory(!showHistory)}>
         <RefreshCw size={16} />
         <span>{showHistory ? 'Ocultar' : 'Ver'} historial de escaneos</span>
       </button>
@@ -317,21 +333,30 @@ export function ScannerPanel() {
             <p className={styles.historyEmpty}>No hay escaneos anteriores</p>
           ) : (
             <div className={styles.historyList}>
-              {history.scans.map((scan: any) => (
-                <div key={scan.id} className={styles.historyItem}>
-                  <div className={styles.historyItemHeader}>
-                    {getStatusIcon(scan.status)}
-                    <span className={styles.historyItemDate}>
-                      {formatDateShort(scan.startedAt)}
-                    </span>
+              {history.scans.map(
+                (scan: {
+                  id: string;
+                  status: string;
+                  startedAt: string;
+                  tracksAdded?: number;
+                  tracksUpdated?: number;
+                  tracksDeleted?: number;
+                }) => (
+                  <div key={scan.id} className={styles.historyItem}>
+                    <div className={styles.historyItemHeader}>
+                      {getStatusIcon(scan.status)}
+                      <span className={styles.historyItemDate}>
+                        {formatDateShort(scan.startedAt)}
+                      </span>
+                    </div>
+                    <div className={styles.historyItemStats}>
+                      <span>+{scan.tracksAdded || 0}</span>
+                      <span>~{scan.tracksUpdated || 0}</span>
+                      <span>-{scan.tracksDeleted || 0}</span>
+                    </div>
                   </div>
-                  <div className={styles.historyItemStats}>
-                    <span>+{scan.tracksAdded || 0}</span>
-                    <span>~{scan.tracksUpdated || 0}</span>
-                    <span>-{scan.tracksDeleted || 0}</span>
-                  </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           )}
         </div>

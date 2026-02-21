@@ -1,6 +1,7 @@
 import { ValidationError } from '@shared/errors';
 import { SetRatingUseCase } from './set-rating.use-case';
 import { ItemType, UserRating } from '../entities/user-interaction.entity';
+import { IUserInteractionsRepository } from '../ports';
 
 describe('SetRatingUseCase', () => {
   let useCase: SetRatingUseCase;
@@ -23,7 +24,7 @@ describe('SetRatingUseCase', () => {
       setRating: jest.fn(),
     };
 
-    useCase = new SetRatingUseCase(mockRepository as any);
+    useCase = new SetRatingUseCase(mockRepository as unknown as IUserInteractionsRepository);
   });
 
   describe('execute', () => {
@@ -69,54 +70,54 @@ describe('SetRatingUseCase', () => {
 
     it('debería lanzar error si rating es menor a 1', async () => {
       // Act & Assert
-      await expect(
-        useCase.execute('user-123', 'track-456', 'track', 0),
-      ).rejects.toThrow(ValidationError);
-      await expect(
-        useCase.execute('user-123', 'track-456', 'track', 0),
-      ).rejects.toThrow('Rating must be an integer between 1 and 5');
+      await expect(useCase.execute('user-123', 'track-456', 'track', 0)).rejects.toThrow(
+        ValidationError
+      );
+      await expect(useCase.execute('user-123', 'track-456', 'track', 0)).rejects.toThrow(
+        'Rating must be an integer between 1 and 5'
+      );
 
       expect(mockRepository.setRating).not.toHaveBeenCalled();
     });
 
     it('debería lanzar error si rating es mayor a 5', async () => {
       // Act & Assert
-      await expect(
-        useCase.execute('user-123', 'track-456', 'track', 6),
-      ).rejects.toThrow(ValidationError);
-      await expect(
-        useCase.execute('user-123', 'track-456', 'track', 6),
-      ).rejects.toThrow('Rating must be an integer between 1 and 5');
+      await expect(useCase.execute('user-123', 'track-456', 'track', 6)).rejects.toThrow(
+        ValidationError
+      );
+      await expect(useCase.execute('user-123', 'track-456', 'track', 6)).rejects.toThrow(
+        'Rating must be an integer between 1 and 5'
+      );
 
       expect(mockRepository.setRating).not.toHaveBeenCalled();
     });
 
     it('debería lanzar error si rating es negativo', async () => {
       // Act & Assert
-      await expect(
-        useCase.execute('user-123', 'track-456', 'track', -1),
-      ).rejects.toThrow(ValidationError);
+      await expect(useCase.execute('user-123', 'track-456', 'track', -1)).rejects.toThrow(
+        ValidationError
+      );
 
       expect(mockRepository.setRating).not.toHaveBeenCalled();
     });
 
     it('debería lanzar error si rating no es entero', async () => {
       // Act & Assert
-      await expect(
-        useCase.execute('user-123', 'track-456', 'track', 3.5),
-      ).rejects.toThrow(ValidationError);
-      await expect(
-        useCase.execute('user-123', 'track-456', 'track', 3.5),
-      ).rejects.toThrow('Rating must be an integer between 1 and 5');
+      await expect(useCase.execute('user-123', 'track-456', 'track', 3.5)).rejects.toThrow(
+        ValidationError
+      );
+      await expect(useCase.execute('user-123', 'track-456', 'track', 3.5)).rejects.toThrow(
+        'Rating must be an integer between 1 and 5'
+      );
 
       expect(mockRepository.setRating).not.toHaveBeenCalled();
     });
 
     it('debería lanzar error si rating es 0', async () => {
       // Act & Assert
-      await expect(
-        useCase.execute('user-123', 'track-456', 'track', 0),
-      ).rejects.toThrow(ValidationError);
+      await expect(useCase.execute('user-123', 'track-456', 'track', 0)).rejects.toThrow(
+        ValidationError
+      );
 
       expect(mockRepository.setRating).not.toHaveBeenCalled();
     });
@@ -134,7 +135,12 @@ describe('SetRatingUseCase', () => {
 
         // Assert
         expect(result.itemType).toBe(itemType);
-        expect(mockRepository.setRating).toHaveBeenLastCalledWith('user-123', 'item-123', itemType, 4);
+        expect(mockRepository.setRating).toHaveBeenLastCalledWith(
+          'user-123',
+          'item-123',
+          itemType,
+          4
+        );
       }
     });
 
@@ -153,16 +159,16 @@ describe('SetRatingUseCase', () => {
 
     it('debería rechazar rating de 2.9 (no es entero)', async () => {
       // Act & Assert
-      await expect(
-        useCase.execute('user-123', 'track-456', 'track', 2.9),
-      ).rejects.toThrow(ValidationError);
+      await expect(useCase.execute('user-123', 'track-456', 'track', 2.9)).rejects.toThrow(
+        ValidationError
+      );
     });
 
     it('debería rechazar rating de 4.1 (no es entero)', async () => {
       // Act & Assert
-      await expect(
-        useCase.execute('user-123', 'track-456', 'track', 4.1),
-      ).rejects.toThrow(ValidationError);
+      await expect(useCase.execute('user-123', 'track-456', 'track', 4.1)).rejects.toThrow(
+        ValidationError
+      );
     });
   });
 });

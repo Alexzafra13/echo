@@ -6,6 +6,9 @@ import {
   createMockPinoLogger,
 } from '@shared/testing/mock.types';
 import { UserFactory } from '@shared/testing/factories/user.factory';
+import { PinoLogger } from 'nestjs-pino';
+import { IStorageService } from '@features/external-metadata/domain/ports';
+import { ImageService } from '@features/external-metadata/application/services/image.service';
 
 describe('DeleteAvatarUseCase', () => {
   let useCase: DeleteAvatarUseCase;
@@ -29,10 +32,10 @@ describe('DeleteAvatarUseCase', () => {
     };
 
     useCase = new DeleteAvatarUseCase(
-      mockLogger as any,
+      mockLogger as unknown as PinoLogger,
       mockUserRepository,
-      mockStorageService as any,
-      mockImageService as any,
+      mockStorageService as unknown as IStorageService,
+      mockImageService as unknown as ImageService
     );
   });
 
@@ -68,9 +71,7 @@ describe('DeleteAvatarUseCase', () => {
       mockUserRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(
-        useCase.execute({ userId: 'nonexistent' }),
-      ).rejects.toThrow(NotFoundError);
+      await expect(useCase.execute({ userId: 'nonexistent' })).rejects.toThrow(NotFoundError);
 
       expect(mockStorageService.deleteImage).not.toHaveBeenCalled();
       expect(mockUserRepository.updatePartial).not.toHaveBeenCalled();
@@ -87,9 +88,7 @@ describe('DeleteAvatarUseCase', () => {
       mockUserRepository.findById.mockResolvedValue(userWithoutAvatar);
 
       // Act & Assert
-      await expect(
-        useCase.execute({ userId: userWithoutAvatar.id }),
-      ).resolves.not.toThrow();
+      await expect(useCase.execute({ userId: userWithoutAvatar.id })).resolves.not.toThrow();
 
       expect(mockStorageService.deleteImage).not.toHaveBeenCalled();
       expect(mockUserRepository.updatePartial).not.toHaveBeenCalled();
@@ -167,9 +166,7 @@ describe('DeleteAvatarUseCase', () => {
       mockUserRepository.findById.mockResolvedValue(userWithNullAvatar);
 
       // Act & Assert
-      await expect(
-        useCase.execute({ userId: userWithNullAvatar.id }),
-      ).resolves.not.toThrow();
+      await expect(useCase.execute({ userId: userWithNullAvatar.id })).resolves.not.toThrow();
 
       expect(mockStorageService.deleteImage).not.toHaveBeenCalled();
     });

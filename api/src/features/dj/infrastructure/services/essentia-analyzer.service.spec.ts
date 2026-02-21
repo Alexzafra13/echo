@@ -32,22 +32,34 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
+/** Mock worker type combining ChildProcess and EventEmitter */
+type MockWorker = ChildProcess & EventEmitter;
+
+/** Type alias for the constructor bypass pattern */
+type EssentiaConstructor = new (logger: typeof mockLogger) => EssentiaAnalyzerService;
+
+interface WorkerMessage {
+  type: string;
+  requestId?: string;
+  [key: string]: unknown;
+}
+
 /**
  * Create a mock child process that behaves like a forked worker
  */
-function createMockWorker(): ChildProcess & EventEmitter {
-  const emitter = new EventEmitter() as any;
+function createMockWorker(): MockWorker {
+  const emitter = new EventEmitter() as MockWorker;
   emitter.send = jest.fn();
   emitter.kill = jest.fn();
   emitter.pid = Math.floor(Math.random() * 10000);
-  emitter.stderr = new EventEmitter();
+  emitter.stderr = new EventEmitter() as ChildProcess['stderr'];
   return emitter;
 }
 
 describe('EssentiaAnalyzerService', () => {
   let service: EssentiaAnalyzerService;
   let forkMock: jest.Mock;
-  let mockWorkers: (ChildProcess & EventEmitter)[];
+  let mockWorkers: MockWorker[];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -74,12 +86,12 @@ describe('EssentiaAnalyzerService', () => {
       return worker;
     });
 
-    service = new (EssentiaAnalyzerService as any)(mockLogger);
+    service = new (EssentiaAnalyzerService as unknown as EssentiaConstructor)(mockLogger);
   });
 
   afterEach(async () => {
     try {
-      await (service as any).terminateAll();
+      await (service as unknown as { terminateAll: () => Promise<void> }).terminateAll();
     } catch {
       /* ignore */
     }
@@ -98,7 +110,9 @@ describe('EssentiaAnalyzerService', () => {
       const os = require('os');
       os.cpus.mockReturnValue(new Array(32).fill({ model: 'test' }));
       os.totalmem.mockReturnValue(64 * 1024 * 1024 * 1024);
-      const largeService = new (EssentiaAnalyzerService as any)(mockLogger);
+      const largeService = new (EssentiaAnalyzerService as unknown as EssentiaConstructor)(
+        mockLogger
+      );
       expect(largeService.getPoolSize()).toBe(12);
     });
 
@@ -107,13 +121,17 @@ describe('EssentiaAnalyzerService', () => {
       const os = require('os');
       os.cpus.mockReturnValue([{ model: 'test' }]); // 1 core
       os.totalmem.mockReturnValue(4 * 1024 * 1024 * 1024);
-      const smallService = new (EssentiaAnalyzerService as any)(mockLogger);
+      const smallService = new (EssentiaAnalyzerService as unknown as EssentiaConstructor)(
+        mockLogger
+      );
       expect(smallService.getPoolSize()).toBeGreaterThanOrEqual(1);
     });
 
     it('should respect DJ_ANALYSIS_CONCURRENCY env var', () => {
       process.env.DJ_ANALYSIS_CONCURRENCY = '6';
-      const envService = new (EssentiaAnalyzerService as any)(mockLogger);
+      const envService = new (EssentiaAnalyzerService as unknown as EssentiaConstructor)(
+        mockLogger
+      );
       expect(envService.getPoolSize()).toBe(6);
       delete process.env.DJ_ANALYSIS_CONCURRENCY;
     });
@@ -150,7 +168,9 @@ describe('EssentiaAnalyzerService', () => {
       const fs = require('fs');
       fs.existsSync.mockReturnValue(false);
 
-      const badService = new (EssentiaAnalyzerService as any)(mockLogger);
+      const badService = new (EssentiaAnalyzerService as unknown as EssentiaConstructor)(
+        mockLogger
+      );
       const available = await badService.isAvailable();
       expect(available).toBe(false);
 
@@ -194,11 +214,15 @@ describe('EssentiaAnalyzerService', () => {
       });
 
       // Create a fresh service so it picks up the new fork mock
-      const freshService = new (EssentiaAnalyzerService as any)(mockLogger);
+      const freshService = new (EssentiaAnalyzerService as unknown as EssentiaConstructor)(
+        mockLogger
+      );
       const available = await freshService.isAvailable();
       expect(available).toBe(true);
       // Should have at least 1 worker in the pool (poolSize - 1 failed)
-      expect((freshService as any).workers.size).toBeGreaterThanOrEqual(1);
+      expect(
+        (freshService as unknown as { workers: Map<unknown, unknown> }).workers.size
+      ).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -211,7 +235,7 @@ describe('EssentiaAnalyzerService', () => {
 
       // Mock the first worker to respond with a result
       const worker = mockWorkers[0];
-      (worker.send as jest.Mock).mockImplementation((msg: any) => {
+      (worker.send as jest.Mock).mockImplementation((msg: WorkerMessage) => {
         if (msg.type === 'analyze') {
           process.nextTick(() => {
             worker.emit('message', {
@@ -234,7 +258,7 @@ describe('EssentiaAnalyzerService', () => {
       await service.isAvailable();
 
       const worker = mockWorkers[0];
-      (worker.send as jest.Mock).mockImplementation((msg: any) => {
+      (worker.send as jest.Mock).mockImplementation((msg: WorkerMessage) => {
         if (msg.type === 'analyze') {
           process.nextTick(() => {
             worker.emit('message', {
@@ -251,7 +275,12 @@ describe('EssentiaAnalyzerService', () => {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { execFile } = require('child_process');
       execFile.mockImplementation(
-        (cmd: string, args: string[], opts: any, cb: (...args: unknown[]) => unknown) => {
+        (
+          cmd: string,
+          args: string[],
+          opts: Record<string, unknown>,
+          cb: (...args: unknown[]) => unknown
+        ) => {
           if (cmd.includes('ffprobe')) {
             cb(null, { stdout: JSON.stringify({ format: { duration: '180' }, streams: [] }) });
           } else {
@@ -274,7 +303,7 @@ describe('EssentiaAnalyzerService', () => {
       // Track which workers get messages
       const workerCalls: number[] = [];
       mockWorkers.forEach((w, i) => {
-        (w.send as jest.Mock).mockImplementation((msg: any) => {
+        (w.send as jest.Mock).mockImplementation((msg: WorkerMessage) => {
           if (msg.type === 'analyze') {
             workerCalls.push(i);
             // Respond after a short delay to simulate processing
@@ -313,7 +342,9 @@ describe('EssentiaAnalyzerService', () => {
       (worker.send as jest.Mock).mockImplementation(() => {});
 
       // Call analyzeWithEssentia directly to avoid FFmpeg fallback
-      const analyzePromise = (service as any).analyzeWithEssentia('/path/to/track.mp3');
+      const analyzePromise = (
+        service as unknown as { analyzeWithEssentia: (path: string) => Promise<unknown> }
+      ).analyzeWithEssentia('/path/to/track.mp3');
 
       // Simulate worker crash after sending
       await new Promise((r) => setTimeout(r, 10));

@@ -1,4 +1,5 @@
 import { UserInteractionsMapper } from './user-interactions.mapper';
+import { UserRating as UserRatingDb } from '@infrastructure/database/schema/play-stats';
 
 describe('UserInteractionsMapper', () => {
   const mockDbRating = {
@@ -12,7 +13,9 @@ describe('UserInteractionsMapper', () => {
 
   describe('toUserRatingDomain', () => {
     it('should convert DB rating to domain UserRating', () => {
-      const rating = UserInteractionsMapper.toUserRatingDomain(mockDbRating as any);
+      const rating = UserInteractionsMapper.toUserRatingDomain(
+        mockDbRating as unknown as UserRatingDb
+      );
 
       expect(rating.userId).toBe('user-1');
       expect(rating.itemId).toBe('track-1');
@@ -28,7 +31,7 @@ describe('UserInteractionsMapper', () => {
         itemId: 'album-1',
         itemType: 'album',
         rating: 4,
-      } as any);
+      } as unknown as UserRatingDb);
 
       expect(albumRating.itemType).toBe('album');
       expect(albumRating.rating).toBe(4);
@@ -40,7 +43,7 @@ describe('UserInteractionsMapper', () => {
       const ratings = UserInteractionsMapper.toUserRatingDomainArray([
         mockDbRating,
         { ...mockDbRating, itemId: 'track-2', rating: 3 },
-      ] as any);
+      ] as unknown as UserRatingDb[]);
 
       expect(ratings).toHaveLength(2);
       expect(ratings[0].rating).toBe(5);
