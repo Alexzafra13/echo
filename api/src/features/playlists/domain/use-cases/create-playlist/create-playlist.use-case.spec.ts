@@ -39,7 +39,7 @@ describe('CreatePlaylistUseCase', () => {
       removeTrack: jest.fn(),
       getPlaylistTracks: jest.fn(),
       reorderTracks: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<IPlaylistRepository>;
 
     useCase = new CreatePlaylistUseCase(playlistRepository);
   });
@@ -76,7 +76,7 @@ describe('CreatePlaylistUseCase', () => {
           description: 'Test playlist',
           ownerId: 'user-123',
           public: false,
-        }),
+        })
       );
       expect(result.id).toBe('playlist-123');
       expect(result.name).toBe('My Playlist');
@@ -126,7 +126,7 @@ describe('CreatePlaylistUseCase', () => {
       expect(playlistRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           public: false,
-        }),
+        })
       );
     });
 
@@ -151,7 +151,7 @@ describe('CreatePlaylistUseCase', () => {
       expect(playlistRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Playlist with spaces',
-        }),
+        })
       );
     });
 
@@ -165,7 +165,7 @@ describe('CreatePlaylistUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(
-        new ValidationError('Playlist name is required'),
+        new ValidationError('Playlist name is required')
       );
       expect(playlistRepository.create).not.toHaveBeenCalled();
     });
@@ -193,7 +193,7 @@ describe('CreatePlaylistUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(
-        new ValidationError('Owner ID is required'),
+        new ValidationError('Owner ID is required')
       );
       expect(playlistRepository.create).not.toHaveBeenCalled();
     });

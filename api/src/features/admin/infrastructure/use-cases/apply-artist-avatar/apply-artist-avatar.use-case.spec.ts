@@ -25,7 +25,16 @@ const mockLogger = {
 
 describe('ApplyArtistAvatarUseCase', () => {
   let useCase: ApplyArtistAvatarUseCase;
-  let mockDrizzle: any;
+  let mockDrizzle: {
+    db: {
+      select: jest.Mock;
+      from: jest.Mock;
+      where: jest.Mock;
+      limit: jest.Mock;
+      update: jest.Mock;
+      set: jest.Mock;
+    };
+  };
   let mockRedis: jest.Mocked<RedisService>;
   let mockImageDownload: jest.Mocked<ImageDownloadService>;
   let mockStorage: jest.Mocked<StorageService>;
@@ -65,34 +74,34 @@ describe('ApplyArtistAvatarUseCase', () => {
     };
 
     // First select returns artist, second returns updated timestamps
-    mockLimit
-      .mockResolvedValueOnce([mockArtist])
-      .mockResolvedValueOnce([{
+    mockLimit.mockResolvedValueOnce([mockArtist]).mockResolvedValueOnce([
+      {
         externalProfileUpdatedAt: new Date(),
         externalBackgroundUpdatedAt: null,
         externalBannerUpdatedAt: null,
         externalLogoUpdatedAt: null,
-      }]);
+      },
+    ]);
 
     mockRedis = {
       del: jest.fn().mockResolvedValue(1),
-    } as any;
+    } as unknown as jest.Mocked<RedisService>;
 
     mockImageDownload = {
       downloadAndSave: jest.fn().mockResolvedValue(undefined),
-    } as any;
+    } as unknown as jest.Mocked<ImageDownloadService>;
 
     mockStorage = {
       getArtistMetadataPath: jest.fn().mockResolvedValue('/metadata/artists/artist-123'),
-    } as any;
+    } as unknown as jest.Mocked<StorageService>;
 
     mockImageService = {
       invalidateArtistCache: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<ImageService>;
 
     mockGateway = {
       emitArtistImagesUpdated: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<MetadataEventsService>;
 
     // Mock fs.unlink for deleting old files
     (fs.unlink as jest.Mock).mockResolvedValue(undefined);
@@ -167,9 +176,7 @@ describe('ApplyArtistAvatarUseCase', () => {
     it('should delete old external image if exists', async () => {
       await useCase.execute(baseInput);
 
-      expect(fs.unlink).toHaveBeenCalledWith(
-        expect.stringContaining('old-profile.jpg'),
-      );
+      expect(fs.unlink).toHaveBeenCalledWith(expect.stringContaining('old-profile.jpg'));
     });
 
     it('should not fail if old image deletion fails', async () => {
@@ -186,7 +193,7 @@ describe('ApplyArtistAvatarUseCase', () => {
       expect(mockStorage.getArtistMetadataPath).toHaveBeenCalledWith('artist-123');
       expect(mockImageDownload.downloadAndSave).toHaveBeenCalledWith(
         baseInput.avatarUrl,
-        expect.stringContaining('profile.jpg'),
+        expect.stringContaining('profile.jpg')
       );
     });
 
@@ -210,14 +217,12 @@ describe('ApplyArtistAvatarUseCase', () => {
           artistId: 'artist-123',
           artistName: 'Test Artist',
           imageType: 'profile',
-        }),
+        })
       );
     });
 
     it('should throw error if download fails', async () => {
-      mockImageDownload.downloadAndSave.mockRejectedValue(
-        new Error('Download failed'),
-      );
+      mockImageDownload.downloadAndSave.mockRejectedValue(new Error('Download failed'));
 
       await expect(useCase.execute(baseInput)).rejects.toThrow('Download failed');
     });
@@ -249,9 +254,7 @@ describe('ApplyArtistAvatarUseCase', () => {
 
       for (const testCase of testCases) {
         jest.clearAllMocks();
-        mockDrizzle.db.limit
-          .mockResolvedValueOnce([mockArtist])
-          .mockResolvedValueOnce([{}]);
+        mockDrizzle.db.limit.mockResolvedValueOnce([mockArtist]).mockResolvedValueOnce([{}]);
 
         const input = { ...baseInput, type: testCase.type };
         const result = await useCase.execute(input);

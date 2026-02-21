@@ -32,7 +32,16 @@ const mockLogger = {
 
 describe('ApplyAlbumCoverUseCase', () => {
   let useCase: ApplyAlbumCoverUseCase;
-  let mockDrizzle: any;
+  let mockDrizzle: {
+    db: {
+      select: jest.Mock;
+      from: jest.Mock;
+      where: jest.Mock;
+      limit: jest.Mock;
+      update: jest.Mock;
+      set: jest.Mock;
+    };
+  };
   let mockRedis: jest.Mocked<RedisService>;
   let mockImageDownload: jest.Mocked<ImageDownloadService>;
   let mockStorage: jest.Mocked<StorageService>;
@@ -68,30 +77,30 @@ describe('ApplyAlbumCoverUseCase', () => {
     };
 
     // First call returns album, second call returns updated album
-    mockLimit.mockResolvedValueOnce([mockAlbum]).mockResolvedValueOnce([
-      { ...mockAlbum, externalInfoUpdatedAt: new Date() },
-    ]);
+    mockLimit
+      .mockResolvedValueOnce([mockAlbum])
+      .mockResolvedValueOnce([{ ...mockAlbum, externalInfoUpdatedAt: new Date() }]);
 
     mockRedis = {
       del: jest.fn().mockResolvedValue(1),
-    } as any;
+    } as unknown as jest.Mocked<RedisService>;
 
     mockImageDownload = {
       downloadAndSave: jest.fn().mockResolvedValue(undefined),
       getImageDimensionsFromFile: jest.fn().mockResolvedValue({ width: 500, height: 500 }),
-    } as any;
+    } as unknown as jest.Mocked<ImageDownloadService>;
 
     mockStorage = {
       getAlbumMetadataPath: jest.fn().mockResolvedValue('/metadata/albums/album-123'),
-    } as any;
+    } as unknown as jest.Mocked<StorageService>;
 
     mockImageService = {
       invalidateAlbumCache: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<ImageService>;
 
     mockGateway = {
       emitAlbumCoverUpdated: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<MetadataEventsService>;
 
     // Mock fs.rename
     (fs.rename as jest.Mock).mockResolvedValue(undefined);
@@ -136,7 +145,7 @@ describe('ApplyAlbumCoverUseCase', () => {
 
       expect(safeUtils.safeDeleteFile).toHaveBeenCalledWith(
         mockAlbum.externalCoverPath,
-        'old cover',
+        'old cover'
       );
     });
 
@@ -146,7 +155,7 @@ describe('ApplyAlbumCoverUseCase', () => {
       expect(mockStorage.getAlbumMetadataPath).toHaveBeenCalledWith('album-123');
       expect(mockImageDownload.downloadAndSave).toHaveBeenCalledWith(
         input.coverUrl,
-        expect.stringContaining('cover-temp-'),
+        expect.stringContaining('cover-temp-')
       );
     });
 
@@ -161,7 +170,7 @@ describe('ApplyAlbumCoverUseCase', () => {
 
       expect(fs.rename).toHaveBeenCalledWith(
         expect.stringContaining('cover-temp-'),
-        expect.stringContaining('cover-500x500.jpg'),
+        expect.stringContaining('cover-500x500.jpg')
       );
     });
 
@@ -191,7 +200,7 @@ describe('ApplyAlbumCoverUseCase', () => {
           albumId: 'album-123',
           albumName: 'Test Album',
           artistId: 'artist-456',
-        }),
+        })
       );
     });
 
@@ -209,14 +218,12 @@ describe('ApplyAlbumCoverUseCase', () => {
     });
 
     it('should clean up temp file on download error', async () => {
-      mockImageDownload.downloadAndSave.mockRejectedValue(
-        new Error('Download failed'),
-      );
+      mockImageDownload.downloadAndSave.mockRejectedValue(new Error('Download failed'));
 
       await expect(useCase.execute(input)).rejects.toThrow('Download failed');
       expect(safeUtils.safeDeleteFile).toHaveBeenCalledWith(
         expect.stringContaining('cover-temp-'),
-        'temp file cleanup',
+        'temp file cleanup'
       );
     });
 

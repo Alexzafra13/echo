@@ -1,4 +1,5 @@
 import { PlayTrackingMapper } from './play-tracking.mapper';
+import { PlayHistory } from '@infrastructure/database/schema/play-stats';
 
 describe('PlayTrackingMapper', () => {
   const mockDbPlayHistory = {
@@ -17,7 +18,9 @@ describe('PlayTrackingMapper', () => {
 
   describe('toPlayEventDomain', () => {
     it('should convert DB play history to domain PlayEvent', () => {
-      const event = PlayTrackingMapper.toPlayEventDomain(mockDbPlayHistory as any);
+      const event = PlayTrackingMapper.toPlayEventDomain(
+        mockDbPlayHistory as unknown as PlayHistory
+      );
 
       expect(event.id).toBe('play-1');
       expect(event.userId).toBe('user-1');
@@ -38,7 +41,7 @@ describe('PlayTrackingMapper', () => {
         completionRate: null,
         sourceId: null,
         sourceType: null,
-      } as any);
+      } as unknown as PlayHistory);
 
       expect(event.client).toBeUndefined();
       expect(event.completionRate).toBeUndefined();
@@ -53,7 +56,7 @@ describe('PlayTrackingMapper', () => {
       const events = PlayTrackingMapper.toPlayEventDomainArray([
         mockDbPlayHistory,
         mockDbPlayHistory,
-      ] as any);
+      ] as unknown as PlayHistory[]);
 
       expect(events).toHaveLength(2);
       expect(events[0].id).toBe('play-1');

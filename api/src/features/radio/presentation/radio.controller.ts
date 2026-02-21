@@ -25,7 +25,7 @@ import { SaveFavoriteStationUseCase } from '../domain/use-cases/save-favorite-st
 import { GetUserFavoritesUseCase } from '../domain/use-cases/get-user-favorites/get-user-favorites.use-case';
 import { DeleteFavoriteStationUseCase } from '../domain/use-cases/delete-favorite-station/delete-favorite-station.use-case';
 import { SearchStationsUseCase } from '../domain/use-cases/search-stations/search-stations.use-case';
-import { IcyMetadataService } from '../domain/services/icy-metadata.service';
+import { IcyMetadataService, RadioMetadata } from '../domain/services/icy-metadata.service';
 import { RadioStationResponseDto } from './dto/radio-station-response.dto';
 import { SearchStationsDto } from './dto/search-stations.dto';
 import { CreateCustomStationDto } from './dto/create-custom-station.dto';
@@ -42,7 +42,7 @@ export class RadioController {
     private readonly getUserFavoritesUseCase: GetUserFavoritesUseCase,
     private readonly deleteFavoriteUseCase: DeleteFavoriteStationUseCase,
     private readonly searchStationsUseCase: SearchStationsUseCase,
-    private readonly icyMetadataService: IcyMetadataService,
+    private readonly icyMetadataService: IcyMetadataService
   ) {}
 
   @Get('search')
@@ -85,14 +85,8 @@ export class RadioController {
     summary: 'Emisoras por país',
     description: 'Obtiene emisoras de un país específico',
   })
-  async getByCountry(
-    @Param('code') code: string,
-    @Query('limit') limit?: number,
-  ) {
-    const stations = await this.searchStationsUseCase.getByCountry(
-      code,
-      limit || 50,
-    );
+  async getByCountry(@Param('code') code: string, @Query('limit') limit?: number) {
+    const stations = await this.searchStationsUseCase.getByCountry(code, limit || 50);
     return stations;
   }
 
@@ -103,10 +97,7 @@ export class RadioController {
     description: 'Obtiene emisoras de un género específico',
   })
   async getByTag(@Param('tag') tag: string, @Query('limit') limit?: number) {
-    const stations = await this.searchStationsUseCase.getByTag(
-      tag,
-      limit || 50,
-    );
+    const stations = await this.searchStationsUseCase.getByTag(tag, limit || 50);
     return stations;
   }
 
@@ -149,10 +140,7 @@ export class RadioController {
     description: 'Guarda una emisora de Radio Browser como favorita',
   })
   @ApiResponse({ status: 201, type: RadioStationResponseDto })
-  async saveFavoriteFromApi(
-    @CurrentUser('id') userId: string,
-    @Body() dto: SaveApiStationDto,
-  ) {
+  async saveFavoriteFromApi(@CurrentUser('id') userId: string, @Body() dto: SaveApiStationDto) {
     const station = await this.saveFavoriteUseCase.execute({
       userId,
       stationData: dto,
@@ -169,10 +157,7 @@ export class RadioController {
     description: 'Crea una emisora personalizada con URL manual',
   })
   @ApiResponse({ status: 201, type: RadioStationResponseDto })
-  async saveFavoriteCustom(
-    @CurrentUser('id') userId: string,
-    @Body() dto: CreateCustomStationDto,
-  ) {
+  async saveFavoriteCustom(@CurrentUser('id') userId: string, @Body() dto: CreateCustomStationDto) {
     const station = await this.saveFavoriteUseCase.execute({
       userId,
       stationData: {
@@ -201,7 +186,7 @@ export class RadioController {
   @ApiResponse({ status: 204, description: 'Emisora eliminada' })
   async deleteFavorite(
     @CurrentUser('id') userId: string,
-    @Param('id', ParseUUIDPipe) stationId: string,
+    @Param('id', ParseUUIDPipe) stationId: string
   ) {
     await this.deleteFavoriteUseCase.execute({ stationId, userId });
   }
@@ -211,8 +196,7 @@ export class RadioController {
   @Public()
   @ApiOperation({
     summary: 'Stream de metadata de radio',
-    description:
-      'Server-Sent Events que transmite metadata ICY en tiempo real (canción actual)',
+    description: 'Server-Sent Events que transmite metadata ICY en tiempo real (canción actual)',
   })
   @ApiResponse({
     status: 200,
@@ -221,17 +205,14 @@ export class RadioController {
   streamMetadata(
     @Query('stationUuid') stationUuid: string,
     @Query('streamUrl') streamUrl: string,
-    @Req() request: FastifyRequest,
+    @Req() request: FastifyRequest
   ): Observable<MessageEvent> {
     return new Observable((subscriber) => {
       // Subscribe to metadata updates
-      const emitter = this.icyMetadataService.subscribe(
-        stationUuid,
-        streamUrl,
-      );
+      const emitter = this.icyMetadataService.subscribe(stationUuid, streamUrl);
 
       // Forward metadata events to SSE client
-      const onMetadata = (metadata: any) => {
+      const onMetadata = (metadata: RadioMetadata) => {
         subscriber.next({
           type: 'metadata',
           data: metadata,
@@ -278,7 +259,7 @@ export class RadioController {
   async proxyStream(
     @Query('url') streamUrl: string,
     @Req() request: FastifyRequest,
-    @Res() reply: FastifyReply,
+    @Res() reply: FastifyReply
   ) {
     if (!streamUrl) {
       throw new BadRequestException('Parámetro URL requerido');
@@ -313,7 +294,7 @@ export class RadioController {
       /^echo$/,
     ];
 
-    if (blockedPatterns.some(pattern => pattern.test(hostname))) {
+    if (blockedPatterns.some((pattern) => pattern.test(hostname))) {
       throw new BadRequestException('Acceso a redes internas no permitido');
     }
 
@@ -326,7 +307,7 @@ export class RadioController {
         {
           headers: {
             'User-Agent': 'Echo/1.0 (Radio Stream Proxy)',
-            'Accept': '*/*',
+            Accept: '*/*',
             'Icy-MetaData': '0',
           },
           timeout: 10000,
@@ -352,11 +333,13 @@ export class RadioController {
           reply.status(proxyResponse.statusCode || 200);
           reply.send(proxyResponse);
           resolve();
-        },
+        }
       );
 
       proxyRequest.on('error', (error) => {
-        reply.status(502).send({ error: 'Failed to connect to radio stream', message: error.message });
+        reply
+          .status(502)
+          .send({ error: 'Failed to connect to radio stream', message: error.message });
         resolve();
       });
 

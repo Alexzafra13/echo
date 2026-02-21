@@ -1,4 +1,9 @@
 import { DjAnalysisQueueService } from './dj-analysis-queue.service';
+import { PinoLogger } from 'nestjs-pino';
+import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
+import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
+import { EssentiaAnalyzerService } from './essentia-analyzer.service';
+import { ScannerGateway } from '../../../scanner/infrastructure/gateways/scanner.gateway';
 
 const mockLogger = {
   info: jest.fn(),
@@ -12,15 +17,42 @@ const mockBullmq = {
   addJob: jest.fn().mockResolvedValue(undefined),
 };
 
+/** Chainable mock for Drizzle query builder */
+interface DrizzleChainMock {
+  select: jest.Mock;
+  from: jest.Mock;
+  where: jest.Mock;
+  innerJoin: jest.Mock;
+  set: jest.Mock;
+  limit: jest.Mock;
+  groupBy: jest.Mock;
+  insert: jest.Mock;
+  values: jest.Mock;
+  update: jest.Mock;
+  then: (resolve: (value: unknown) => unknown) => unknown;
+  [Symbol.toStringTag]: string;
+}
+
 // Chain-able mock for Drizzle query builder
-function createChainMock(returnValue: any = []) {
-  const chain: any = {};
-  const methods = ['select', 'from', 'where', 'innerJoin', 'set', 'limit', 'groupBy', 'insert', 'values', 'update'];
+function createChainMock(returnValue: unknown[] = []): DrizzleChainMock {
+  const chain = {} as DrizzleChainMock;
+  const methods = [
+    'select',
+    'from',
+    'where',
+    'innerJoin',
+    'set',
+    'limit',
+    'groupBy',
+    'insert',
+    'values',
+    'update',
+  ];
   for (const method of methods) {
-    chain[method] = jest.fn().mockReturnValue(chain);
+    (chain as Record<string, jest.Mock>)[method] = jest.fn().mockReturnValue(chain);
   }
   // Terminal: make select return a thenable that resolves to returnValue
-  chain.then = (resolve: any) => resolve(returnValue);
+  chain.then = (resolve: (value: unknown) => unknown) => resolve(returnValue);
   // Also make it directly awaitable
   chain[Symbol.toStringTag] = 'Promise';
   return chain;
@@ -53,12 +85,18 @@ describe('DjAnalysisQueueService', () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
 
-    service = new (DjAnalysisQueueService as any)(
+    service = new (DjAnalysisQueueService as unknown as new (
+      logger: typeof mockLogger,
+      bullmq: typeof mockBullmq,
+      drizzle: typeof mockDrizzle,
+      analyzer: typeof mockAnalyzer,
+      scannerGateway: typeof mockScannerGateway
+    ) => DjAnalysisQueueService)(
       mockLogger,
       mockBullmq,
       mockDrizzle,
       mockAnalyzer,
-      mockScannerGateway,
+      mockScannerGateway
     );
   });
 
@@ -71,13 +109,13 @@ describe('DjAnalysisQueueService', () => {
   describe('constructor', () => {
     it('should set concurrency from analyzer pool size', () => {
       expect(mockAnalyzer.getPoolSize).toHaveBeenCalled();
-      expect((service as any).concurrency).toBe(2);
+      expect((service as unknown as { concurrency: number }).concurrency).toBe(2);
     });
 
     it('should log initialization', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         { concurrency: 2 },
-        'DJ Analysis queue initialized',
+        'DJ Analysis queue initialized'
       );
     });
   });
@@ -91,12 +129,17 @@ describe('DjAnalysisQueueService', () => {
       expect(mockBullmq.registerProcessor).toHaveBeenCalledWith(
         'dj-analysis-queue',
         expect.any(Function),
-        { concurrency: 2 },
+        { concurrency: 2 }
       );
     });
 
     it('should schedule resume of pending analyses after 5s', () => {
-      const spy = jest.spyOn(service as any, 'resumePendingAnalyses').mockResolvedValue(undefined);
+      const spy = jest
+        .spyOn(
+          service as unknown as { resumePendingAnalyses: () => Promise<void> },
+          'resumePendingAnalyses'
+        )
+        .mockResolvedValue(undefined);
 
       service.onModuleInit();
 
@@ -123,11 +166,9 @@ describe('DjAnalysisQueueService', () => {
 
     it('should return already-running when queue is active', async () => {
       // Manually set running state
-      (service as any).isRunning = true;
+      (service as unknown as { isRunning: boolean }).isRunning = true;
 
-      const tracksChain = createChainMock([
-        { id: 't1', title: 'Track 1', path: '/music/t1.mp3' },
-      ]);
+      const tracksChain = createChainMock([{ id: 't1', title: 'Track 1', path: '/music/t1.mp3' }]);
       mockDrizzle.db.select.mockReturnValue(tracksChain);
 
       const result = await service.startAnalysisQueue();
@@ -153,11 +194,11 @@ describe('DjAnalysisQueueService', () => {
       await service.startAnalysisQueueForTracks(tracks);
 
       expect(mockBullmq.addJob).toHaveBeenCalledTimes(2);
-      expect(mockBullmq.addJob).toHaveBeenCalledWith(
-        'dj-analysis-queue',
-        'analyze-track',
-        { trackId: 't1', trackTitle: 'Track 1', filePath: '/music/t1.mp3' },
-      );
+      expect(mockBullmq.addJob).toHaveBeenCalledWith('dj-analysis-queue', 'analyze-track', {
+        trackId: 't1',
+        trackTitle: 'Track 1',
+        filePath: '/music/t1.mp3',
+      });
     });
 
     it('should set isRunning and emit progress', async () => {
@@ -165,8 +206,8 @@ describe('DjAnalysisQueueService', () => {
         { id: 't1', title: 'Track 1', path: '/music/t1.mp3' },
       ]);
 
-      expect((service as any).isRunning).toBe(true);
-      expect((service as any).totalToProcess).toBe(1);
+      expect((service as unknown as { isRunning: boolean }).isRunning).toBe(true);
+      expect((service as unknown as { totalToProcess: number }).totalToProcess).toBe(1);
       expect(mockScannerGateway.emitDjProgress).toHaveBeenCalled();
     });
   });
@@ -177,11 +218,11 @@ describe('DjAnalysisQueueService', () => {
     it('should add a single job to the queue', async () => {
       await service.enqueueTrack({ id: 't1', title: 'Track 1', path: '/music/t1.mp3' });
 
-      expect(mockBullmq.addJob).toHaveBeenCalledWith(
-        'dj-analysis-queue',
-        'analyze-track',
-        { trackId: 't1', trackTitle: 'Track 1', filePath: '/music/t1.mp3' },
-      );
+      expect(mockBullmq.addJob).toHaveBeenCalledWith('dj-analysis-queue', 'analyze-track', {
+        trackId: 't1',
+        trackTitle: 'Track 1',
+        filePath: '/music/t1.mp3',
+      });
     });
   });
 
@@ -189,9 +230,9 @@ describe('DjAnalysisQueueService', () => {
 
   describe('stopQueue', () => {
     it('should set isRunning to false', async () => {
-      (service as any).isRunning = true;
+      (service as unknown as { isRunning: boolean }).isRunning = true;
       await service.stopQueue();
-      expect((service as any).isRunning).toBe(false);
+      expect((service as unknown as { isRunning: boolean }).isRunning).toBe(false);
     });
 
     it('should emit progress update', async () => {
@@ -238,18 +279,30 @@ describe('DjAnalysisQueueService', () => {
 
   describe('formatDuration', () => {
     it('should format seconds', () => {
-      expect((service as any).formatDuration(5000)).toBe('5s');
-      expect((service as any).formatDuration(45000)).toBe('45s');
+      expect(
+        (service as unknown as { formatDuration: (ms: number) => string }).formatDuration(5000)
+      ).toBe('5s');
+      expect(
+        (service as unknown as { formatDuration: (ms: number) => string }).formatDuration(45000)
+      ).toBe('45s');
     });
 
     it('should format minutes and seconds', () => {
-      expect((service as any).formatDuration(90000)).toBe('1m 30s');
-      expect((service as any).formatDuration(300000)).toBe('5m 0s');
+      expect(
+        (service as unknown as { formatDuration: (ms: number) => string }).formatDuration(90000)
+      ).toBe('1m 30s');
+      expect(
+        (service as unknown as { formatDuration: (ms: number) => string }).formatDuration(300000)
+      ).toBe('5m 0s');
     });
 
     it('should format hours and minutes', () => {
-      expect((service as any).formatDuration(3600000)).toBe('1h 0m');
-      expect((service as any).formatDuration(5400000)).toBe('1h 30m');
+      expect(
+        (service as unknown as { formatDuration: (ms: number) => string }).formatDuration(3600000)
+      ).toBe('1h 0m');
+      expect(
+        (service as unknown as { formatDuration: (ms: number) => string }).formatDuration(5400000)
+      ).toBe('1h 30m');
     });
   });
 
@@ -257,18 +310,26 @@ describe('DjAnalysisQueueService', () => {
 
   describe('updateAverageProcessingTime', () => {
     it('should compute rolling average', () => {
-      (service as any).updateAverageProcessingTime(1000);
-      expect((service as any).averageProcessingTime).toBe(1000);
+      const svc = service as unknown as {
+        updateAverageProcessingTime: (ms: number) => void;
+        averageProcessingTime: number;
+      };
+      svc.updateAverageProcessingTime(1000);
+      expect(svc.averageProcessingTime).toBe(1000);
 
-      (service as any).updateAverageProcessingTime(3000);
-      expect((service as any).averageProcessingTime).toBe(2000);
+      svc.updateAverageProcessingTime(3000);
+      expect(svc.averageProcessingTime).toBe(2000);
     });
 
     it('should keep only last 20 measurements', () => {
+      const svc = service as unknown as {
+        updateAverageProcessingTime: (ms: number) => void;
+        processingTimes: number[];
+      };
       for (let i = 0; i < 25; i++) {
-        (service as any).updateAverageProcessingTime(100);
+        svc.updateAverageProcessingTime(100);
       }
-      expect((service as any).processingTimes).toHaveLength(20);
+      expect(svc.processingTimes).toHaveLength(20);
     });
   });
 });

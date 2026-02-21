@@ -23,15 +23,11 @@ export class ExploreController {
   @ApiOperation({ summary: 'Get albums never played by the user' })
   @ApiOkResponse({ type: ExploreAlbumsResponseDto })
   async getUnplayedAlbums(
-    @Request() req: any,
-    @Query() query: ExploreQueryDto,
+    @Request() req: { user: { userId: string } },
+    @Query() query: ExploreQueryDto
   ): Promise<ExploreAlbumsResponseDto> {
     const { limit = 20, offset = 0 } = query;
-    const result = await this.exploreService.getUnplayedAlbums(
-      req.user.userId,
-      limit,
-      offset,
-    );
+    const result = await this.exploreService.getUnplayedAlbums(req.user.userId, limit, offset);
 
     return {
       ...result,
@@ -44,15 +40,15 @@ export class ExploreController {
   @ApiOperation({ summary: 'Get albums not played in recent months' })
   @ApiOkResponse({ type: ExploreAlbumsResponseDto })
   async getForgottenAlbums(
-    @Request() req: any,
-    @Query() query: ForgottenAlbumsQueryDto,
+    @Request() req: { user: { userId: string } },
+    @Query() query: ForgottenAlbumsQueryDto
   ): Promise<ExploreAlbumsResponseDto> {
     const { limit = 20, offset = 0, monthsAgo = 3 } = query;
     const result = await this.exploreService.getForgottenAlbums(
       req.user.userId,
       monthsAgo,
       limit,
-      offset,
+      offset
     );
 
     return {
@@ -66,14 +62,11 @@ export class ExploreController {
   @ApiOperation({ summary: 'Get lesser-played tracks from favorite artists' })
   @ApiOkResponse({ type: ExploreTracksResponseDto })
   async getHiddenGems(
-    @Request() req: any,
-    @Query() query: ExploreQueryDto,
+    @Request() req: { user: { userId: string } },
+    @Query() query: ExploreQueryDto
   ): Promise<ExploreTracksResponseDto> {
     const { limit = 30 } = query;
-    const tracks = await this.exploreService.getHiddenGems(
-      req.user.userId,
-      limit,
-    );
+    const tracks = await this.exploreService.getHiddenGems(req.user.userId, limit);
 
     return {
       tracks,
@@ -100,9 +93,7 @@ export class ExploreController {
   @Get('random/albums')
   @ApiOperation({ summary: 'Get multiple random albums for surprise section' })
   @ApiOkResponse({ type: RandomAlbumsResponseDto })
-  async getRandomAlbums(
-    @Query('count') count?: number,
-  ): Promise<RandomAlbumsResponseDto> {
+  async getRandomAlbums(@Query('count') count?: number): Promise<RandomAlbumsResponseDto> {
     const albums = await this.exploreService.getRandomAlbums(count ?? 6);
     return { albums };
   }

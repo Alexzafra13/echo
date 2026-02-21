@@ -39,7 +39,7 @@ export class SaveFavoriteStationUseCase {
     @Inject(RADIO_STATION_REPOSITORY)
     private readonly repository: IRadioStationRepository,
     @Inject(RADIO_BROWSER_API_CLIENT)
-    private readonly radioBrowserApi: IRadioBrowserApiClient,
+    private readonly radioBrowserApi: IRadioBrowserApiClient
   ) {}
 
   async execute(input: SaveFavoriteStationInput): Promise<RadioStation> {
@@ -47,10 +47,7 @@ export class SaveFavoriteStationUseCase {
 
     // Si no es custom y tiene UUID, verificar si ya existe en favoritos
     if (!isCustom && stationData.stationuuid) {
-      const existing = await this.repository.findByStationUuid(
-        userId,
-        stationData.stationuuid,
-      );
+      const existing = await this.repository.findByStationUuid(userId, stationData.stationuuid);
 
       if (existing) {
         // Ya está en favoritos, retornar la existente
@@ -81,7 +78,10 @@ export class SaveFavoriteStationUseCase {
           clickCount: stationData.clickcount,
           lastCheckOk: stationData.lastcheckok,
         })
-      : RadioStation.createFromAPI(userId, stationData as any);
+      : RadioStation.createFromAPI(
+          userId,
+          stationData as typeof stationData & { stationuuid: string }
+        );
 
     // Guardar en BD
     return this.repository.save(station);

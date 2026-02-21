@@ -7,6 +7,13 @@ import {
   GetUserInteractionsUseCase,
   GetItemSummaryUseCase,
 } from '../../domain/use-cases';
+import { RequestWithUser } from '@shared/types/request.types';
+import { SetRatingDto, GetUserInteractionsDto, ItemTypeDto } from '../dtos/interaction.dto';
+import {
+  RatingResponseDto,
+  UserInteractionDto,
+  ItemInteractionSummaryDto,
+} from '../dtos/interaction-response.dto';
 
 describe('UserInteractionsController', () => {
   let controller: UserInteractionsController;
@@ -54,12 +61,12 @@ describe('UserInteractionsController', () => {
         updatedAt: new Date('2025-01-01'),
       };
 
-      setRatingUseCase.execute.mockResolvedValue(mockResult as any);
+      setRatingUseCase.execute.mockResolvedValue(mockResult as unknown as RatingResponseDto);
 
       const dto = { itemId: 'track-1', itemType: 'track', rating: 5 };
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
 
-      const result = await controller.setRating(dto as any, req);
+      const result = await controller.setRating(dto as SetRatingDto, req);
 
       expect(setRatingUseCase.execute).toHaveBeenCalledWith('user-1', 'track-1', 'track', 5);
       expect(result.rating).toBe(5);
@@ -71,9 +78,9 @@ describe('UserInteractionsController', () => {
     it('should remove a rating for an item', async () => {
       removeRatingUseCase.execute.mockResolvedValue(undefined);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
 
-      await controller.removeRating('track-1', 'track' as any, req);
+      await controller.removeRating('track-1', 'track' as ItemTypeDto, req);
 
       expect(removeRatingUseCase.execute).toHaveBeenCalledWith('user-1', 'track-1', 'track');
     });
@@ -91,12 +98,14 @@ describe('UserInteractionsController', () => {
         },
       ];
 
-      getUserInteractionsUseCase.execute.mockResolvedValue(mockInteractions as any);
+      getUserInteractionsUseCase.execute.mockResolvedValue(
+        mockInteractions as unknown as UserInteractionDto[]
+      );
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const query = { itemType: 'track' };
 
-      const result = await controller.getUserInteractions(query as any, req);
+      const result = await controller.getUserInteractions(query as GetUserInteractionsDto, req);
 
       expect(getUserInteractionsUseCase.execute).toHaveBeenCalledWith('user-1', 'track');
       expect(result).toHaveLength(1);
@@ -106,10 +115,10 @@ describe('UserInteractionsController', () => {
     it('should return all interactions when no itemType filter', async () => {
       getUserInteractionsUseCase.execute.mockResolvedValue([]);
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const query = {};
 
-      const result = await controller.getUserInteractions(query as any, req);
+      const result = await controller.getUserInteractions(query as GetUserInteractionsDto, req);
 
       expect(getUserInteractionsUseCase.execute).toHaveBeenCalledWith('user-1', undefined);
       expect(result).toEqual([]);
@@ -126,11 +135,13 @@ describe('UserInteractionsController', () => {
         totalRatings: 10,
       };
 
-      getItemSummaryUseCase.execute.mockResolvedValue(mockSummary as any);
+      getItemSummaryUseCase.execute.mockResolvedValue(
+        mockSummary as unknown as ItemInteractionSummaryDto
+      );
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
 
-      const result = await controller.getItemSummary('track-1', 'track' as any, req);
+      const result = await controller.getItemSummary('track-1', 'track' as ItemTypeDto, req);
 
       expect(getItemSummaryUseCase.execute).toHaveBeenCalledWith('track-1', 'track', 'user-1');
       expect(result.averageRating).toBe(4.2);

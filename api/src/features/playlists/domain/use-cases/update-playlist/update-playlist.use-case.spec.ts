@@ -1,6 +1,7 @@
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { UpdatePlaylistUseCase } from './update-playlist.use-case';
 import { Playlist } from '../../entities';
+import { IPlaylistRepository } from '../../ports';
 
 describe('UpdatePlaylistUseCase', () => {
   let useCase: UpdatePlaylistUseCase;
@@ -34,7 +35,7 @@ describe('UpdatePlaylistUseCase', () => {
       update: jest.fn(),
     };
 
-    useCase = new UpdatePlaylistUseCase(mockPlaylistRepository as any);
+    useCase = new UpdatePlaylistUseCase(mockPlaylistRepository as unknown as IPlaylistRepository);
   });
 
   describe('execute', () => {
@@ -100,14 +101,14 @@ describe('UpdatePlaylistUseCase', () => {
           id: '',
           userId: 'user-123',
           name: 'New Name',
-        }),
+        })
       ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
           id: '',
           userId: 'user-123',
           name: 'New Name',
-        }),
+        })
       ).rejects.toThrow('Playlist ID is required');
     });
 
@@ -121,7 +122,7 @@ describe('UpdatePlaylistUseCase', () => {
           id: 'nonexistent',
           userId: 'user-123',
           name: 'New Name',
-        }),
+        })
       ).rejects.toThrow(NotFoundError);
     });
 
@@ -138,14 +139,14 @@ describe('UpdatePlaylistUseCase', () => {
           id: 'playlist-123',
           userId: 'user-123', // Different from owner
           name: 'New Name',
-        }),
+        })
       ).rejects.toThrow(ForbiddenError);
       await expect(
         useCase.execute({
           id: 'playlist-123',
           userId: 'user-123',
           name: 'New Name',
-        }),
+        })
       ).rejects.toThrow('You do not have permission to modify this playlist');
     });
 
@@ -160,14 +161,14 @@ describe('UpdatePlaylistUseCase', () => {
           id: 'playlist-123',
           userId: 'user-123',
           name: '',
-        }),
+        })
       ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
           id: 'playlist-123',
           userId: 'user-123',
           name: '',
-        }),
+        })
       ).rejects.toThrow('Playlist name cannot be empty');
     });
 
@@ -182,7 +183,7 @@ describe('UpdatePlaylistUseCase', () => {
           id: 'playlist-123',
           userId: 'user-123',
           name: '   ',
-        }),
+        })
       ).rejects.toThrow(ValidationError);
     });
 
@@ -242,7 +243,7 @@ describe('UpdatePlaylistUseCase', () => {
           id: 'playlist-123',
           userId: 'user-123',
           name: 'New Name',
-        }),
+        })
       ).rejects.toThrow(NotFoundError);
     });
   });
