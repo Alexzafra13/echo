@@ -36,7 +36,7 @@ export function getFfmpegPath(): string {
  */
 export function getFfprobePath(): string {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
     if (ffprobeInstaller?.path && fs.existsSync(ffprobeInstaller.path)) {
       if (ensureExecutable(ffprobeInstaller.path)) return ffprobeInstaller.path;

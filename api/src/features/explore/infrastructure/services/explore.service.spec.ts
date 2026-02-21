@@ -2,16 +2,30 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ExploreService } from './explore.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 
+/** Chainable mock that mimics a Drizzle query builder */
+interface DrizzleChainMock {
+  select: jest.Mock;
+  from: jest.Mock;
+  leftJoin: jest.Mock;
+  innerJoin: jest.Mock;
+  where: jest.Mock;
+  orderBy: jest.Mock;
+  groupBy: jest.Mock;
+  limit: jest.Mock;
+  offset: jest.Mock;
+  then: (resolve: (value: unknown) => unknown) => Promise<unknown>;
+}
+
 describe('ExploreService', () => {
   let service: ExploreService;
-  let mockDrizzle: { db: any };
+  let mockDrizzle: { db: { select: jest.Mock } };
 
   // Helper to create a query chain that returns specific results for main and count queries
-  const setupQueryMocks = (mainResult: any[], countResult: number = 0) => {
+  const setupQueryMocks = (mainResult: Record<string, unknown>[], countResult: number = 0) => {
     let queryCount = 0;
 
-    const createChain = () => {
-      const chain: any = {};
+    const createChain = (): DrizzleChainMock => {
+      const chain = {} as DrizzleChainMock;
       chain.select = jest.fn().mockReturnValue(chain);
       chain.from = jest.fn().mockReturnValue(chain);
       chain.leftJoin = jest.fn().mockReturnValue(chain);
@@ -23,7 +37,7 @@ describe('ExploreService', () => {
       chain.offset = jest.fn().mockReturnValue(chain);
 
       // Make chain thenable (async iterable)
-      chain.then = (resolve: any) => {
+      chain.then = (resolve: (value: unknown) => unknown) => {
         queryCount++;
         // Odd queries (1, 3, 5...) are main queries, even (2, 4, 6...) are count queries
         if (queryCount % 2 === 1) {
@@ -44,7 +58,7 @@ describe('ExploreService', () => {
   };
 
   beforeEach(async () => {
-    mockDrizzle = { db: {} };
+    mockDrizzle = { db: { select: jest.fn() } };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -96,7 +110,7 @@ describe('ExploreService', () => {
       let capturedLimit: number | undefined;
       let capturedOffset: number | undefined;
 
-      const chain: any = {};
+      const chain = {} as DrizzleChainMock;
       chain.select = jest.fn().mockReturnValue(chain);
       chain.from = jest.fn().mockReturnValue(chain);
       chain.leftJoin = jest.fn().mockReturnValue(chain);
@@ -110,7 +124,7 @@ describe('ExploreService', () => {
         capturedOffset = o;
         return chain;
       });
-      chain.then = (resolve: any) => Promise.resolve([]).then(resolve);
+      chain.then = (resolve: (value: unknown) => unknown) => Promise.resolve([]).then(resolve);
 
       mockDrizzle.db = { select: jest.fn().mockReturnValue(chain) };
 
@@ -169,14 +183,14 @@ describe('ExploreService', () => {
   describe('getHiddenGems', () => {
     it('should return empty array when user has no top artists', async () => {
       // First query returns empty array (no top artists)
-      const chain: any = {};
+      const chain = {} as DrizzleChainMock;
       chain.select = jest.fn().mockReturnValue(chain);
       chain.from = jest.fn().mockReturnValue(chain);
       chain.where = jest.fn().mockReturnValue(chain);
       chain.groupBy = jest.fn().mockReturnValue(chain);
       chain.orderBy = jest.fn().mockReturnValue(chain);
       chain.limit = jest.fn().mockReturnValue(chain);
-      chain.then = (resolve: any) => Promise.resolve([]).then(resolve);
+      chain.then = (resolve: (value: unknown) => unknown) => Promise.resolve([]).then(resolve);
 
       mockDrizzle.db = { select: jest.fn().mockReturnValue(chain) };
 
@@ -207,8 +221,8 @@ describe('ExploreService', () => {
 
       let queryNumber = 0;
 
-      const createChain = () => {
-        const chain: any = {};
+      const createChain = (): DrizzleChainMock => {
+        const chain = {} as DrizzleChainMock;
         chain.select = jest.fn().mockReturnValue(chain);
         chain.from = jest.fn().mockReturnValue(chain);
         chain.leftJoin = jest.fn().mockReturnValue(chain);
@@ -216,7 +230,7 @@ describe('ExploreService', () => {
         chain.groupBy = jest.fn().mockReturnValue(chain);
         chain.orderBy = jest.fn().mockReturnValue(chain);
         chain.limit = jest.fn().mockReturnValue(chain);
-        chain.then = (resolve: any) => {
+        chain.then = (resolve: (value: unknown) => unknown) => {
           queryNumber++;
           if (queryNumber === 1) {
             return Promise.resolve(mockTopArtists).then(resolve);
@@ -241,8 +255,8 @@ describe('ExploreService', () => {
       let capturedLimit: number | undefined;
       let queryNumber = 0;
 
-      const createChain = () => {
-        const chain: any = {};
+      const createChain = (): DrizzleChainMock => {
+        const chain = {} as DrizzleChainMock;
         chain.select = jest.fn().mockReturnValue(chain);
         chain.from = jest.fn().mockReturnValue(chain);
         chain.leftJoin = jest.fn().mockReturnValue(chain);
@@ -253,7 +267,7 @@ describe('ExploreService', () => {
           if (queryNumber === 1) capturedLimit = l;
           return chain;
         });
-        chain.then = (resolve: any) => {
+        chain.then = (resolve: (value: unknown) => unknown) => {
           queryNumber++;
           if (queryNumber === 1) {
             return Promise.resolve(mockTopArtists).then(resolve);
@@ -273,13 +287,13 @@ describe('ExploreService', () => {
 
   describe('getRandomAlbum', () => {
     it('should return null when no albums exist', async () => {
-      const chain: any = {};
+      const chain = {} as DrizzleChainMock;
       chain.select = jest.fn().mockReturnValue(chain);
       chain.from = jest.fn().mockReturnValue(chain);
       chain.leftJoin = jest.fn().mockReturnValue(chain);
       chain.orderBy = jest.fn().mockReturnValue(chain);
       chain.limit = jest.fn().mockReturnValue(chain);
-      chain.then = (resolve: any) => Promise.resolve([]).then(resolve);
+      chain.then = (resolve: (value: unknown) => unknown) => Promise.resolve([]).then(resolve);
 
       mockDrizzle.db = { select: jest.fn().mockReturnValue(chain) };
 
@@ -300,13 +314,14 @@ describe('ExploreService', () => {
         duration: 3000,
       };
 
-      const chain: any = {};
+      const chain = {} as DrizzleChainMock;
       chain.select = jest.fn().mockReturnValue(chain);
       chain.from = jest.fn().mockReturnValue(chain);
       chain.leftJoin = jest.fn().mockReturnValue(chain);
       chain.orderBy = jest.fn().mockReturnValue(chain);
       chain.limit = jest.fn().mockReturnValue(chain);
-      chain.then = (resolve: any) => Promise.resolve([mockAlbum]).then(resolve);
+      chain.then = (resolve: (value: unknown) => unknown) =>
+        Promise.resolve([mockAlbum]).then(resolve);
 
       mockDrizzle.db = { select: jest.fn().mockReturnValue(chain) };
 
@@ -318,13 +333,13 @@ describe('ExploreService', () => {
 
   describe('getRandomArtist', () => {
     it('should return null when no artists with songs exist', async () => {
-      const chain: any = {};
+      const chain = {} as DrizzleChainMock;
       chain.select = jest.fn().mockReturnValue(chain);
       chain.from = jest.fn().mockReturnValue(chain);
       chain.where = jest.fn().mockReturnValue(chain);
       chain.orderBy = jest.fn().mockReturnValue(chain);
       chain.limit = jest.fn().mockReturnValue(chain);
-      chain.then = (resolve: any) => Promise.resolve([]).then(resolve);
+      chain.then = (resolve: (value: unknown) => unknown) => Promise.resolve([]).then(resolve);
 
       mockDrizzle.db = { select: jest.fn().mockReturnValue(chain) };
 
@@ -342,13 +357,14 @@ describe('ExploreService', () => {
         songCount: 25,
       };
 
-      const chain: any = {};
+      const chain = {} as DrizzleChainMock;
       chain.select = jest.fn().mockReturnValue(chain);
       chain.from = jest.fn().mockReturnValue(chain);
       chain.where = jest.fn().mockReturnValue(chain);
       chain.orderBy = jest.fn().mockReturnValue(chain);
       chain.limit = jest.fn().mockReturnValue(chain);
-      chain.then = (resolve: any) => Promise.resolve([mockArtist]).then(resolve);
+      chain.then = (resolve: (value: unknown) => unknown) =>
+        Promise.resolve([mockArtist]).then(resolve);
 
       mockDrizzle.db = { select: jest.fn().mockReturnValue(chain) };
 
@@ -360,13 +376,13 @@ describe('ExploreService', () => {
 
   describe('getRandomAlbums', () => {
     it('should return empty array when no albums exist', async () => {
-      const chain: any = {};
+      const chain = {} as DrizzleChainMock;
       chain.select = jest.fn().mockReturnValue(chain);
       chain.from = jest.fn().mockReturnValue(chain);
       chain.leftJoin = jest.fn().mockReturnValue(chain);
       chain.orderBy = jest.fn().mockReturnValue(chain);
       chain.limit = jest.fn().mockReturnValue(chain);
-      chain.then = (resolve: any) => Promise.resolve([]).then(resolve);
+      chain.then = (resolve: (value: unknown) => unknown) => Promise.resolve([]).then(resolve);
 
       mockDrizzle.db = { select: jest.fn().mockReturnValue(chain) };
 
@@ -384,7 +400,7 @@ describe('ExploreService', () => {
 
       let capturedLimit: number | undefined;
 
-      const chain: any = {};
+      const chain = {} as DrizzleChainMock;
       chain.select = jest.fn().mockReturnValue(chain);
       chain.from = jest.fn().mockReturnValue(chain);
       chain.leftJoin = jest.fn().mockReturnValue(chain);
@@ -393,7 +409,8 @@ describe('ExploreService', () => {
         capturedLimit = l;
         return chain;
       });
-      chain.then = (resolve: any) => Promise.resolve(mockAlbums).then(resolve);
+      chain.then = (resolve: (value: unknown) => unknown) =>
+        Promise.resolve(mockAlbums).then(resolve);
 
       mockDrizzle.db = { select: jest.fn().mockReturnValue(chain) };
 
@@ -406,7 +423,7 @@ describe('ExploreService', () => {
     it('should use default count of 6', async () => {
       let capturedLimit: number | undefined;
 
-      const chain: any = {};
+      const chain = {} as DrizzleChainMock;
       chain.select = jest.fn().mockReturnValue(chain);
       chain.from = jest.fn().mockReturnValue(chain);
       chain.leftJoin = jest.fn().mockReturnValue(chain);
@@ -415,7 +432,7 @@ describe('ExploreService', () => {
         capturedLimit = l;
         return chain;
       });
-      chain.then = (resolve: any) => Promise.resolve([]).then(resolve);
+      chain.then = (resolve: (value: unknown) => unknown) => Promise.resolve([]).then(resolve);
 
       mockDrizzle.db = { select: jest.fn().mockReturnValue(chain) };
 

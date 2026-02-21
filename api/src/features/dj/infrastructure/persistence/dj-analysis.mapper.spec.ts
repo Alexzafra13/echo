@@ -1,21 +1,6 @@
 import { DjAnalysisMapper } from './dj-analysis.mapper';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
-
-// Minimal type matching the DB schema for tests
-interface DjAnalysisDb {
-  id: string;
-  trackId: string;
-  bpm: number | null;
-  key: string | null;
-  camelotKey: string | null;
-  energy: number | null;
-  danceability: number | null;
-  status: string;
-  analysisError: string | null;
-  analyzedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { DjAnalysis as DjAnalysisDb } from '../../../../infrastructure/database/schema';
 
 describe('DjAnalysisMapper', () => {
   const now = new Date('2025-01-01T00:00:00Z');
@@ -27,6 +12,7 @@ describe('DjAnalysisMapper', () => {
     key: 'Am',
     camelotKey: '8A',
     energy: 0.75,
+    rawEnergy: 0.72,
     danceability: 0.65,
     status: 'completed',
     analysisError: null,
@@ -42,6 +28,7 @@ describe('DjAnalysisMapper', () => {
     key: null,
     camelotKey: null,
     energy: null,
+    rawEnergy: null,
     danceability: null,
     status: 'pending',
     analysisError: null,
@@ -54,7 +41,7 @@ describe('DjAnalysisMapper', () => {
 
   describe('toDomain', () => {
     it('should map a complete DB record to domain entity', () => {
-      const entity = DjAnalysisMapper.toDomain(fullDbRecord as any);
+      const entity = DjAnalysisMapper.toDomain(fullDbRecord);
 
       expect(entity.id).toBe('analysis-id-1');
       expect(entity.trackId).toBe('track-123');
@@ -68,7 +55,7 @@ describe('DjAnalysisMapper', () => {
     });
 
     it('should map null DB fields to undefined domain fields', () => {
-      const entity = DjAnalysisMapper.toDomain(nullableDbRecord as any);
+      const entity = DjAnalysisMapper.toDomain(nullableDbRecord);
 
       expect(entity.bpm).toBeUndefined();
       expect(entity.key).toBeUndefined();
@@ -80,10 +67,10 @@ describe('DjAnalysisMapper', () => {
     });
 
     it('should default invalid status to pending', () => {
-      const invalidStatusRecord = { ...fullDbRecord, status: 'garbage' };
+      const invalidStatusRecord = { ...fullDbRecord, status: 'garbage' } as unknown as DjAnalysisDb;
       const spy = jest.spyOn(console, 'warn').mockImplementation();
 
-      const entity = DjAnalysisMapper.toDomain(invalidStatusRecord as any);
+      const entity = DjAnalysisMapper.toDomain(invalidStatusRecord);
       expect(entity.status).toBe('pending');
 
       spy.mockRestore();
@@ -91,8 +78,8 @@ describe('DjAnalysisMapper', () => {
 
     it('should preserve valid statuses', () => {
       for (const status of ['pending', 'analyzing', 'completed', 'failed']) {
-        const record = { ...fullDbRecord, status };
-        const entity = DjAnalysisMapper.toDomain(record as any);
+        const record = { ...fullDbRecord, status } as DjAnalysisDb;
+        const entity = DjAnalysisMapper.toDomain(record);
         expect(entity.status).toBe(status);
       }
     });
@@ -102,7 +89,7 @@ describe('DjAnalysisMapper', () => {
 
   describe('toDomainArray', () => {
     it('should map an array of DB records', () => {
-      const entities = DjAnalysisMapper.toDomainArray([fullDbRecord, nullableDbRecord] as any[]);
+      const entities = DjAnalysisMapper.toDomainArray([fullDbRecord, nullableDbRecord]);
       expect(entities).toHaveLength(2);
       expect(entities[0].id).toBe('analysis-id-1');
       expect(entities[1].id).toBe('analysis-id-2');
@@ -168,7 +155,7 @@ describe('DjAnalysisMapper', () => {
 
   describe('round-trip', () => {
     it('should preserve data through toDomain → toPersistence cycle', () => {
-      const entity = DjAnalysisMapper.toDomain(fullDbRecord as any);
+      const entity = DjAnalysisMapper.toDomain(fullDbRecord);
       const backToDb = DjAnalysisMapper.toPersistence(entity);
 
       expect(backToDb.id).toBe(fullDbRecord.id);

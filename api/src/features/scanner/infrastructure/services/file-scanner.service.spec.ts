@@ -1,5 +1,7 @@
 import { FileScannerService } from './file-scanner.service';
+import { PinoLogger } from 'nestjs-pino';
 import * as fs from 'fs/promises';
+import type { Dirent, Stats } from 'fs';
 import * as path from 'path';
 
 jest.mock('fs/promises');
@@ -8,7 +10,12 @@ const mockFs = fs as jest.Mocked<typeof fs>;
 
 describe('FileScannerService', () => {
   let service: FileScannerService;
-  let mockLogger: any;
+  let mockLogger: {
+    log: jest.Mock;
+    error: jest.Mock;
+    warn: jest.Mock;
+    debug: jest.Mock;
+  };
 
   // Helper to create cross-platform paths
   const p = (...segments: string[]) => path.join(...segments);
@@ -23,12 +30,12 @@ describe('FileScannerService', () => {
       debug: jest.fn(),
     };
 
-    service = new FileScannerService(mockLogger);
+    service = new FileScannerService(mockLogger as unknown as PinoLogger);
   });
 
   describe('scanDirectory', () => {
     it('should return empty array for empty directory', async () => {
-      mockFs.readdir.mockResolvedValue([] as any);
+      mockFs.readdir.mockResolvedValue([] as unknown as Dirent[]);
 
       const result = await service.scanDirectory('/music');
 
@@ -39,7 +46,7 @@ describe('FileScannerService', () => {
       mockFs.readdir.mockResolvedValue([
         { name: 'song.mp3', isDirectory: () => false, isFile: () => true },
         { name: 'document.txt', isDirectory: () => false, isFile: () => true },
-      ] as any);
+      ] as unknown as Dirent[]);
 
       const result = await service.scanDirectory('/music', false);
 
@@ -59,7 +66,7 @@ describe('FileScannerService', () => {
         { name: 'track.ape', isDirectory: () => false, isFile: () => true },
       ];
 
-      mockFs.readdir.mockResolvedValue(audioFiles as any);
+      mockFs.readdir.mockResolvedValue(audioFiles as unknown as Dirent[]);
 
       const result = await service.scanDirectory('/music', false);
 
@@ -74,10 +81,10 @@ describe('FileScannerService', () => {
         .mockResolvedValueOnce([
           { name: 'song.mp3', isDirectory: () => false, isFile: () => true },
           { name: 'subdir', isDirectory: () => true, isFile: () => false },
-        ] as any)
+        ] as unknown as Dirent[])
         .mockResolvedValueOnce([
           { name: 'nested.flac', isDirectory: () => false, isFile: () => true },
-        ] as any);
+        ] as unknown as Dirent[]);
 
       const result = await service.scanDirectory('/music');
 
@@ -89,7 +96,7 @@ describe('FileScannerService', () => {
       mockFs.readdir.mockResolvedValue([
         { name: 'song.mp3', isDirectory: () => false, isFile: () => true },
         { name: 'subdir', isDirectory: () => true, isFile: () => false },
-      ] as any);
+      ] as unknown as Dirent[]);
 
       const result = await service.scanDirectory('/music', false);
 
@@ -103,7 +110,7 @@ describe('FileScannerService', () => {
         { name: 'document.pdf', isDirectory: () => false, isFile: () => true },
         { name: 'readme.txt', isDirectory: () => false, isFile: () => true },
         { name: '.DS_Store', isDirectory: () => false, isFile: () => true },
-      ] as any);
+      ] as unknown as Dirent[]);
 
       const result = await service.scanDirectory('/music', false);
 
@@ -114,7 +121,7 @@ describe('FileScannerService', () => {
       mockFs.readdir.mockResolvedValue([
         { name: 'SONG.MP3', isDirectory: () => false, isFile: () => true },
         { name: 'Track.FLAC', isDirectory: () => false, isFile: () => true },
-      ] as any);
+      ] as unknown as Dirent[]);
 
       const result = await service.scanDirectory('/music', false);
 
@@ -137,11 +144,11 @@ describe('FileScannerService', () => {
           { name: 'song.mp3', isDirectory: () => false, isFile: () => true },
           { name: 'protected', isDirectory: () => true, isFile: () => false },
           { name: 'accessible', isDirectory: () => true, isFile: () => false },
-        ] as any)
+        ] as unknown as Dirent[])
         .mockRejectedValueOnce(new Error('EACCES: permission denied'))
         .mockResolvedValueOnce([
           { name: 'other.flac', isDirectory: () => false, isFile: () => true },
-        ] as any);
+        ] as unknown as Dirent[]);
 
       const result = await service.scanDirectory('/music');
 
@@ -154,16 +161,16 @@ describe('FileScannerService', () => {
       mockFs.readdir
         .mockResolvedValueOnce([
           { name: 'level1', isDirectory: () => true, isFile: () => false },
-        ] as any)
+        ] as unknown as Dirent[])
         .mockResolvedValueOnce([
           { name: 'level2', isDirectory: () => true, isFile: () => false },
-        ] as any)
+        ] as unknown as Dirent[])
         .mockResolvedValueOnce([
           { name: 'level3', isDirectory: () => true, isFile: () => false },
-        ] as any)
+        ] as unknown as Dirent[])
         .mockResolvedValueOnce([
           { name: 'deep.mp3', isDirectory: () => false, isFile: () => true },
-        ] as any);
+        ] as unknown as Dirent[]);
 
       const result = await service.scanDirectory('/music');
 
@@ -219,7 +226,7 @@ describe('FileScannerService', () => {
         isFile: () => true,
         isDirectory: () => false,
       };
-      mockFs.stat.mockResolvedValue(mockStats as any);
+      mockFs.stat.mockResolvedValue(mockStats as unknown as Stats);
 
       const result = await service.getFileStats('/music/song.mp3');
 

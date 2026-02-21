@@ -19,7 +19,7 @@ describe('RemoveFriendshipUseCase', () => {
     mockRepo = {
       getFriendshipById: jest.fn(),
       removeFriendship: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<ISocialRepository>;
     useCase = new RemoveFriendshipUseCase(mockRepo);
   });
 

@@ -54,14 +54,17 @@ describe('EssentiaAnalyzerService', () => {
     mockWorkers = [];
 
     // Restore os mock defaults (other tests may have changed them)
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const os = require('os');
     os.cpus.mockReturnValue(new Array(4).fill({ model: 'test' }));
     os.totalmem.mockReturnValue(8 * 1024 * 1024 * 1024);
 
     // Restore fs mock default
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const fs = require('fs');
     fs.existsSync.mockReturnValue(true);
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     forkMock = require('child_process').fork;
     forkMock.mockImplementation(() => {
       const worker = createMockWorker();
@@ -91,6 +94,7 @@ describe('EssentiaAnalyzerService', () => {
     });
 
     it('should cap at 12 workers', () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const os = require('os');
       os.cpus.mockReturnValue(new Array(32).fill({ model: 'test' }));
       os.totalmem.mockReturnValue(64 * 1024 * 1024 * 1024);
@@ -99,6 +103,7 @@ describe('EssentiaAnalyzerService', () => {
     });
 
     it('should return minimum of 1 worker', () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const os = require('os');
       os.cpus.mockReturnValue([{ model: 'test' }]); // 1 core
       os.totalmem.mockReturnValue(4 * 1024 * 1024 * 1024);
@@ -141,6 +146,7 @@ describe('EssentiaAnalyzerService', () => {
     });
 
     it('should return false when worker file does not exist', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const fs = require('fs');
       fs.existsSync.mockReturnValue(false);
 
@@ -177,7 +183,9 @@ describe('EssentiaAnalyzerService', () => {
         mockWorkers.push(worker);
         if (callCount === 1) {
           // First worker fails on next tick
-          process.nextTick(() => worker.emit('message', { type: 'init_error', error: 'WASM failed' }));
+          process.nextTick(() =>
+            worker.emit('message', { type: 'init_error', error: 'WASM failed' })
+          );
         } else {
           // Other workers succeed
           process.nextTick(() => worker.emit('message', { type: 'ready' }));
@@ -240,15 +248,16 @@ describe('EssentiaAnalyzerService', () => {
       });
 
       // Mock execFile for FFmpeg fallback (ffprobe returns audio info, ffmpeg returns volume)
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { execFile } = require('child_process');
       execFile.mockImplementation(
-        (cmd: string, args: string[], opts: any, cb: Function) => {
+        (cmd: string, args: string[], opts: any, cb: (...args: unknown[]) => unknown) => {
           if (cmd.includes('ffprobe')) {
             cb(null, { stdout: JSON.stringify({ format: { duration: '180' }, streams: [] }) });
           } else {
             cb(null, { stdout: '', stderr: 'mean_volume: -14.0 dB' });
           }
-        },
+        }
       );
 
       const result = await service.analyze('/path/to/track.mp3');
@@ -283,7 +292,7 @@ describe('EssentiaAnalyzerService', () => {
 
       // Send multiple concurrent analyses
       const promises = Array.from({ length: poolSize }, (_, i) =>
-        service.analyze(`/path/track-${i}.mp3`),
+        service.analyze(`/path/track-${i}.mp3`)
       );
       const results = await Promise.all(promises);
 

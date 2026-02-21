@@ -44,11 +44,11 @@ describe('GetPlaylistUseCase', () => {
   beforeEach(() => {
     mockPlaylistRepo = {
       findById: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<IPlaylistRepository>;
 
     mockUserRepo = {
       findById: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<IUserRepository>;
 
     useCase = new GetPlaylistUseCase(mockPlaylistRepo, mockUserRepo);
   });
@@ -194,7 +194,7 @@ describe('GetPlaylistUseCase', () => {
         useCase.execute({
           id: 'private-playlist',
           requesterId: 'other-user', // Different from ownerId
-        }),
+        })
       ).rejects.toThrow(ForbiddenError);
     });
 
@@ -217,7 +217,7 @@ describe('GetPlaylistUseCase', () => {
         useCase.execute({
           id: 'private-playlist',
           // No requesterId
-        }),
+        })
       ).rejects.toThrow(ForbiddenError);
     });
   });

@@ -6,9 +6,23 @@ import {
   GetScanStatusUseCase,
   GetScansHistoryUseCase,
 } from '../../domain/use-cases';
-import { LufsAnalysisQueueService } from '../../infrastructure/services/lufs-analysis-queue.service';
+import {
+  LufsAnalysisQueueService,
+  LufsQueueStats,
+} from '../../infrastructure/services/lufs-analysis-queue.service';
 import { DjAnalysisQueueService } from '@features/dj/infrastructure/services/dj-analysis-queue.service';
-import { LibraryCleanupService } from '../../infrastructure/services/scanning/library-cleanup.service';
+import {
+  LibraryCleanupService,
+  TrackMissingResult,
+  PurgeMode,
+} from '../../infrastructure/services/scanning/library-cleanup.service';
+import {
+  StartScanRequestDto,
+  StartScanResponseDto,
+  ScanStatusResponseDto,
+  ScansHistoryQueryDto,
+  ScansHistoryResponseDto,
+} from '../dtos';
 
 describe('ScannerController', () => {
   let controller: ScannerController;
@@ -70,10 +84,10 @@ describe('ScannerController', () => {
         status: 'running',
         message: 'Scan started',
       };
-      startScanUseCase.execute.mockResolvedValue(mockResult as any);
+      startScanUseCase.execute.mockResolvedValue(mockResult as unknown as StartScanResponseDto);
 
       const dto = { path: '/music', recursive: true, pruneDeleted: false };
-      const result = await controller.startScan(dto as any);
+      const result = await controller.startScan(dto as StartScanRequestDto);
 
       expect(startScanUseCase.execute).toHaveBeenCalledWith({
         path: '/music',
@@ -93,7 +107,7 @@ describe('ScannerController', () => {
         startedAt: new Date('2025-01-01'),
         concurrency: 4,
       };
-      lufsQueueService.getQueueStats.mockResolvedValue(mockStats as any);
+      lufsQueueService.getQueueStats.mockResolvedValue(mockStats as unknown as LufsQueueStats);
 
       const result = await controller.getLufsStatus();
 
@@ -112,7 +126,9 @@ describe('ScannerController', () => {
         startedAt: null,
         concurrency: 2,
       };
-      djAnalysisQueue.getQueueStats.mockResolvedValue(mockStats as any);
+      djAnalysisQueue.getQueueStats.mockResolvedValue(
+        mockStats as unknown as Awaited<ReturnType<DjAnalysisQueueService['getQueueStats']>>
+      );
 
       const result = await controller.getDjStatus();
 
@@ -129,7 +145,9 @@ describe('ScannerController', () => {
         tracksAdded: 150,
         tracksUpdated: 10,
       };
-      getScanStatusUseCase.execute.mockResolvedValue(mockStatus as any);
+      getScanStatusUseCase.execute.mockResolvedValue(
+        mockStatus as unknown as ScanStatusResponseDto
+      );
 
       const result = await controller.getScanStatus('scan-1');
 
@@ -146,10 +164,12 @@ describe('ScannerController', () => {
         page: 1,
         limit: 10,
       };
-      getScansHistoryUseCase.execute.mockResolvedValue(mockHistory as any);
+      getScansHistoryUseCase.execute.mockResolvedValue(
+        mockHistory as unknown as ScansHistoryResponseDto
+      );
 
       const query = { page: 1, limit: 10 };
-      const result = await controller.getScansHistory(query as any);
+      const result = await controller.getScansHistory(query as ScansHistoryQueryDto);
 
       expect(getScansHistoryUseCase.execute).toHaveBeenCalledWith({ page: 1, limit: 10 });
       expect(result).toEqual(mockHistory);
@@ -158,11 +178,11 @@ describe('ScannerController', () => {
 
   describe('getMissingFiles', () => {
     it('should return missing files list with count and purge mode', async () => {
-      const mockTracks = [
-        { id: 'track-1', title: 'Missing Song', path: '/music/missing.mp3' },
-      ];
-      libraryCleanup.getMissingTracks.mockResolvedValue(mockTracks as any);
-      libraryCleanup.getPurgeMode.mockResolvedValue('never' as any);
+      const mockTracks = [{ id: 'track-1', title: 'Missing Song', path: '/music/missing.mp3' }];
+      libraryCleanup.getMissingTracks.mockResolvedValue(
+        mockTracks as unknown as Awaited<ReturnType<LibraryCleanupService['getMissingTracks']>>
+      );
+      libraryCleanup.getPurgeMode.mockResolvedValue('never' as PurgeMode);
 
       const result = await controller.getMissingFiles();
 
@@ -200,7 +220,7 @@ describe('ScannerController', () => {
         trackDeleted: true,
         albumDeleted: false,
         artistDeleted: false,
-      } as any);
+      } as unknown as TrackMissingResult);
 
       const result = await controller.deleteMissingTrack('track-1');
 

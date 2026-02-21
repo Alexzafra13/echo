@@ -11,37 +11,39 @@ describe('AddTrackToPlaylistUseCase', () => {
   let trackRepository: jest.Mocked<ITrackRepository>;
 
   // Helper functions to create fresh instances for each test
-  const createMockPlaylist = () => Playlist.fromPrimitives({
-    id: 'playlist-123',
-    name: 'Test Playlist',
-    description: undefined,
-    coverImageUrl: undefined,
-    duration: 180,
-    size: Number(1000000),
-    ownerId: 'user-123',
-    public: false,
-    songCount: 1,
-    path: undefined,
-    sync: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
+  const createMockPlaylist = () =>
+    Playlist.fromPrimitives({
+      id: 'playlist-123',
+      name: 'Test Playlist',
+      description: undefined,
+      coverImageUrl: undefined,
+      duration: 180,
+      size: Number(1000000),
+      ownerId: 'user-123',
+      public: false,
+      songCount: 1,
+      path: undefined,
+      sync: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
-  const createMockTrack = () => Track.reconstruct({
-    id: 'track-123',
-    title: 'Test Track',
-    duration: 200,
-    size: Number(2000000),
-    trackNumber: 1,
-    discNumber: 1,
-    path: '/music/test.mp3',
-    year: 2024,
-    artistId: 'artist-123',
-    albumId: 'album-123',
-    compilation: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
+  const createMockTrack = () =>
+    Track.reconstruct({
+      id: 'track-123',
+      title: 'Test Track',
+      duration: 200,
+      size: Number(2000000),
+      trackNumber: 1,
+      discNumber: 1,
+      path: '/music/test.mp3',
+      year: 2024,
+      artistId: 'artist-123',
+      albumId: 'album-123',
+      compilation: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
   beforeEach(() => {
     playlistRepository = {
@@ -57,7 +59,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       getPlaylistTracks: jest.fn(),
       reorderTracks: jest.fn(),
       isTrackInPlaylist: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<IPlaylistRepository>;
 
     trackRepository = {
       findById: jest.fn(),
@@ -68,7 +70,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<ITrackRepository>;
 
     useCase = new AddTrackToPlaylistUseCase(playlistRepository, trackRepository);
   });
@@ -106,8 +108,14 @@ describe('AddTrackToPlaylistUseCase', () => {
       // Assert
       expect(playlistRepository.findById).toHaveBeenCalledWith('playlist-123');
       expect(trackRepository.findById).toHaveBeenCalledWith('track-123');
-      expect(playlistRepository.isTrackInPlaylist).toHaveBeenCalledWith('playlist-123', 'track-123');
-      expect(playlistRepository.addTrackWithAutoOrder).toHaveBeenCalledWith('playlist-123', 'track-123');
+      expect(playlistRepository.isTrackInPlaylist).toHaveBeenCalledWith(
+        'playlist-123',
+        'track-123'
+      );
+      expect(playlistRepository.addTrackWithAutoOrder).toHaveBeenCalledWith(
+        'playlist-123',
+        'track-123'
+      );
       expect(playlistRepository.update).toHaveBeenCalledTimes(1);
       expect(result.playlistId).toBe('playlist-123');
       expect(result.trackId).toBe('track-123');
@@ -140,7 +148,10 @@ describe('AddTrackToPlaylistUseCase', () => {
       await useCase.execute(input);
 
       // Assert
-      expect(playlistRepository.addTrackWithAutoOrder).toHaveBeenCalledWith('playlist-123', 'track-123');
+      expect(playlistRepository.addTrackWithAutoOrder).toHaveBeenCalledWith(
+        'playlist-123',
+        'track-123'
+      );
     });
 
     it('should throw error if playlistId is empty', async () => {
@@ -182,7 +193,9 @@ describe('AddTrackToPlaylistUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(NotFoundError);
-      await expect(useCase.execute(input)).rejects.toThrow('Playlist with id non-existent not found');
+      await expect(useCase.execute(input)).rejects.toThrow(
+        'Playlist with id non-existent not found'
+      );
       expect(trackRepository.findById).not.toHaveBeenCalled();
     });
 
@@ -217,9 +230,7 @@ describe('AddTrackToPlaylistUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(ConflictError);
-      await expect(useCase.execute(input)).rejects.toThrow(
-        'Esta canción ya está en la playlist',
-      );
+      await expect(useCase.execute(input)).rejects.toThrow('Esta canción ya está en la playlist');
       expect(playlistRepository.addTrack).not.toHaveBeenCalled();
     });
 

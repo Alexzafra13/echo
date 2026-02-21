@@ -117,6 +117,7 @@ describe('Security E2E', () => {
       });
 
       it('debería rechazar token de usuario desactivado', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { eq } = require('drizzle-orm');
         // Crear y loguear usuario
         const { accessToken, user } = await createUserAndLogin(drizzle, app);

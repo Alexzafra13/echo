@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import * as path from 'path';
@@ -10,7 +10,11 @@ import { AgentRegistryService } from '../../infrastructure/services/agent-regist
 import { MetadataCacheService } from '../../infrastructure/services/metadata-cache.service';
 import { StorageService } from '../../infrastructure/services/storage.service';
 import { ImageDownloadService } from '../../infrastructure/services/image-download.service';
-import { MetadataConflictService, ConflictPriority } from '../../infrastructure/services/metadata-conflict.service';
+import {
+  MetadataConflictService,
+  ConflictPriority,
+  ConflictSource,
+} from '../../infrastructure/services/metadata-conflict.service';
 import { NotFoundError } from '@shared/errors';
 import { MbidSearchService } from './mbid-search.service';
 import { GenreEnrichmentService } from './genre-enrichment.service';
@@ -38,7 +42,7 @@ export class AlbumEnrichmentService {
     private readonly conflictService: MetadataConflictService,
     private readonly mbidSearch: MbidSearchService,
     private readonly genreEnrichment: GenreEnrichmentService,
-    private readonly enrichmentLog: EnrichmentLogService,
+    private readonly enrichmentLog: EnrichmentLogService
   ) {}
 
   /**
@@ -50,13 +54,14 @@ export class AlbumEnrichmentService {
     let coverUpdated = false;
 
     // Check if any cover retrieval agents are available
-    const coverAgents = this.agentRegistry.getAgentsFor<IAlbumCoverRetriever>('IAlbumCoverRetriever');
+    const coverAgents =
+      this.agentRegistry.getAgentsFor<IAlbumCoverRetriever>('IAlbumCoverRetriever');
     const hasEnrichmentAgents = coverAgents.length > 0;
 
     if (!hasEnrichmentAgents) {
       this.logger.warn(
         `No cover retrieval agents available for album ${albumId}. ` +
-        `This may indicate a configuration issue.`
+          `This may indicate a configuration issue.`
       );
       return { coverUpdated: false, errors: ['No cover retrieval agents configured'] };
     }
@@ -75,10 +80,12 @@ export class AlbumEnrichmentService {
         .limit(1);
 
       const album = albumResult[0]?.album;
-      const artistData = albumResult[0] ? {
-        name: albumResult[0].artistName,
-        mbzArtistId: albumResult[0].artistMbzId
-      } : null;
+      const artistData = albumResult[0]
+        ? {
+            name: albumResult[0].artistName,
+            mbzArtistId: albumResult[0].artistMbzId,
+          }
+        : null;
 
       if (!album) {
         throw new NotFoundError('Album', albumId);
@@ -97,19 +104,24 @@ export class AlbumEnrichmentService {
           .where(eq(albums.id, albumId))
           .limit(1);
         if (refreshed[0]?.mbzAlbumId) {
-          (album as any).mbzAlbumId = refreshed[0].mbzAlbumId;
+          (album as typeof albums.$inferSelect).mbzAlbumId = refreshed[0].mbzAlbumId;
         }
       }
 
       // Step 2: Enrich genres (if MBID available)
       if (album.mbzAlbumId) {
         try {
-          const genresAdded = await this.genreEnrichment.enrichAlbumGenres(albumId, album.mbzAlbumId);
+          const genresAdded = await this.genreEnrichment.enrichAlbumGenres(
+            albumId,
+            album.mbzAlbumId
+          );
           if (genresAdded > 0) {
             this.logger.info(`Added ${genresAdded} genres for album: ${album.name}`);
           }
         } catch (error) {
-          this.logger.warn(`Error enriching genres for "${album.name}": ${(error as Error).message}`);
+          this.logger.warn(
+            `Error enriching genres for "${album.name}": ${(error as Error).message}`
+          );
           errors.push(`Genre enrichment failed: ${(error as Error).message}`);
         }
       }
@@ -154,7 +166,10 @@ export class AlbumEnrichmentService {
 
       return { coverUpdated, errors };
     } catch (error) {
-      this.logger.error(`Error enriching album ${albumId}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error enriching album ${albumId}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       errors.push((error as Error).message);
 
       // Log the error
@@ -241,9 +256,13 @@ export class AlbumEnrichmentService {
     matches: MusicBrainzAlbumMatch[]
   ): Promise<void> {
     const topMatch = matches[0];
-    const suggestions = matches.slice(0, 3).map((m) =>
-      `${m.title} by ${m.artistName}${m.disambiguation ? ` (${m.disambiguation})` : ''} - MBID: ${m.mbid} (score: ${m.score})`
-    ).join('\n');
+    const suggestions = matches
+      .slice(0, 3)
+      .map(
+        (m) =>
+          `${m.title} by ${m.artistName}${m.disambiguation ? ` (${m.disambiguation})` : ''} - MBID: ${m.mbid} (score: ${m.score})`
+      )
+      .join('\n');
 
     await this.conflictService.createConflict({
       entityId: albumId,
@@ -251,7 +270,7 @@ export class AlbumEnrichmentService {
       field: 'albumName',
       currentValue: albumName,
       suggestedValue: `${topMatch.title}${topMatch.disambiguation ? ` (${topMatch.disambiguation})` : ''}`,
-      source: 'musicbrainz' as any,
+      source: 'musicbrainz' as ConflictSource,
       priority: ConflictPriority.MEDIUM,
       metadata: {
         albumName,
@@ -271,7 +290,7 @@ export class AlbumEnrichmentService {
    */
   private async enrichCover(
     albumId: string,
-    album: any,
+    album: typeof albums.$inferSelect,
     artistData: { name: string | null; mbzArtistId: string | null } | null,
     artistName: string,
     forceRefresh: boolean,
@@ -289,7 +308,8 @@ export class AlbumEnrichmentService {
 
     if (!cover) return false;
 
-    const isMusicBrainzSource = cover.source === 'coverartarchive' || cover.source === 'musicbrainz';
+    const isMusicBrainzSource =
+      cover.source === 'coverartarchive' || cover.source === 'musicbrainz';
     const hasExistingCover = !!album.externalCoverPath;
 
     if (!hasExistingCover || forceRefresh) {
@@ -331,7 +351,7 @@ export class AlbumEnrichmentService {
    */
   private async handleCoverConflict(
     albumId: string,
-    album: any,
+    album: typeof albums.$inferSelect,
     artistName: string,
     cover: AlbumCover,
     isMusicBrainzSource: boolean
@@ -351,7 +371,9 @@ export class AlbumEnrichmentService {
 
     // Fallback: Use external cover
     if (!currentDimensions && album.externalCoverPath) {
-      currentDimensions = await this.imageDownload.getImageDimensionsFromFile(album.externalCoverPath);
+      currentDimensions = await this.imageDownload.getImageDimensionsFromFile(
+        album.externalCoverPath
+      );
       if (currentDimensions) {
         currentCoverUrl = `/api/images/albums/${albumId}/cover`;
         currentCoverSource = 'external';
@@ -367,12 +389,13 @@ export class AlbumEnrichmentService {
       return;
     }
 
-    const isQualityImprovement = currentDimensions && suggestedDimensions
-      ? this.imageDownload.isSignificantImprovement(currentDimensions, suggestedDimensions)
-      : false;
+    const isQualityImprovement =
+      currentDimensions && suggestedDimensions
+        ? this.imageDownload.isSignificantImprovement(currentDimensions, suggestedDimensions)
+        : false;
 
     const isLowQuality = currentDimensions
-      ? (currentDimensions.width < 500 || currentDimensions.height < 500)
+      ? currentDimensions.width < 500 || currentDimensions.height < 500
       : false;
 
     const currentResolution = currentDimensions
@@ -399,7 +422,7 @@ export class AlbumEnrichmentService {
     // Create the conflict
     this.logger.info(
       `Cover comparison for "${album.name}": ` +
-      `Current: ${currentResolution || 'none'} → Suggested: ${suggestedResolution}`
+        `Current: ${currentResolution || 'none'} → Suggested: ${suggestedResolution}`
     );
 
     await this.conflictService.createConflict({
@@ -408,12 +431,13 @@ export class AlbumEnrichmentService {
       field: 'externalCover',
       currentValue: currentCoverUrl,
       suggestedValue: cover.largeUrl,
-      source: cover.source as any,
+      source: cover.source as ConflictSource,
       priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
       metadata: {
         albumName: album.name,
         artistName,
-        currentSource: currentCoverSource === 'physical' ? 'embedded' : (album.externalCoverSource || 'unknown'),
+        currentSource:
+          currentCoverSource === 'physical' ? 'embedded' : album.externalCoverSource || 'unknown',
         currentCoverType: currentCoverSource,
         currentResolution,
         suggestedResolution,
@@ -453,9 +477,21 @@ export class AlbumEnrichmentService {
 
         // Fanart.tv needs special handling
         if (agentObj.name === 'fanart' && mbzArtistId && mbzAlbumId) {
-          const fanartAgent = agentObj as any;
+          const fanartAgent = agentObj as IAlbumCoverRetriever & {
+            getAlbumCoverByArtist?: (
+              artistMbid: string,
+              albumMbid: string,
+              artistName: string,
+              albumName: string
+            ) => Promise<AlbumCover | null>;
+          };
           if (fanartAgent.getAlbumCoverByArtist) {
-            const cover = await fanartAgent.getAlbumCoverByArtist(mbzArtistId, mbzAlbumId, artist, album);
+            const cover = await fanartAgent.getAlbumCoverByArtist(
+              mbzArtistId,
+              mbzAlbumId,
+              artist,
+              album
+            );
             if (cover) {
               if (albumId) {
                 await this.cache.set('album', albumId, 'cover', {
@@ -486,7 +522,9 @@ export class AlbumEnrichmentService {
           return cover;
         }
       } catch (error) {
-        this.logger.warn(`Agent "${agentObj.name}" failed for cover ${artist} - ${album}: ${(error as Error).message}`);
+        this.logger.warn(
+          `Agent "${agentObj.name}" failed for cover ${artist} - ${album}: ${(error as Error).message}`
+        );
       }
     }
 

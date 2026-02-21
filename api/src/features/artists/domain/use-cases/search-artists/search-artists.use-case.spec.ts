@@ -18,7 +18,7 @@ describe('SearchArtistsUseCase', () => {
   });
 
   beforeEach(() => {
-    mockRepo = { search: jest.fn() } as any;
+    mockRepo = { search: jest.fn() } as unknown as jest.Mocked<IArtistRepository>;
     useCase = new SearchArtistsUseCase(mockRepo);
   });
 
@@ -33,11 +33,15 @@ describe('SearchArtistsUseCase', () => {
   });
 
   it('should throw ValidationError for empty query', async () => {
-    await expect(useCase.execute({ query: '', skip: 0, take: 10 })).rejects.toThrow(ValidationError);
+    await expect(useCase.execute({ query: '', skip: 0, take: 10 })).rejects.toThrow(
+      ValidationError
+    );
   });
 
   it('should throw ValidationError for query shorter than 2 chars', async () => {
-    await expect(useCase.execute({ query: 'R', skip: 0, take: 10 })).rejects.toThrow(ValidationError);
+    await expect(useCase.execute({ query: 'R', skip: 0, take: 10 })).rejects.toThrow(
+      ValidationError
+    );
   });
 
   it('should trim query', async () => {
@@ -56,7 +60,7 @@ describe('SearchArtistsUseCase', () => {
         size: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
-      }),
+      })
     );
     mockRepo.search.mockResolvedValue(artists);
 

@@ -56,7 +56,7 @@ describe('GetPlaylistsUseCase', () => {
       count: jest.fn(),
       countByOwnerId: jest.fn(),
       getBatchPlaylistAlbumIds: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<IPlaylistRepository>;
 
     useCase = new GetPlaylistsUseCase(playlistRepository);
   });
@@ -90,7 +90,10 @@ describe('GetPlaylistsUseCase', () => {
       // Assert
       expect(playlistRepository.findByOwnerId).toHaveBeenCalledWith('user-123', 0, 20);
       expect(playlistRepository.countByOwnerId).toHaveBeenCalledWith('user-123');
-      expect(playlistRepository.getBatchPlaylistAlbumIds).toHaveBeenCalledWith(['playlist-1', 'playlist-2']);
+      expect(playlistRepository.getBatchPlaylistAlbumIds).toHaveBeenCalledWith([
+        'playlist-1',
+        'playlist-2',
+      ]);
       expect(result.items).toHaveLength(2);
       expect(result.total).toBe(2);
       expect(result.skip).toBe(0);
@@ -238,7 +241,9 @@ describe('GetPlaylistsUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(ValidationError);
-      await expect(useCase.execute(input)).rejects.toThrow('Must specify ownerId or publicOnly filter');
+      await expect(useCase.execute(input)).rejects.toThrow(
+        'Must specify ownerId or publicOnly filter'
+      );
     });
 
     it('should map playlists to output format correctly', async () => {
@@ -266,7 +271,7 @@ describe('GetPlaylistsUseCase', () => {
           ownerId: 'user-123',
           public: false,
           songCount: 3,
-        }),
+        })
       );
     });
 

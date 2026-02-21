@@ -1,6 +1,7 @@
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { DeletePlaylistUseCase } from './delete-playlist.use-case';
 import { Playlist } from '../../entities';
+import { IPlaylistRepository } from '../../ports';
 
 describe('DeletePlaylistUseCase', () => {
   let useCase: DeletePlaylistUseCase;
@@ -34,7 +35,7 @@ describe('DeletePlaylistUseCase', () => {
       delete: jest.fn(),
     };
 
-    useCase = new DeletePlaylistUseCase(mockPlaylistRepository as any);
+    useCase = new DeletePlaylistUseCase(mockPlaylistRepository as unknown as IPlaylistRepository);
   });
 
   describe('execute', () => {
@@ -63,13 +64,13 @@ describe('DeletePlaylistUseCase', () => {
         useCase.execute({
           id: '',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
           id: '',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow('Playlist ID is required');
     });
 
@@ -79,7 +80,7 @@ describe('DeletePlaylistUseCase', () => {
         useCase.execute({
           id: '   ',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow(ValidationError);
     });
 
@@ -92,13 +93,13 @@ describe('DeletePlaylistUseCase', () => {
         useCase.execute({
           id: 'nonexistent',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow(NotFoundError);
       await expect(
         useCase.execute({
           id: 'nonexistent',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow('Playlist with id nonexistent not found');
     });
 
@@ -114,13 +115,13 @@ describe('DeletePlaylistUseCase', () => {
         useCase.execute({
           id: 'playlist-123',
           userId: 'user-123', // Different from owner
-        }),
+        })
       ).rejects.toThrow(ForbiddenError);
       await expect(
         useCase.execute({
           id: 'playlist-123',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow('You do not have permission to delete this playlist');
     });
 
@@ -135,7 +136,7 @@ describe('DeletePlaylistUseCase', () => {
         useCase.execute({
           id: 'playlist-123',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow(NotFoundError);
     });
 

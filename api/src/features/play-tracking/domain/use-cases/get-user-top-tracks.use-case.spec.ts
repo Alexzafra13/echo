@@ -6,7 +6,7 @@ describe('GetUserTopTracksUseCase', () => {
   let mockRepo: jest.Mocked<IPlayTrackingRepository>;
 
   beforeEach(() => {
-    mockRepo = { getUserTopTracks: jest.fn() } as any;
+    mockRepo = { getUserTopTracks: jest.fn() } as unknown as jest.Mocked<IPlayTrackingRepository>;
     useCase = new GetUserTopTracksUseCase(mockRepo);
   });
 

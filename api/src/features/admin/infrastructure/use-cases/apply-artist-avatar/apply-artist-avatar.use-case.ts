@@ -11,10 +11,7 @@ import { MetadataEventsService } from '@features/external-metadata/infrastructur
 import { getArtistImageTypeConfig } from '../../../domain/config/artist-image-type.config';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import {
-  ApplyArtistAvatarInput,
-  ApplyArtistAvatarOutput,
-} from './apply-artist-avatar.dto';
+import { ApplyArtistAvatarInput, ApplyArtistAvatarOutput } from './apply-artist-avatar.dto';
 
 @Injectable()
 export class ApplyArtistAvatarUseCase {
@@ -26,7 +23,7 @@ export class ApplyArtistAvatarUseCase {
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEventsService,
+    private readonly metadataGateway: MetadataEventsService
   ) {}
 
   async execute(input: ApplyArtistAvatarInput): Promise<ApplyArtistAvatarOutput> {
@@ -50,7 +47,7 @@ export class ApplyArtistAvatarUseCase {
     }
 
     this.logger.info(
-      `Applying ${input.type} image for artist: ${artist.name} from ${input.provider}`,
+      `Applying ${input.type} image for artist: ${artist.name} from ${input.provider}`
     );
 
     const basePath = await this.storage.getArtistMetadataPath(input.artistId);
@@ -77,7 +74,7 @@ export class ApplyArtistAvatarUseCase {
       throw error;
     }
 
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       [typeConfig.externalPathField]: filename,
       [typeConfig.externalSourceField]: input.provider,
       [typeConfig.externalUpdatedField]: new Date(),
@@ -86,7 +83,9 @@ export class ApplyArtistAvatarUseCase {
     if (input.replaceLocal !== false) {
       updateData[typeConfig.localPathField] = null;
       updateData[typeConfig.localUpdatedField] = null;
-      this.logger.debug(`Clearing local ${input.type} reference (replaceLocal=${input.replaceLocal ?? true})`);
+      this.logger.debug(
+        `Clearing local ${input.type} reference (replaceLocal=${input.replaceLocal ?? true})`
+      );
     }
 
     this.logger.debug(
@@ -94,14 +93,9 @@ export class ApplyArtistAvatarUseCase {
       JSON.stringify(updateData, null, 2)
     );
 
-    await this.drizzle.db
-      .update(artists)
-      .set(updateData)
-      .where(eq(artists.id, input.artistId));
+    await this.drizzle.db.update(artists).set(updateData).where(eq(artists.id, input.artistId));
 
-    this.logger.debug(
-      `Artist updated. ${typeConfig.externalUpdatedField} is now set`
-    );
+    this.logger.debug(`Artist updated. ${typeConfig.externalUpdatedField} is now set`);
 
     this.imageService.invalidateArtistCache(input.artistId);
     await this.redis.del(`artist:${input.artistId}`);
@@ -119,7 +113,9 @@ export class ApplyArtistAvatarUseCase {
 
     const finalArtist = finalArtistResult[0];
 
-    const updatedAt = (finalArtist?.[typeConfig.externalUpdatedField as keyof typeof finalArtist] as Date) || new Date();
+    const updatedAt =
+      (finalArtist?.[typeConfig.externalUpdatedField as keyof typeof finalArtist] as Date) ||
+      new Date();
     this.metadataGateway.emitArtistImagesUpdated({
       artistId: input.artistId,
       artistName: artist.name,

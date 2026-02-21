@@ -1,7 +1,9 @@
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { RemoveTrackFromPlaylistUseCase } from './remove-track-from-playlist.use-case';
 import { Playlist } from '../../entities';
+import { IPlaylistRepository } from '../../ports';
 import { Track } from '@features/tracks/domain/entities/track.entity';
+import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 
 describe('RemoveTrackFromPlaylistUseCase', () => {
   let useCase: RemoveTrackFromPlaylistUseCase;
@@ -62,8 +64,8 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
     };
 
     useCase = new RemoveTrackFromPlaylistUseCase(
-      mockPlaylistRepository as any,
-      mockTrackRepository as any,
+      mockPlaylistRepository as unknown as IPlaylistRepository,
+      mockTrackRepository as unknown as ITrackRepository
     );
   });
 
@@ -98,14 +100,14 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           playlistId: '',
           trackId: 'track-456',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
           playlistId: '',
           trackId: 'track-456',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow('Playlist ID is required');
     });
 
@@ -116,14 +118,14 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           playlistId: 'playlist-123',
           trackId: '',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
           playlistId: 'playlist-123',
           trackId: '',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow('Track ID is required');
     });
 
@@ -137,14 +139,14 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           playlistId: 'nonexistent',
           trackId: 'track-456',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow(NotFoundError);
       await expect(
         useCase.execute({
           playlistId: 'nonexistent',
           trackId: 'track-456',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow('Playlist with id nonexistent not found');
     });
 
@@ -161,14 +163,14 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           playlistId: 'playlist-123',
           trackId: 'track-456',
           userId: 'user-123', // Different from owner
-        }),
+        })
       ).rejects.toThrow(ForbiddenError);
       await expect(
         useCase.execute({
           playlistId: 'playlist-123',
           trackId: 'track-456',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow('You do not have permission to modify this playlist');
     });
 
@@ -184,14 +186,14 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           playlistId: 'playlist-123',
           trackId: 'nonexistent-track',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow(NotFoundError);
       await expect(
         useCase.execute({
           playlistId: 'playlist-123',
           trackId: 'nonexistent-track',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow('Track with id nonexistent-track not found');
     });
 
@@ -209,14 +211,14 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           playlistId: 'playlist-123',
           trackId: 'track-456',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow(NotFoundError);
       await expect(
         useCase.execute({
           playlistId: 'playlist-123',
           trackId: 'track-456',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow('track-456 is not in playlist playlist-123');
     });
 
@@ -263,7 +265,7 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           playlistId: 'playlist-123',
           trackId: 'track-456',
           userId: 'user-123',
-        }),
+        })
       ).rejects.toThrow(NotFoundError);
     });
   });

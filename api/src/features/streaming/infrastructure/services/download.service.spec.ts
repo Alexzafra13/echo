@@ -131,9 +131,7 @@ describe('DownloadService', () => {
       });
 
       // Act & Assert
-      await expect(service.getAlbumDownloadInfo('invalid-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getAlbumDownloadInfo('invalid-id')).rejects.toThrow(NotFoundException);
     });
 
     it('debería lanzar NotFoundException si el album no tiene tracks', async () => {
@@ -165,7 +163,7 @@ describe('DownloadService', () => {
 
       // Act & Assert
       await expect(service.getAlbumDownloadInfo('album-123')).rejects.toThrow(
-        'Album has no tracks',
+        'Album has no tracks'
       );
     });
 
@@ -341,9 +339,7 @@ describe('DownloadService', () => {
         ],
       };
 
-      (fs.promises.stat as jest.Mock).mockRejectedValueOnce(
-        new Error('ENOENT'),
-      );
+      (fs.promises.stat as jest.Mock).mockRejectedValueOnce(new Error('ENOENT'));
 
       // Act
       const result = await service.calculateAlbumSize(albumInfo);
@@ -356,6 +352,7 @@ describe('DownloadService', () => {
   describe('streamAlbumAsZip', () => {
     it('debería crear un archivo ZIP con estructura correcta', async () => {
       // Arrange
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const archiver = require('archiver');
       const mockArchive = {
         on: jest.fn(),
@@ -406,6 +403,7 @@ describe('DownloadService', () => {
 
     it('debería saltar archivos que no existen', async () => {
       // Arrange
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const archiver = require('archiver');
       const mockArchive = {
         on: jest.fn(),
@@ -465,6 +463,7 @@ describe('DownloadService', () => {
 
     it('debería formatear correctamente nombres de archivos multi-disco', async () => {
       // Arrange
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const archiver = require('archiver');
       const mockArchive = {
         on: jest.fn(),
@@ -523,6 +522,7 @@ describe('DownloadService', () => {
 
     it('debería sanitizar caracteres inválidos en nombres', async () => {
       // Arrange
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const archiver = require('archiver');
       const mockArchive = {
         on: jest.fn(),

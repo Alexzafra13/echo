@@ -21,7 +21,7 @@ describe('CalculateTrackScoreUseCase', () => {
   beforeEach(() => {
     mockScoringService = {
       calculateFullTrackScore: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<ScoringService>;
 
     useCase = new CalculateTrackScoreUseCase(mockScoringService);
   });
@@ -35,7 +35,7 @@ describe('CalculateTrackScoreUseCase', () => {
       expect(mockScoringService.calculateFullTrackScore).toHaveBeenCalledWith(
         'user-123',
         'track-123',
-        undefined,
+        undefined
       );
       expect(result).toEqual(mockTrackScore);
     });
@@ -48,7 +48,7 @@ describe('CalculateTrackScoreUseCase', () => {
       expect(mockScoringService.calculateFullTrackScore).toHaveBeenCalledWith(
         'user-123',
         'track-123',
-        'artist-456',
+        'artist-456'
       );
       expect(result).toEqual(mockTrackScore);
     });
@@ -77,7 +77,7 @@ describe('CalculateTrackScoreUseCase', () => {
       mockScoringService.calculateFullTrackScore.mockRejectedValue(error);
 
       await expect(useCase.execute('user-123', 'track-123')).rejects.toThrow(
-        'Scoring calculation failed',
+        'Scoring calculation failed'
       );
     });
   });

@@ -23,7 +23,7 @@ describe('SendFriendRequestUseCase', () => {
       sendFriendRequest: jest.fn(),
       getFriendshipBetweenUsers: jest.fn(),
       acceptFriendRequest: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<ISocialRepository>;
 
     useCase = new SendFriendRequestUseCase(mockSocialRepo);
   });
@@ -43,7 +43,7 @@ describe('SendFriendRequestUseCase', () => {
     it('should throw ValidationError when sending request to yourself', async () => {
       await expect(useCase.execute('user-1', 'user-1')).rejects.toThrow(ValidationError);
       await expect(useCase.execute('user-1', 'user-1')).rejects.toThrow(
-        'Cannot send friend request to yourself',
+        'Cannot send friend request to yourself'
       );
     });
 
@@ -56,7 +56,7 @@ describe('SendFriendRequestUseCase', () => {
 
       await expect(useCase.execute('user-1', 'user-2')).rejects.toThrow(ConflictError);
       await expect(useCase.execute('user-1', 'user-2')).rejects.toThrow(
-        'You are already friends with this user',
+        'You are already friends with this user'
       );
     });
 
@@ -71,7 +71,7 @@ describe('SendFriendRequestUseCase', () => {
 
       await expect(useCase.execute('user-1', 'user-2')).rejects.toThrow(ConflictError);
       await expect(useCase.execute('user-1', 'user-2')).rejects.toThrow(
-        'Friend request already sent',
+        'Friend request already sent'
       );
     });
 
@@ -95,7 +95,7 @@ describe('SendFriendRequestUseCase', () => {
 
       expect(mockSocialRepo.acceptFriendRequest).toHaveBeenCalledWith(
         'friendship-incoming',
-        'user-1',
+        'user-1'
       );
       expect(result.status).toBe('accepted');
     });
@@ -109,7 +109,7 @@ describe('SendFriendRequestUseCase', () => {
 
       await expect(useCase.execute('user-1', 'user-2')).rejects.toThrow(ValidationError);
       await expect(useCase.execute('user-1', 'user-2')).rejects.toThrow(
-        'Cannot send friend request to this user',
+        'Cannot send friend request to this user'
       );
     });
   });

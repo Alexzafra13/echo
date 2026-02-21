@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundError, ForbiddenError } from '@shared/errors';
 import { StreamTrackUseCase } from './stream-track.use-case';
-import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
+import {
+  TRACK_REPOSITORY,
+  ITrackRepository,
+} from '@features/tracks/domain/ports/track-repository.port';
 import { Track } from '@features/tracks/domain/entities/track.entity';
 import * as fs from 'fs';
 
@@ -112,7 +115,7 @@ describe('StreamTrackUseCase', () => {
       const trackWithoutPath = Track.reconstruct({
         id: 'track-2',
         title: 'No Path Song',
-        path: undefined as any,
+        path: undefined as unknown as string,
         discNumber: 1,
         compilation: false,
         createdAt: new Date(),

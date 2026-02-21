@@ -30,7 +30,7 @@ describe('GetFriendsUseCase', () => {
   beforeEach(() => {
     mockSocialRepo = {
       getFriends: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<ISocialRepository>;
 
     useCase = new GetFriendsUseCase(mockSocialRepo);
   });

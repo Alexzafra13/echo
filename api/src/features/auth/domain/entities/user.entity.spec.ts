@@ -15,10 +15,12 @@ describe('User Entity', () => {
   describe('create', () => {
     it('debería crear un nuevo usuario', () => {
       // Act
-      const user = User.create(createUserInput({
-        username: 'juan',
-        name: 'Juan García',
-      }));
+      const user = User.create(
+        createUserInput({
+          username: 'juan',
+          name: 'Juan García',
+        })
+      );
 
       // Assert
       expect(user.id).toBeDefined();
@@ -55,13 +57,15 @@ describe('User Entity', () => {
       const now = new Date();
 
       // Act
-      const user = User.reconstruct(createMockUserProps({
-        id: 'user-123',
-        username: 'juan',
-        name: 'Juan',
-        createdAt: now,
-        updatedAt: now,
-      }));
+      const user = User.reconstruct(
+        createMockUserProps({
+          id: 'user-123',
+          username: 'juan',
+          name: 'Juan',
+          createdAt: now,
+          updatedAt: now,
+        })
+      );
 
       // Assert
       expect(user.id).toBe('user-123');
@@ -76,13 +80,15 @@ describe('User Entity', () => {
       const updatedAt = new Date('2025-01-15');
 
       // Act
-      const user = User.reconstruct(createMockUserProps({
-        id: 'user-123',
-        username: 'juan',
-        name: 'Juan',
-        createdAt,
-        updatedAt,
-      }));
+      const user = User.reconstruct(
+        createMockUserProps({
+          id: 'user-123',
+          username: 'juan',
+          name: 'Juan',
+          createdAt,
+          updatedAt,
+        })
+      );
 
       // Assert
       expect(user.createdAt).toEqual(createdAt);
@@ -93,10 +99,12 @@ describe('User Entity', () => {
   describe('getters', () => {
     it('debería retornar todas las propiedades', () => {
       // Arrange
-      const user = User.create(createUserInput({
-        username: 'juan',
-        name: 'Juan',
-      }));
+      const user = User.create(
+        createUserInput({
+          username: 'juan',
+          name: 'Juan',
+        })
+      );
 
       // Assert
       expect(user.id).toBeDefined();
@@ -121,10 +129,12 @@ describe('User Entity', () => {
   describe('toPrimitives', () => {
     it('debería convertir a objeto primitivo', () => {
       // Arrange
-      const user = User.create(createUserInput({
-        username: 'juan',
-        name: 'Juan',
-      }));
+      const user = User.create(
+        createUserInput({
+          username: 'juan',
+          name: 'Juan',
+        })
+      );
 
       // Act
       const primitives = user.toPrimitives();
@@ -140,10 +150,12 @@ describe('User Entity', () => {
 
     it('debería retornar una copia, no referencia', () => {
       // Arrange
-      const user = User.create(createUserInput({
-        username: 'juan',
-        name: 'Juan',
-      }));
+      const user = User.create(
+        createUserInput({
+          username: 'juan',
+          name: 'Juan',
+        })
+      );
 
       // Act
       const primitives1 = user.toPrimitives();
@@ -156,10 +168,12 @@ describe('User Entity', () => {
 
     it('debería poder reconstruir desde toPrimitives', () => {
       // Arrange
-      const user1 = User.create(createUserInput({
-        username: 'juan',
-        name: 'Juan',
-      }));
+      const user1 = User.create(
+        createUserInput({
+          username: 'juan',
+          name: 'Juan',
+        })
+      );
 
       // Act
       const primitives = user1.toPrimitives();
@@ -179,7 +193,7 @@ describe('User Entity', () => {
 
       // Act & Assert
       expect(() => {
-        (user as any).username = 'maria';
+        (user as unknown as Record<string, string>).username = 'maria';
       }).toThrow();
     });
   });

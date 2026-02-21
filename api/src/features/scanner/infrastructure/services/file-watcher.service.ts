@@ -25,7 +25,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
     private readonly bullmq: BullmqService,
     private readonly settingsService: SettingsService,
     private readonly libraryCleanup: LibraryCleanupService,
-    private readonly scannerGateway: ScannerGateway,
+    private readonly scannerGateway: ScannerGateway
   ) {}
 
   async onModuleInit() {
@@ -41,7 +41,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
 
     const musicPath = await this.settingsService.getString(
       'library.music.path',
-      this.configService.get<string>('UPLOAD_PATH', ''),
+      this.configService.get<string>('UPLOAD_PATH', '')
     );
 
     if (!musicPath) {
@@ -61,12 +61,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
       this.logger.info(`Starting file watcher on: ${path}`);
 
       this.watcher = chokidar.watch(path, {
-        ignored: [
-          /(^|[\/\\])\../,
-          '**/node_modules/**',
-          '**/.git/**',
-          '**/covers/**',
-        ],
+        ignored: [/(^|[/\\])\../, '**/node_modules/**', '**/.git/**', '**/covers/**'],
         persistent: true,
         ignoreInitial: true,
         awaitWriteFinish: {
@@ -84,7 +79,6 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
         .on('unlink', (filePath) => this.handleFileDeleted(filePath))
         .on('error', (error) => this.handleError(error as Error))
         .on('ready', () => this.handleReady(path));
-
     } catch (error) {
       this.logger.error(`Error starting file watcher:`, error);
     }
@@ -167,7 +161,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
 
   private isSupportedFile(filePath: string): boolean {
     const ext = filePath.toLowerCase();
-    return this.SUPPORTED_EXTENSIONS.some(supported => ext.endsWith(supported));
+    return this.SUPPORTED_EXTENSIONS.some((supported) => ext.endsWith(supported));
   }
 
   private addToPendingQueue(filePath: string): void {
@@ -208,15 +202,11 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
         return;
       }
 
-      await this.bullmq.addJob(
-        'scanner',
-        'incremental-scan',
-        {
-          files: existingFiles,
-          source: 'file-watcher',
-          timestamp: new Date().toISOString(),
-        },
-      );
+      await this.bullmq.addJob('scanner', 'incremental-scan', {
+        files: existingFiles,
+        source: 'file-watcher',
+        timestamp: new Date().toISOString(),
+      });
 
       this.logger.info(`${existingFiles.length} file(s) added to scan queue`);
     } catch (error) {

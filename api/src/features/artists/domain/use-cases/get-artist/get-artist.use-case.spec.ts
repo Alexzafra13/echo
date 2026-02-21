@@ -20,7 +20,7 @@ describe('GetArtistUseCase', () => {
   });
 
   beforeEach(() => {
-    mockRepo = { findById: jest.fn() } as any;
+    mockRepo = { findById: jest.fn() } as unknown as jest.Mocked<IArtistRepository>;
     useCase = new GetArtistUseCase(mockRepo);
   });
 

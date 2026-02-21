@@ -7,7 +7,7 @@ import { UpdatePlaylistInput, UpdatePlaylistOutput } from './update-playlist.dto
 export class UpdatePlaylistUseCase {
   constructor(
     @Inject(PLAYLIST_REPOSITORY)
-    private readonly playlistRepository: IPlaylistRepository,
+    private readonly playlistRepository: IPlaylistRepository
   ) {}
 
   async execute(input: UpdatePlaylistInput): Promise<UpdatePlaylistOutput> {
@@ -28,7 +28,7 @@ export class UpdatePlaylistUseCase {
     }
 
     // 3. Preparar datos para actualizar
-    const updates: any = {};
+    const updates: Record<string, string | boolean | undefined> = {};
 
     if (input.name !== undefined) {
       if (input.name.trim() === '') {

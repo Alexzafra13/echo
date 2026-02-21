@@ -11,23 +11,25 @@ import {
   Inject,
 } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { RequestWithUser } from '@shared/types/request.types';
 import { parsePaginationParams } from '@shared/utils';
-import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
+import {
+  TRACK_REPOSITORY,
+  ITrackRepository,
+} from '@features/tracks/domain/ports/track-repository.port';
 import {
   CalculateTrackScoreUseCase,
   GenerateDailyMixUseCase,
   GenerateSmartPlaylistUseCase,
   GetAutoPlaylistsUseCase,
 } from '../../domain/use-cases';
-import { SmartPlaylistConfig } from '../../domain/entities/track-score.entity';
+import {
+  SmartPlaylistConfig,
+  AutoPlaylist,
+  TrackScore,
+} from '../../domain/entities/track-score.entity';
 import {
   CalculateScoreDto,
   DailyMixConfigDto,
@@ -40,6 +42,20 @@ import {
   SmartPlaylistDto,
 } from '../dtos/recommendations-response.dto';
 import { WaveMixService } from '../../infrastructure/services/wave-mix.service';
+
+interface TrackEnrichmentData {
+  id: string;
+  title: string;
+  artistName: string | null;
+  albumName: string | null;
+  duration: number | null;
+  albumId: string | null;
+  artistId: string | null;
+  rgTrackGain: number | null;
+  rgTrackPeak: number | null;
+  rgAlbumGain: number | null;
+  rgAlbumPeak: number | null;
+}
 
 @ApiTags('recommendations')
 @ApiBearerAuth('JWT-auth')
@@ -55,7 +71,7 @@ export class RecommendationsController {
     private readonly getAutoPlaylistsUseCase: GetAutoPlaylistsUseCase,
     private readonly waveMixService: WaveMixService,
     @Inject(TRACK_REPOSITORY)
-    private readonly trackRepository: ITrackRepository,
+    private readonly trackRepository: ITrackRepository
   ) {}
 
   @Post('calculate-score')
@@ -66,7 +82,10 @@ export class RecommendationsController {
     description: 'Track score calculated successfully',
     type: TrackScoreDto,
   })
-  async calculateScore(@Body() dto: CalculateScoreDto, @Req() req: RequestWithUser): Promise<TrackScoreDto> {
+  async calculateScore(
+    @Body() dto: CalculateScoreDto,
+    @Req() req: RequestWithUser
+  ): Promise<TrackScoreDto> {
     const userId = req.user.id;
     const score = await this.calculateTrackScoreUseCase.execute(userId, dto.trackId, dto.artistId);
 
@@ -90,7 +109,10 @@ export class RecommendationsController {
     description: 'Daily Mix generated successfully',
     type: DailyMixDto,
   })
-  async getDailyMix(@Query() config: DailyMixConfigDto, @Req() req: RequestWithUser): Promise<DailyMixDto> {
+  async getDailyMix(
+    @Query() config: DailyMixConfigDto,
+    @Req() req: RequestWithUser
+  ): Promise<DailyMixDto> {
     const userId = req.user.id;
     const dailyMix = await this.generateDailyMixUseCase.execute(userId, config);
 
@@ -156,15 +178,25 @@ export class RecommendationsController {
     description: 'Smart playlist generated successfully',
     type: SmartPlaylistDto,
   })
-  async generateSmartPlaylist(@Body() config: SmartPlaylistConfigDto, @Req() req: RequestWithUser): Promise<SmartPlaylistDto> {
+  async generateSmartPlaylist(
+    @Body() config: SmartPlaylistConfigDto,
+    @Req() req: RequestWithUser
+  ): Promise<SmartPlaylistDto> {
     const userId = req.user.id;
 
     // Log for autoplay debugging
-    this.logger.info(`[SmartPlaylist] Generating playlist: artistId=${config.artistId}, name=${config.name}`);
+    this.logger.info(
+      `[SmartPlaylist] Generating playlist: artistId=${config.artistId}, name=${config.name}`
+    );
 
-    const result = await this.generateSmartPlaylistUseCase.execute(userId, config as SmartPlaylistConfig);
+    const result = await this.generateSmartPlaylistUseCase.execute(
+      userId,
+      config as SmartPlaylistConfig
+    );
 
-    this.logger.info(`[SmartPlaylist] Generated ${result.tracks.length} tracks for artistId=${config.artistId}`);
+    this.logger.info(
+      `[SmartPlaylist] Generated ${result.tracks.length} tracks for artistId=${config.artistId}`
+    );
 
     // Use helper method to fetch and map tracks
     const trackIds = result.tracks.map((t) => t.trackId);
@@ -242,10 +274,21 @@ export class RecommendationsController {
 
   @Get('wave-mix/artists')
   @ApiOperation({ summary: 'Get paginated Wave Mix artist playlists' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Wave Mix artist playlists retrieved successfully' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Wave Mix artist playlists retrieved successfully',
+  })
   async getWaveMixArtistPlaylists(
-    @Req() req: RequestWithUser, @Query('skip') skip?: string, @Query('take') take?: string
-  ): Promise<{ playlists: AutoPlaylistDto[]; total: number; skip: number; take: number; hasMore: boolean }> {
+    @Req() req: RequestWithUser,
+    @Query('skip') skip?: string,
+    @Query('take') take?: string
+  ): Promise<{
+    playlists: AutoPlaylistDto[];
+    total: number;
+    skip: number;
+    take: number;
+    hasMore: boolean;
+  }> {
     const userId = req.user.id;
     const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take, { maxTake: 50 });
 
@@ -254,15 +297,32 @@ export class RecommendationsController {
     // OPTIMIZATION: Use batch enrichment to avoid N+1 query
     const playlistsWithTracks = await this.enrichPlaylistsWithTracks(result.playlists);
 
-    return { playlists: playlistsWithTracks, total: result.total, skip: skipNum, take: takeNum, hasMore: result.hasMore };
+    return {
+      playlists: playlistsWithTracks,
+      total: result.total,
+      skip: skipNum,
+      take: takeNum,
+      hasMore: result.hasMore,
+    };
   }
 
   @Get('wave-mix/genres')
   @ApiOperation({ summary: 'Get paginated Wave Mix genre playlists' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Wave Mix genre playlists retrieved successfully' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Wave Mix genre playlists retrieved successfully',
+  })
   async getWaveMixGenrePlaylists(
-    @Req() req: RequestWithUser, @Query('skip') skip?: string, @Query('take') take?: string
-  ): Promise<{ playlists: AutoPlaylistDto[]; total: number; skip: number; take: number; hasMore: boolean }> {
+    @Req() req: RequestWithUser,
+    @Query('skip') skip?: string,
+    @Query('take') take?: string
+  ): Promise<{
+    playlists: AutoPlaylistDto[];
+    total: number;
+    skip: number;
+    take: number;
+    hasMore: boolean;
+  }> {
     const userId = req.user.id;
     const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take, { maxTake: 50 });
 
@@ -271,10 +331,16 @@ export class RecommendationsController {
     // OPTIMIZATION: Use batch enrichment to avoid N+1 query
     const playlistsWithTracks = await this.enrichPlaylistsWithTracks(result.playlists);
 
-    return { playlists: playlistsWithTracks, total: result.total, skip: skipNum, take: takeNum, hasMore: result.hasMore };
+    return {
+      playlists: playlistsWithTracks,
+      total: result.total,
+      skip: skipNum,
+      take: takeNum,
+      hasMore: result.hasMore,
+    };
   }
 
-  private async fetchTracksById(trackIds: string[]) {
+  private async fetchTracksById(trackIds: string[]): Promise<Map<string, TrackEnrichmentData>> {
     if (trackIds.length === 0) {
       return new Map();
     }
@@ -303,14 +369,17 @@ export class RecommendationsController {
     return new Map(tracksData.map((t) => [t.id, t]));
   }
 
-  private mapPlaylistWithTracks(playlist: any, trackMap: Map<string, any>): AutoPlaylistDto {
+  private mapPlaylistWithTracks(
+    playlist: AutoPlaylist,
+    trackMap: Map<string, TrackEnrichmentData>
+  ): AutoPlaylistDto {
     return {
       id: playlist.id,
       type: playlist.type,
       userId: playlist.userId,
       name: playlist.name,
       description: playlist.description,
-      tracks: playlist.tracks.map((t: any) => {
+      tracks: playlist.tracks.map((t: TrackScore) => {
         const track = trackMap.get(t.trackId);
         return {
           trackId: t.trackId,
@@ -349,7 +418,7 @@ export class RecommendationsController {
   }
 
   // Batch enrich para evitar N+1 queries
-  private async enrichPlaylistsWithTracks(playlists: any[]): Promise<AutoPlaylistDto[]> {
+  private async enrichPlaylistsWithTracks(playlists: AutoPlaylist[]): Promise<AutoPlaylistDto[]> {
     if (playlists.length === 0) {
       return [];
     }

@@ -54,32 +54,28 @@ export class DrizzleScannerRepository implements IScannerRepository {
   async create(scan: LibraryScan): Promise<LibraryScan> {
     const persistenceData = ScannerMapper.toPersistence(scan);
 
-    const result = await this.drizzle.db
-      .insert(libraryScans)
-      .values(persistenceData)
-      .returning();
+    const result = await this.drizzle.db.insert(libraryScans).values(persistenceData).returning();
 
     return ScannerMapper.toDomain(result[0]);
   }
 
-  async update(
-    id: string,
-    data: Partial<LibraryScan>,
-  ): Promise<LibraryScan | null> {
+  async update(id: string, data: Partial<LibraryScan>): Promise<LibraryScan | null> {
     const primitives = data.toPrimitives ? data.toPrimitives() : data;
 
-    const updateData: any = {};
+    const updateData: Partial<{
+      status: string;
+      finishedAt: Date;
+      tracksAdded: number;
+      tracksUpdated: number;
+      tracksDeleted: number;
+      errorMessage: string;
+    }> = {};
     if (primitives.status) updateData.status = primitives.status;
-    if (primitives.finishedAt !== undefined)
-      updateData.finishedAt = primitives.finishedAt;
-    if (primitives.tracksAdded !== undefined)
-      updateData.tracksAdded = primitives.tracksAdded;
-    if (primitives.tracksUpdated !== undefined)
-      updateData.tracksUpdated = primitives.tracksUpdated;
-    if (primitives.tracksDeleted !== undefined)
-      updateData.tracksDeleted = primitives.tracksDeleted;
-    if (primitives.errorMessage !== undefined)
-      updateData.errorMessage = primitives.errorMessage;
+    if (primitives.finishedAt !== undefined) updateData.finishedAt = primitives.finishedAt;
+    if (primitives.tracksAdded !== undefined) updateData.tracksAdded = primitives.tracksAdded;
+    if (primitives.tracksUpdated !== undefined) updateData.tracksUpdated = primitives.tracksUpdated;
+    if (primitives.tracksDeleted !== undefined) updateData.tracksDeleted = primitives.tracksDeleted;
+    if (primitives.errorMessage !== undefined) updateData.errorMessage = primitives.errorMessage;
 
     try {
       const result = await this.drizzle.db
@@ -95,9 +91,7 @@ export class DrizzleScannerRepository implements IScannerRepository {
   }
 
   async count(): Promise<number> {
-    const result = await this.drizzle.db
-      .select({ count: count() })
-      .from(libraryScans);
+    const result = await this.drizzle.db.select({ count: count() }).from(libraryScans);
 
     return result[0]?.count ?? 0;
   }
