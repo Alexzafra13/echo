@@ -92,6 +92,7 @@ export function HistoryTab() {
     previewUrl?: string;
     entityType?: string;
     entityId?: string;
+    id?: string;
   }): string | null => {
     const value = log.previewUrl;
     if (!value) return null;
