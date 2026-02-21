@@ -1,5 +1,6 @@
 import { TrackMapper } from './track.mapper';
 import { Track } from '../../domain/entities/track.entity';
+import { Track as TrackDb } from '@infrastructure/database/schema/tracks';
 
 describe('TrackMapper', () => {
   const mockDbTrack = {
@@ -35,7 +36,7 @@ describe('TrackMapper', () => {
 
   describe('toDomain', () => {
     it('should convert DB track to domain Track', () => {
-      const track = TrackMapper.toDomain(mockDbTrack as any);
+      const track = TrackMapper.toDomain(mockDbTrack as unknown as TrackDb);
 
       expect(track).toBeInstanceOf(Track);
       expect(track.id).toBe('track-1');
@@ -51,7 +52,7 @@ describe('TrackMapper', () => {
     });
 
     it('should convert BigInt size to number', () => {
-      const track = TrackMapper.toDomain(mockDbTrack as any);
+      const track = TrackMapper.toDomain(mockDbTrack as unknown as TrackDb);
       expect(track.size).toBe(15000000);
     });
 
@@ -73,7 +74,7 @@ describe('TrackMapper', () => {
         rgTrackPeak: null,
         outroStart: null,
         bpm: null,
-      } as any);
+      } as unknown as TrackDb);
 
       expect(track.albumId).toBeUndefined();
       expect(track.artistId).toBeUndefined();
@@ -87,7 +88,7 @@ describe('TrackMapper', () => {
     });
 
     it('should map ReplayGain fields', () => {
-      const track = TrackMapper.toDomain(mockDbTrack as any);
+      const track = TrackMapper.toDomain(mockDbTrack as unknown as TrackDb);
       expect(track.rgTrackGain).toBe(-6.5);
       expect(track.rgTrackPeak).toBe(0.95);
       expect(track.rgAlbumGain).toBe(-7.0);
@@ -95,7 +96,7 @@ describe('TrackMapper', () => {
     });
 
     it('should map DJ fields', () => {
-      const track = TrackMapper.toDomain(mockDbTrack as any);
+      const track = TrackMapper.toDomain(mockDbTrack as unknown as TrackDb);
       expect(track.outroStart).toBe(370.0);
       expect(track.bpm).toBe(82);
     });
@@ -104,7 +105,7 @@ describe('TrackMapper', () => {
       const track = TrackMapper.toDomain({
         ...mockDbTrack,
         discNumber: null,
-      } as any);
+      } as unknown as TrackDb);
       expect(track.discNumber).toBe(1);
     });
 
@@ -112,14 +113,14 @@ describe('TrackMapper', () => {
       const track = TrackMapper.toDomain({
         ...mockDbTrack,
         compilation: null,
-      } as any);
+      } as unknown as TrackDb);
       expect(track.compilation).toBe(false);
     });
   });
 
   describe('toPersistence', () => {
     it('should convert domain track to persistence', () => {
-      const track = TrackMapper.toDomain(mockDbTrack as any);
+      const track = TrackMapper.toDomain(mockDbTrack as unknown as TrackDb);
       const persistence = TrackMapper.toPersistence(track);
 
       expect(persistence.id).toBe('track-1');
@@ -135,7 +136,7 @@ describe('TrackMapper', () => {
         albumId: null,
         artistId: null,
         lyrics: null,
-      } as any);
+      } as unknown as TrackDb);
       const persistence = TrackMapper.toPersistence(track);
 
       expect(persistence.albumId).toBeNull();
@@ -146,7 +147,7 @@ describe('TrackMapper', () => {
 
   describe('toDomainArray', () => {
     it('should convert array of DB tracks', () => {
-      const tracks = TrackMapper.toDomainArray([mockDbTrack, mockDbTrack] as any);
+      const tracks = TrackMapper.toDomainArray([mockDbTrack, mockDbTrack] as unknown as TrackDb[]);
       expect(tracks).toHaveLength(2);
       expect(tracks[0]).toBeInstanceOf(Track);
     });

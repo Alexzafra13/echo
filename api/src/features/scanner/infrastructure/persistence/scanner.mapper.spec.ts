@@ -1,5 +1,6 @@
 import { ScannerMapper } from './scanner.mapper';
 import { LibraryScan } from '../../domain/entities/library-scan.entity';
+import { LibraryScan as LibraryScanDb } from '@infrastructure/database/schema/system';
 
 describe('ScannerMapper', () => {
   describe('toDomain', () => {
@@ -15,7 +16,7 @@ describe('ScannerMapper', () => {
         errorMessage: null,
       };
 
-      const result = ScannerMapper.toDomain(dbRecord as any);
+      const result = ScannerMapper.toDomain(dbRecord as unknown as LibraryScanDb);
 
       expect(result).toBeInstanceOf(LibraryScan);
       expect(result.id).toBe('scan-123');
@@ -35,7 +36,7 @@ describe('ScannerMapper', () => {
         errorMessage: null,
       };
 
-      const result = ScannerMapper.toDomain(dbRecord as any);
+      const result = ScannerMapper.toDomain(dbRecord as unknown as LibraryScanDb);
 
       expect(result.finishedAt).toBeUndefined();
     });
@@ -52,7 +53,7 @@ describe('ScannerMapper', () => {
         errorMessage: null,
       };
 
-      const result = ScannerMapper.toDomain(dbRecord as any);
+      const result = ScannerMapper.toDomain(dbRecord as unknown as LibraryScanDb);
 
       expect(result.errorMessage).toBeUndefined();
     });
@@ -69,7 +70,7 @@ describe('ScannerMapper', () => {
         errorMessage: 'Disk space exceeded',
       };
 
-      const result = ScannerMapper.toDomain(dbRecord as any);
+      const result = ScannerMapper.toDomain(dbRecord as unknown as LibraryScanDb);
 
       expect(result.errorMessage).toBe('Disk space exceeded');
     });
@@ -89,7 +90,7 @@ describe('ScannerMapper', () => {
           errorMessage: null,
         };
 
-        const result = ScannerMapper.toDomain(dbRecord as any);
+        const result = ScannerMapper.toDomain(dbRecord as unknown as LibraryScanDb);
         expect(result.status).toBe(status);
       });
     });
@@ -120,7 +121,7 @@ describe('ScannerMapper', () => {
         },
       ];
 
-      const result = ScannerMapper.toDomainArray(dbRecords as any);
+      const result = ScannerMapper.toDomainArray(dbRecords as unknown as LibraryScanDb[]);
 
       expect(result).toHaveLength(2);
       expect(result[0]).toBeInstanceOf(LibraryScan);
@@ -231,7 +232,7 @@ describe('ScannerMapper', () => {
         errorMessage: persistence.errorMessage,
       };
 
-      const reconstructed = ScannerMapper.toDomain(dbResult as any);
+      const reconstructed = ScannerMapper.toDomain(dbResult as unknown as LibraryScanDb);
 
       expect(reconstructed.id).toBe(originalProps.id);
       expect(reconstructed.status).toBe(originalProps.status);
@@ -253,7 +254,7 @@ describe('ScannerMapper', () => {
 
       const domain = LibraryScan.fromPrimitives(originalProps);
       const persistence = ScannerMapper.toPersistence(domain);
-      const reconstructed = ScannerMapper.toDomain(persistence as any);
+      const reconstructed = ScannerMapper.toDomain(persistence as unknown as LibraryScanDb);
 
       expect(reconstructed.finishedAt).toBeUndefined();
       expect(reconstructed.errorMessage).toBeUndefined();

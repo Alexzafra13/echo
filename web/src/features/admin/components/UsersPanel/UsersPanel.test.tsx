@@ -23,11 +23,24 @@ vi.mock('@shared/hooks', () => ({
 
 // Mock UI components
 vi.mock('@shared/components/ui', () => ({
-  Button: ({ children, onClick, leftIcon }: any) => (
-    <button onClick={onClick}>{leftIcon}{children}</button>
+  Button: ({
+    children,
+    onClick,
+    leftIcon,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    leftIcon?: React.ReactNode;
+  }) => (
+    <button onClick={onClick}>
+      {leftIcon}
+      {children}
+    </button>
   ),
-  InlineNotification: ({ message, onDismiss }: any) => (
-    <div data-testid="notification" onClick={onDismiss}>{message}</div>
+  InlineNotification: ({ message, onDismiss }: { message: string; onDismiss?: () => void }) => (
+    <div data-testid="notification" onClick={onDismiss}>
+      {message}
+    </div>
   ),
   ConfirmDialog: () => null,
 }));
@@ -46,7 +59,15 @@ vi.mock('./CredentialsModal', () => ({
 }));
 
 vi.mock('./UserRow', () => ({
-  UserRow: ({ user, onEdit, onDeactivate }: any) => (
+  UserRow: ({
+    user,
+    onEdit,
+    onDeactivate,
+  }: {
+    user: { id: string; username: string; isAdmin: boolean; isActive: boolean };
+    onEdit: (u: { id: string }) => void;
+    onDeactivate: (u: { id: string }) => void;
+  }) => (
     <tr data-testid={`user-${user.id}`}>
       <td>{user.username}</td>
       <td>{user.isAdmin ? 'Admin' : 'User'}</td>
@@ -61,7 +82,17 @@ vi.mock('./UserRow', () => ({
 }));
 
 vi.mock('./SearchFilters', () => ({
-  SearchFilters: ({ searchQuery, onSearchChange, onRoleFilterChange, onStatusFilterChange }: any) => (
+  SearchFilters: ({
+    searchQuery,
+    onSearchChange,
+    onRoleFilterChange,
+    onStatusFilterChange,
+  }: {
+    searchQuery: string;
+    onSearchChange: (val: string) => void;
+    onRoleFilterChange: (val: string) => void;
+    onStatusFilterChange: (val: string) => void;
+  }) => (
     <div data-testid="search-filters">
       <input
         data-testid="search-input"
@@ -84,11 +115,25 @@ vi.mock('./SearchFilters', () => ({
 }));
 
 vi.mock('./Pagination', () => ({
-  Pagination: ({ currentPage, totalPages, onPageChange }: any) => (
+  Pagination: ({
+    currentPage,
+    totalPages,
+    onPageChange,
+  }: {
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+  }) => (
     <div data-testid="pagination">
-      <span>Page {currentPage} of {totalPages}</span>
-      <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage <= 1}>Prev</button>
-      <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= totalPages}>Next</button>
+      <span>
+        Page {currentPage} of {totalPages}
+      </span>
+      <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage <= 1}>
+        Prev
+      </button>
+      <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= totalPages}>
+        Next
+      </button>
     </div>
   ),
 }));
@@ -113,8 +158,14 @@ vi.mock('../../hooks/useUsers', () => ({
     error: mockHooksState.error,
   }),
   useDeleteUser: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
-  useResetPassword: () => ({ mutateAsync: vi.fn().mockResolvedValue({ temporaryPassword: 'temp123' }), isPending: false }),
-  usePermanentlyDeleteUser: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
+  useResetPassword: () => ({
+    mutateAsync: vi.fn().mockResolvedValue({ temporaryPassword: 'temp123' }),
+    isPending: false,
+  }),
+  usePermanentlyDeleteUser: () => ({
+    mutateAsync: vi.fn().mockResolvedValue({}),
+    isPending: false,
+  }),
   useUpdateUser: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
 }));
 

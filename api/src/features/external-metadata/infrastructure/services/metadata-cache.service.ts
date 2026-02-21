@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and, lte, sql } from 'drizzle-orm';
@@ -18,9 +18,11 @@ export class MetadataCacheService {
   // Cache TTL in days (configurable via environment)
   private readonly DEFAULT_TTL_DAYS = 30;
 
-  constructor(@InjectPinoLogger(MetadataCacheService.name)
+  constructor(
+    @InjectPinoLogger(MetadataCacheService.name)
     private readonly logger: PinoLogger,
-    private readonly drizzle: DrizzleService) {}
+    private readonly drizzle: DrizzleService
+  ) {}
 
   /**
    * Get cached metadata for a specific entity and provider
@@ -29,7 +31,7 @@ export class MetadataCacheService {
     entityType: string,
     entityId: string,
     provider: string
-  ): Promise<any | null> {
+  ): Promise<Record<string, unknown> | null> {
     try {
       const results = await this.drizzle.db
         .select()
@@ -47,13 +49,17 @@ export class MetadataCacheService {
 
       if (!cached) {
         // Use debug level to avoid excessive logging in production
-        this.logger.debug(`📭 Cache MISS: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...)`);
+        this.logger.debug(
+          `📭 Cache MISS: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...)`
+        );
         return null;
       }
 
       // Check if cache is expired
       if (cached.expiresAt && new Date() > cached.expiresAt) {
-        this.logger.debug(`⏰ Cache EXPIRED: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...) - expired ${cached.expiresAt.toISOString()}`);
+        this.logger.debug(
+          `⏰ Cache EXPIRED: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...) - expired ${cached.expiresAt.toISOString()}`
+        );
         await this.delete(entityType, entityId, provider);
         return null;
       }
@@ -62,10 +68,15 @@ export class MetadataCacheService {
       const cacheAge = cached.fetchedAt
         ? Math.round((Date.now() - new Date(cached.fetchedAt).getTime()) / (1000 * 60 * 60))
         : 'unknown';
-      this.logger.debug(`✅ Cache HIT: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...) - cached ${cacheAge}h ago`);
+      this.logger.debug(
+        `✅ Cache HIT: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...) - cached ${cacheAge}h ago`
+      );
       return JSON.parse(cached.data);
     } catch (error) {
-      this.logger.error(`Error reading from cache: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error reading from cache: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       return null;
     }
   }
@@ -77,7 +88,7 @@ export class MetadataCacheService {
     entityType: string,
     entityId: string,
     provider: string,
-    metadata: any,
+    metadata: Record<string, unknown>,
     ttlDays?: number
   ): Promise<void> {
     try {
@@ -113,31 +124,28 @@ export class MetadataCacheService {
             )
           );
       } else {
-        await this.drizzle.db
-          .insert(metadataCache)
-          .values({
-            entityId,
-            entityType,
-            provider,
-            data: JSON.stringify(metadata),
-            expiresAt,
-          });
+        await this.drizzle.db.insert(metadataCache).values({
+          entityId,
+          entityType,
+          provider,
+          data: JSON.stringify(metadata),
+          expiresAt,
+        });
       }
 
       this.logger.debug(`Cached metadata: ${entityType}:${entityId}:${provider}`);
     } catch (error) {
-      this.logger.error(`Error writing to cache: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error writing to cache: ${(error as Error).message}`,
+        (error as Error).stack
+      );
     }
   }
 
   /**
    * Delete cached metadata
    */
-  async delete(
-    entityType: string,
-    entityId: string,
-    provider: string
-  ): Promise<void> {
+  async delete(entityType: string, entityId: string, provider: string): Promise<void> {
     try {
       await this.drizzle.db
         .delete(metadataCache)
@@ -151,7 +159,10 @@ export class MetadataCacheService {
 
       this.logger.debug(`Deleted cache: ${entityType}:${entityId}:${provider}`);
     } catch (error) {
-      this.logger.error(`Error deleting cache: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error deleting cache: ${(error as Error).message}`,
+        (error as Error).stack
+      );
     }
   }
 
@@ -162,16 +173,14 @@ export class MetadataCacheService {
     try {
       await this.drizzle.db
         .delete(metadataCache)
-        .where(
-          and(
-            eq(metadataCache.entityType, entityType),
-            eq(metadataCache.entityId, entityId)
-          )
-        );
+        .where(and(eq(metadataCache.entityType, entityType), eq(metadataCache.entityId, entityId)));
 
       this.logger.debug(`Cleared all cache for ${entityType}:${entityId}`);
     } catch (error) {
-      this.logger.error(`Error clearing entity cache: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error clearing entity cache: ${(error as Error).message}`,
+        (error as Error).stack
+      );
     }
   }
 
@@ -190,7 +199,10 @@ export class MetadataCacheService {
       this.logger.info(`Cleared ${count} expired cache entries`);
       return count;
     } catch (error) {
-      this.logger.error(`Error clearing expired cache: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error clearing expired cache: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       return 0;
     }
   }
@@ -205,9 +217,7 @@ export class MetadataCacheService {
   }> {
     try {
       const [totalResult, byEntityType, byProvider] = await Promise.all([
-        this.drizzle.db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(metadataCache),
+        this.drizzle.db.select({ count: sql<number>`count(*)::int` }).from(metadataCache),
         this.drizzle.db
           .select({
             entityType: metadataCache.entityType,
@@ -228,15 +238,14 @@ export class MetadataCacheService {
 
       return {
         total,
-        byEntityType: Object.fromEntries(
-          byEntityType.map((item) => [item.entityType, item.count])
-        ),
-        byProvider: Object.fromEntries(
-          byProvider.map((item) => [item.provider, item.count])
-        ),
+        byEntityType: Object.fromEntries(byEntityType.map((item) => [item.entityType, item.count])),
+        byProvider: Object.fromEntries(byProvider.map((item) => [item.provider, item.count])),
       };
     } catch (error) {
-      this.logger.error(`Error getting cache stats: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error getting cache stats: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       return { total: 0, byEntityType: {}, byProvider: {} };
     }
   }

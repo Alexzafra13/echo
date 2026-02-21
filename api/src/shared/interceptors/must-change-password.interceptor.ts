@@ -25,7 +25,7 @@ import { Observable } from 'rxjs';
 export class MustChangePasswordInterceptor implements NestInterceptor {
   constructor(private reflector: Reflector) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
@@ -36,10 +36,10 @@ export class MustChangePasswordInterceptor implements NestInterceptor {
     }
 
     // Verificar si la ruta está marcada como permitida para cambio de contraseña
-    const allowChangePassword = this.reflector.getAllAndOverride<boolean>(
-      'allowChangePassword',
-      [context.getHandler(), context.getClass()],
-    );
+    const allowChangePassword = this.reflector.getAllAndOverride<boolean>('allowChangePassword', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     // Si la ruta está permitida, dejar pasar
     if (allowChangePassword) {

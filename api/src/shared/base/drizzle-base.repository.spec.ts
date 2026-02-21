@@ -20,7 +20,7 @@ const mockTable = {
   id: { name: 'id' },
   name: { name: 'name' },
   active: { name: 'active' },
-} as any;
+} as unknown as Record<string, { name: string }>;
 
 // Test mapper
 const testMapper: EntityMapper<TestDomain, TestPersistence> = {
@@ -48,7 +48,7 @@ class TestRepository extends DrizzleBaseRepository<TestDomain, TestPersistence> 
 
   public testBuildUpdateData<T extends Record<string, unknown>>(
     primitives: T,
-    fields: (keyof T)[],
+    fields: (keyof T)[]
   ) {
     return this.buildUpdateData(primitives, fields);
   }
@@ -57,7 +57,7 @@ class TestRepository extends DrizzleBaseRepository<TestDomain, TestPersistence> 
 describe('DrizzleBaseRepository', () => {
   let repository: TestRepository;
   let mockDrizzle: jest.Mocked<DrizzleService>;
-  let mockDb: any;
+  let mockDb: { delete: jest.Mock; where: jest.Mock; returning: jest.Mock };
 
   beforeEach(() => {
     // Setup mock chain for drizzle operations
@@ -69,7 +69,7 @@ describe('DrizzleBaseRepository', () => {
 
     mockDrizzle = {
       db: mockDb,
-    } as any;
+    } as unknown as jest.Mocked<DrizzleService>;
 
     repository = new TestRepository(mockDrizzle);
   });
@@ -211,10 +211,7 @@ describe('DrizzleBaseRepository', () => {
         description: 'test',
       };
 
-      const result = repository.testBuildUpdateData(primitives, [
-        'name',
-        'description',
-      ]);
+      const result = repository.testBuildUpdateData(primitives, ['name', 'description']);
 
       expect(result).toEqual({
         name: '',

@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and, lte, sql } from 'drizzle-orm';
@@ -10,8 +10,8 @@ import { mbidSearchCache } from '@infrastructure/database/schema';
 export interface MbidSearchCacheEntry {
   queryText: string;
   queryType: 'artist' | 'album' | 'recording';
-  queryParams?: Record<string, any>;
-  results: any[];
+  queryParams?: Record<string, unknown>;
+  results: unknown[];
   resultCount: number;
 }
 
@@ -39,9 +39,11 @@ export interface MbidSearchCacheEntry {
 export class MbidSearchCacheService {
   private readonly DEFAULT_TTL_DAYS = 7;
 
-  constructor(@InjectPinoLogger(MbidSearchCacheService.name)
+  constructor(
+    @InjectPinoLogger(MbidSearchCacheService.name)
     private readonly logger: PinoLogger,
-    private readonly drizzle: DrizzleService) {}
+    private readonly drizzle: DrizzleService
+  ) {}
 
   /**
    * Normaliza el texto de búsqueda para cache key
@@ -59,8 +61,8 @@ export class MbidSearchCacheService {
   private generateCacheKey(
     queryText: string,
     queryType: string,
-    queryParams?: Record<string, any>,
-  ): { queryText: string; queryType: string; queryParams: Record<string, any> } {
+    queryParams?: Record<string, unknown>
+  ): { queryText: string; queryType: string; queryParams: Record<string, unknown> } {
     const normalizedText = this.normalizeQuery(queryText);
     const normalizedParams = queryParams || {};
 
@@ -82,8 +84,8 @@ export class MbidSearchCacheService {
   async get(
     queryText: string,
     queryType: 'artist' | 'album' | 'recording',
-    queryParams?: Record<string, any>,
-  ): Promise<any[] | null> {
+    queryParams?: Record<string, unknown>
+  ): Promise<unknown[] | null> {
     try {
       const cacheKey = this.generateCacheKey(queryText, queryType, queryParams);
 
@@ -94,8 +96,8 @@ export class MbidSearchCacheService {
           and(
             eq(mbidSearchCache.queryText, cacheKey.queryText),
             eq(mbidSearchCache.queryType, cacheKey.queryType),
-            sql`${mbidSearchCache.queryParams} = ${JSON.stringify(cacheKey.queryParams)}::jsonb`,
-          ),
+            sql`${mbidSearchCache.queryParams} = ${JSON.stringify(cacheKey.queryParams)}::jsonb`
+          )
         )
         .limit(1);
 
@@ -103,7 +105,7 @@ export class MbidSearchCacheService {
 
       if (!cached) {
         this.logger.debug(
-          `Cache MISS: ${queryType}:"${queryText}" ${queryParams ? JSON.stringify(queryParams) : ''}`,
+          `Cache MISS: ${queryType}:"${queryText}" ${queryParams ? JSON.stringify(queryParams) : ''}`
         );
         return null;
       }
@@ -124,15 +126,13 @@ export class MbidSearchCacheService {
         })
         .where(eq(mbidSearchCache.id, cached.id));
 
-      this.logger.debug(
-        `Cache HIT: ${queryType}:"${queryText}" (hits: ${cached.hitCount + 1})`,
-      );
+      this.logger.debug(`Cache HIT: ${queryType}:"${queryText}" (hits: ${cached.hitCount + 1})`);
 
-      return cached.results as any[];
+      return cached.results as unknown[];
     } catch (error) {
       this.logger.error(
         `Error reading from cache: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
       return null;
     }
@@ -150,11 +150,7 @@ export class MbidSearchCacheService {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + ttl);
 
-      const cacheKey = this.generateCacheKey(
-        entry.queryText,
-        entry.queryType,
-        entry.queryParams,
-      );
+      const cacheKey = this.generateCacheKey(entry.queryText, entry.queryType, entry.queryParams);
 
       // Check if entry already exists
       const existing = await this.drizzle.db
@@ -164,8 +160,8 @@ export class MbidSearchCacheService {
           and(
             eq(mbidSearchCache.queryText, cacheKey.queryText),
             eq(mbidSearchCache.queryType, cacheKey.queryType),
-            sql`${mbidSearchCache.queryParams} = ${JSON.stringify(cacheKey.queryParams)}::jsonb`,
-          ),
+            sql`${mbidSearchCache.queryParams} = ${JSON.stringify(cacheKey.queryParams)}::jsonb`
+          )
         )
         .limit(1);
 
@@ -184,25 +180,23 @@ export class MbidSearchCacheService {
           .where(eq(mbidSearchCache.id, existing[0].id));
       } else {
         // Insert new entry
-        await this.drizzle.db
-          .insert(mbidSearchCache)
-          .values({
-            queryText: cacheKey.queryText,
-            queryType: cacheKey.queryType,
-            queryParams: cacheKey.queryParams,
-            results: entry.results,
-            resultCount: entry.resultCount,
-            expiresAt,
-          });
+        await this.drizzle.db.insert(mbidSearchCache).values({
+          queryText: cacheKey.queryText,
+          queryType: cacheKey.queryType,
+          queryParams: cacheKey.queryParams,
+          results: entry.results,
+          resultCount: entry.resultCount,
+          expiresAt,
+        });
       }
 
       this.logger.debug(
-        `Cached ${entry.queryType} search: "${entry.queryText}" (${entry.resultCount} results, TTL: ${ttl}d)`,
+        `Cached ${entry.queryType} search: "${entry.queryText}" (${entry.resultCount} results, TTL: ${ttl}d)`
       );
     } catch (error) {
       this.logger.error(
         `Error writing to cache: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
     }
   }
@@ -212,9 +206,7 @@ export class MbidSearchCacheService {
    */
   async delete(id: string): Promise<void> {
     try {
-      await this.drizzle.db
-        .delete(mbidSearchCache)
-        .where(eq(mbidSearchCache.id, id));
+      await this.drizzle.db.delete(mbidSearchCache).where(eq(mbidSearchCache.id, id));
       this.logger.debug(`Deleted cache entry: ${id}`);
     } catch (error) {
       this.logger.warn(`Error deleting cache entry: ${(error as Error).message}`);
@@ -236,9 +228,7 @@ export class MbidSearchCacheService {
       this.logger.info(`Cleaned up ${count} expired cache entries`);
       return count;
     } catch (error) {
-      this.logger.error(
-        `Error cleaning up expired cache: ${(error as Error).message}`,
-      );
+      this.logger.error(`Error cleaning up expired cache: ${(error as Error).message}`);
       return 0;
     }
   }
@@ -281,8 +271,7 @@ export class MbidSearchCacheService {
 
       entries.forEach((entry) => {
         const queryType = entry.queryType as 'artist' | 'album' | 'recording';
-        stats.hitsByType[queryType] =
-          (stats.hitsByType[queryType] || 0) + entry.hitCount;
+        stats.hitsByType[queryType] = (stats.hitsByType[queryType] || 0) + entry.hitCount;
         totalHits += entry.hitCount;
 
         if (entry.createdAt < oldestDate) {
@@ -295,9 +284,7 @@ export class MbidSearchCacheService {
 
       return stats;
     } catch (error) {
-      this.logger.error(
-        `Error getting cache stats: ${(error as Error).message}`,
-      );
+      this.logger.error(`Error getting cache stats: ${(error as Error).message}`);
       return {
         totalEntries: 0,
         hitsByType: { artist: 0, album: 0, recording: 0 },
@@ -312,9 +299,7 @@ export class MbidSearchCacheService {
    */
   async clear(): Promise<number> {
     try {
-      const deleted = await this.drizzle.db
-        .delete(mbidSearchCache)
-        .returning();
+      const deleted = await this.drizzle.db.delete(mbidSearchCache).returning();
       const count = deleted.length;
       this.logger.warn(`Cleared entire MBID search cache (${count} entries)`);
       return count;

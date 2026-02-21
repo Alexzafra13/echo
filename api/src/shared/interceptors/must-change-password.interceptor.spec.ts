@@ -15,7 +15,7 @@ describe('MustChangePasswordInterceptor', () => {
 
     mockCallHandler = {
       handle: jest.fn(() => of({})),
-    } as any;
+    } as unknown as CallHandler;
 
     mockExecutionContext = {
       switchToHttp: jest.fn().mockReturnValue({
@@ -25,7 +25,7 @@ describe('MustChangePasswordInterceptor', () => {
       }),
       getHandler: jest.fn(),
       getClass: jest.fn(),
-    } as any;
+    } as unknown as ExecutionContext;
   });
 
   it('should pass through if no user (public route)', () => {
@@ -70,7 +70,7 @@ describe('MustChangePasswordInterceptor', () => {
       interceptor.intercept(mockExecutionContext, mockCallHandler);
     } catch (error) {
       expect(error).toBeInstanceOf(ForbiddenException);
-      const response = (error as ForbiddenException).getResponse() as any;
+      const response = (error as ForbiddenException).getResponse() as Record<string, unknown>;
       expect(response.statusCode).toBe(403);
       expect(response.message).toBe('You must change your password before accessing the system');
       expect(response.error).toBe('MustChangePassword');

@@ -30,7 +30,7 @@ export class EntityCreationService {
     private readonly drizzle: DrizzleService,
     private readonly coverArtService: CoverArtService,
     @InjectPinoLogger(EntityCreationService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   /**
@@ -39,10 +39,7 @@ export class EntityCreationService {
    * Uses normalized name (without accents) to prevent duplicates like
    * "Dani Fernández" and "Dani Fernandez" being treated as different artists.
    */
-  async findOrCreateArtist(
-    artistName: string,
-    mbzArtistId?: string,
-  ): Promise<ArtistResult> {
+  async findOrCreateArtist(artistName: string, mbzArtistId?: string): Promise<ArtistResult> {
     const normalizedName = (artistName || 'Unknown Artist').trim();
     const orderName = normalizeForSorting(normalizedName);
 
@@ -99,7 +96,7 @@ export class EntityCreationService {
       mbzAlbumId?: string;
       mbzAlbumArtistId?: string;
     },
-    trackPath: string,
+    trackPath: string
   ): Promise<AlbumResult> {
     const normalizedName = (albumName || 'Unknown Album').trim();
     const orderName = normalizeForSorting(normalizedName);
@@ -141,11 +138,17 @@ export class EntityCreationService {
 
     if (existingAlbum[0]) {
       let coverExtracted = false;
-      const updates: any = {};
+      const updates: Partial<{
+        mbzAlbumId: string | null;
+        mbzAlbumArtistId: string | null;
+        pid: string;
+        coverArtPath: string;
+        updatedAt: Date;
+      }> = {};
 
       this.logger.debug(
         `Found existing album "${existingAlbum[0].name}" (ID: ${existingAlbum[0].id}), ` +
-        `coverArtPath: ${existingAlbum[0].coverArtPath === null ? 'NULL' : `"${existingAlbum[0].coverArtPath}"`}`
+          `coverArtPath: ${existingAlbum[0].coverArtPath === null ? 'NULL' : `"${existingAlbum[0].coverArtPath}"`}`
       );
 
       // Update MBID and PID if provided and album doesn't have one
@@ -153,8 +156,15 @@ export class EntityCreationService {
         updates.mbzAlbumId = metadata.mbzAlbumId;
         updates.mbzAlbumArtistId = metadata.mbzAlbumArtistId || null;
         // Regenerate PID with MusicBrainz ID (more stable)
-        updates.pid = generateAlbumPid(metadata.mbzAlbumId, artistId, normalizedName, metadata.year);
-        this.logger.debug(`Updated MBID for album "${existingAlbum[0].name}": ${metadata.mbzAlbumId}`);
+        updates.pid = generateAlbumPid(
+          metadata.mbzAlbumId,
+          artistId,
+          normalizedName,
+          metadata.year
+        );
+        this.logger.debug(
+          `Updated MBID for album "${existingAlbum[0].name}": ${metadata.mbzAlbumId}`
+        );
       }
 
       // Set PID for legacy albums that don't have one
@@ -164,19 +174,25 @@ export class EntityCreationService {
 
       // Extract cover if missing
       if (!existingAlbum[0].coverArtPath) {
-        this.logger.debug(`Attempting to extract cover for existing album "${existingAlbum[0].name}" from: ${trackPath}`);
+        this.logger.debug(
+          `Attempting to extract cover for existing album "${existingAlbum[0].name}" from: ${trackPath}`
+        );
 
         const coverPath = await this.coverArtService.extractAndCacheCover(
           existingAlbum[0].id,
-          trackPath,
+          trackPath
         );
 
-        this.logger.debug(`Cover extraction result for "${existingAlbum[0].name}": ${coverPath || 'NULL'}`);
+        this.logger.debug(
+          `Cover extraction result for "${existingAlbum[0].name}": ${coverPath || 'NULL'}`
+        );
 
         if (coverPath) {
           updates.coverArtPath = coverPath;
           coverExtracted = true;
-          this.logger.info(`✅ Extracted cover for existing album "${existingAlbum[0].name}": ${coverPath}`);
+          this.logger.info(
+            `✅ Extracted cover for existing album "${existingAlbum[0].name}": ${coverPath}`
+          );
         } else {
           this.logger.warn(`❌ No cover found for existing album "${existingAlbum[0].name}"`);
         }
@@ -185,10 +201,7 @@ export class EntityCreationService {
       // Apply updates if any
       if (Object.keys(updates).length > 0) {
         updates.updatedAt = new Date();
-        await this.drizzle.db
-          .update(albums)
-          .set(updates)
-          .where(eq(albums.id, existingAlbum[0].id));
+        await this.drizzle.db.update(albums).set(updates).where(eq(albums.id, existingAlbum[0].id));
       }
 
       return {
@@ -203,10 +216,7 @@ export class EntityCreationService {
     // Create new album
     const albumId = generateUuid();
 
-    const coverPath = await this.coverArtService.extractAndCacheCover(
-      albumId,
-      trackPath,
-    );
+    const coverPath = await this.coverArtService.extractAndCacheCover(albumId, trackPath);
 
     const newAlbum = await this.drizzle.db
       .insert(albums)

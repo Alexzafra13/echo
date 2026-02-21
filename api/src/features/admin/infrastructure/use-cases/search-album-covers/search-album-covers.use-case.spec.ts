@@ -6,7 +6,15 @@ import { ImageSearchOrchestratorService } from '@features/external-metadata/appl
 
 describe('SearchAlbumCoversUseCase', () => {
   let useCase: SearchAlbumCoversUseCase;
-  let mockDrizzle: any;
+  let mockDrizzle: {
+    db: {
+      select: jest.Mock;
+      from: jest.Mock;
+      leftJoin: jest.Mock;
+      where: jest.Mock;
+      limit: jest.Mock;
+    };
+  };
   let mockOrchestrator: jest.Mocked<ImageSearchOrchestratorService>;
 
   const mockAlbum = {
@@ -49,10 +57,12 @@ describe('SearchAlbumCoversUseCase', () => {
     const mockFrom = jest.fn().mockReturnThis();
     const mockLeftJoin = jest.fn().mockReturnThis();
     const mockWhere = jest.fn().mockReturnThis();
-    const mockLimit = jest.fn().mockResolvedValue([{
-      album: mockAlbum,
-      artist: mockArtist,
-    }]);
+    const mockLimit = jest.fn().mockResolvedValue([
+      {
+        album: mockAlbum,
+        artist: mockArtist,
+      },
+    ]);
 
     mockDrizzle = {
       db: {
@@ -66,7 +76,7 @@ describe('SearchAlbumCoversUseCase', () => {
 
     mockOrchestrator = {
       searchAlbumCovers: jest.fn().mockResolvedValue(mockCovers),
-    } as any;
+    } as unknown as jest.Mocked<ImageSearchOrchestratorService>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -120,10 +130,12 @@ describe('SearchAlbumCoversUseCase', () => {
     });
 
     it('should handle album without artist (orphan album)', async () => {
-      mockDrizzle.db.limit.mockResolvedValue([{
-        album: mockAlbum,
-        artist: null,
-      }]);
+      mockDrizzle.db.limit.mockResolvedValue([
+        {
+          album: mockAlbum,
+          artist: null,
+        },
+      ]);
 
       const result = await useCase.execute(input);
 
@@ -137,17 +149,19 @@ describe('SearchAlbumCoversUseCase', () => {
     });
 
     it('should handle album without mbzAlbumId', async () => {
-      mockDrizzle.db.limit.mockResolvedValue([{
-        album: { ...mockAlbum, mbzAlbumId: null },
-        artist: mockArtist,
-      }]);
+      mockDrizzle.db.limit.mockResolvedValue([
+        {
+          album: { ...mockAlbum, mbzAlbumId: null },
+          artist: mockArtist,
+        },
+      ]);
 
       const result = await useCase.execute(input);
 
       expect(mockOrchestrator.searchAlbumCovers).toHaveBeenCalledWith(
         expect.objectContaining({
           mbzAlbumId: null,
-        }),
+        })
       );
       expect(result.albumInfo.mbzAlbumId).toBeUndefined();
     });

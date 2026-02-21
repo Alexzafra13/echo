@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { eq, desc, count } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { libraryScans } from '@infrastructure/database/schema';
-import { LibraryScan } from '../../domain/entities/library-scan.entity';
+import { LibraryScan, LibraryScanProps } from '../../domain/entities/library-scan.entity';
 import { IScannerRepository } from '../../domain/ports/scanner-repository.port';
 import { ScannerMapper } from './scanner.mapper';
 
@@ -59,8 +59,8 @@ export class DrizzleScannerRepository implements IScannerRepository {
     return ScannerMapper.toDomain(result[0]);
   }
 
-  async update(id: string, data: Partial<LibraryScan>): Promise<LibraryScan | null> {
-    const primitives = data.toPrimitives ? data.toPrimitives() : data;
+  async update(id: string, data: Partial<LibraryScanProps>): Promise<LibraryScan | null> {
+    const primitives = data;
 
     const updateData: Partial<{
       status: string;

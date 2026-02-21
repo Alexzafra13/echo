@@ -7,14 +7,27 @@ import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { ScannerGateway } from '../gateways/scanner.gateway';
 import { getLoggerToken } from 'nestjs-pino';
 
+interface MockLogger {
+  debug: jest.Mock;
+  warn: jest.Mock;
+  error: jest.Mock;
+  info: jest.Mock;
+}
+
+interface LufsJobData {
+  trackId: string;
+  trackTitle: string;
+  filePath: string;
+}
+
 describe('LufsAnalysisQueueService', () => {
   let service: LufsAnalysisQueueService;
-  let mockDrizzle: any;
-  let mockBullmq: any;
-  let mockLufsAnalyzer: any;
-  let mockScannerGateway: any;
-  let mockConfigService: any;
-  let mockLogger: any;
+  let mockDrizzle: Partial<DrizzleService>;
+  let mockBullmq: Partial<jest.Mocked<BullmqService>>;
+  let mockLufsAnalyzer: Partial<jest.Mocked<LufsAnalyzerService>>;
+  let mockScannerGateway: Partial<jest.Mocked<ScannerGateway>>;
+  let mockConfigService: Partial<jest.Mocked<ConfigService>>;
+  let mockLogger: MockLogger;
 
   // Track mocks for database queries
   const mockTracks = [
@@ -122,7 +135,7 @@ describe('LufsAnalysisQueueService', () => {
         expect.any(Function),
         expect.objectContaining({
           concurrency: expect.any(Number),
-        }),
+        })
       );
     });
 
@@ -132,7 +145,7 @@ describe('LufsAnalysisQueueService', () => {
 
       // Assert
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('LufsAnalysisQueueService initialized'),
+        expect.stringContaining('LufsAnalysisQueueService initialized')
       );
     });
   });
@@ -218,7 +231,7 @@ describe('LufsAnalysisQueueService', () => {
           isRunning: true,
           pendingTracks: expect.any(Number),
           processedInSession: 0,
-        }),
+        })
       );
     });
 
@@ -246,7 +259,7 @@ describe('LufsAnalysisQueueService', () => {
           attempts: 1,
           removeOnComplete: true,
           removeOnFail: true,
-        }),
+        })
       );
     });
   });
@@ -267,7 +280,7 @@ describe('LufsAnalysisQueueService', () => {
 
       // Assert
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('LUFS analysis queue stopped'),
+        expect.stringContaining('LUFS analysis queue stopped')
       );
     });
   });
@@ -298,7 +311,8 @@ describe('LufsAnalysisQueueService', () => {
       // Arrange - Start the queue first
       const mockSelectResult = {
         from: jest.fn().mockReturnThis(),
-        where: jest.fn()
+        where: jest
+          .fn()
           .mockResolvedValueOnce(mockTracks) // For startLufsAnalysisQueue
           .mockResolvedValue([{ count: 10 }]), // For getQueueStats
       };
@@ -317,7 +331,7 @@ describe('LufsAnalysisQueueService', () => {
   });
 
   describe('processLufsJob (via processor)', () => {
-    let jobProcessor: (job: any) => Promise<void>;
+    let jobProcessor: (job: { data: LufsJobData }) => Promise<void>;
 
     beforeEach(async () => {
       await service.onModuleInit();
@@ -353,7 +367,7 @@ describe('LufsAnalysisQueueService', () => {
           rgTrackGain: expect.any(Number),
           rgTrackPeak: expect.any(Number),
           lufsAnalyzedAt: expect.any(Date),
-        }),
+        })
       );
     });
 
@@ -383,13 +397,13 @@ describe('LufsAnalysisQueueService', () => {
       expect(mockUpdateResult.set).toHaveBeenCalledWith(
         expect.objectContaining({
           lufsAnalyzedAt: expect.any(Date),
-        }),
+        })
       );
       // Should NOT include gain/peak values
       expect(mockUpdateResult.set).not.toHaveBeenCalledWith(
         expect.objectContaining({
           rgTrackGain: expect.any(Number),
-        }),
+        })
       );
     });
 
@@ -415,9 +429,7 @@ describe('LufsAnalysisQueueService', () => {
       await jobProcessor(mockJob);
 
       // Assert
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error analyzing'),
-      );
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error analyzing'));
       expect(mockDrizzle.db.update).toHaveBeenCalled();
     });
 
@@ -452,7 +464,8 @@ describe('LufsAnalysisQueueService', () => {
 
       const mockSelectResult = {
         from: jest.fn().mockReturnThis(),
-        where: jest.fn()
+        where: jest
+          .fn()
           .mockResolvedValueOnce(mockTracks)
           .mockResolvedValue([{ count: 2 }]),
       };
@@ -476,9 +489,9 @@ describe('LufsAnalysisQueueService', () => {
       const mockSelectResult = {
         from: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue([mockTracks[0]]), // Only one track
-        groupBy: jest.fn().mockResolvedValue([
-          { albumId: 'album-1', avgGain: -2.5, maxPeak: 0.95, trackCount: 1 },
-        ]),
+        groupBy: jest
+          .fn()
+          .mockResolvedValue([{ albumId: 'album-1', avgGain: -2.5, maxPeak: 0.95, trackCount: 1 }]),
       };
       mockDrizzle.db.select.mockReturnValue(mockSelectResult);
 
@@ -502,9 +515,7 @@ describe('LufsAnalysisQueueService', () => {
       });
 
       // Assert - Album gains calculation should have been attempted
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('album gains'),
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('album gains'));
     });
   });
 
@@ -536,7 +547,7 @@ describe('LufsAnalysisQueueService', () => {
       expect(mockBullmq.registerProcessor).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(Function),
-        expect.objectContaining({ concurrency: 4 }),
+        expect.objectContaining({ concurrency: 4 })
       );
     });
   });

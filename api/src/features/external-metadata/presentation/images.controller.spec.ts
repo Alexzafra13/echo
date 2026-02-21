@@ -43,7 +43,7 @@ describe('ImagesController', () => {
       header: jest.fn().mockReturnThis(),
       send: jest.fn().mockReturnThis(),
     };
-    return reply as any;
+    return reply as unknown as FastifyReply;
   };
 
   beforeEach(async () => {
@@ -93,7 +93,7 @@ describe('ImagesController', () => {
         'profile',
         undefined,
         undefined,
-        reply,
+        reply
       );
 
       expect(result).toBeInstanceOf(StreamableFile);
@@ -101,7 +101,7 @@ describe('ImagesController', () => {
       expect(reply.header).toHaveBeenCalledWith('ETag', '"abc123"');
       expect(reply.header).toHaveBeenCalledWith(
         'Cache-Control',
-        'public, max-age=31536000, immutable',
+        'public, max-age=31536000, immutable'
       );
     });
 
@@ -115,7 +115,7 @@ describe('ImagesController', () => {
         'profile',
         undefined,
         '"abc123"', // If-None-Match header
-        reply,
+        reply
       );
 
       expect(result).toBeUndefined();
@@ -126,7 +126,7 @@ describe('ImagesController', () => {
       const reply = createMockReply();
 
       await expect(
-        controller.getArtistImage('artist-1', 'invalid', undefined, undefined, reply),
+        controller.getArtistImage('artist-1', 'invalid', undefined, undefined, reply)
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -136,7 +136,7 @@ describe('ImagesController', () => {
       const reply = createMockReply();
 
       await expect(
-        controller.getArtistImage('artist-1', 'profile', undefined, undefined, reply),
+        controller.getArtistImage('artist-1', 'profile', undefined, undefined, reply)
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -152,7 +152,7 @@ describe('ImagesController', () => {
           imageType,
           undefined,
           undefined,
-          reply,
+          reply
         );
         expect(result).toBeInstanceOf(StreamableFile);
       }
@@ -247,13 +247,13 @@ describe('ImagesController', () => {
 
     it('should throw NotFoundException when custom image not found', async () => {
       imageService.getCustomArtistImage.mockRejectedValue(
-        new NotFoundException('Custom image not found'),
+        new NotFoundException('Custom image not found')
       );
 
       const reply = createMockReply();
 
       await expect(
-        controller.getCustomArtistImage('artist-1', 'non-existent', reply),
+        controller.getCustomArtistImage('artist-1', 'non-existent', reply)
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -293,7 +293,7 @@ describe('ImagesController', () => {
       const reply = createMockReply();
 
       await expect(
-        controller.getAlbumCover('non-existent', undefined, undefined, reply),
+        controller.getAlbumCover('non-existent', undefined, undefined, reply)
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -359,13 +359,13 @@ describe('ImagesController', () => {
 
     it('should throw NotFoundException when custom cover not found', async () => {
       imageService.getCustomAlbumCover.mockRejectedValue(
-        new NotFoundException('Custom cover not found'),
+        new NotFoundException('Custom cover not found')
       );
 
       const reply = createMockReply();
 
       await expect(
-        controller.getCustomAlbumCover('album-1', 'non-existent', reply),
+        controller.getCustomAlbumCover('album-1', 'non-existent', reply)
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -394,7 +394,7 @@ describe('ImagesController', () => {
       const reply = createMockReply();
 
       await expect(controller.getUserAvatar('non-existent', reply)).rejects.toThrow(
-        NotFoundException,
+        NotFoundException
       );
     });
   });
@@ -414,17 +414,17 @@ describe('ImagesController', () => {
       expect(reply.header).toHaveBeenCalledWith('Content-Type', 'image/jpeg');
       expect(reply.header).toHaveBeenCalledWith(
         'Last-Modified',
-        mockImageResult.lastModified.toUTCString(),
+        mockImageResult.lastModified.toUTCString()
       );
       expect(reply.header).toHaveBeenCalledWith('ETag', '"abc123"');
       expect(reply.header).toHaveBeenCalledWith(
         'Cache-Control',
-        'public, max-age=31536000, immutable',
+        'public, max-age=31536000, immutable'
       );
       expect(reply.header).toHaveBeenCalledWith('Access-Control-Allow-Origin', '*');
       expect(reply.header).toHaveBeenCalledWith(
         'Access-Control-Allow-Methods',
-        'GET, HEAD, OPTIONS',
+        'GET, HEAD, OPTIONS'
       );
     });
   });

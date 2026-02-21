@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useAudioElements, AudioElementsCallbacks } from './useAudioElements';
+import { renderHook, act } from '@testing-library/react';
+import { useAudioElements } from './useAudioElements';
 
 // Mock logger to avoid console noise
 vi.mock('@shared/utils/logger', () => ({
@@ -12,8 +12,16 @@ vi.mock('@shared/utils/logger', () => ({
   },
 }));
 
+// Interface for mock audio that allows writing readonly HTMLAudioElement properties
+interface MockAudioElement extends HTMLAudioElement {
+  _triggerEvent: (event: string, eventObj?: Event) => void;
+  _setReadyState: (state: number) => void;
+  readyState: number;
+  duration: number;
+}
+
 // Create a mock Audio element with all needed properties and methods
-function createMockAudio(): HTMLAudioElement {
+function createMockAudio(): MockAudioElement {
   const eventListeners: Record<string, Set<EventListener>> = {};
 
   const mockAudio = {
@@ -24,26 +32,28 @@ function createMockAudio(): HTMLAudioElement {
     src: '',
     readyState: 0,
 
-    play: vi.fn().mockImplementation(function(this: typeof mockAudio) {
+    play: vi.fn().mockImplementation(function (this: typeof mockAudio) {
       this.paused = false;
       // Trigger play event
-      eventListeners['play']?.forEach(listener => listener(new Event('play')));
+      eventListeners['play']?.forEach((listener) => listener(new Event('play')));
       return Promise.resolve();
     }),
 
-    pause: vi.fn().mockImplementation(function(this: typeof mockAudio) {
+    pause: vi.fn().mockImplementation(function (this: typeof mockAudio) {
       this.paused = true;
-      eventListeners['pause']?.forEach(listener => listener(new Event('pause')));
+      eventListeners['pause']?.forEach((listener) => listener(new Event('pause')));
     }),
 
     load: vi.fn(),
 
-    addEventListener: vi.fn((event: string, handler: EventListener, options?: AddEventListenerOptions) => {
-      if (!eventListeners[event]) {
-        eventListeners[event] = new Set();
+    addEventListener: vi.fn(
+      (event: string, handler: EventListener, _options?: AddEventListenerOptions) => {
+        if (!eventListeners[event]) {
+          eventListeners[event] = new Set();
+        }
+        eventListeners[event].add(handler);
       }
-      eventListeners[event].add(handler);
-    }),
+    ),
 
     removeEventListener: vi.fn((event: string, handler: EventListener) => {
       eventListeners[event]?.delete(handler);
@@ -51,28 +61,25 @@ function createMockAudio(): HTMLAudioElement {
 
     // Helper to trigger events in tests
     _triggerEvent: (event: string, eventObj?: Event) => {
-      eventListeners[event]?.forEach(listener => {
+      eventListeners[event]?.forEach((listener) => {
         listener(eventObj || new Event(event));
         // Handle { once: true } option
       });
     },
 
-    _setReadyState: function(state: number) {
+    _setReadyState: function (state: number) {
       this.readyState = state;
       if (state >= 4) {
         this._triggerEvent('canplaythrough');
       }
     },
-  } as unknown as HTMLAudioElement & {
-    _triggerEvent: (event: string, eventObj?: Event) => void;
-    _setReadyState: (state: number) => void;
-  };
+  } as unknown as MockAudioElement;
 
   return mockAudio;
 }
 
 describe('useAudioElements', () => {
-  let mockAudioInstances: ReturnType<typeof createMockAudio>[];
+  let mockAudioInstances: MockAudioElement[];
   let originalAudio: typeof Audio;
 
   beforeEach(() => {
@@ -273,7 +280,7 @@ describe('useAudioElements', () => {
       const { result } = renderHook(() => useAudioElements());
 
       // Simulate audio ready
-      (mockAudioInstances[0] as any).readyState = 4;
+      mockAudioInstances[0].readyState = 4;
 
       await act(async () => {
         await result.current.playActive();
@@ -286,11 +293,11 @@ describe('useAudioElements', () => {
       const { result } = renderHook(() => useAudioElements());
 
       // Start with readyState < 4
-      (mockAudioInstances[0] as any).readyState = 2;
+      mockAudioInstances[0].readyState = 2;
 
       // Simulate canplaythrough event after a delay
       setTimeout(() => {
-        (mockAudioInstances[0] as any)._setReadyState(4);
+        mockAudioInstances[0]._setReadyState(4);
       }, 10);
 
       await act(async () => {
@@ -316,7 +323,7 @@ describe('useAudioElements', () => {
       const { result } = renderHook(() => useAudioElements());
 
       // Simulate audio ready
-      (mockAudioInstances[1] as any).readyState = 4;
+      mockAudioInstances[1].readyState = 4;
 
       await act(async () => {
         await result.current.playInactive();
@@ -450,7 +457,7 @@ describe('useAudioElements', () => {
     it('should return duration of active audio', () => {
       const { result } = renderHook(() => useAudioElements());
 
-      (mockAudioInstances[0] as any).duration = 180;
+      mockAudioInstances[0].duration = 180;
 
       expect(result.current.getDuration()).toBe(180);
     });
@@ -488,11 +495,9 @@ describe('useAudioElements', () => {
   describe('callbacks', () => {
     it('should call onPlay when audio starts playing', async () => {
       const onPlay = vi.fn();
-      const { result } = renderHook(() =>
-        useAudioElements({ callbacks: { onPlay } })
-      );
+      const { result } = renderHook(() => useAudioElements({ callbacks: { onPlay } }));
 
-      (mockAudioInstances[0] as any).readyState = 4;
+      mockAudioInstances[0].readyState = 4;
 
       await act(async () => {
         await result.current.playActive();
@@ -503,119 +508,101 @@ describe('useAudioElements', () => {
 
     it('should call onPause when both audios are paused', () => {
       const onPause = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onPause } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onPause } }));
 
       // Simulate both paused
       mockAudioInstances[0].paused = true;
       mockAudioInstances[1].paused = true;
 
       // Trigger pause event
-      (mockAudioInstances[0] as any)._triggerEvent('pause');
+      mockAudioInstances[0]._triggerEvent('pause');
 
       expect(onPause).toHaveBeenCalled();
     });
 
     it('should NOT call onPause during crossfade (one still playing)', () => {
       const onPause = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onPause } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onPause } }));
 
       // Simulate crossfade - A paused, B playing
       mockAudioInstances[0].paused = true;
       mockAudioInstances[1].paused = false;
 
       // Trigger pause event on A
-      (mockAudioInstances[0] as any)._triggerEvent('pause');
+      mockAudioInstances[0]._triggerEvent('pause');
 
       expect(onPause).not.toHaveBeenCalled();
     });
 
     it('should call onEnded when track ends', () => {
       const onEnded = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onEnded } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onEnded } }));
 
-      (mockAudioInstances[0] as any)._triggerEvent('ended');
+      mockAudioInstances[0]._triggerEvent('ended');
 
       expect(onEnded).toHaveBeenCalled();
     });
 
     it('should call onTimeUpdate only for active audio', () => {
       const onTimeUpdate = vi.fn();
-      const { result } = renderHook(() =>
-        useAudioElements({ callbacks: { onTimeUpdate } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onTimeUpdate } }));
 
       mockAudioInstances[0].currentTime = 15;
-      (mockAudioInstances[0] as any)._triggerEvent('timeupdate');
+      mockAudioInstances[0]._triggerEvent('timeupdate');
 
       expect(onTimeUpdate).toHaveBeenCalledWith(15);
 
       // Now trigger on inactive - should not call
       onTimeUpdate.mockClear();
       mockAudioInstances[1].currentTime = 20;
-      (mockAudioInstances[1] as any)._triggerEvent('timeupdate');
+      mockAudioInstances[1]._triggerEvent('timeupdate');
 
       expect(onTimeUpdate).not.toHaveBeenCalled();
     });
 
     it('should call onDurationChange only for active audio', () => {
       const onDurationChange = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onDurationChange } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onDurationChange } }));
 
-      (mockAudioInstances[0] as any).duration = 200;
-      (mockAudioInstances[0] as any)._triggerEvent('loadedmetadata');
+      mockAudioInstances[0].duration = 200;
+      mockAudioInstances[0]._triggerEvent('loadedmetadata');
 
       expect(onDurationChange).toHaveBeenCalledWith(200);
     });
 
     it('should call onError when error occurs', () => {
       const onError = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onError } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onError } }));
 
       const errorEvent = new Event('error');
-      (mockAudioInstances[0] as any)._triggerEvent('error', errorEvent);
+      mockAudioInstances[0]._triggerEvent('error', errorEvent);
 
       expect(onError).toHaveBeenCalledWith(errorEvent);
     });
 
     it('should call onWaiting when buffering', () => {
       const onWaiting = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onWaiting } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onWaiting } }));
 
-      (mockAudioInstances[0] as any)._triggerEvent('waiting');
+      mockAudioInstances[0]._triggerEvent('waiting');
 
       expect(onWaiting).toHaveBeenCalled();
     });
 
     it('should call onPlaying when playback resumes', () => {
       const onPlaying = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onPlaying } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onPlaying } }));
 
-      (mockAudioInstances[0] as any)._triggerEvent('playing');
+      mockAudioInstances[0]._triggerEvent('playing');
 
       expect(onPlaying).toHaveBeenCalled();
     });
 
     it('should call onStalled when playback stalls', () => {
       const onStalled = vi.fn();
-      renderHook(() =>
-        useAudioElements({ callbacks: { onStalled } })
-      );
+      renderHook(() => useAudioElements({ callbacks: { onStalled } }));
 
-      (mockAudioInstances[0] as any)._triggerEvent('stalled');
+      mockAudioInstances[0]._triggerEvent('stalled');
 
       expect(onStalled).toHaveBeenCalled();
     });
@@ -625,7 +612,7 @@ describe('useAudioElements', () => {
     it('should resolve immediately if readyState >= 4', async () => {
       const { result } = renderHook(() => useAudioElements());
 
-      (mockAudioInstances[0] as any).readyState = 4;
+      mockAudioInstances[0].readyState = 4;
 
       let resolved = false;
       await act(async () => {
@@ -638,11 +625,11 @@ describe('useAudioElements', () => {
     it('should wait for canplaythrough event', async () => {
       const { result } = renderHook(() => useAudioElements());
 
-      (mockAudioInstances[0] as any).readyState = 2;
+      mockAudioInstances[0].readyState = 2;
 
       // Simulate canplaythrough after a delay
       setTimeout(() => {
-        (mockAudioInstances[0] as any)._setReadyState(4);
+        mockAudioInstances[0]._setReadyState(4);
       }, 10);
 
       let resolved = false;
@@ -657,7 +644,7 @@ describe('useAudioElements', () => {
       vi.useFakeTimers();
       const { result } = renderHook(() => useAudioElements());
 
-      (mockAudioInstances[0] as any).readyState = 2;
+      mockAudioInstances[0].readyState = 2;
 
       const promise = result.current.waitForAudioReady(mockAudioInstances[0], 100);
 
@@ -745,7 +732,7 @@ describe('useAudioElements', () => {
       expect(mockAudioInstances[0].src).toBe('http://example.com/track1.mp3');
 
       // 2. Play active
-      (mockAudioInstances[0] as any).readyState = 4;
+      mockAudioInstances[0].readyState = 4;
       await act(async () => {
         await result.current.playActive();
       });
@@ -759,7 +746,7 @@ describe('useAudioElements', () => {
       expect(mockAudioInstances[1].volume).toBe(0); // Ready for fade in
 
       // 4. Start crossfade - play inactive
-      (mockAudioInstances[1] as any).readyState = 4;
+      mockAudioInstances[1].readyState = 4;
       await act(async () => {
         await result.current.playInactive();
       });

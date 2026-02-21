@@ -4,7 +4,7 @@ import { LogService, LogCategory } from './log.service';
 
 describe('LogCleanupService', () => {
   let service: LogCleanupService;
-  let mockLogger: any;
+  let mockLogger: { info: jest.Mock; debug: jest.Mock; error: jest.Mock };
   let mockLogService: jest.Mocked<LogService>;
 
   beforeEach(async () => {
@@ -48,11 +48,11 @@ describe('LogCleanupService', () => {
       expect(mockLogService.cleanupOldLogs).toHaveBeenCalledWith(30); // Default retention
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({ retentionDays: 30 }),
-        'Starting scheduled log cleanup',
+        'Starting scheduled log cleanup'
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({ deletedCount: 150, retentionDays: 30 }),
-        'Log cleanup completed',
+        'Log cleanup completed'
       );
     });
 
@@ -79,13 +79,13 @@ describe('LogCleanupService', () => {
       // Assert
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.objectContaining({ error: 'Database connection failed' }),
-        'Failed to clean up old logs',
+        'Failed to clean up old logs'
       );
       expect(mockLogService.error).toHaveBeenCalledWith(
         LogCategory.CLEANUP,
         'Scheduled log cleanup failed',
         {},
-        error,
+        error
       );
     });
 
@@ -112,7 +112,7 @@ describe('LogCleanupService', () => {
       expect(result).toBe(50);
       expect(mockLogger.info).toHaveBeenCalledWith(
         { retentionDays: 30 },
-        'Manual log cleanup triggered',
+        'Manual log cleanup triggered'
       );
     });
 
@@ -128,7 +128,7 @@ describe('LogCleanupService', () => {
       expect(result).toBe(200);
       expect(mockLogger.info).toHaveBeenCalledWith(
         { retentionDays: 7 },
-        'Manual log cleanup triggered',
+        'Manual log cleanup triggered'
       );
     });
   });

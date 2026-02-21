@@ -657,7 +657,7 @@ describe('TrackRepository Integration', () => {
       const updated = await repository.update(track.id, {
         title: 'Updated Title',
         duration: 240,
-      } as any);
+      } as Partial<Track>);
 
       expect(updated).toBeDefined();
       expect(updated?.title).toBe('Updated Title');
@@ -684,7 +684,7 @@ describe('TrackRepository Integration', () => {
       // Esperar un poco para que updatedAt sea diferente
       await new Promise(resolve => setTimeout(resolve, 10));
 
-      await repository.update(track.id, { title: 'Modified' } as any);
+      await repository.update(track.id, { title: 'Modified' } as Partial<Track>);
 
       const [dbTrack] = await drizzle.db
         .select()
@@ -697,7 +697,7 @@ describe('TrackRepository Integration', () => {
     it('debería retornar null si track no existe', async () => {
       const result = await repository.update(
         '00000000-0000-0000-0000-000000000000',
-        { title: 'No Existe' } as any,
+        { title: 'No Existe' } as Partial<Track>,
       );
 
       expect(result).toBeNull();

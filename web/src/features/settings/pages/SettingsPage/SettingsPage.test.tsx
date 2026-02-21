@@ -1,11 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { SettingsPage } from './SettingsPage';
 
 // Mock dependencies
 vi.mock('@shared/components/layout/Header', () => ({
-  Header: ({ showBackButton, disableSearch }: { showBackButton?: boolean; disableSearch?: boolean }) => (
-    <header data-testid="header" data-back={showBackButton} data-no-search={disableSearch}>Header</header>
+  Header: ({
+    showBackButton,
+    disableSearch,
+  }: {
+    showBackButton?: boolean;
+    disableSearch?: boolean;
+  }) => (
+    <header data-testid="header" data-back={showBackButton} data-no-search={disableSearch}>
+      Header
+    </header>
   ),
 }));
 
@@ -310,7 +318,9 @@ describe('SettingsPage', () => {
       mockPlayerState.normalization.enabled = true;
       render(<SettingsPage />);
 
-      const preventClippingLabel = screen.getByText('Prevenir distorsión').closest('div')?.parentElement;
+      const preventClippingLabel = screen
+        .getByText('Prevenir distorsión')
+        .closest('div')?.parentElement;
       const toggle = preventClippingLabel?.querySelector('input[type="checkbox"]');
 
       fireEvent.click(toggle!);
@@ -329,7 +339,9 @@ describe('SettingsPage', () => {
     it('should toggle crossfade', () => {
       render(<SettingsPage />);
 
-      const crossfadeLabel = screen.getByText('Fundido entre canciones').closest('div')?.parentElement;
+      const crossfadeLabel = screen
+        .getByText('Fundido entre canciones')
+        .closest('div')?.parentElement;
       const toggle = crossfadeLabel?.querySelector('input[type="checkbox"]');
 
       fireEvent.click(toggle!);
@@ -392,7 +404,9 @@ describe('SettingsPage', () => {
     it('should toggle autoplay', () => {
       render(<SettingsPage />);
 
-      const autoplayLabel = screen.getByText('Reproducción automática').closest('div')?.parentElement;
+      const autoplayLabel = screen
+        .getByText('Reproducción automática')
+        .closest('div')?.parentElement;
       const toggle = autoplayLabel?.querySelector('input[type="checkbox"]');
 
       fireEvent.click(toggle!);

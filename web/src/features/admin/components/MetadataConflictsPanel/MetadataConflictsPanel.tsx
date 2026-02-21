@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { AlertCircle, Sparkles } from 'lucide-react';
 import { CollapsibleInfo } from '@shared/components/ui';
-import {
-  useMetadataConflicts,
-  type MetadataConflict,
-} from '../../hooks/useMetadataConflicts';
+import { useMetadataConflicts, type MetadataConflict } from '../../hooks/useMetadataConflicts';
 import { ArtistSidebarItem, ConflictCard } from './components';
 import styles from './MetadataConflictsPanel.module.css';
 
@@ -19,6 +16,7 @@ export function MetadataConflictsPanel() {
   };
 
   const { data, isLoading, error } = useMetadataConflicts(filters);
+  const [selectedArtist, setSelectedArtist] = useState<string>('');
 
   const conflicts = data?.conflicts || [];
   const total = data?.total || 0;
@@ -44,15 +42,20 @@ export function MetadataConflictsPanel() {
     ([, a], [, b]) => b.length - a.length
   );
 
-  const [selectedArtist, setSelectedArtist] = useState<string>(
-    sortedArtists.length > 0 ? sortedArtists[0][0] : ''
-  );
+  const effectiveSelectedArtist =
+    selectedArtist && groupedConflicts[selectedArtist]
+      ? selectedArtist
+      : sortedArtists.length > 0
+        ? sortedArtists[0][0]
+        : '';
 
-  if (selectedArtist && !groupedConflicts[selectedArtist] && sortedArtists.length > 0) {
-    setSelectedArtist(sortedArtists[0][0]);
+  if (effectiveSelectedArtist !== selectedArtist) {
+    setSelectedArtist(effectiveSelectedArtist);
   }
 
-  const selectedConflicts = selectedArtist ? groupedConflicts[selectedArtist] || [] : [];
+  const selectedConflicts = effectiveSelectedArtist
+    ? groupedConflicts[effectiveSelectedArtist] || []
+    : [];
 
   // Handle error state
   if (error) {
@@ -74,9 +77,7 @@ export function MetadataConflictsPanel() {
           <Sparkles size={22} className={styles.headerIcon} />
           <div>
             <h2 className={styles.title}>Sugerencias de Metadatos</h2>
-            <p className={styles.description}>
-              {total} sugerencias pendientes de revisar
-            </p>
+            <p className={styles.description}>{total} sugerencias pendientes de revisar</p>
           </div>
         </div>
         <div className={styles.badge}>
@@ -87,57 +88,57 @@ export function MetadataConflictsPanel() {
       {/* Content */}
       <div className={styles.content}>
         <div className={styles.contentLayout}>
-            <aside className={styles.sidebar}>
-              <div className={styles.sidebarHeader}>
-                <h3 className={styles.sidebarTitle}>Artistas</h3>
-                <span className={styles.sidebarCount}>{sortedArtists.length}</span>
-              </div>
-              <div className={styles.sidebarList}>
-                {sortedArtists.map(([artistName, artistConflicts]) => (
-                  <ArtistSidebarItem
-                    key={artistName}
-                    artistName={artistName}
-                    conflictCount={artistConflicts.length}
-                    isSelected={selectedArtist === artistName}
-                    onClick={() => setSelectedArtist(artistName)}
-                  />
-                ))}
-              </div>
-            </aside>
+          <aside className={styles.sidebar}>
+            <div className={styles.sidebarHeader}>
+              <h3 className={styles.sidebarTitle}>Artistas</h3>
+              <span className={styles.sidebarCount}>{sortedArtists.length}</span>
+            </div>
+            <div className={styles.sidebarList}>
+              {sortedArtists.map(([artistName, artistConflicts]) => (
+                <ArtistSidebarItem
+                  key={artistName}
+                  artistName={artistName}
+                  conflictCount={artistConflicts.length}
+                  isSelected={effectiveSelectedArtist === artistName}
+                  onClick={() => setSelectedArtist(artistName)}
+                />
+              ))}
+            </div>
+          </aside>
 
-            <main className={styles.mainContent}>
-              {selectedArtist && (
-                <>
-                  <div className={styles.detailHeader}>
-                    <div>
-                      <h3 className={styles.detailTitle}>{selectedArtist}</h3>
-                      <p className={styles.detailSubtitle}>
-                        {selectedConflicts.length}{' '}
-                        {selectedConflicts.length === 1
-                          ? 'conflicto pendiente'
-                          : 'conflictos pendientes'}
-                      </p>
-                    </div>
+          <main className={styles.mainContent}>
+            {effectiveSelectedArtist && (
+              <>
+                <div className={styles.detailHeader}>
+                  <div>
+                    <h3 className={styles.detailTitle}>{effectiveSelectedArtist}</h3>
+                    <p className={styles.detailSubtitle}>
+                      {selectedConflicts.length}{' '}
+                      {selectedConflicts.length === 1
+                        ? 'conflicto pendiente'
+                        : 'conflictos pendientes'}
+                    </p>
                   </div>
-                  <div className={styles.conflictsList}>
-                    {selectedConflicts.map((conflict) => (
-                      <ConflictCard key={conflict.id} conflict={conflict} />
-                    ))}
-                  </div>
-                </>
-              )}
-            </main>
-          </div>
+                </div>
+                <div className={styles.conflictsList}>
+                  {selectedConflicts.map((conflict) => (
+                    <ConflictCard key={conflict.id} conflict={conflict} />
+                  ))}
+                </div>
+              </>
+            )}
+          </main>
+        </div>
 
         <CollapsibleInfo title="Sobre las sugerencias" defaultExpanded={false}>
           <ul>
             <li>
-              <strong>Alta prioridad (MusicBrainz):</strong> Se aplican automáticamente por
-              su alta confiabilidad
+              <strong>Alta prioridad (MusicBrainz):</strong> Se aplican automáticamente por su alta
+              confiabilidad
             </li>
             <li>
-              <strong>Media prioridad (Last.fm, Fanart):</strong> Requieren tu aprobación
-              antes de aplicarse
+              <strong>Media prioridad (Last.fm, Fanart):</strong> Requieren tu aprobación antes de
+              aplicarse
             </li>
             <li>
               <strong>Aceptar:</strong> Aplica la sugerencia y reemplaza el dato actual

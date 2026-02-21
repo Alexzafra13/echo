@@ -53,7 +53,7 @@ describe('Log Sanitizer', () => {
       const obj = { data: longStr };
       const result = sanitizeForLog(obj);
       expect((result.data as string).length).toBeLessThan(300);
-      expect((result.data as string)).toContain('...[truncated]');
+      expect(result.data as string).toContain('...[truncated]');
     });
 
     it('should leave normal fields unchanged', () => {
@@ -67,15 +67,15 @@ describe('Log Sanitizer', () => {
     it('should handle nested objects', () => {
       const obj = { user: { password: 'secret', name: 'John' } };
       const result = sanitizeForLog(obj);
-      expect((result.user as any).password).toBe('[REDACTED]');
-      expect((result.user as any).name).toBe('John');
+      expect((result.user as Record<string, unknown>).password).toBe('[REDACTED]');
+      expect((result.user as Record<string, unknown>).name).toBe('John');
     });
 
     it('should handle arrays', () => {
       const obj = { tokens: [{ token: 'abc' }, { token: 'xyz' }] };
       const result = sanitizeForLog(obj);
-      expect((result.tokens as any)[0].token).toBe('[REDACTED]');
-      expect((result.tokens as any)[1].token).toBe('[REDACTED]');
+      expect((result.tokens as Record<string, unknown>[])[0].token).toBe('[REDACTED]');
+      expect((result.tokens as Record<string, unknown>[])[1].token).toBe('[REDACTED]');
     });
 
     it('should handle null/undefined values', () => {
@@ -86,8 +86,8 @@ describe('Log Sanitizer', () => {
     });
 
     it('should handle non-object input', () => {
-      expect(sanitizeForLog(null as any)).toBeNull();
-      expect(sanitizeForLog(undefined as any)).toBeUndefined();
+      expect(sanitizeForLog(null as unknown as Record<string, unknown>)).toBeNull();
+      expect(sanitizeForLog(undefined as unknown as Record<string, unknown>)).toBeUndefined();
     });
 
     it('should be case insensitive for field names', () => {

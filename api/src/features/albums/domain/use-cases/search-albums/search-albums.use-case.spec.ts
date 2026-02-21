@@ -22,7 +22,7 @@ describe('SearchAlbumsUseCase', () => {
   });
 
   beforeEach(() => {
-    mockRepo = { search: jest.fn() } as any;
+    mockRepo = { search: jest.fn() } as unknown as jest.Mocked<IAlbumRepository>;
     useCase = new SearchAlbumsUseCase(mockRepo);
   });
 
@@ -38,11 +38,15 @@ describe('SearchAlbumsUseCase', () => {
   });
 
   it('should throw ValidationError for empty query', async () => {
-    await expect(useCase.execute({ query: '', skip: 0, take: 10 })).rejects.toThrow(ValidationError);
+    await expect(useCase.execute({ query: '', skip: 0, take: 10 })).rejects.toThrow(
+      ValidationError
+    );
   });
 
   it('should throw ValidationError for query shorter than 2 chars', async () => {
-    await expect(useCase.execute({ query: 'A', skip: 0, take: 10 })).rejects.toThrow(ValidationError);
+    await expect(useCase.execute({ query: 'A', skip: 0, take: 10 })).rejects.toThrow(
+      ValidationError
+    );
   });
 
   it('should trim query', async () => {

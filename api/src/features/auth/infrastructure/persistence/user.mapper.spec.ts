@@ -1,5 +1,6 @@
 import { UserMapper } from './user.mapper';
 import { User } from '../../domain/entities/user.entity';
+import { User as UserDb } from '@infrastructure/database/schema/users';
 
 describe('UserMapper', () => {
   const mockDbUser = {
@@ -31,7 +32,7 @@ describe('UserMapper', () => {
 
   describe('toDomain', () => {
     it('should convert DB user to domain User', () => {
-      const user = UserMapper.toDomain(mockDbUser as any);
+      const user = UserMapper.toDomain(mockDbUser as unknown as UserDb);
 
       expect(user).toBeInstanceOf(User);
       expect(user.id).toBe('user-1');
@@ -58,7 +59,7 @@ describe('UserMapper', () => {
         lastLoginAt: null,
         lastAccessAt: null,
         bio: null,
-      } as any);
+      } as unknown as UserDb);
 
       expect(user.name).toBeUndefined();
       expect(user.avatarPath).toBeUndefined();
@@ -72,7 +73,7 @@ describe('UserMapper', () => {
       const user = UserMapper.toDomain({
         ...mockDbUser,
         homeSections: null,
-      } as any);
+      } as unknown as UserDb);
 
       expect(user.homeSections).toBeDefined();
       expect(user.homeSections.length).toBeGreaterThan(0);
@@ -82,7 +83,7 @@ describe('UserMapper', () => {
       const user = UserMapper.toDomain({
         ...mockDbUser,
         isPublicProfile: null,
-      } as any);
+      } as unknown as UserDb);
 
       expect(user.isPublicProfile).toBe(false);
     });
@@ -90,7 +91,7 @@ describe('UserMapper', () => {
 
   describe('toPersistence', () => {
     it('should convert domain User to persistence format', () => {
-      const user = UserMapper.toDomain(mockDbUser as any);
+      const user = UserMapper.toDomain(mockDbUser as unknown as UserDb);
       const persistence = UserMapper.toPersistence(user);
 
       expect(persistence.id).toBe('user-1');
@@ -110,7 +111,7 @@ describe('UserMapper', () => {
         name: null,
         avatarPath: null,
         bio: null,
-      } as any);
+      } as unknown as UserDb);
       const persistence = UserMapper.toPersistence(user);
 
       expect(persistence.name).toBeNull();
@@ -121,7 +122,7 @@ describe('UserMapper', () => {
 
   describe('roundtrip', () => {
     it('should preserve data through toDomain -> toPersistence', () => {
-      const user = UserMapper.toDomain(mockDbUser as any);
+      const user = UserMapper.toDomain(mockDbUser as unknown as UserDb);
       const persistence = UserMapper.toPersistence(user);
 
       expect(persistence.id).toBe(mockDbUser.id);

@@ -7,10 +7,10 @@ const isDev = import.meta.env.DEV;
 
 export const logger = {
   debug: (...args: unknown[]) => {
-    if (isDev) console.debug(...args);
+    if (isDev) console.debug(...args); // eslint-disable-line no-console
   },
   info: (...args: unknown[]) => {
-    if (isDev) console.info(...args);
+    if (isDev) console.info(...args); // eslint-disable-line no-console
   },
   warn: (...args: unknown[]) => {
     if (isDev) console.warn(...args);

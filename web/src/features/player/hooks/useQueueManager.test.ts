@@ -21,10 +21,12 @@ describe('useQueueManager', () => {
     onEndSession = vi.fn();
   });
 
-  const renderQueueManager = (options: {
-    repeatMode?: 'off' | 'all' | 'one';
-    isShuffle?: boolean;
-  } = {}) => {
+  const renderQueueManager = (
+    options: {
+      repeatMode?: 'off' | 'all' | 'one';
+      isShuffle?: boolean;
+    } = {}
+  ) => {
     return renderHook(() =>
       useQueueManager({
         onPlayTrack,
@@ -499,7 +501,7 @@ describe('useQueueManager', () => {
         result.current.playNext();
       });
 
-      const playedCount = 3; // Started at 0, played 2 more
+      const _playedCount = 3; // Started at 0, played 2 more
 
       // Remove a track from the middle
       act(() => {

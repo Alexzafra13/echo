@@ -49,7 +49,7 @@ export class ArtistFactory {
   /**
    * Crea múltiples artistas
    */
-  static createMany(count: number, overridesFn?: (index: number) => Partial<any>): Artist[] {
+  static createMany(count: number, overridesFn?: (index: number) => Partial<Record<string, unknown>>): Artist[] {
     return Array.from({ length: count }, (_, i) =>
       ArtistFactory.create(overridesFn ? overridesFn(i) : {
         id: `artist-${i}`,

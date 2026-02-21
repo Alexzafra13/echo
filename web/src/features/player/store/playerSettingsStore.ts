@@ -53,8 +53,7 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
     (set) => ({
       ...initialState,
 
-      setPlayerPreference: (preference) =>
-        set({ playerPreference: preference }),
+      setPlayerPreference: (preference) => set({ playerPreference: preference }),
 
       setCrossfadeEnabled: (enabled) =>
         set((state) => ({
@@ -150,8 +149,10 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
           if (oldNormalization) {
             const parsed = JSON.parse(oldNormalization);
             if (parsed.enabled !== undefined) state.setNormalizationEnabled(parsed.enabled);
-            if (parsed.targetLufs !== undefined) state.setNormalizationTargetLufs(parsed.targetLufs);
-            if (parsed.preventClipping !== undefined) state.setNormalizationPreventClipping(parsed.preventClipping);
+            if (parsed.targetLufs !== undefined)
+              state.setNormalizationTargetLufs(parsed.targetLufs);
+            if (parsed.preventClipping !== undefined)
+              state.setNormalizationPreventClipping(parsed.preventClipping);
             localStorage.removeItem('normalization-settings');
           }
 
@@ -162,12 +163,13 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
             localStorage.removeItem('autoplay-settings');
           }
         } catch {
+          // Migration errors are non-critical; old settings will be ignored
         }
       },
 
       merge: (persistedState, currentState) => ({
         ...currentState,
-        ...(persistedState as Partial<PlayerSettingsState> || {}),
+        ...((persistedState as Partial<PlayerSettingsState>) || {}),
       }),
     }
   )

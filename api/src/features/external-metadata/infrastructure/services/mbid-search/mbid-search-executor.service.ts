@@ -1,7 +1,12 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { MusicBrainzAgent } from '../../agents/musicbrainz.agent';
 import { MbidSearchCacheService } from '../mbid-search-cache.service';
+import {
+  MusicBrainzArtistMatch,
+  MusicBrainzAlbumMatch,
+  MusicBrainzRecordingMatch,
+} from '../../../domain/interfaces/musicbrainz-search.interface';
 
 /**
  * Search result from MusicBrainz with normalized format
@@ -10,7 +15,7 @@ export interface MbidMatch {
   mbid: string;
   name: string;
   score: number;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 }
 
 /**
@@ -23,7 +28,7 @@ export class MbidSearchExecutorService {
     @InjectPinoLogger(MbidSearchExecutorService.name)
     private readonly logger: PinoLogger,
     private readonly musicBrainzAgent: MusicBrainzAgent,
-    private readonly searchCache: MbidSearchCacheService,
+    private readonly searchCache: MbidSearchCacheService
   ) {}
 
   /**
@@ -104,10 +109,10 @@ export class MbidSearchExecutorService {
       trackNumber?: number;
       duration?: number;
     },
-    limit = 10,
+    limit = 10
   ): Promise<MbidMatch[]> {
     this.logger.debug(
-      `Searching MBID for track: "${params.title}" by ${params.artist}${params.album ? ` from "${params.album}"` : ''}`,
+      `Searching MBID for track: "${params.title}" by ${params.artist}${params.album ? ` from "${params.album}"` : ''}`
     );
 
     const cacheKey = `${params.artist}|${params.title}|${params.album || ''}`;
@@ -134,7 +139,7 @@ export class MbidSearchExecutorService {
         trackNumber: params.trackNumber,
         duration: params.duration,
       },
-      limit,
+      limit
     );
 
     if (!matches || matches.length === 0) {
@@ -158,7 +163,7 @@ export class MbidSearchExecutorService {
   // PRIVATE HELPERS - Format matches to common interface
   // ============================================
 
-  private formatArtistMatches(matches: any[]): MbidMatch[] {
+  private formatArtistMatches(matches: MusicBrainzArtistMatch[]): MbidMatch[] {
     return matches.slice(0, 5).map((match) => ({
       mbid: match.mbid,
       name: match.name,
@@ -173,7 +178,7 @@ export class MbidSearchExecutorService {
     }));
   }
 
-  private formatAlbumMatches(matches: any[]): MbidMatch[] {
+  private formatAlbumMatches(matches: MusicBrainzAlbumMatch[]): MbidMatch[] {
     return matches.slice(0, 5).map((match) => ({
       mbid: match.mbid,
       name: match.title,
@@ -189,7 +194,7 @@ export class MbidSearchExecutorService {
     }));
   }
 
-  private formatTrackMatches(matches: any[]): MbidMatch[] {
+  private formatTrackMatches(matches: MusicBrainzRecordingMatch[]): MbidMatch[] {
     return matches.slice(0, 5).map((match) => ({
       mbid: match.mbid,
       name: match.title,

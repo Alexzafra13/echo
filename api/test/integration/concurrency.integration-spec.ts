@@ -325,8 +325,8 @@ describe('Concurrency Integration', () => {
       const results = await Promise.all(queryPromises);
 
       // Assert - Most should succeed (allow for some connection issues in CI)
-      const successCount = results.filter((r: any) => r.status === 200).length;
-      const errorCount = results.filter((r: any) => r.status === 0).length;
+      const successCount = results.filter((r) => r.status === 200).length;
+      const errorCount = results.filter((r) => r.status === 0).length;
 
       // If we have connection errors, that's acceptable in CI - just log it
       if (errorCount > 0) {
@@ -421,10 +421,10 @@ describe('Concurrency Integration', () => {
       const user2Items = user2Playlists.body.items || [];
 
       // Verify counts
-      const user1Count = user1Items.filter((p: any) =>
+      const user1Count = user1Items.filter((p: { name: string }) =>
         p.name.startsWith('User1')
       ).length;
-      const user2Count = user2Items.filter((p: any) =>
+      const user2Count = user2Items.filter((p: { name: string }) =>
         p.name.startsWith('User2')
       ).length;
 
@@ -432,10 +432,10 @@ describe('Concurrency Integration', () => {
       expect(user2Count).toBe(3);
 
       // Verify no cross-contamination
-      const user1HasUser2 = user1Items.some((p: any) =>
+      const user1HasUser2 = user1Items.some((p: { name: string }) =>
         p.name.startsWith('User2')
       );
-      const user2HasUser1 = user2Items.some((p: any) =>
+      const user2HasUser1 = user2Items.some((p: { name: string }) =>
         p.name.startsWith('User1')
       );
 

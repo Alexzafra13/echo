@@ -292,7 +292,7 @@ describe('User Interactions E2E', () => {
         .expect((res) => {
           expect(Array.isArray(res.body)).toBe(true);
           expect(res.body.length).toBe(1);
-          res.body.forEach((interaction: any) => {
+          res.body.forEach((interaction: { itemType: string }) => {
             expect(interaction.itemType).toBe('track');
           });
         });

@@ -1,5 +1,10 @@
 import { AlbumMapper } from './album.mapper';
 import { Album } from '../../domain/entities/album.entity';
+import { Album as AlbumDb } from '@infrastructure/database/schema/albums';
+
+type AlbumWithRelations = AlbumDb & {
+  artist?: { name: string } | null;
+};
 
 describe('AlbumMapper', () => {
   const mockDbAlbum = {
@@ -22,7 +27,7 @@ describe('AlbumMapper', () => {
 
   describe('toDomain', () => {
     it('should convert DB album to domain Album', () => {
-      const album = AlbumMapper.toDomain(mockDbAlbum as any);
+      const album = AlbumMapper.toDomain(mockDbAlbum as unknown as AlbumWithRelations);
 
       expect(album).toBeInstanceOf(Album);
       expect(album.id).toBe('album-1');
@@ -45,7 +50,7 @@ describe('AlbumMapper', () => {
         releaseDate: null,
         description: null,
         artist: null,
-      } as any);
+      } as unknown as AlbumWithRelations);
 
       expect(album.artistId).toBeUndefined();
       expect(album.coverArtPath).toBeUndefined();
@@ -56,7 +61,7 @@ describe('AlbumMapper', () => {
     });
 
     it('should convert releaseDate string to Date', () => {
-      const album = AlbumMapper.toDomain(mockDbAlbum as any);
+      const album = AlbumMapper.toDomain(mockDbAlbum as unknown as AlbumWithRelations);
       expect(album.releaseDate).toBeInstanceOf(Date);
     });
 
@@ -66,7 +71,7 @@ describe('AlbumMapper', () => {
         songCount: null,
         duration: null,
         size: null,
-      } as any);
+      } as unknown as AlbumWithRelations);
 
       expect(album.songCount).toBe(0);
       expect(album.duration).toBe(0);
@@ -76,7 +81,7 @@ describe('AlbumMapper', () => {
 
   describe('toPersistence', () => {
     it('should convert domain album to persistence format', () => {
-      const album = AlbumMapper.toDomain(mockDbAlbum as any);
+      const album = AlbumMapper.toDomain(mockDbAlbum as unknown as AlbumWithRelations);
       const persistence = AlbumMapper.toPersistence(album);
 
       expect(persistence.id).toBe('album-1');
@@ -95,7 +100,7 @@ describe('AlbumMapper', () => {
         releaseDate: null,
         description: null,
         artist: null,
-      } as any);
+      } as unknown as AlbumWithRelations);
       const persistence = AlbumMapper.toPersistence(album);
 
       expect(persistence.artistId).toBeNull();
@@ -108,7 +113,10 @@ describe('AlbumMapper', () => {
 
   describe('toDomainArray', () => {
     it('should convert array of DB albums to domain albums', () => {
-      const albums = AlbumMapper.toDomainArray([mockDbAlbum, mockDbAlbum] as any);
+      const albums = AlbumMapper.toDomainArray([
+        mockDbAlbum,
+        mockDbAlbum,
+      ] as unknown as AlbumWithRelations[]);
       expect(albums).toHaveLength(2);
       expect(albums[0]).toBeInstanceOf(Album);
       expect(albums[1]).toBeInstanceOf(Album);

@@ -4,10 +4,7 @@ import { eq, desc } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { libraryScans } from '@infrastructure/database/schema';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
-import {
-  IScannerRepository,
-  SCANNER_REPOSITORY,
-} from '../../domain/ports/scanner-repository.port';
+import { IScannerRepository, SCANNER_REPOSITORY } from '../../domain/ports/scanner-repository.port';
 import { FileScannerService } from './file-scanner.service';
 import { LufsAnalysisQueueService } from './lufs-analysis-queue.service';
 import { DjAnalysisQueueService } from '@features/dj/infrastructure/services/dj-analysis-queue.service';
@@ -18,11 +15,7 @@ import { SettingsService } from '@features/external-metadata/infrastructure/serv
 import { EnrichmentQueueService } from '@features/external-metadata/infrastructure/services/enrichment-queue.service';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { generateUuid } from '@shared/utils';
-import {
-  TrackProcessingService,
-  ScanProgressTracker,
-  LibraryCleanupService,
-} from './scanning';
+import { TrackProcessingService, ScanProgressTracker, LibraryCleanupService } from './scanning';
 import * as path from 'path';
 
 // Setting key for music library path
@@ -84,7 +77,7 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly trackProcessing: TrackProcessingService,
     private readonly libraryCleanup: LibraryCleanupService,
     @InjectPinoLogger(ScanProcessorService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   onModuleInit() {
@@ -108,7 +101,7 @@ export class ScanProcessorService implements OnModuleInit {
   private async getMusicLibraryPath(): Promise<string> {
     return this.settingsService.getString(
       LIBRARY_PATH_KEY,
-      process.env.MUSIC_LIBRARY_PATH || '/music',
+      process.env.MUSIC_LIBRARY_PATH || '/music'
     );
   }
 
@@ -132,7 +125,7 @@ export class ScanProcessorService implements OnModuleInit {
           type: 'exponential',
           delay: 2000,
         },
-      },
+      }
     );
   }
 
@@ -154,12 +147,14 @@ export class ScanProcessorService implements OnModuleInit {
 
     try {
       // Update status to running
-      await this.scannerRepository.update(scanId, { status: 'running' } as any);
+      await this.scannerRepository.update(scanId, { status: 'running' });
 
       // Get last scan timestamp for incremental scanning
       const lastScanTime = await this.getLastScanTime();
       if (lastScanTime) {
-        this.logger.info(`⚡ Scan incremental: solo archivos modificados desde ${lastScanTime.toISOString()}`);
+        this.logger.info(
+          `⚡ Scan incremental: solo archivos modificados desde ${lastScanTime.toISOString()}`
+        );
       } else {
         this.logger.info(`📁 Scan completo: primera vez o sin scans previos`);
       }
@@ -172,7 +167,12 @@ export class ScanProcessorService implements OnModuleInit {
       tracker.totalFiles = files.length;
       this.logger.info(`📁 Encontrados ${files.length} archivos de música`);
 
-      this.emitProgress(scanId, tracker, ScanStatus.SCANNING, `Encontrados ${files.length} archivos`);
+      this.emitProgress(
+        scanId,
+        tracker,
+        ScanStatus.SCANNING,
+        `Encontrados ${files.length} archivos`
+      );
 
       // Process each file
       let tracksAdded = 0;
@@ -227,7 +227,7 @@ export class ScanProcessorService implements OnModuleInit {
         tracksAdded,
         tracksUpdated,
         tracksDeleted,
-      } as any);
+      });
 
       const duration = Date.now() - startTime;
 
@@ -239,28 +239,24 @@ export class ScanProcessorService implements OnModuleInit {
       await this.startLufsAnalysis();
       await this.startDjAnalysis();
 
-      await this.logService.info(
-        LogCategory.SCANNER,
-        `Scan completado exitosamente: ${scanId}`,
-        {
-          entityId: scanId,
-          entityType: 'scan',
-          details: JSON.stringify({
-            totalFiles: tracker.totalFiles,
-            filesScanned: tracker.filesScanned,
-            tracksCreated: tracker.tracksCreated,
-            tracksSkipped: tracker.tracksSkipped,
-            albumsCreated: tracker.albumsCreated,
-            artistsCreated: tracker.artistsCreated,
-            coversExtracted: tracker.coversExtracted,
-            errors: tracker.errors,
-            duration,
-            tracksAdded,
-            tracksUpdated,
-            tracksDeleted,
-          }),
-        },
-      );
+      await this.logService.info(LogCategory.SCANNER, `Scan completado exitosamente: ${scanId}`, {
+        entityId: scanId,
+        entityType: 'scan',
+        details: JSON.stringify({
+          totalFiles: tracker.totalFiles,
+          filesScanned: tracker.filesScanned,
+          tracksCreated: tracker.tracksCreated,
+          tracksSkipped: tracker.tracksSkipped,
+          albumsCreated: tracker.albumsCreated,
+          artistsCreated: tracker.artistsCreated,
+          coversExtracted: tracker.coversExtracted,
+          errors: tracker.errors,
+          duration,
+          tracksAdded,
+          tracksUpdated,
+          tracksDeleted,
+        }),
+      });
 
       // Emit: completed
       this.scannerGateway.emitCompleted({
@@ -277,7 +273,7 @@ export class ScanProcessorService implements OnModuleInit {
       });
 
       this.logger.info(
-        `✅ Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted} ⏭️${tracker.tracksSkipped} saltados`,
+        `✅ Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted} ⏭️${tracker.tracksSkipped} saltados`
       );
     } catch (error) {
       this.logger.error(`❌ Error en escaneo ${scanId}:`, error);
@@ -294,14 +290,14 @@ export class ScanProcessorService implements OnModuleInit {
             filesProcessedBeforeError: tracker.filesScanned,
           }),
         },
-        error as Error,
+        error as Error
       );
 
       await this.scannerRepository.update(scanId, {
         status: 'failed',
         finishedAt: new Date(),
         errorMessage: (error as Error).message || 'Error desconocido',
-      } as any);
+      });
 
       throw error;
     }
@@ -329,7 +325,7 @@ export class ScanProcessorService implements OnModuleInit {
     tracker: ScanProgressTracker,
     status: ScanStatus,
     message: string,
-    currentFile?: string,
+    currentFile?: string
   ): void {
     this.scannerGateway.emitProgress({
       scanId,
@@ -457,12 +453,12 @@ export class ScanProcessorService implements OnModuleInit {
    */
   private async performAutoEnrichment(
     artistsCreated: number,
-    albumsCreated: number,
+    albumsCreated: number
   ): Promise<void> {
     try {
       const autoEnrichEnabled = await this.settingsService.getBoolean(
         'metadata.auto_enrich.enabled',
-        true,
+        true
       );
 
       if (!autoEnrichEnabled) {
@@ -473,16 +469,14 @@ export class ScanProcessorService implements OnModuleInit {
       const result = await this.enrichmentQueueService.startEnrichmentQueue();
 
       if (result.started) {
-        this.logger.info(
-          `🚀 Cola de enriquecimiento iniciada: ${result.pending} items pendientes`
-        );
+        this.logger.info(`🚀 Cola de enriquecimiento iniciada: ${result.pending} items pendientes`);
       } else {
         this.logger.info(`ℹ️ ${result.message}`);
       }
     } catch (error) {
       this.logger.error(
         `Error al iniciar cola de enriquecimiento: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
     }
   }
@@ -494,7 +488,7 @@ export class ScanProcessorService implements OnModuleInit {
     try {
       const lufsAnalysisEnabled = await this.settingsService.getBoolean(
         'lufs.auto_analysis.enabled',
-        true, // Enabled by default
+        true // Enabled by default
       );
 
       if (!lufsAnalysisEnabled) {
@@ -505,16 +499,14 @@ export class ScanProcessorService implements OnModuleInit {
       const result = await this.lufsAnalysisQueue.startLufsAnalysisQueue();
 
       if (result.started) {
-        this.logger.info(
-          `🎚️ Cola de análisis LUFS iniciada: ${result.pending} tracks pendientes`
-        );
+        this.logger.info(`🎚️ Cola de análisis LUFS iniciada: ${result.pending} tracks pendientes`);
       } else if (result.pending > 0) {
         this.logger.info(`ℹ️ ${result.message}`);
       }
     } catch (error) {
       this.logger.error(
         `Error al iniciar cola de análisis LUFS: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
     }
   }
@@ -526,7 +518,7 @@ export class ScanProcessorService implements OnModuleInit {
     try {
       const djAnalysisEnabled = await this.settingsService.getBoolean(
         'dj.auto_analysis.enabled',
-        true, // Enabled by default
+        true // Enabled by default
       );
 
       if (!djAnalysisEnabled) {
@@ -537,18 +529,15 @@ export class ScanProcessorService implements OnModuleInit {
       const result = await this.djAnalysisQueue.startAnalysisQueue();
 
       if (result.started) {
-        this.logger.info(
-          `🎧 Cola de análisis DJ iniciada: ${result.pending} tracks pendientes`
-        );
+        this.logger.info(`🎧 Cola de análisis DJ iniciada: ${result.pending} tracks pendientes`);
       } else if (result.pending > 0) {
         this.logger.info(`ℹ️ ${result.message}`);
       }
     } catch (error) {
       this.logger.error(
         `Error al iniciar cola de análisis DJ: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
     }
   }
-
 }

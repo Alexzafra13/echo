@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -35,10 +30,10 @@ const LOG_PAYLOADS = process.env.NODE_ENV !== 'production';
 export class WsLoggingInterceptor implements NestInterceptor {
   constructor(
     @InjectPinoLogger(WsLoggingInterceptor.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const client = context.switchToWs().getClient<Socket>();
     const data = context.switchToWs().getData();
     const pattern = context.switchToWs().getPattern();
@@ -48,27 +43,24 @@ export class WsLoggingInterceptor implements NestInterceptor {
 
     // Log incoming event - only include sanitized payload in non-production
     if (LOG_PAYLOADS && data && typeof data === 'object') {
-      this.logger.debug(
-        `Incoming event: ${pattern} | User: ${userId} | Socket: ${socketId}`,
-        { data: sanitizeForLog(data) }
-      );
+      this.logger.debug(`Incoming event: ${pattern} | User: ${userId} | Socket: ${socketId}`, {
+        data: sanitizeForLog(data as Record<string, unknown>),
+      });
     } else {
-      this.logger.debug(
-        `Incoming event: ${pattern} | User: ${userId} | Socket: ${socketId}`
-      );
+      this.logger.debug(`Incoming event: ${pattern} | User: ${userId} | Socket: ${socketId}`);
     }
 
     const now = Date.now();
 
     return next.handle().pipe(
       tap({
-        next: (response: any) => {
+        next: (response: unknown) => {
           const duration = Date.now() - now;
           // Only include sanitized response in non-production
           if (LOG_PAYLOADS && response && typeof response === 'object') {
             this.logger.debug(
               `Outgoing response: ${pattern} | Duration: ${duration}ms | User: ${userId}`,
-              { response: sanitizeForLog(response) }
+              { response: sanitizeForLog(response as Record<string, unknown>) }
             );
           } else {
             this.logger.debug(
@@ -76,11 +68,11 @@ export class WsLoggingInterceptor implements NestInterceptor {
             );
           }
         },
-        error: (error: any) => {
+        error: (error: unknown) => {
           const duration = Date.now() - now;
           // Log error message but not full error object which might contain sensitive data
           this.logger.error(
-            `Event error: ${pattern} | Duration: ${duration}ms | User: ${userId} | Error: ${error?.message || 'Unknown error'}`
+            `Event error: ${pattern} | Duration: ${duration}ms | User: ${userId} | Error: ${error instanceof Error ? error.message : 'Unknown error'}`
           );
         },
       })

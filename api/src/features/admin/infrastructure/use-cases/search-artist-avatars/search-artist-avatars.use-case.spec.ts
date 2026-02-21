@@ -6,7 +6,14 @@ import { ImageSearchOrchestratorService } from '@features/external-metadata/appl
 
 describe('SearchArtistAvatarsUseCase', () => {
   let useCase: SearchArtistAvatarsUseCase;
-  let mockDrizzle: any;
+  let mockDrizzle: {
+    db: {
+      select: jest.Mock;
+      from: jest.Mock;
+      where: jest.Mock;
+      limit: jest.Mock;
+    };
+  };
   let mockOrchestrator: jest.Mocked<ImageSearchOrchestratorService>;
 
   const mockArtist = {
@@ -62,7 +69,7 @@ describe('SearchArtistAvatarsUseCase', () => {
 
     mockOrchestrator = {
       searchArtistImages: jest.fn().mockResolvedValue(mockImages),
-    } as any;
+    } as unknown as jest.Mocked<ImageSearchOrchestratorService>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -113,10 +120,12 @@ describe('SearchArtistAvatarsUseCase', () => {
     });
 
     it('should handle artist without mbzArtistId', async () => {
-      mockDrizzle.db.limit.mockResolvedValue([{
-        ...mockArtist,
-        mbzArtistId: null,
-      }]);
+      mockDrizzle.db.limit.mockResolvedValue([
+        {
+          ...mockArtist,
+          mbzArtistId: null,
+        },
+      ]);
 
       const result = await useCase.execute(input);
 

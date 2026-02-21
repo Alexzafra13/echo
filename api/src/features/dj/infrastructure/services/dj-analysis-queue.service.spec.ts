@@ -1,9 +1,4 @@
 import { DjAnalysisQueueService } from './dj-analysis-queue.service';
-import { PinoLogger } from 'nestjs-pino';
-import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
-import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
-import { EssentiaAnalyzerService } from './essentia-analyzer.service';
-import { ScannerGateway } from '../../../scanner/infrastructure/gateways/scanner.gateway';
 
 const mockLogger = {
   info: jest.fn(),

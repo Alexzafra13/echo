@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useAutoplay } from './useAutoplay';
+import type { Track } from '@shared/types/track.types';
 
 // Mock logger
 vi.mock('@shared/utils/logger', () => ({
@@ -93,7 +94,7 @@ describe('useAutoplay', () => {
     it('should load tracks from similar artists', async () => {
       const { result } = renderHook(() => useAutoplay());
 
-      let loadResult: { tracks: any[]; sourceArtistName: string | null } = {
+      let loadResult: { tracks: Track[]; sourceArtistName: string | null } = {
         tracks: [],
         sourceArtistName: null,
       };
@@ -109,7 +110,7 @@ describe('useAutoplay', () => {
     it('should convert tracks to player format', async () => {
       const { result } = renderHook(() => useAutoplay());
 
-      let loadResult: { tracks: any[]; sourceArtistName: string | null } = {
+      let loadResult: { tracks: Track[]; sourceArtistName: string | null } = {
         tracks: [],
         sourceArtistName: null,
       };
@@ -128,7 +129,7 @@ describe('useAutoplay', () => {
     it('should return source artist name', async () => {
       const { result } = renderHook(() => useAutoplay());
 
-      let loadResult: { tracks: any[]; sourceArtistName: string | null } = {
+      let loadResult: { tracks: Track[]; sourceArtistName: string | null } = {
         tracks: [],
         sourceArtistName: null,
       };
@@ -148,7 +149,7 @@ describe('useAutoplay', () => {
 
       const { result } = renderHook(() => useAutoplay());
 
-      let loadResult: { tracks: any[]; sourceArtistName: string | null } = {
+      let loadResult: { tracks: Track[]; sourceArtistName: string | null } = {
         tracks: [],
         sourceArtistName: null,
       };
@@ -164,7 +165,7 @@ describe('useAutoplay', () => {
     it('should return empty when already loading', async () => {
       // Make the service slow
       vi.mocked(artistsService.getRelatedArtists).mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve(mockRelatedArtists), 1000))
+        () => new Promise((resolve) => setTimeout(() => resolve(mockRelatedArtists), 1000))
       );
 
       const { result } = renderHook(() => useAutoplay());
@@ -173,7 +174,7 @@ describe('useAutoplay', () => {
       const firstLoad = result.current.loadSimilarArtistTracks('artist-1');
 
       // Try second load while first is in progress
-      let secondResult: { tracks: any[] } = { tracks: [] };
+      let secondResult: { tracks: Track[] } = { tracks: [] };
       await act(async () => {
         secondResult = await result.current.loadSimilarArtistTracks('artist-2');
       });
@@ -192,16 +193,13 @@ describe('useAutoplay', () => {
 
       const excludeIds = new Set(['track-1']);
 
-      let loadResult: { tracks: any[] } = { tracks: [] };
+      let loadResult: { tracks: Track[] } = { tracks: [] };
       await act(async () => {
-        loadResult = await result.current.loadSimilarArtistTracks(
-          'current-artist-id',
-          excludeIds
-        );
+        loadResult = await result.current.loadSimilarArtistTracks('current-artist-id', excludeIds);
       });
 
       // track-1 should be excluded
-      const hasExcludedTrack = loadResult.tracks.some(t => t.id === 'track-1');
+      const hasExcludedTrack = loadResult.tracks.some((t) => t.id === 'track-1');
       expect(hasExcludedTrack).toBe(false);
     });
 
@@ -210,7 +208,7 @@ describe('useAutoplay', () => {
 
       const { result } = renderHook(() => useAutoplay());
 
-      let loadResult: { tracks: any[]; sourceArtistName: string | null } = {
+      let loadResult: { tracks: Track[]; sourceArtistName: string | null } = {
         tracks: [],
         sourceArtistName: null,
       };
@@ -248,7 +246,7 @@ describe('useAutoplay', () => {
       vi.clearAllMocks();
 
       // Now load - should use cached data
-      let loadResult: { tracks: any[] } = { tracks: [] };
+      let loadResult: { tracks: Track[] } = { tracks: [] };
       await act(async () => {
         loadResult = await result.current.loadSimilarArtistTracks('current-artist-id');
       });
@@ -262,7 +260,7 @@ describe('useAutoplay', () => {
     it('should not prefetch if already prefetching', async () => {
       // Make prefetch slow
       vi.mocked(artistsService.getRelatedArtists).mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve(mockRelatedArtists), 500))
+        () => new Promise((resolve) => setTimeout(() => resolve(mockRelatedArtists), 500))
       );
 
       const { result } = renderHook(() => useAutoplay());
@@ -320,7 +318,7 @@ describe('useAutoplay', () => {
 
       // Now the same tracks should be available again
       // (verified by loading again with same excludes)
-      let loadResult: { tracks: any[] } = { tracks: [] };
+      let loadResult: { tracks: Track[] } = { tracks: [] };
       await act(async () => {
         loadResult = await result.current.loadSimilarArtistTracks('current-artist-id');
       });
@@ -374,7 +372,7 @@ describe('useAutoplay', () => {
 
       const { result } = renderHook(() => useAutoplay());
 
-      let loadResult: { tracks: any[] } = { tracks: [] };
+      let loadResult: { tracks: Track[] } = { tracks: [] };
       await act(async () => {
         loadResult = await result.current.loadSimilarArtistTracks('current-artist-id');
       });
@@ -385,7 +383,7 @@ describe('useAutoplay', () => {
     it('should generate cover image URL from albumId', async () => {
       const { result } = renderHook(() => useAutoplay());
 
-      let loadResult: { tracks: any[] } = { tracks: [] };
+      let loadResult: { tracks: Track[] } = { tracks: [] };
       await act(async () => {
         loadResult = await result.current.loadSimilarArtistTracks('current-artist-id');
       });
@@ -412,7 +410,7 @@ describe('useAutoplay', () => {
 
       const { result } = renderHook(() => useAutoplay());
 
-      let loadResult: { tracks: any[] } = { tracks: [] };
+      let loadResult: { tracks: Track[] } = { tracks: [] };
       await act(async () => {
         loadResult = await result.current.loadSimilarArtistTracks('current-artist-id');
       });
@@ -429,7 +427,7 @@ describe('useAutoplay', () => {
 
       const { result } = renderHook(() => useAutoplay());
 
-      let loadResult: { tracks: any[] } = { tracks: [] };
+      let loadResult: { tracks: Track[] } = { tracks: [] };
       await act(async () => {
         loadResult = await result.current.loadSimilarArtistTracks('current-artist-id');
       });
@@ -449,7 +447,7 @@ describe('useAutoplay', () => {
 
       const { result } = renderHook(() => useAutoplay());
 
-      let loadResult: { tracks: any[] } = { tracks: [] };
+      let loadResult: { tracks: Track[] } = { tracks: [] };
       await act(async () => {
         loadResult = await result.current.loadSimilarArtistTracks('current-artist-id');
       });

@@ -35,7 +35,7 @@ describe('WsThrottlerGuard', () => {
       switchToWs: () => ({
         getClient: () => mockSocket,
       }),
-    } as any;
+    } as unknown as ExecutionContext;
   });
 
   afterEach(() => {
@@ -111,7 +111,7 @@ describe('WsThrottlerGuard', () => {
         switchToWs: () => ({
           getClient: () => mockSocket2,
         }),
-      } as any;
+      } as unknown as ExecutionContext;
 
       // Cliente 1 alcanza límite
       for (let i = 0; i < 20; i++) {

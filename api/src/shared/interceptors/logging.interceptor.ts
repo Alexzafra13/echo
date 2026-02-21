@@ -16,7 +16,7 @@ import { BaseError, getHttpStatusForError } from '@shared/errors/base.error';
 export class LoggingInterceptor implements NestInterceptor {
   constructor(private readonly logService: LogService) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
     const { method, url, user, ip, headers } = request;
 
@@ -44,26 +44,22 @@ export class LoggingInterceptor implements NestInterceptor {
               url,
               errorMessage: error.message,
             },
-            error,
+            error
           );
         } else if (statusCode === 401 || statusCode === 403) {
-          this.logService.warning(
-            LogCategory.AUTH,
-            `Access denied: ${method} ${url}`,
-            {
-              statusCode,
-              userId: user?.id,
-              ipAddress: ip,
-              userAgent: headers['user-agent'],
-              method,
-              url,
-              reason: error.message,
-            },
-          );
+          this.logService.warning(LogCategory.AUTH, `Access denied: ${method} ${url}`, {
+            statusCode,
+            userId: user?.id,
+            ipAddress: ip,
+            userAgent: headers['user-agent'],
+            method,
+            url,
+            reason: error.message,
+          });
         }
 
         return throwError(() => error);
-      }),
+      })
     );
   }
 }

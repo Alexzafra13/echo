@@ -13,6 +13,14 @@ jest.mock('icecast-parser', () => ({
   })),
 }));
 
+// Type for accessing private methods in tests
+interface IcyMetadataServicePrivate {
+  parseMetadata(stationUuid: string, metadata: Map<string, string>): RadioMetadata;
+  isHttpsUrl(url: string): boolean;
+  broadcastMetadata(stationUuid: string, metadata: RadioMetadata): void;
+  broadcastError(stationUuid: string, error: Error): void;
+}
+
 const mockLogger = {
   trace: jest.fn(),
   debug: jest.fn(),
@@ -48,9 +56,9 @@ describe('IcyMetadataService', () => {
     const callParseMetadata = (
       service: IcyMetadataService,
       stationUuid: string,
-      metadata: Map<string, string>,
+      metadata: Map<string, string>
     ): RadioMetadata => {
-      return (service as any).parseMetadata(stationUuid, metadata);
+      return (service as unknown as IcyMetadataServicePrivate).parseMetadata(stationUuid, metadata);
     };
 
     it('should parse "Artist - Song" format correctly', () => {
@@ -147,7 +155,7 @@ describe('IcyMetadataService', () => {
 
   describe('isHttpsUrl', () => {
     const callIsHttpsUrl = (service: IcyMetadataService, url: string): boolean => {
-      return (service as any).isHttpsUrl(url);
+      return (service as unknown as IcyMetadataServicePrivate).isHttpsUrl(url);
     };
 
     it('should return true for HTTPS URLs', () => {
@@ -331,10 +339,7 @@ describe('IcyMetadataService', () => {
 
       service.onModuleInit();
 
-      expect(prependListenerSpy).toHaveBeenCalledWith(
-        'uncaughtException',
-        expect.any(Function),
-      );
+      expect(prependListenerSpy).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
 
       prependListenerSpy.mockRestore();
     });
@@ -345,10 +350,7 @@ describe('IcyMetadataService', () => {
       service.onModuleInit();
       service.onModuleDestroy();
 
-      expect(removeListenerSpy).toHaveBeenCalledWith(
-        'uncaughtException',
-        expect.any(Function),
-      );
+      expect(removeListenerSpy).toHaveBeenCalledWith('uncaughtException', expect.any(Function));
 
       removeListenerSpy.mockRestore();
     });
@@ -374,7 +376,7 @@ describe('IcyMetadataService', () => {
       };
 
       // Call private method
-      (service as any).broadcastMetadata('station-1', metadata);
+      (service as unknown as IcyMetadataServicePrivate).broadcastMetadata('station-1', metadata);
 
       expect(handler1).toHaveBeenCalledWith(metadata);
       expect(handler2).toHaveBeenCalledWith(metadata);
@@ -397,7 +399,7 @@ describe('IcyMetadataService', () => {
         timestamp: Date.now(),
       };
 
-      (service as any).broadcastMetadata('station-1', metadata);
+      (service as unknown as IcyMetadataServicePrivate).broadcastMetadata('station-1', metadata);
 
       expect(handler1).toHaveBeenCalled();
       expect(handler2).not.toHaveBeenCalled();
@@ -421,7 +423,7 @@ describe('IcyMetadataService', () => {
 
       const error = new Error('Stream error');
 
-      (service as any).broadcastError('station-1', error);
+      (service as unknown as IcyMetadataServicePrivate).broadcastError('station-1', error);
 
       expect(handler1).toHaveBeenCalledWith(error);
       expect(handler2).toHaveBeenCalledWith(error);

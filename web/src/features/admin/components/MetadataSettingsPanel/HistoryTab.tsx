@@ -5,7 +5,6 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-
   RefreshCw,
   Music,
   Disc,
@@ -31,7 +30,11 @@ export function HistoryTab() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Queries
-  const { data: logsData, isLoading: logsLoading, refetch: refetchLogs } = useEnrichmentLogs(filters);
+  const {
+    data: logsData,
+    isLoading: logsLoading,
+    refetch: refetchLogs,
+  } = useEnrichmentLogs(filters);
   const { data: statsData, isLoading: statsLoading } = useEnrichmentStats(statsPeriod);
 
   const logs = logsData?.logs || [];
@@ -85,7 +88,11 @@ export function HistoryTab() {
   };
 
   // Build complete image URLs for preview
-  const buildImageUrl = (log: any): string | null => {
+  const buildImageUrl = (log: {
+    previewUrl?: string;
+    entityType?: string;
+    entityId?: string;
+  }): string | null => {
     const value = log.previewUrl;
     if (!value) return null;
 
@@ -232,7 +239,7 @@ export function HistoryTab() {
             onChange={(e) => {
               const value = e.target.value;
               handleFilterChange({
-                entityType: value === 'artist' || value === 'album' ? value : undefined
+                entityType: value === 'artist' || value === 'album' ? value : undefined,
               });
             }}
           >
@@ -247,7 +254,10 @@ export function HistoryTab() {
             onChange={(e) => {
               const value = e.target.value;
               handleFilterChange({
-                status: value === 'success' || value === 'partial' || value === 'error' ? value : undefined
+                status:
+                  value === 'success' || value === 'partial' || value === 'error'
+                    ? value
+                    : undefined,
               });
             }}
           >
@@ -314,9 +324,7 @@ export function HistoryTab() {
                       </td>
                       <td>{log.metadataType}</td>
                       <td>{getStatusBadge(log.status)}</td>
-                      <td>
-                        {log.processingTime ? `${log.processingTime}ms` : '-'}
-                      </td>
+                      <td>{log.processingTime ? `${log.processingTime}ms` : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { IAlbumCoverRetriever } from '../../domain/interfaces';
@@ -6,6 +6,12 @@ import { AlbumCover } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
 import { fetchWithTimeout } from '@shared/utils';
 import { ExternalApiError } from '@shared/errors';
+
+interface CoverArtImage {
+  front: boolean;
+  image: string;
+  thumbnails?: Record<string, string>;
+}
 
 /**
  * Cover Art Archive Agent
@@ -77,9 +83,8 @@ export class CoverArtArchiveAgent implements IAlbumCoverRetriever {
       const data = await response.json();
 
       // Find the front cover image
-      const frontCover = data.images?.find(
-        (img: any) => img.front === true
-      ) || data.images?.[0];
+      const frontCover =
+        data.images?.find((img: CoverArtImage) => img.front === true) || data.images?.[0];
 
       if (!frontCover) {
         this.logger.debug(`No front cover image found for MBID: ${mbid}`);
@@ -93,12 +98,7 @@ export class CoverArtArchiveAgent implements IAlbumCoverRetriever {
 
       this.logger.debug(`Retrieved cover art for: ${artist} - ${album}`);
 
-      return new AlbumCover(
-        smallUrl,
-        mediumUrl,
-        largeUrl,
-        this.name
-      );
+      return new AlbumCover(smallUrl, mediumUrl, largeUrl, this.name);
     } catch (error) {
       this.logger.error(
         `Error fetching cover art for ${artist} - ${album}: ${(error as Error).message}`,

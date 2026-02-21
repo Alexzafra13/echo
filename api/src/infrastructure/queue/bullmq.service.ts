@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { Queue, Worker } from 'bullmq';
+import { Queue, Worker, Job } from 'bullmq';
 import { Redis } from 'ioredis';
 import { cacheConfig } from '@config/cache.config';
 
@@ -12,7 +12,7 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @InjectPinoLogger(BullmqService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   async onModuleInit() {
@@ -24,18 +24,24 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.redisConnection.on('connect', () => {
-      this.logger.info({
-        host: cacheConfig.redis_host,
-        port: cacheConfig.redis_port,
-      }, 'BullMQ Redis connected');
+      this.logger.info(
+        {
+          host: cacheConfig.redis_host,
+          port: cacheConfig.redis_port,
+        },
+        'BullMQ Redis connected'
+      );
     });
 
     this.redisConnection.on('error', (err) => {
-      this.logger.error({
-        error: err,
-        host: cacheConfig.redis_host,
-        port: cacheConfig.redis_port,
-      }, 'BullMQ Redis error');
+      this.logger.error(
+        {
+          error: err,
+          host: cacheConfig.redis_host,
+          port: cacheConfig.redis_port,
+        },
+        'BullMQ Redis error'
+      );
     });
 
     this.logger.info('BullMQ Service initialized');
@@ -70,15 +76,20 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
     return queue;
   }
 
-  async addJob(queueName: string, jobName: string, data: any, opts?: any) {
+  async addJob(
+    queueName: string,
+    jobName: string,
+    data: Record<string, unknown>,
+    opts?: Record<string, unknown>
+  ) {
     const queue = this.createQueue(queueName);
     return await queue.add(jobName, data, opts);
   }
 
   registerProcessor(
     queueName: string,
-    processor: (job: any) => Promise<any>,
-    options?: { concurrency?: number },
+    processor: (job: Job) => Promise<unknown>,
+    options?: { concurrency?: number }
   ): Worker | null {
     try {
       const worker = new Worker(queueName, processor, {
@@ -87,27 +98,36 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
       });
 
       worker.on('completed', (job) => {
-        this.logger.debug({
-          jobId: job.id,
-          jobName: job.name,
-          queueName,
-        }, 'Job completed successfully');
+        this.logger.debug(
+          {
+            jobId: job.id,
+            jobName: job.name,
+            queueName,
+          },
+          'Job completed successfully'
+        );
       });
 
       worker.on('failed', (job, err) => {
-        this.logger.error({
-          jobId: job?.id,
-          jobName: job?.name,
-          queueName,
-          error: err.message,
-        }, 'Job failed');
+        this.logger.error(
+          {
+            jobId: job?.id,
+            jobName: job?.name,
+            queueName,
+            error: err.message,
+          },
+          'Job failed'
+        );
       });
 
       worker.on('error', (err) => {
-        this.logger.error({
-          queueName,
-          error: err.message,
-        }, 'Worker error');
+        this.logger.error(
+          {
+            queueName,
+            error: err.message,
+          },
+          'Worker error'
+        );
       });
 
       this.workers.push(worker);
@@ -115,10 +135,13 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
 
       return worker;
     } catch (error) {
-      this.logger.error({
-        queueName,
-        error: error instanceof Error ? error.message : String(error),
-      }, 'Failed to register processor');
+      this.logger.error(
+        {
+          queueName,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        'Failed to register processor'
+      );
       return null;
     }
   }

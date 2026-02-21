@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Essentia.js Worker - Runs in separate process with suppressed stdout
  *

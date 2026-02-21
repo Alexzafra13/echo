@@ -16,6 +16,8 @@ import { GetFavoriteAlbumsUseCase } from '../../domain/use-cases/get-favorite-al
 import { Album } from '../../domain/entities/album.entity';
 import { Track } from '@features/tracks/domain/entities/track.entity';
 import { NotFoundException } from '@nestjs/common';
+import { FastifyReply } from 'fastify';
+import { JwtUser } from '@shared/types/request.types';
 
 describe('AlbumsController', () => {
   let controller: AlbumsController;
@@ -201,7 +203,7 @@ describe('AlbumsController', () => {
 
     it('debería lanzar NotFoundException si no hay álbumes', async () => {
       // Arrange
-      getFeaturedAlbumUseCase.execute.mockResolvedValue(null as any);
+      getFeaturedAlbumUseCase.execute.mockResolvedValue(null);
 
       // Act & Assert
       await expect(controller.getFeaturedAlbum()).rejects.toThrow(NotFoundException);
@@ -239,7 +241,7 @@ describe('AlbumsController', () => {
       };
 
       // Act
-      await controller.getAlbumCover('album-1', mockRes as any);
+      await controller.getAlbumCover('album-1', mockRes as unknown as FastifyReply);
 
       // Assert
       expect(getAlbumCoverUseCase.execute).toHaveBeenCalledWith({ albumId: 'album-1' });
@@ -327,7 +329,9 @@ describe('AlbumsController', () => {
       const mockUser = { id: 'user-1', username: 'test' };
 
       // Act
-      const result = await controller.getRecentlyPlayedAlbums(mockUser as any, { limit: 20 });
+      const result = await controller.getRecentlyPlayedAlbums(mockUser as unknown as JwtUser, {
+        limit: 20,
+      });
 
       // Assert
       expect(getRecentlyPlayedAlbumsUseCase.execute).toHaveBeenCalledWith({
@@ -351,7 +355,10 @@ describe('AlbumsController', () => {
       const mockUser = { id: 'user-1', username: 'test' };
 
       // Act
-      const result = await controller.getFavoriteAlbums(mockUser as any, { page: 1, limit: 20 });
+      const result = await controller.getFavoriteAlbums(mockUser as unknown as JwtUser, {
+        page: 1,
+        limit: 20,
+      });
 
       // Assert
       expect(getFavoriteAlbumsUseCase.execute).toHaveBeenCalledWith({

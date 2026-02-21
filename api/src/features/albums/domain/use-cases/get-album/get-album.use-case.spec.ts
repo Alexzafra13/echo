@@ -22,7 +22,7 @@ describe('GetAlbumUseCase', () => {
   });
 
   beforeEach(() => {
-    mockRepo = { findById: jest.fn() } as any;
+    mockRepo = { findById: jest.fn() } as unknown as jest.Mocked<IAlbumRepository>;
     useCase = new GetAlbumUseCase(mockRepo);
   });
 

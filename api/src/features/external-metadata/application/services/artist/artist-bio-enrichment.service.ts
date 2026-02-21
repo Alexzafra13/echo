@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
@@ -7,7 +7,11 @@ import { IArtistBioRetriever } from '../../../domain/interfaces';
 import { ArtistBio } from '../../../domain/entities';
 import { AgentRegistryService } from '../../../infrastructure/services/agent-registry.service';
 import { MetadataCacheService } from '../../../infrastructure/services/metadata-cache.service';
-import { MetadataConflictService, ConflictPriority } from '../../../infrastructure/services/metadata-conflict.service';
+import {
+  MetadataConflictService,
+  ConflictPriority,
+  ConflictSource,
+} from '../../../infrastructure/services/metadata-conflict.service';
 import { EnrichmentLogService } from '../enrichment-log.service';
 
 export interface BioEnrichmentResult {
@@ -28,7 +32,7 @@ export class ArtistBioEnrichmentService {
     private readonly agentRegistry: AgentRegistryService,
     private readonly cache: MetadataCacheService,
     private readonly conflictService: MetadataConflictService,
-    private readonly enrichmentLog: EnrichmentLogService,
+    private readonly enrichmentLog: EnrichmentLogService
   ) {}
 
   /**
@@ -36,9 +40,14 @@ export class ArtistBioEnrichmentService {
    */
   async enrichBiography(
     artistId: string,
-    artist: { name: string; mbzArtistId: string | null; biography?: string | null; biographySource?: string | null },
+    artist: {
+      name: string;
+      mbzArtistId: string | null;
+      biography?: string | null;
+      biographySource?: string | null;
+    },
     forceRefresh: boolean,
-    startTime: number,
+    startTime: number
   ): Promise<BioEnrichmentResult> {
     const bio = await this.getArtistBio(artist.mbzArtistId, artist.name, forceRefresh, artistId);
     if (!bio) return { updated: false };
@@ -111,7 +120,9 @@ export class ArtistBioEnrichmentService {
           return bio;
         }
       } catch (error) {
-        this.logger.warn(`Agent "${agent.name}" failed for bio ${name}: ${(error as Error).message}`);
+        this.logger.warn(
+          `Agent "${agent.name}" failed for bio ${name}: ${(error as Error).message}`
+        );
       }
     }
 
@@ -126,7 +137,7 @@ export class ArtistBioEnrichmentService {
     artistId: string,
     artist: { name: string; biography?: string | null; biographySource?: string | null },
     bio: ArtistBio,
-    isMusicBrainzSource: boolean,
+    isMusicBrainzSource: boolean
   ): Promise<void> {
     const currentBio = artist.biography || '';
     const suggestedBio = bio.content || '';
@@ -138,7 +149,7 @@ export class ArtistBioEnrichmentService {
         field: 'biography',
         currentValue: currentBio.substring(0, 200) + '...',
         suggestedValue: suggestedBio.substring(0, 200) + '...',
-        source: bio.source as any,
+        source: bio.source as ConflictSource,
         priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
         metadata: {
           artistName: artist.name,

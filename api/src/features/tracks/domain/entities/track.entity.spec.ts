@@ -106,7 +106,7 @@ describe('Track Entity', () => {
       const track = Track.reconstruct({
         id: 'track-1',
         ...baseProps,
-        size: BigInt(10485760) as any,
+        size: BigInt(10485760) as unknown as number,
         createdAt: new Date(),
         updatedAt: new Date(),
       });

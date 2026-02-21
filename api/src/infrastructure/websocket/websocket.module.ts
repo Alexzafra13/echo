@@ -33,22 +33,11 @@ import { WsLoggingInterceptor } from './interceptors/ws-logging.interceptor';
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRATION', '24h'),
-        } as any,
+        },
       }),
     }),
   ],
-  providers: [
-    WsJwtGuard,
-    WsThrottlerGuard,
-    WsExceptionFilter,
-    WsLoggingInterceptor,
-  ],
-  exports: [
-    WsJwtGuard,
-    WsThrottlerGuard,
-    WsExceptionFilter,
-    WsLoggingInterceptor,
-    JwtModule,
-  ],
+  providers: [WsJwtGuard, WsThrottlerGuard, WsExceptionFilter, WsLoggingInterceptor],
+  exports: [WsJwtGuard, WsThrottlerGuard, WsExceptionFilter, WsLoggingInterceptor, JwtModule],
 })
 export class WebSocketModule {}

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
+import { AxiosError, AxiosHeaders } from 'axios';
 import { AddToPlaylistModal } from './AddToPlaylistModal';
 import type { Track } from '@features/home/types';
 
@@ -293,7 +293,7 @@ describe('AddToPlaylistModal', () => {
         status: 400,
         statusText: 'Bad Request',
         headers: {},
-        config: { headers: {} as any },
+        config: { headers: new AxiosHeaders() },
       };
       mockAddTrackMutateAsync.mockRejectedValueOnce(axiosError);
 
@@ -342,9 +342,7 @@ describe('AddToPlaylistModal', () => {
     it('should show "canción" for single song', () => {
       vi.mocked(usePlaylists).mockReturnValue({
         data: {
-          items: [
-            { id: 'p1', name: 'Single', songCount: 1, albumIds: [] },
-          ],
+          items: [{ id: 'p1', name: 'Single', songCount: 1, albumIds: [] }],
         },
         isLoading: false,
         isSuccess: true,

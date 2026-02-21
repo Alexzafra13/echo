@@ -2,6 +2,7 @@ import { LoginUseCase } from './login.use-case';
 import { IUserRepository, IPasswordService, ITokenService } from '../../ports';
 import { LogService } from '@features/logs/application/log.service';
 import { UnauthorizedError, ValidationError } from '@shared/errors';
+import { User } from '../../entities/user.entity';
 
 describe('LoginUseCase', () => {
   let useCase: LoginUseCase;
@@ -27,16 +28,16 @@ describe('LoginUseCase', () => {
     mockUserRepo = {
       findByUsername: jest.fn(),
       updatePartial: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<IUserRepository>;
 
     mockPasswordService = {
       compare: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<IPasswordService>;
 
     mockTokenService = {
       generateAccessToken: jest.fn(),
       generateRefreshToken: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<ITokenService>;
 
     mockLogService = {
       info: jest.fn(),
@@ -47,13 +48,13 @@ describe('LoginUseCase', () => {
       mockUserRepo,
       mockPasswordService,
       mockTokenService,
-      mockLogService as any,
+      mockLogService as unknown as LogService
     );
   });
 
   describe('execute', () => {
     it('should login successfully with valid credentials', async () => {
-      mockUserRepo.findByUsername.mockResolvedValue(validUser as any);
+      mockUserRepo.findByUsername.mockResolvedValue(validUser as unknown as User);
       mockPasswordService.compare.mockResolvedValue(true);
       mockTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockResolvedValue('refresh-token');
@@ -77,22 +78,22 @@ describe('LoginUseCase', () => {
     });
 
     it('should throw ValidationError when username is missing', async () => {
-      await expect(
-        useCase.execute({ username: '', password: 'password123' }),
-      ).rejects.toThrow(ValidationError);
+      await expect(useCase.execute({ username: '', password: 'password123' })).rejects.toThrow(
+        ValidationError
+      );
     });
 
     it('should throw ValidationError when password is missing', async () => {
-      await expect(
-        useCase.execute({ username: 'testuser', password: '' }),
-      ).rejects.toThrow(ValidationError);
+      await expect(useCase.execute({ username: 'testuser', password: '' })).rejects.toThrow(
+        ValidationError
+      );
     });
 
     it('should throw UnauthorizedError when user not found', async () => {
       mockUserRepo.findByUsername.mockResolvedValue(null);
 
       await expect(
-        useCase.execute({ username: 'nonexistent', password: 'password123' }),
+        useCase.execute({ username: 'nonexistent', password: 'password123' })
       ).rejects.toThrow(UnauthorizedError);
 
       expect(mockLogService.warning).toHaveBeenCalled();
@@ -100,21 +101,21 @@ describe('LoginUseCase', () => {
 
     it('should throw UnauthorizedError when account is inactive', async () => {
       const inactiveUser = { ...validUser, isActive: false };
-      mockUserRepo.findByUsername.mockResolvedValue(inactiveUser as any);
+      mockUserRepo.findByUsername.mockResolvedValue(inactiveUser as unknown as User);
 
       await expect(
-        useCase.execute({ username: 'testuser', password: 'password123' }),
+        useCase.execute({ username: 'testuser', password: 'password123' })
       ).rejects.toThrow(UnauthorizedError);
 
       expect(mockLogService.warning).toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedError when password is invalid', async () => {
-      mockUserRepo.findByUsername.mockResolvedValue(validUser as any);
+      mockUserRepo.findByUsername.mockResolvedValue(validUser as unknown as User);
       mockPasswordService.compare.mockResolvedValue(false);
 
       await expect(
-        useCase.execute({ username: 'testuser', password: 'wrongpassword' }),
+        useCase.execute({ username: 'testuser', password: 'wrongpassword' })
       ).rejects.toThrow(UnauthorizedError);
 
       expect(mockLogService.warning).toHaveBeenCalled();
@@ -122,7 +123,7 @@ describe('LoginUseCase', () => {
 
     it('should return mustChangePassword flag when set', async () => {
       const userMustChange = { ...validUser, mustChangePassword: true };
-      mockUserRepo.findByUsername.mockResolvedValue(userMustChange as any);
+      mockUserRepo.findByUsername.mockResolvedValue(userMustChange as unknown as User);
       mockPasswordService.compare.mockResolvedValue(true);
       mockTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockResolvedValue('refresh-token');
@@ -137,7 +138,7 @@ describe('LoginUseCase', () => {
 
     it('should return admin flag when user is admin', async () => {
       const adminUser = { ...validUser, isAdmin: true };
-      mockUserRepo.findByUsername.mockResolvedValue(adminUser as any);
+      mockUserRepo.findByUsername.mockResolvedValue(adminUser as unknown as User);
       mockPasswordService.compare.mockResolvedValue(true);
       mockTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockResolvedValue('refresh-token');
@@ -151,7 +152,7 @@ describe('LoginUseCase', () => {
     });
 
     it('should not expose sensitive data in response', async () => {
-      mockUserRepo.findByUsername.mockResolvedValue(validUser as any);
+      mockUserRepo.findByUsername.mockResolvedValue(validUser as unknown as User);
       mockPasswordService.compare.mockResolvedValue(true);
       mockTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockResolvedValue('refresh-token');

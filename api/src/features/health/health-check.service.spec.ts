@@ -8,7 +8,7 @@ import { SettingsService } from '@features/external-metadata/infrastructure/serv
 // Mock os module
 jest.mock('os', () => ({
   totalmem: jest.fn(() => 17179869184), // 16 GB
-  freemem: jest.fn(() => 8589934592),  // 8 GB
+  freemem: jest.fn(() => 8589934592), // 8 GB
   loadavg: jest.fn(() => [1.5, 1.2, 1.0]),
 }));
 
@@ -17,7 +17,7 @@ jest.mock('fs/promises', () => ({
   statfs: jest.fn().mockResolvedValue({
     bsize: 4096,
     blocks: 125000000, // ~500GB
-    bfree: 25000000,   // ~100GB free (80% used)
+    bfree: 25000000, // ~100GB free (80% used)
   }),
 }));
 
@@ -112,9 +112,7 @@ describe('HealthCheckService', () => {
     });
 
     it('debería lanzar HttpException 503 cuando la base de datos falla', async () => {
-      mockDrizzleService.db.execute = jest.fn().mockRejectedValue(
-        new Error('Connection refused')
-      );
+      mockDrizzleService.db.execute = jest.fn().mockRejectedValue(new Error('Connection refused'));
 
       await expect(service.check()).rejects.toThrow(HttpException);
 
@@ -122,9 +120,9 @@ describe('HealthCheckService', () => {
         await service.check();
       } catch (error) {
         expect((error as HttpException).getStatus()).toBe(HttpStatus.SERVICE_UNAVAILABLE);
-        const response = (error as HttpException).getResponse() as any;
+        const response = (error as HttpException).getResponse() as Record<string, unknown>;
         expect(response.status).toBe('error');
-        expect(response.services.database).toBe('error');
+        expect((response.services as Record<string, string>).database).toBe('error');
         expect(response.error).toContain('Database');
       }
     });
@@ -148,7 +146,7 @@ describe('HealthCheckService', () => {
       try {
         await service.check();
       } catch (error) {
-        const response = (error as HttpException).getResponse() as any;
+        const response = (error as HttpException).getResponse() as Record<string, unknown>;
         expect(response.error).toContain('Database');
       }
     });
@@ -156,7 +154,7 @@ describe('HealthCheckService', () => {
     it('debería ejecutar chequeos en paralelo', async () => {
       const dbExecuteStart = Date.now();
       mockDrizzleService.db.execute = jest.fn().mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         return [{ '?column?': 1 }];
       });
 

@@ -86,7 +86,7 @@ async function bootstrap() {
   );
 
   // Serialización de BigInt para respuestas JSON
-  // @ts-expect-error
+  // @ts-expect-error toJSON is not part of the BigInt interface but is needed for JSON serialization
   BigInt.prototype.toJSON = function () {
     return this.toString();
   };

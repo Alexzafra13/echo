@@ -45,7 +45,7 @@ test.describe('Autenticación', () => {
 
     // Debe mostrar alerta de error o seguir en la página de login (no redirigir)
     // El mensaje puede variar según configuración del API
-    const hasError = await page.locator('[class*="error"], [class*="alert"], [role="alert"]').isVisible().catch(() => false);
+    const _hasError = await page.locator('[class*="error"], [class*="alert"], [role="alert"]').isVisible().catch(() => false);
     const stayedOnLogin = page.url().includes('/login');
 
     // Al menos debe quedarse en login (no redirigir a home)

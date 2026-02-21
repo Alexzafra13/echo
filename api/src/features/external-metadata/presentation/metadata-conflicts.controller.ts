@@ -266,7 +266,7 @@ export class MetadataConflictsController {
     }
 
     // Get metadata (already parsed as JSONB)
-    const metadata = conflict.metadata ? (conflict.metadata as Record<string, any>) : null;
+    const metadata = conflict.metadata ? (conflict.metadata as Record<string, unknown>) : null;
 
     if (!metadata || !metadata.suggestions || !Array.isArray(metadata.suggestions)) {
       throw new BadRequestException(

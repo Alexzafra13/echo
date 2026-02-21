@@ -1,5 +1,6 @@
 import { ArtistMapper } from './artist.mapper';
 import { Artist } from '../../domain/entities/artist.entity';
+import { Artist as ArtistDb } from '@infrastructure/database/schema/artists';
 
 describe('ArtistMapper', () => {
   const mockDbArtist = {
@@ -19,7 +20,7 @@ describe('ArtistMapper', () => {
 
   describe('toDomain', () => {
     it('should convert DB artist to domain Artist', () => {
-      const artist = ArtistMapper.toDomain(mockDbArtist as any);
+      const artist = ArtistMapper.toDomain(mockDbArtist as unknown as ArtistDb);
 
       expect(artist).toBeInstanceOf(Artist);
       expect(artist.id).toBe('artist-1');
@@ -41,7 +42,7 @@ describe('ArtistMapper', () => {
         externalUrl: null,
         externalProfileUpdatedAt: null,
         orderArtistName: null,
-      } as any);
+      } as unknown as ArtistDb);
 
       expect(artist.mbzArtistId).toBeUndefined();
       expect(artist.biography).toBeUndefined();
@@ -56,7 +57,7 @@ describe('ArtistMapper', () => {
         albumCount: null,
         songCount: null,
         size: null,
-      } as any);
+      } as unknown as ArtistDb);
 
       expect(artist.albumCount).toBe(0);
       expect(artist.songCount).toBe(0);
@@ -64,14 +65,14 @@ describe('ArtistMapper', () => {
     });
 
     it('should map externalProfileUpdatedAt to externalInfoUpdatedAt', () => {
-      const artist = ArtistMapper.toDomain(mockDbArtist as any);
+      const artist = ArtistMapper.toDomain(mockDbArtist as unknown as ArtistDb);
       expect(artist.externalInfoUpdatedAt).toEqual(mockDbArtist.externalProfileUpdatedAt);
     });
   });
 
   describe('toPersistence', () => {
     it('should convert domain artist to persistence format', () => {
-      const artist = ArtistMapper.toDomain(mockDbArtist as any);
+      const artist = ArtistMapper.toDomain(mockDbArtist as unknown as ArtistDb);
       const persistence = ArtistMapper.toPersistence(artist);
 
       expect(persistence.id).toBe('artist-1');
@@ -82,7 +83,7 @@ describe('ArtistMapper', () => {
     });
 
     it('should map externalInfoUpdatedAt back to externalProfileUpdatedAt', () => {
-      const artist = ArtistMapper.toDomain(mockDbArtist as any);
+      const artist = ArtistMapper.toDomain(mockDbArtist as unknown as ArtistDb);
       const persistence = ArtistMapper.toPersistence(artist);
       expect(persistence.externalProfileUpdatedAt).toEqual(mockDbArtist.externalProfileUpdatedAt);
     });
@@ -92,7 +93,7 @@ describe('ArtistMapper', () => {
         ...mockDbArtist,
         mbzArtistId: null,
         biography: null,
-      } as any);
+      } as unknown as ArtistDb);
       const persistence = ArtistMapper.toPersistence(artist);
       expect(persistence.mbzArtistId).toBeNull();
       expect(persistence.biography).toBeNull();
@@ -101,7 +102,10 @@ describe('ArtistMapper', () => {
 
   describe('toDomainArray', () => {
     it('should convert array of DB artists', () => {
-      const artists = ArtistMapper.toDomainArray([mockDbArtist, mockDbArtist] as any);
+      const artists = ArtistMapper.toDomainArray([
+        mockDbArtist,
+        mockDbArtist,
+      ] as unknown as ArtistDb[]);
       expect(artists).toHaveLength(2);
       expect(artists[0]).toBeInstanceOf(Artist);
     });

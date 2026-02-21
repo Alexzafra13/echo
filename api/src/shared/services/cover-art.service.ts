@@ -37,7 +37,7 @@ export class CoverArtService {
   constructor(
     @InjectPinoLogger(CoverArtService.name)
     private readonly logger: PinoLogger,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {
     // Directory where covers will be cached
     // Priority: COVERS_PATH > DATA_PATH/uploads/covers > UPLOAD_PATH/covers > ./uploads/covers
@@ -78,10 +78,7 @@ export class CoverArtService {
    * @param trackPath - Path to first track of the album
    * @returns Relative path to cached cover or undefined
    */
-  async extractAndCacheCover(
-    albumId: string,
-    trackPath: string,
-  ): Promise<string | undefined> {
+  async extractAndCacheCover(albumId: string, trackPath: string): Promise<string | undefined> {
     try {
       // 1. Search for external cover in track directory
       const trackDir = path.dirname(trackPath);
@@ -95,11 +92,7 @@ export class CoverArtService {
       const embeddedCover = await this.extractEmbeddedCover(trackPath);
 
       if (embeddedCover) {
-        return await this.cacheCoverFromBuffer(
-          albumId,
-          embeddedCover.data,
-          embeddedCover.format,
-        );
+        return await this.cacheCoverFromBuffer(albumId, embeddedCover.data, embeddedCover.format);
       }
 
       this.logger.warn(`Cover not found for album ${albumId}`);
@@ -128,7 +121,7 @@ export class CoverArtService {
    * Extracts embedded cover from audio file
    */
   private async extractEmbeddedCover(
-    trackPath: string,
+    trackPath: string
   ): Promise<{ data: Buffer; format: string } | undefined> {
     try {
       const metadata = await parseFile(trackPath);
@@ -172,17 +165,17 @@ export class CoverArtService {
     source: string,
     dest: string,
     maxRetries = 3,
-    delay = 100,
+    delay = 100
   ): Promise<void> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         await fs.copyFile(source, dest);
         return; // Success
-      } catch (error: any) {
+      } catch (error: unknown) {
         // If it's a permission error (EPERM) on Windows, retry
-        if (error.code === 'EPERM' && attempt < maxRetries) {
+        if ((error as NodeJS.ErrnoException).code === 'EPERM' && attempt < maxRetries) {
           this.logger.warn(
-            `EPERM error copying ${path.basename(source)}, retrying (${attempt}/${maxRetries})...`,
+            `EPERM error copying ${path.basename(source)}, retrying (${attempt}/${maxRetries})...`
           );
           await new Promise((resolve) => setTimeout(resolve, delay * attempt));
           continue;
@@ -199,7 +192,7 @@ export class CoverArtService {
   private async cacheCoverFromBuffer(
     albumId: string,
     buffer: Buffer,
-    mimeType: string,
+    mimeType: string
   ): Promise<string> {
     // Determine extension from MIME type
     const ext = this.mimeTypeToExtension(mimeType);

@@ -6,7 +6,6 @@ import { SettingsService } from '@features/external-metadata/infrastructure/serv
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import * as fs from 'fs/promises';
-import * as path from 'path';
 import type { Dirent, Stats } from 'fs';
 
 // Mock fs/promises
@@ -118,7 +117,7 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockRejectedValue(new Error('ENOENT'));
 
       // Act
-      const result = await controller.getLibrary();
+      await controller.getLibrary();
 
       // Assert
       expect(mockSettingsService.getString).toHaveBeenCalledWith(

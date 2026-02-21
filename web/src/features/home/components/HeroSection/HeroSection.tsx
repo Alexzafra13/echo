@@ -2,7 +2,12 @@ import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer, Track } from '@features/player';
-import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, useAlbumTracks } from '../../hooks';
+import {
+  useArtistImages,
+  getArtistImageUrl,
+  useAutoEnrichArtist,
+  useAlbumTracks,
+} from '../../hooks';
 import { useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { useArtist } from '@features/artists/hooks';
 import type { HeroSectionProps } from '../../types';
@@ -21,9 +26,7 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
   const album = isAlbum ? item.data : null;
   const playlist = isPlaylist ? item.data : null;
 
-  const artistId = isAlbum
-    ? album!.artistId
-    : playlist?.metadata.artistId || '';
+  const artistId = isAlbum ? album!.artistId : playlist?.metadata.artistId || '';
 
   useArtistMetadataSync(artistId);
   useAlbumMetadataSync(isAlbum ? album!.id : '', artistId);
@@ -32,12 +35,13 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
   const { data: artistImages } = useArtistImages(artistId);
   const { data: albumTracks } = useAlbumTracks(isAlbum ? album!.id : '');
 
-  const hasHeroImages = artistImages?.images.background?.exists || artistImages?.images.logo?.exists;
+  const hasHeroImages =
+    artistImages?.images.background?.exists || artistImages?.images.logo?.exists;
   useAutoEnrichArtist(artistId, hasHeroImages);
 
-  const convertAlbumToPlayerTracks = (apiTracks: any[]): Track[] => {
+  const convertAlbumToPlayerTracks = (apiTracks: Track[]): Track[] => {
     if (!album) return [];
-    return apiTracks.map(track => ({
+    return apiTracks.map((track) => ({
       id: track.id,
       title: track.title,
       artist: track.artistName || album.artist || 'Unknown Artist',
@@ -53,8 +57,8 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
   const convertPlaylistToPlayerTracks = (): Track[] => {
     if (!playlist || !playlist.tracks) return [];
     return playlist.tracks
-      .filter(st => st.track)
-      .map(st => ({
+      .filter((st) => st.track)
+      .map((st) => ({
         id: st.track!.id,
         title: st.track!.title,
         artist: st.track!.artistName || 'Unknown Artist',
@@ -107,9 +111,7 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
     }
   };
 
-  const coverUrl = isAlbum
-    ? getCoverUrl(album!.coverImage)
-    : playlist?.coverImageUrl || '';
+  const coverUrl = isAlbum ? getCoverUrl(album!.coverImage) : playlist?.coverImageUrl || '';
 
   const artistTimestamp = artist?.externalInfoUpdatedAt || artist?.updatedAt;
 
@@ -117,7 +119,7 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
   const backgroundUrl = hasBackground
     ? getArtistImageUrl(artistId, 'background', artistTimestamp)
     : isAlbum
-      ? (album!.backgroundImage || coverUrl)
+      ? album!.backgroundImage || coverUrl
       : coverUrl;
 
   const hasLogo = artistImages?.images.logo?.exists;
@@ -212,7 +214,12 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
             className={styles.heroSection__playButton}
             aria-label={isAlbum ? 'Play album' : 'Play playlist'}
           >
-            <Play size={24} fill="currentColor" strokeWidth={0} className={styles.heroSection__playIcon} />
+            <Play
+              size={24}
+              fill="currentColor"
+              strokeWidth={0}
+              className={styles.heroSection__playIcon}
+            />
             <span className={styles.heroSection__playText}>Reproducir</span>
           </button>
         </div>

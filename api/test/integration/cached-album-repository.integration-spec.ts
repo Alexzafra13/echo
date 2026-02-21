@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 import { getLoggerToken } from 'nestjs-pino';
 import { RedisService } from '../../src/infrastructure/cache/redis.service';
 import { CachedAlbumRepository } from '../../src/features/albums/infrastructure/persistence/cached-album.repository';
+import { DrizzleAlbumRepository } from '../../src/features/albums/infrastructure/persistence/album.repository';
 import { Album, AlbumProps } from '../../src/features/albums/domain/entities/album.entity';
 import { IAlbumRepository } from '../../src/features/albums/domain/ports/album-repository.port';
 
@@ -86,13 +88,13 @@ describe('CachedAlbumRepository Integration', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<IAlbumRepository>;
 
     // Crear instancia del cached repository con Redis REAL
     cachedRepository = new CachedAlbumRepository(
-      baseRepository as any,
+      baseRepository as unknown as DrizzleAlbumRepository,
       redisService,
-      mockLogger as any,
+      mockLogger as unknown as PinoLogger,
     );
   });
 
@@ -235,7 +237,7 @@ describe('CachedAlbumRepository Integration', () => {
         name: 'Updated Title',
       });
       baseRepository.update.mockResolvedValue(updatedAlbum);
-      await cachedRepository.update('album-test-1', { name: 'Updated Title' } as any);
+      await cachedRepository.update('album-test-1', { name: 'Updated Title' } as Partial<Album>);
 
       // Assert - Cache debería estar invalidado
       cached = await redisService.get('album:album-test-1');
@@ -342,7 +344,7 @@ describe('CachedAlbumRepository Integration', () => {
         name: 'Updated Album 1',
       });
       baseRepository.update.mockResolvedValue(updatedAlbum1);
-      await cachedRepository.update('album-1', { name: 'Updated Album 1' } as any);
+      await cachedRepository.update('album-1', { name: 'Updated Album 1' } as Partial<Album>);
 
       // Assert - CachedAlbumRepository.invalidateListCaches() invalida TODOS los albums
       // Esto es por diseño para garantizar consistencia de datos

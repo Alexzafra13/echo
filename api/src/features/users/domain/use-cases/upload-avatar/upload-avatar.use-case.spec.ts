@@ -7,6 +7,10 @@ import {
   createMockPinoLogger,
 } from '@shared/testing/mock.types';
 import { UserFactory } from '@shared/testing/factories/user.factory';
+import { PinoLogger } from 'nestjs-pino';
+import { IStorageService } from '@features/external-metadata/domain/ports';
+import { ImageService } from '@features/external-metadata/application/services/image.service';
+import { UploadAvatarInput } from './upload-avatar.dto';
 
 describe('UploadAvatarUseCase', () => {
   let useCase: UploadAvatarUseCase;
@@ -21,7 +25,7 @@ describe('UploadAvatarUseCase', () => {
   };
   let mockLogger: ReturnType<typeof createMockPinoLogger>;
 
-  const createMockFile = (overrides = {}) => ({
+  const createMockFile = (overrides = {}): UploadAvatarInput['file'] => ({
     buffer: Buffer.from('fake-image-data'),
     size: 1024,
     mimetype: 'image/jpeg',
@@ -41,10 +45,10 @@ describe('UploadAvatarUseCase', () => {
     };
 
     useCase = new UploadAvatarUseCase(
-      mockLogger as any,
+      mockLogger as unknown as PinoLogger,
       mockUserRepository,
-      mockStorageService as any,
-      mockImageService as any,
+      mockStorageService as unknown as IStorageService,
+      mockImageService as unknown as ImageService
     );
   });
 
@@ -62,7 +66,7 @@ describe('UploadAvatarUseCase', () => {
       // Act
       const result = await useCase.execute({
         userId: mockUser.id,
-        file: mockFile as any,
+        file: mockFile,
       });
 
       // Assert
@@ -71,7 +75,7 @@ describe('UploadAvatarUseCase', () => {
       expect(result.avatarMimeType).toBe('image/jpeg');
       expect(mockStorageService.saveImage).toHaveBeenCalledWith(
         '/avatars/user-123.jpg',
-        mockFile.buffer,
+        mockFile.buffer
       );
       expect(mockUserRepository.updatePartial).toHaveBeenCalledWith(mockUser.id, {
         avatarPath: '/avatars/user-123.jpg',
@@ -98,7 +102,7 @@ describe('UploadAvatarUseCase', () => {
       // Act
       await useCase.execute({
         userId: mockUser.id,
-        file: mockFile as any,
+        file: mockFile,
       });
 
       // Assert
@@ -121,7 +125,7 @@ describe('UploadAvatarUseCase', () => {
       // Act
       const result = await useCase.execute({
         userId: mockUser.id,
-        file: mockFile as any,
+        file: mockFile,
       });
 
       // Assert - Should continue despite error
@@ -138,8 +142,8 @@ describe('UploadAvatarUseCase', () => {
       await expect(
         useCase.execute({
           userId: 'nonexistent',
-          file: mockFile as any,
-        }),
+          file: mockFile,
+        })
       ).rejects.toThrow(NotFoundError);
 
       expect(mockStorageService.saveImage).not.toHaveBeenCalled();
@@ -158,14 +162,14 @@ describe('UploadAvatarUseCase', () => {
       await expect(
         useCase.execute({
           userId: mockUser.id,
-          file: largeFile as any,
-        }),
+          file: largeFile,
+        })
       ).rejects.toThrow(BadRequestException);
       await expect(
         useCase.execute({
           userId: mockUser.id,
-          file: largeFile as any,
-        }),
+          file: largeFile,
+        })
       ).rejects.toThrow('File size exceeds 5MB limit');
 
       expect(mockStorageService.saveImage).not.toHaveBeenCalled();
@@ -184,14 +188,14 @@ describe('UploadAvatarUseCase', () => {
       await expect(
         useCase.execute({
           userId: mockUser.id,
-          file: invalidFile as any,
-        }),
+          file: invalidFile,
+        })
       ).rejects.toThrow(BadRequestException);
       await expect(
         useCase.execute({
           userId: mockUser.id,
-          file: invalidFile as any,
-        }),
+          file: invalidFile,
+        })
       ).rejects.toThrow('Invalid file type');
 
       expect(mockStorageService.saveImage).not.toHaveBeenCalled();
@@ -212,7 +216,7 @@ describe('UploadAvatarUseCase', () => {
       // Act
       const result = await useCase.execute({
         userId: mockUser.id,
-        file: pngFile as any,
+        file: pngFile,
       });
 
       // Assert
@@ -234,7 +238,7 @@ describe('UploadAvatarUseCase', () => {
       // Act
       const result = await useCase.execute({
         userId: mockUser.id,
-        file: webpFile as any,
+        file: webpFile,
       });
 
       // Assert
@@ -254,8 +258,8 @@ describe('UploadAvatarUseCase', () => {
       await expect(
         useCase.execute({
           userId: mockUser.id,
-          file: pdfFile as any,
-        }),
+          file: pdfFile,
+        })
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -274,7 +278,7 @@ describe('UploadAvatarUseCase', () => {
       // Act
       const result = await useCase.execute({
         userId: mockUser.id,
-        file: exactSizeFile as any,
+        file: exactSizeFile,
       });
 
       // Assert

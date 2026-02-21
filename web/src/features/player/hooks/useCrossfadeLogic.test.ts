@@ -89,7 +89,7 @@ describe('useCrossfadeLogic', () => {
       return ++rafId;
     });
 
-    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id) => {
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((_id) => {
       // Just clear the callback
     });
 
@@ -98,18 +98,19 @@ describe('useCrossfadeLogic', () => {
     vi.spyOn(performance, 'now').mockImplementation(() => time);
 
     // Helper to advance time
-    (global as any).advanceTime = (ms: number) => {
+    const advanceTime = (ms: number) => {
       time += ms;
       // Execute all pending animation frames
       const callbacks = [...rafCallbacks];
       rafCallbacks = [];
-      callbacks.forEach(cb => cb(time));
+      callbacks.forEach((cb) => cb(time));
     };
+    (global as unknown as Record<string, unknown>).advanceTime = advanceTime;
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    delete (global as any).advanceTime;
+    delete (global as unknown as Record<string, unknown>).advanceTime;
   });
 
   describe('initialization', () => {
@@ -382,7 +383,7 @@ describe('useCrossfadeLogic', () => {
 
       // Advance time to middle of crossfade
       act(() => {
-        (global as any).advanceTime(500); // 50% through 1 second fade
+        (global as unknown as Record<string, (ms: number) => void>).advanceTime(500); // 50% through 1 second fade
       });
 
       // Volumes should have been adjusted
@@ -540,7 +541,7 @@ describe('useCrossfadeLogic', () => {
       const mockAudioA = mockAudioElements.audioRefA.current!;
       const addEventListenerCalls = vi.mocked(mockAudioA.addEventListener).mock.calls;
       const timeUpdateHandler = addEventListenerCalls.find(
-        call => call[0] === 'timeupdate'
+        (call) => call[0] === 'timeupdate'
       )?.[1] as EventListener;
 
       if (timeUpdateHandler) {

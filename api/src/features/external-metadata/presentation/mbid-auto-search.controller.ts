@@ -13,7 +13,7 @@ import { SettingsService } from '../infrastructure/services/settings.service';
 export class MbidAutoSearchController {
   constructor(
     private readonly mbidAutoSearchService: MbidAutoSearchService,
-    private readonly settingsService: SettingsService,
+    private readonly settingsService: SettingsService
   ) {}
 
   @Get('config')
@@ -49,11 +49,11 @@ export class MbidAutoSearchController {
   async getConfig() {
     const enabled = await this.settingsService.getBoolean(
       'metadata.auto_search_mbid.enabled',
-      false,
+      false
     );
     const confidenceThreshold = await this.settingsService.getNumber(
       'metadata.auto_search_mbid.confidence_threshold',
-      95,
+      95
     );
 
     return {
@@ -115,10 +115,8 @@ export class MbidAutoSearchController {
     status: 400,
     description: 'Invalid configuration (threshold must be 75-100)',
   })
-  async updateConfig(
-    @Body() body: { enabled?: boolean; confidenceThreshold?: number },
-  ) {
-    const updates: Array<[string, any]> = [];
+  async updateConfig(@Body() body: { enabled?: boolean; confidenceThreshold?: number }) {
+    const updates: Array<[string, boolean | number]> = [];
 
     if (typeof body.enabled === 'boolean') {
       await this.settingsService.set('metadata.auto_search_mbid.enabled', body.enabled);
@@ -130,26 +128,23 @@ export class MbidAutoSearchController {
       if (body.confidenceThreshold < 75 || body.confidenceThreshold > 100) {
         throw new Error(
           'Confidence threshold must be between 75 and 100. ' +
-            'Lower values may cause incorrect MBIDs to be applied automatically.',
+            'Lower values may cause incorrect MBIDs to be applied automatically.'
         );
       }
 
       await this.settingsService.set(
         'metadata.auto_search_mbid.confidence_threshold',
-        body.confidenceThreshold,
+        body.confidenceThreshold
       );
       updates.push(['confidenceThreshold', body.confidenceThreshold]);
     }
 
     // Get final configuration
     const finalConfig = {
-      enabled: await this.settingsService.getBoolean(
-        'metadata.auto_search_mbid.enabled',
-        false,
-      ),
+      enabled: await this.settingsService.getBoolean('metadata.auto_search_mbid.enabled', false),
       confidenceThreshold: await this.settingsService.getNumber(
         'metadata.auto_search_mbid.confidence_threshold',
-        95,
+        95
       ),
     };
 

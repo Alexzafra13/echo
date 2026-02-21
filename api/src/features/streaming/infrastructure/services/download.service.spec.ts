@@ -1,4 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
+import { Writable } from 'stream';
+import { PinoLogger } from 'nestjs-pino';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { DownloadService, AlbumDownloadInfo } from './download.service';
 
 // Mock fs module
@@ -52,7 +55,10 @@ describe('DownloadService', () => {
       },
     };
 
-    service = new DownloadService(mockLogger as any, mockDrizzle as any);
+    service = new DownloadService(
+      mockLogger as unknown as PinoLogger,
+      mockDrizzle as unknown as DrizzleService
+    );
 
     // Reset mocks
     jest.clearAllMocks();
@@ -393,7 +399,7 @@ describe('DownloadService', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(true);
 
       // Act
-      await service.streamAlbumAsZip(albumInfo, mockOutputStream as any);
+      await service.streamAlbumAsZip(albumInfo, mockOutputStream as unknown as Writable);
 
       // Assert
       expect(mockArchive.pipe).toHaveBeenCalledWith(mockOutputStream);
@@ -454,7 +460,7 @@ describe('DownloadService', () => {
         .mockReturnValueOnce(false); // track2 missing
 
       // Act
-      await service.streamAlbumAsZip(albumInfo, mockOutputStream as any);
+      await service.streamAlbumAsZip(albumInfo, mockOutputStream as unknown as Writable);
 
       // Assert - append is used for tracks (with streams), file is only for cover
       expect(mockArchive.append).toHaveBeenCalledTimes(1); // Only track1, track2 was skipped
@@ -512,7 +518,7 @@ describe('DownloadService', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(true);
 
       // Act
-      await service.streamAlbumAsZip(albumInfo, mockOutputStream as any);
+      await service.streamAlbumAsZip(albumInfo, mockOutputStream as unknown as Writable);
 
       // Assert - append is used instead of file for tracks (with streams)
       expect(mockArchive.append).toHaveBeenCalledTimes(2);
@@ -563,7 +569,7 @@ describe('DownloadService', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(true);
 
       // Act
-      await service.streamAlbumAsZip(albumInfo, mockOutputStream as any);
+      await service.streamAlbumAsZip(albumInfo, mockOutputStream as unknown as Writable);
 
       // Assert - append is used for tracks with sanitized names
       expect(mockArchive.append).toHaveBeenCalledTimes(1);

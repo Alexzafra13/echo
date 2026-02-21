@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { usePlayTracking } from './usePlayTracking';
 import * as playTrackingService from '@shared/services/play-tracking.service';
@@ -65,9 +65,7 @@ describe('usePlayTracking', () => {
   describe('startPlaySession', () => {
     it('should start a new play session with track info', () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       const track = createTrack('track-1');
 
@@ -81,9 +79,7 @@ describe('usePlayTracking', () => {
 
     it('should use shuffle context when isShuffle is true', () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: true })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: true }));
 
       const track = createTrack('track-1');
 
@@ -96,9 +92,7 @@ describe('usePlayTracking', () => {
 
     it('should allow custom context override', () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       const track = createTrack('track-1');
 
@@ -113,9 +107,7 @@ describe('usePlayTracking', () => {
   describe('endPlaySession', () => {
     it('should record skip when skipped is true', async () => {
       const audioElements = createMockAudioElements(30, 180); // 30s played of 180s
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       const track = createTrack('track-1');
 
@@ -140,9 +132,7 @@ describe('usePlayTracking', () => {
 
     it('should record play when completion rate >= 30%', async () => {
       const audioElements = createMockAudioElements(60, 180); // 33% completion
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       const track = createTrack('track-1');
 
@@ -166,9 +156,7 @@ describe('usePlayTracking', () => {
 
     it('should record play when completion rate >= 95%', async () => {
       const audioElements = createMockAudioElements(175, 180); // ~97% completion
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       const track = createTrack('track-1');
 
@@ -185,9 +173,7 @@ describe('usePlayTracking', () => {
 
     it('should not record play when completion rate < 30% and not skipped', async () => {
       const audioElements = createMockAudioElements(20, 180); // ~11% completion
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       const track = createTrack('track-1');
 
@@ -205,9 +191,7 @@ describe('usePlayTracking', () => {
 
     it('should do nothing if no active session', async () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       await act(async () => {
         await result.current.endPlaySession(false);
@@ -219,9 +203,7 @@ describe('usePlayTracking', () => {
 
     it('should clear session after ending', async () => {
       const audioElements = createMockAudioElements(60, 180);
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       const track = createTrack('track-1');
 
@@ -243,9 +225,7 @@ describe('usePlayTracking', () => {
   describe('setSessionSource', () => {
     it('should set source info on active session', () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       const track = createTrack('track-1');
 
@@ -264,9 +244,7 @@ describe('usePlayTracking', () => {
 
     it('should do nothing if no active session', () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       // Should not throw
       act(() => {
@@ -278,9 +256,7 @@ describe('usePlayTracking', () => {
 
     it('should include source info in recorded play', async () => {
       const audioElements = createMockAudioElements(100, 180);
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       const track = createTrack('track-1');
 
@@ -306,9 +282,7 @@ describe('usePlayTracking', () => {
 
     it('should include source info in recorded skip', async () => {
       const audioElements = createMockAudioElements(30, 180);
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       const track = createTrack('track-1');
 
@@ -336,18 +310,14 @@ describe('usePlayTracking', () => {
   describe('hasActiveSession', () => {
     it('should return false when no session', () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       expect(result.current.hasActiveSession()).toBe(false);
     });
 
     it('should return true when session active', () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       act(() => {
         result.current.startPlaySession(createTrack('1'));
@@ -360,18 +330,14 @@ describe('usePlayTracking', () => {
   describe('getCurrentSessionTrackId', () => {
     it('should return null when no session', () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       expect(result.current.getCurrentSessionTrackId()).toBe(null);
     });
 
     it('should return track id when session active', () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       act(() => {
         result.current.startPlaySession(createTrack('my-track'));
@@ -384,9 +350,7 @@ describe('usePlayTracking', () => {
   describe('context detection', () => {
     it('should use direct context by default', () => {
       const audioElements = createMockAudioElements(100, 180);
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       act(() => {
         result.current.startPlaySession(createTrack('1'));
@@ -397,9 +361,7 @@ describe('usePlayTracking', () => {
 
     it('should use shuffle context when shuffle enabled', () => {
       const audioElements = createMockAudioElements(100, 180);
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: true })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: true }));
 
       act(() => {
         result.current.startPlaySession(createTrack('1'));
@@ -412,9 +374,7 @@ describe('usePlayTracking', () => {
   describe('edge cases', () => {
     it('should handle zero duration gracefully', async () => {
       const audioElements = createMockAudioElements(0, 0);
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       act(() => {
         result.current.startPlaySession(createTrack('1'));
@@ -430,9 +390,7 @@ describe('usePlayTracking', () => {
 
     it('should handle multiple sessions sequentially', async () => {
       const audioElements = createMockAudioElements(60, 180);
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       // First session
       act(() => {
@@ -465,9 +423,7 @@ describe('usePlayTracking', () => {
 
     it('should start new session even if previous not ended', () => {
       const audioElements = createMockAudioElements();
-      const { result } = renderHook(() =>
-        usePlayTracking({ audioElements, isShuffle: false })
-      );
+      const { result } = renderHook(() => usePlayTracking({ audioElements, isShuffle: false }));
 
       act(() => {
         result.current.startPlaySession(createTrack('track-1'));

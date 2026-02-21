@@ -7,13 +7,28 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 
 describe('WaveMixSchedulerService', () => {
   let service: WaveMixSchedulerService;
-  let mockLogger: any;
-  let mockBullmqService: any;
-  let mockWaveMixService: any;
-  let mockDrizzle: any;
+  let mockLogger: {
+    info: jest.Mock;
+    debug: jest.Mock;
+    warn: jest.Mock;
+    error: jest.Mock;
+  };
+  let mockBullmqService: {
+    createQueue: jest.Mock;
+    registerProcessor: jest.Mock;
+    addJob: jest.Mock;
+  };
+  let mockWaveMixService: {
+    refreshAutoPlaylists: jest.Mock;
+  };
+  let mockDrizzle: {
+    db: {
+      select: jest.Mock;
+    };
+  };
 
   // Mock data holder
-  let mockUsersData: any[] = [];
+  let mockUsersData: { id: string; username: string }[] = [];
 
   beforeEach(async () => {
     // Reset mock data
@@ -50,7 +65,9 @@ describe('WaveMixSchedulerService', () => {
                 limit: jest.fn().mockImplementation(() => {
                   // Return data on first call, empty array on subsequent calls (pagination end)
                   queryCallCount++;
-                  return queryCallCount === 1 ? Promise.resolve(mockUsersData) : Promise.resolve([]);
+                  return queryCallCount === 1
+                    ? Promise.resolve(mockUsersData)
+                    : Promise.resolve([]);
                 }),
               })),
             })),
@@ -168,14 +185,8 @@ describe('WaveMixSchedulerService', () => {
 
       // Assert
       expect(mockWaveMixService.refreshAutoPlaylists).toHaveBeenCalledWith(userId);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        { userId },
-        'Regenerating Wave Mix for user'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        { userId },
-        'Wave Mix regenerated successfully'
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith({ userId }, 'Regenerating Wave Mix for user');
+      expect(mockLogger.info).toHaveBeenCalledWith({ userId }, 'Wave Mix regenerated successfully');
     });
   });
 

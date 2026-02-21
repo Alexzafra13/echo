@@ -68,11 +68,11 @@ describe('GetAlbumTracksUseCase', () => {
   beforeEach(() => {
     mockAlbumRepo = {
       findById: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<IAlbumRepository>;
 
     mockTrackRepo = {
       findByAlbumId: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<ITrackRepository>;
 
     useCase = new GetAlbumTracksUseCase(mockAlbumRepo, mockTrackRepo);
   });
@@ -151,7 +151,7 @@ describe('GetAlbumTracksUseCase', () => {
 
       expect(result.tracks).toHaveLength(4);
       expect(result.totalTracks).toBe(4);
-      const discNumbers = result.tracks.map(t => t.discNumber);
+      const discNumbers = result.tracks.map((t) => t.discNumber);
       expect(discNumbers).toContain(1);
       expect(discNumbers).toContain(2);
     });
