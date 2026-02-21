@@ -1,14 +1,21 @@
 import { ScoringService } from './scoring.service';
 import { SCORING_WEIGHTS, FEEDBACK_SCORES, RECENCY_DECAY } from '../entities/track-score.entity';
+import { IUserInteractionsRepository } from '@features/user-interactions/domain/ports';
+import { IPlayTrackingRepository } from '@features/play-tracking/domain/ports';
+import { PinoLogger } from 'nestjs-pino';
 
 describe('ScoringService', () => {
   let service: ScoringService;
 
   beforeEach(() => {
     const mockLogger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
-    const mockInteractionsRepo = {} as any;
-    const mockPlayTrackingRepo = {} as any;
-    service = new ScoringService(mockLogger as any, mockInteractionsRepo, mockPlayTrackingRepo);
+    const mockInteractionsRepo = {} as unknown as IUserInteractionsRepository;
+    const mockPlayTrackingRepo = {} as unknown as IPlayTrackingRepository;
+    service = new ScoringService(
+      mockLogger as unknown as PinoLogger,
+      mockInteractionsRepo,
+      mockPlayTrackingRepo
+    );
   });
 
   describe('calculateTrackScore', () => {

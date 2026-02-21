@@ -7,6 +7,7 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import type { Dirent, Stats } from 'fs';
 
 // Mock fs/promises
 jest.mock('fs/promises');
@@ -79,11 +80,11 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockResolvedValue(undefined);
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as any);
+      } as unknown as Stats);
       mockedFs.readdir.mockResolvedValue([
         { name: 'song1.mp3', isFile: () => true, isDirectory: () => false },
         { name: 'song2.flac', isFile: () => true, isDirectory: () => false },
-      ] as any);
+      ] as unknown as Dirent[]);
 
       // Act
       const result = await controller.getLibrary();
@@ -111,8 +112,8 @@ describe('AdminLibraryController', () => {
     it('debería usar MUSIC_LIBRARY_PATH de entorno como fallback', async () => {
       // Arrange
       process.env.MUSIC_LIBRARY_PATH = '/custom/music';
-      mockSettingsService.getString.mockImplementation(
-        (key, defaultValue) => Promise.resolve(defaultValue)
+      mockSettingsService.getString.mockImplementation((key, defaultValue) =>
+        Promise.resolve(defaultValue)
       );
       mockedFs.access.mockRejectedValue(new Error('ENOENT'));
 
@@ -137,7 +138,7 @@ describe('AdminLibraryController', () => {
       });
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as any);
+      } as unknown as Stats);
       mockedFs.readdir.mockResolvedValue([]);
 
       // Act
@@ -160,7 +161,7 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockResolvedValue(undefined);
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as any);
+      } as unknown as Stats);
       mockedFs.readdir.mockResolvedValue([]);
       mockSettingsService.set.mockResolvedValue(undefined);
 
@@ -170,10 +171,7 @@ describe('AdminLibraryController', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.path).toBe(newPath);
-      expect(mockSettingsService.set).toHaveBeenCalledWith(
-        'library.music.path',
-        newPath
-      );
+      expect(mockSettingsService.set).toHaveBeenCalledWith('library.music.path', newPath);
     });
 
     it('debería rechazar si el path no existe', async () => {
@@ -181,9 +179,9 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockRejectedValue(new Error('ENOENT'));
 
       // Act & Assert
-      await expect(
-        controller.updateLibrary({ path: '/nonexistent' })
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.updateLibrary({ path: '/nonexistent' })).rejects.toThrow(
+        BadRequestException
+      );
     });
 
     it('debería rechazar si el path no es un directorio', async () => {
@@ -191,12 +189,12 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockResolvedValue(undefined);
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => false,
-      } as any);
+      } as unknown as Stats);
 
       // Act & Assert
-      await expect(
-        controller.updateLibrary({ path: '/path/to/file.txt' })
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.updateLibrary({ path: '/path/to/file.txt' })).rejects.toThrow(
+        BadRequestException
+      );
     });
 
     it('debería normalizar el path (backslashes a forward slashes)', async () => {
@@ -205,7 +203,7 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockResolvedValue(undefined);
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as any);
+      } as unknown as Stats);
       mockedFs.readdir.mockResolvedValue([]);
       mockSettingsService.set.mockResolvedValue(undefined);
 
@@ -221,12 +219,12 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockResolvedValue(undefined);
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as any);
+      } as unknown as Stats);
       mockedFs.readdir.mockResolvedValue([
         { name: 'song1.mp3', isFile: () => true, isDirectory: () => false },
         { name: 'song2.flac', isFile: () => true, isDirectory: () => false },
         { name: 'cover.jpg', isFile: () => true, isDirectory: () => false },
-      ] as any);
+      ] as unknown as Dirent[]);
       mockSettingsService.set.mockResolvedValue(undefined);
 
       // Act
@@ -263,9 +261,9 @@ describe('AdminLibraryController', () => {
       const prodController = module.get<AdminLibraryController>(AdminLibraryController);
 
       // Act & Assert
-      await expect(
-        prodController.updateLibrary({ path: '/etc/passwd' })
-      ).rejects.toThrow(ForbiddenException);
+      await expect(prodController.updateLibrary({ path: '/etc/passwd' })).rejects.toThrow(
+        ForbiddenException
+      );
     });
   });
 
@@ -279,13 +277,13 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockResolvedValue(undefined);
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as any);
+      } as unknown as Stats);
       mockedFs.readdir.mockResolvedValue([
         { name: 'subdir1', isDirectory: () => true, isFile: () => false },
         { name: 'subdir2', isDirectory: () => true, isFile: () => false },
         { name: 'file.txt', isDirectory: () => false, isFile: () => true },
         { name: '.hidden', isDirectory: () => true, isFile: () => false },
-      ] as any);
+      ] as unknown as Dirent[]);
 
       // Act
       const result = await controller.browseDirectories({ path: '/music' });
@@ -293,7 +291,7 @@ describe('AdminLibraryController', () => {
       // Assert
       expect(result.currentPath).toBe('/music');
       expect(result.directories).toHaveLength(2); // Only visible directories
-      expect(result.directories.map((d: any) => d.name)).not.toContain('.hidden');
+      expect(result.directories.map((d: { name: string }) => d.name)).not.toContain('.hidden');
     });
 
     it('debería indicar si se puede subir un nivel', async () => {
@@ -301,7 +299,7 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockResolvedValue(undefined);
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as any);
+      } as unknown as Stats);
       mockedFs.readdir.mockResolvedValue([]);
 
       // Act
@@ -317,11 +315,11 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockResolvedValue(undefined);
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as any);
+      } as unknown as Stats);
       mockedFs.readdir
         .mockResolvedValueOnce([
           { name: 'album1', isDirectory: () => true, isFile: () => false },
-        ] as any)
+        ] as unknown as Dirent[])
         .mockResolvedValueOnce(['song.mp3', 'song.flac']); // Contents of album1
 
       // Act
@@ -336,12 +334,12 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockResolvedValue(undefined);
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => false,
-      } as any);
+      } as unknown as Stats);
 
       // Act & Assert
-      await expect(
-        controller.browseDirectories({ path: '/music/file.txt' })
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.browseDirectories({ path: '/music/file.txt' })).rejects.toThrow(
+        BadRequestException
+      );
     });
 
     it('debería ordenar directorios alfabéticamente', async () => {
@@ -349,18 +347,18 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockResolvedValue(undefined);
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as any);
+      } as unknown as Stats);
       mockedFs.readdir.mockResolvedValue([
         { name: 'zebra', isDirectory: () => true, isFile: () => false },
         { name: 'alpha', isDirectory: () => true, isFile: () => false },
         { name: 'beta', isDirectory: () => true, isFile: () => false },
-      ] as any);
+      ] as unknown as Dirent[]);
 
       // Act
       const result = await controller.browseDirectories({ path: '/music' });
 
       // Assert
-      const names = result.directories.map((d: any) => d.name);
+      const names = result.directories.map((d: { name: string }) => d.name);
       expect(names).toEqual(['alpha', 'beta', 'zebra']);
     });
 
@@ -374,7 +372,7 @@ describe('AdminLibraryController', () => {
       });
       mockedFs.stat.mockResolvedValue({
         isDirectory: () => true,
-      } as any);
+      } as unknown as Stats);
 
       // Act
       const result = await controller.browseDirectories({ path: '/' });
@@ -390,9 +388,9 @@ describe('AdminLibraryController', () => {
       mockedFs.access.mockRejectedValue(new Error('Permission denied'));
 
       // Act & Assert
-      await expect(
-        controller.browseDirectories({ path: '/root' })
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.browseDirectories({ path: '/root' })).rejects.toThrow(
+        BadRequestException
+      );
     });
   });
 });

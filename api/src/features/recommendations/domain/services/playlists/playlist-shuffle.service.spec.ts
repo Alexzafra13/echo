@@ -5,7 +5,7 @@ import { TrackScore } from '../../entities/track-score.entity';
 
 describe('PlaylistShuffleService', () => {
   let service: PlaylistShuffleService;
-  let mockPlayTrackingRepo: any;
+  let mockPlayTrackingRepo: { getUserPlayHistory: jest.Mock };
 
   // Test data
   const createTrackScore = (trackId: string, score: number): TrackScore => ({
@@ -67,7 +67,7 @@ describe('PlaylistShuffleService', () => {
 
       expect(result).toHaveLength(5);
       // All original tracks should be present
-      const resultIds = result.map(t => t.trackId);
+      const resultIds = result.map((t) => t.trackId);
       expect(resultIds).toContain('track-1');
       expect(resultIds).toContain('track-2');
       expect(resultIds).toContain('track-3');
@@ -87,11 +87,11 @@ describe('PlaylistShuffleService', () => {
       const results: string[][] = [];
       for (let i = 0; i < 10; i++) {
         const result = await service.intelligentShuffle(tracks, mockTrackDetails);
-        results.push(result.map(t => t.trackId));
+        results.push(result.map((t) => t.trackId));
       }
 
       // At least some results should be different (probabilistic test)
-      const uniqueResults = new Set(results.map(r => r.join(',')));
+      const uniqueResults = new Set(results.map((r) => r.join(',')));
       expect(uniqueResults.size).toBeGreaterThan(1);
     });
   });
@@ -117,8 +117,8 @@ describe('PlaylistShuffleService', () => {
         const result = await service.intelligentShuffle(tracks, trackDetails);
 
         for (let j = 0; j < result.length - 1; j++) {
-          const current = trackDetails.find(t => t.id === result[j].trackId);
-          const next = trackDetails.find(t => t.id === result[j + 1].trackId);
+          const current = trackDetails.find((t) => t.id === result[j].trackId);
+          const next = trackDetails.find((t) => t.id === result[j + 1].trackId);
           if (current?.artistId === next?.artistId) {
             consecutiveSameArtistCount++;
           }
@@ -147,8 +147,8 @@ describe('PlaylistShuffleService', () => {
         const result = await service.intelligentShuffle(tracks, trackDetails);
 
         for (let j = 0; j < result.length - 1; j++) {
-          const current = trackDetails.find(t => t.id === result[j].trackId);
-          const next = trackDetails.find(t => t.id === result[j + 1].trackId);
+          const current = trackDetails.find((t) => t.id === result[j].trackId);
+          const next = trackDetails.find((t) => t.id === result[j + 1].trackId);
           if (current?.albumId === next?.albumId) {
             consecutiveSameAlbumCount++;
           }

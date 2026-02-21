@@ -2,6 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getLoggerToken } from 'nestjs-pino';
 import { ExploreController } from './explore.controller';
 import { ExploreService } from '../../infrastructure/services/explore.service';
+import { RequestWithUser } from '@shared/types/request.types';
+import {
+  ExploreQueryDto,
+  ForgottenAlbumsQueryDto,
+  ExploreAlbumsResponseDto,
+  ExploreTracksResponseDto,
+  RandomAlbumResponseDto,
+  RandomArtistResponseDto,
+} from '../dtos/explore.dto';
 
 describe('ExploreController', () => {
   let controller: ExploreController;
@@ -45,12 +54,14 @@ describe('ExploreController', () => {
         albums: [{ id: 'album-1', name: 'Unplayed Album' }],
         total: 1,
       };
-      exploreService.getUnplayedAlbums.mockResolvedValue(mockResult as any);
+      exploreService.getUnplayedAlbums.mockResolvedValue(
+        mockResult as unknown as ExploreAlbumsResponseDto
+      );
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const query = { limit: 20, offset: 0 };
 
-      const result = await controller.getUnplayedAlbums(req, query as any);
+      const result = await controller.getUnplayedAlbums(req, query as ExploreQueryDto);
 
       expect(exploreService.getUnplayedAlbums).toHaveBeenCalledWith('user-1', 20, 0);
       expect(result.limit).toBe(20);
@@ -64,12 +75,14 @@ describe('ExploreController', () => {
         albums: [{ id: 'album-2', name: 'Forgotten Album' }],
         total: 1,
       };
-      exploreService.getForgottenAlbums.mockResolvedValue(mockResult as any);
+      exploreService.getForgottenAlbums.mockResolvedValue(
+        mockResult as unknown as ExploreAlbumsResponseDto
+      );
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const query = { limit: 20, offset: 0, monthsAgo: 3 };
 
-      const result = await controller.getForgottenAlbums(req, query as any);
+      const result = await controller.getForgottenAlbums(req, query as ForgottenAlbumsQueryDto);
 
       expect(exploreService.getForgottenAlbums).toHaveBeenCalledWith('user-1', 3, 20, 0);
       expect(result.limit).toBe(20);
@@ -79,12 +92,14 @@ describe('ExploreController', () => {
   describe('getHiddenGems', () => {
     it('should return hidden gem tracks', async () => {
       const mockTracks = [{ id: 'track-1', title: 'Hidden Gem' }];
-      exploreService.getHiddenGems.mockResolvedValue(mockTracks as any);
+      exploreService.getHiddenGems.mockResolvedValue(
+        mockTracks as unknown as ExploreTracksResponseDto['tracks']
+      );
 
-      const req = { user: mockUser } as any;
+      const req = { user: mockUser } as unknown as RequestWithUser;
       const query = { limit: 30 };
 
-      const result = await controller.getHiddenGems(req, query as any);
+      const result = await controller.getHiddenGems(req, query as ExploreQueryDto);
 
       expect(exploreService.getHiddenGems).toHaveBeenCalledWith('user-1', 30);
       expect(result.tracks).toHaveLength(1);
@@ -95,7 +110,9 @@ describe('ExploreController', () => {
   describe('getRandomAlbum', () => {
     it('should return a random album', async () => {
       const mockAlbum = { id: 'album-3', name: 'Random Album' };
-      exploreService.getRandomAlbum.mockResolvedValue(mockAlbum as any);
+      exploreService.getRandomAlbum.mockResolvedValue(
+        mockAlbum as unknown as RandomAlbumResponseDto['album']
+      );
 
       const result = await controller.getRandomAlbum();
 
@@ -107,7 +124,9 @@ describe('ExploreController', () => {
   describe('getRandomArtist', () => {
     it('should return a random artist', async () => {
       const mockArtist = { id: 'artist-1', name: 'Random Artist' };
-      exploreService.getRandomArtist.mockResolvedValue(mockArtist as any);
+      exploreService.getRandomArtist.mockResolvedValue(
+        mockArtist as unknown as RandomArtistResponseDto['artist']
+      );
 
       const result = await controller.getRandomArtist();
 
@@ -122,7 +141,9 @@ describe('ExploreController', () => {
         { id: 'album-4', name: 'Random 1' },
         { id: 'album-5', name: 'Random 2' },
       ];
-      exploreService.getRandomAlbums.mockResolvedValue(mockAlbums as any);
+      exploreService.getRandomAlbums.mockResolvedValue(
+        mockAlbums as unknown as RandomAlbumResponseDto['album'][]
+      );
 
       const result = await controller.getRandomAlbums(6);
 

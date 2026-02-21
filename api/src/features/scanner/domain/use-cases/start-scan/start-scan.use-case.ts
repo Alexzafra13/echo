@@ -1,14 +1,14 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { LibraryScan } from '../../entities/library-scan.entity';
-import {
-  IScannerRepository,
-  SCANNER_REPOSITORY,
-} from '../../ports/scanner-repository.port';
+import { IScannerRepository, SCANNER_REPOSITORY } from '../../ports/scanner-repository.port';
 import { StartScanInput, StartScanOutput } from './start-scan.dto';
 import { ScannerError } from '@shared/errors';
 
 export interface IScanProcessor {
-  enqueueScan(scanId: string, options?: any): Promise<void>;
+  enqueueScan(
+    scanId: string,
+    options?: { path?: string; recursive?: boolean; pruneDeleted?: boolean }
+  ): Promise<void>;
 }
 
 export const SCAN_PROCESSOR = 'IScanProcessor';
@@ -19,7 +19,7 @@ export class StartScanUseCase {
     @Inject(SCANNER_REPOSITORY)
     private readonly scannerRepository: IScannerRepository,
     @Inject(SCAN_PROCESSOR)
-    private readonly scanProcessor: IScanProcessor,
+    private readonly scanProcessor: IScanProcessor
   ) {}
 
   async execute(input: StartScanInput = {}): Promise<StartScanOutput> {
