@@ -33,6 +33,10 @@ coverage
 /blob-report/
 /playwright/.cache/
 /e2e/.auth/
+/e2e/screenshots/
+
+# Downloaded binaries
+*.deb
 
 # Environment variables
 .env
