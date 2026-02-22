@@ -34,7 +34,6 @@ describe('StreamTrackUseCase', () => {
   });
 
   beforeEach(async () => {
-    process.env.DATA_PATH = '/app/data';
 
     const mockTrackRepository: Partial<ITrackRepository> = {
       findById: jest.fn(),
@@ -69,7 +68,7 @@ describe('StreamTrackUseCase', () => {
   });
 
   afterEach(() => {
-    delete process.env.DATA_PATH;
+    jest.restoreAllMocks();
   });
 
   describe('execute', () => {
@@ -126,7 +125,7 @@ describe('StreamTrackUseCase', () => {
       await expect(useCase.execute({ trackId: 'track-2' })).rejects.toThrow(NotFoundError);
     });
 
-    it('should throw ForbiddenError if file path is outside DATA_PATH', async () => {
+    it('should throw ForbiddenError if file path is outside allowed roots', async () => {
       const trackOutsideData = Track.reconstruct({
         id: 'track-3',
         title: 'Bad Path Song',
@@ -139,6 +138,30 @@ describe('StreamTrackUseCase', () => {
       (trackRepository.findById as jest.Mock).mockResolvedValue(trackOutsideData);
 
       await expect(useCase.execute({ trackId: 'track-3' })).rejects.toThrow(ForbiddenError);
+    });
+
+    it('should allow file paths under any allowed root (/mnt, /media, /music, etc.)', async () => {
+      const trackOnMnt = Track.reconstruct({
+        id: 'track-mnt',
+        title: 'Mounted Song',
+        path: '/mnt/navidrome/musica/artist/song.mp3',
+        duration: 200,
+        discNumber: 1,
+        compilation: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      (trackRepository.findById as jest.Mock).mockResolvedValue(trackOnMnt);
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.statSync as jest.Mock).mockReturnValue({
+        isFile: () => true,
+        size: 5242880,
+      });
+
+      const result = await useCase.execute({ trackId: 'track-mnt' });
+
+      expect(result.filePath).toBe('/mnt/navidrome/musica/artist/song.mp3');
+      expect(result.mimeType).toBe('audio/mpeg');
     });
 
     it('should throw NotFoundError if file does not exist on disk', async () => {
