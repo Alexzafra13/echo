@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DashboardPanel } from './DashboardPanel';
 
 // Mock API client
@@ -51,6 +52,18 @@ vi.mock('@shared/utils/logger', () => ({
 }));
 
 import { apiClient } from '@shared/services/api';
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, retryDelay: 0 },
+      mutations: { retry: false },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
 
 // Mock data
 const mockStats = {
@@ -133,13 +146,15 @@ const mockStats = {
 describe('DashboardPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset apiClient.get implementation to avoid leaking between tests
+    vi.mocked(apiClient.get).mockReset();
   });
 
   describe('loading state', () => {
     it('should show loading state initially', () => {
       vi.mocked(apiClient.get).mockImplementation(() => new Promise(() => {}));
 
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       expect(screen.getByText('Cargando estadísticas...')).toBeInTheDocument();
     });
@@ -147,9 +162,12 @@ describe('DashboardPanel', () => {
 
   describe('error state', () => {
     it('should show error state when API fails', async () => {
-      vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('Network error'));
+      // Reject twice: initial call + 1 retry (component has retry: 1)
+      vi.mocked(apiClient.get)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error('Network error'));
 
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Error al cargar las estadísticas')).toBeInTheDocument();
@@ -157,9 +175,11 @@ describe('DashboardPanel', () => {
     });
 
     it('should show retry button on error', async () => {
-      vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('Network error'));
+      vi.mocked(apiClient.get)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error('Network error'));
 
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Reintentar')).toBeInTheDocument();
@@ -169,9 +189,10 @@ describe('DashboardPanel', () => {
     it('should retry loading when clicking retry button', async () => {
       vi.mocked(apiClient.get)
         .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce({ data: mockStats });
 
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Reintentar')).toBeInTheDocument();
@@ -183,7 +204,8 @@ describe('DashboardPanel', () => {
         expect(screen.getByText('Dashboard')).toBeInTheDocument();
       });
 
-      expect(apiClient.get).toHaveBeenCalledTimes(2);
+      // Initial call + 1 retry (both fail) + manual refetch (succeeds)
+      expect(apiClient.get).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -193,7 +215,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render dashboard title', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Dashboard')).toBeInTheDocument();
@@ -201,7 +223,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render subtitle', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Vista general del sistema')).toBeInTheDocument();
@@ -209,7 +231,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render refresh button', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Actualizar')).toBeInTheDocument();
@@ -217,7 +239,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render stat cards', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByTestId('stat-card-canciones')).toBeInTheDocument();
@@ -230,7 +252,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render health panel', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByTestId('health-panel')).toBeInTheDocument();
@@ -238,7 +260,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render user activity section', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Actividad de Usuarios')).toBeInTheDocument();
@@ -249,7 +271,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render user activity values', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         // Values appear in the activity stats section
@@ -259,7 +281,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render enrichment stats section', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Enriquecimiento de Metadata')).toBeInTheDocument();
@@ -269,7 +291,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render enrichment stats values', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         // Check that enrichment section is rendered
@@ -279,7 +301,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render last scan section', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Último Escaneo')).toBeInTheDocument();
@@ -291,7 +313,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render last scan values', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('completed')).toBeInTheDocument();
@@ -302,7 +324,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render activity timeline chart', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByTestId('activity-timeline-chart')).toBeInTheDocument();
@@ -310,7 +332,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render storage breakdown chart', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByTestId('storage-breakdown-chart')).toBeInTheDocument();
@@ -318,7 +340,7 @@ describe('DashboardPanel', () => {
     });
 
     it('should render recent activity feed', async () => {
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByTestId('recent-activity-feed')).toBeInTheDocument();
@@ -330,7 +352,7 @@ describe('DashboardPanel', () => {
     it('should refresh stats when clicking refresh button', async () => {
       vi.mocked(apiClient.get).mockResolvedValue({ data: mockStats });
 
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Dashboard')).toBeInTheDocument();
@@ -368,7 +390,7 @@ describe('DashboardPanel', () => {
 
       vi.mocked(apiClient.get).mockResolvedValue({ data: statsWithNoScan });
 
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('No hay escaneos registrados')).toBeInTheDocument();
@@ -380,7 +402,7 @@ describe('DashboardPanel', () => {
     it('should show failed count when there are failures', async () => {
       vi.mocked(apiClient.get).mockResolvedValue({ data: mockStats });
 
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         // Check that the enrichment section renders
@@ -391,7 +413,7 @@ describe('DashboardPanel', () => {
     it('should render enrichment data correctly', async () => {
       vi.mocked(apiClient.get).mockResolvedValue({ data: mockStats });
 
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByText('Enriquecimiento de Metadata')).toBeInTheDocument();
@@ -406,7 +428,7 @@ describe('DashboardPanel', () => {
       vi.mocked(apiClient.get).mockResolvedValue({ data: mockStats });
       const mockNavigate = vi.fn();
 
-      render(<DashboardPanel onNavigateToTab={mockNavigate} />);
+      render(<DashboardPanel onNavigateToTab={mockNavigate} />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(screen.getByTestId('health-panel')).toBeInTheDocument();
@@ -418,7 +440,7 @@ describe('DashboardPanel', () => {
     it('should call correct API endpoint', async () => {
       vi.mocked(apiClient.get).mockResolvedValue({ data: mockStats });
 
-      render(<DashboardPanel />);
+      render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(apiClient.get).toHaveBeenCalledWith('/admin/dashboard/stats');
