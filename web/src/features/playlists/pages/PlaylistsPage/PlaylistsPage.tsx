@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Music, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Music, Trash2, Edit2, Play } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { useGridDimensions } from '@features/home/hooks';
@@ -181,6 +181,16 @@ export default function PlaylistsPage() {
                         albumIds={playlist.albumIds || []}
                         playlistName={playlist.name}
                       />
+                      <button
+                        className={styles.playlistCard__playOverlay}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLocation(`/playlists/${playlist.id}`);
+                        }}
+                        title="Reproducir playlist"
+                      >
+                        <Play size={18} fill="white" />
+                      </button>
                     </div>
 
                     <div className={styles.playlistCard__info}>
@@ -212,7 +222,7 @@ export default function PlaylistsPage() {
                         }}
                         title="Editar playlist"
                       >
-                        <Edit2 size={16} />
+                        <Edit2 size={14} />
                       </button>
                       <button
                         className={styles.playlistCard__actionButton}
@@ -223,7 +233,7 @@ export default function PlaylistsPage() {
                         title="Eliminar playlist"
                         disabled={deletePlaylistMutation.isPending}
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>

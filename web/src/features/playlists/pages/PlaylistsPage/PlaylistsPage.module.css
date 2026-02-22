@@ -314,22 +314,24 @@
   gap: 20px;
 }
 
-/* Playlist Card */
+/* Playlist Card - Clean floating design */
 .playlistCard {
-  background: var(--bg-elevated, #1e293b);
-  border-radius: 10px;
-  padding: 12px;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid var(--white-05);
+  transition: background 0.2s ease;
+  border: none;
   position: relative;
 }
 
 .playlistCard:hover {
-  background: var(--white-08);
-  border-color: var(--white-10);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px var(--black-30);
+  background: var(--white-05);
+}
+
+.playlistCard:hover .playlistCard__playOverlay {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .playlistCard:hover .playlistCard__actions {
@@ -339,16 +341,50 @@
 .playlistCard__cover {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   background: var(--white-05);
+  position: relative;
+  box-shadow: 0 4px 12px var(--black-20);
+  transition: box-shadow 0.3s ease;
+}
+
+.playlistCard:hover .playlistCard__cover {
+  box-shadow: 0 8px 24px var(--black-40);
 }
 
 .playlistCard__cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Play button overlay on cover hover */
+.playlistCard__playOverlay {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary-500, #ed6842);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.4);
+  z-index: 2;
+}
+
+.playlistCard__playOverlay:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 16px rgba(237, 104, 66, 0.5);
 }
 
 .playlistCard__coverPlaceholder {
@@ -372,11 +408,11 @@
 }
 
 .playlistCard__info {
-  margin-bottom: 8px;
+  padding: 0 2px;
 }
 
 .playlistCard__title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary, #ffffff);
   margin: 0 0 4px 0;
@@ -388,7 +424,7 @@
 .playlistCard__description {
   font-size: 13px;
   color: var(--text-secondary, #b8bcc8);
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -408,24 +444,25 @@
   opacity: 0.5;
 }
 
-/* Actions */
+/* Actions - 3-dot menu button */
 .playlistCard__actions {
   position: absolute;
   top: 12px;
   right: 12px;
   display: flex;
-  gap: 6px;
+  gap: 4px;
   opacity: 0;
   transition: opacity 0.2s ease;
+  z-index: 3;
 }
 
 .playlistCard__actionButton {
   width: 28px;
   height: 28px;
-  border-radius: 6px;
-  background: var(--black-80);
+  border-radius: 50%;
+  background: var(--black-60);
   backdrop-filter: blur(8px);
-  border: 1px solid var(--white-10);
+  border: none;
   color: var(--text-primary, #ffffff);
   display: flex;
   align-items: center;
@@ -435,9 +472,8 @@
 }
 
 .playlistCard__actionButton:hover {
-  background: var(--primary-20);
-  border-color: var(--color-primary-500, #ed6842);
-  color: var(--color-primary-500, #ed6842);
+  background: var(--black-80);
+  transform: scale(1.1);
 }
 
 .playlistCard__actionButton:disabled {
@@ -531,12 +567,15 @@
     gap: 12px;
   }
 
-  .playlistCard {
-    border-radius: 12px; /* iOS rounded */
+  .playlistCard__cover {
+    border-radius: 8px;
   }
 
-  .playlistCard__cover {
-    border-radius: 8px; /* iOS rounded */
+  .playlistCard__playOverlay {
+    opacity: 1;
+    transform: translateY(0);
+    width: 36px;
+    height: 36px;
   }
 
   .playlistCard__actions {
@@ -568,24 +607,9 @@
   }
 }
 
-/* Play button for cards */
+/* Legacy play button - kept for compatibility */
 .playlistCard__playButton {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-  border: none;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.playlistCard__playButton:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4);
+  display: none;
 }
 
 /* ===== Modal Styles ===== */
