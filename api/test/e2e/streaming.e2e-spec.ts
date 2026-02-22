@@ -282,15 +282,18 @@ describe('Streaming E2E', () => {
       await request(app.getHttpServer())
         .head(`/api/tracks/${trackId}/stream?token=${streamToken}`)
         .expect((res) => {
-          // 404 porque no hay archivo, pero autenticación pasó
-          expect([200, 404, 500]).toContain(res.status);
+          // Autenticación pasó si no es 401. Puede ser:
+          // - 404: archivo no existe
+          // - 403: path fuera de DATA_PATH (validación anti-traversal)
+          // - 500: error interno
+          expect([200, 403, 404, 500]).toContain(res.status);
         });
 
       // User 2 con su token
       await request(app.getHttpServer())
         .head(`/api/tracks/${trackId}/stream?token=${user2StreamToken}`)
         .expect((res) => {
-          expect([200, 404, 500]).toContain(res.status);
+          expect([200, 403, 404, 500]).toContain(res.status);
         });
     });
   });
