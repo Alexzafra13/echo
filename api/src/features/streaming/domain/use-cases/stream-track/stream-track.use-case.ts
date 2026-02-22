@@ -9,6 +9,10 @@ import * as path from 'path';
 
 @Injectable()
 export class StreamTrackUseCase {
+  // Same allowed roots as admin library configuration - covers all valid
+  // mount points where music files can be stored in self-hosted deployments
+  private static readonly ALLOWED_ROOTS = ['/mnt', '/media', '/music', '/data', '/home', '/app'];
+
   constructor(
     @InjectPinoLogger(StreamTrackUseCase.name)
     private readonly logger: PinoLogger,
@@ -17,17 +21,20 @@ export class StreamTrackUseCase {
   ) {}
 
   /**
-   * Validates that the resolved file path is within the allowed data directory.
+   * Validates that the resolved file path is within allowed directories.
    * Prevents path traversal attacks if database is compromised.
    */
   private validateFilePath(filePath: string): string {
     const resolved = path.resolve(filePath);
-    const dataPath = path.resolve(process.env.DATA_PATH || '/app/data');
 
-    if (!resolved.startsWith(dataPath + path.sep) && resolved !== dataPath) {
+    const isAllowed = StreamTrackUseCase.ALLOWED_ROOTS.some(
+      (root) => resolved.startsWith(root + path.sep) || resolved === root,
+    );
+
+    if (!isAllowed) {
       this.logger.error(
-        { filePath, resolved, dataPath },
-        'Path traversal attempt detected - file path outside data directory',
+        { filePath, resolved },
+        'Path traversal attempt detected - file path outside allowed directories',
       );
       throw new ForbiddenError('Invalid file path');
     }
