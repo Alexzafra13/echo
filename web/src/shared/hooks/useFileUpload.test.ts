@@ -6,14 +6,25 @@ import { ChangeEvent } from 'react';
 // Mock FileReader
 const mockFileReaderResult = 'data:image/jpeg;base64,mockdata';
 class MockFileReader {
+  static readonly LOADING = 1;
+  static readonly DONE = 2;
+
   result: string | null = null;
+  readyState: number = 0;
   onloadend: (() => void) | null = null;
+  onerror: (() => void) | null = null;
 
   readAsDataURL() {
+    this.readyState = MockFileReader.LOADING;
     this.result = mockFileReaderResult;
     setTimeout(() => {
+      this.readyState = MockFileReader.DONE;
       this.onloadend?.();
     }, 0);
+  }
+
+  abort() {
+    this.readyState = MockFileReader.DONE;
   }
 }
 
