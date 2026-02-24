@@ -200,6 +200,7 @@
   backdrop-filter: blur(4px);
   z-index: 9998;
   animation: fadeIn 0.3s ease;
+  pointer-events: auto;
 }
 
 .trackOptionsMenu__overlay--closing {
@@ -220,6 +221,7 @@
   flex-direction: column;
   animation: sheetSlideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1);
   padding-bottom: env(safe-area-inset-bottom, 16px);
+  pointer-events: auto;
 }
 
 .trackOptionsMenu__sheet--closing {

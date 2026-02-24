@@ -46,7 +46,9 @@
   flex-shrink: 0;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .playlistDetailPage__heroCover:hover {
@@ -338,7 +340,7 @@
   }
 
   .playlistDetailPage__trackSection {
-    padding: 0 16px 32px;
+    padding: 0 0 32px;
   }
 }
 
@@ -373,30 +375,30 @@
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .playlistDetailPage {
+:root[data-theme='light'] .playlistDetailPage {
   background: #e5e7eb;
   background-image: var(--gradient-textured);
 }
 
-:root[data-theme="light"] .playlistDetailPage__content {
+:root[data-theme='light'] .playlistDetailPage__content {
   background: linear-gradient(180deg, rgba(237, 104, 66, 0.08) 0%, #e5e7eb 40%);
 }
 
-:root[data-theme="light"] .playlistDetailPage__hero {
+:root[data-theme='light'] .playlistDetailPage__hero {
   background: rgba(156, 163, 175, 0.4);
   backdrop-filter: blur(10px);
 }
 
-:root[data-theme="light"] .playlistDetailPage__imageModal {
+:root[data-theme='light'] .playlistDetailPage__imageModal {
   background: rgba(229, 231, 235, 0.95);
 }
 
-:root[data-theme="light"] .playlistDetailPage__visibilityBadge--public {
+:root[data-theme='light'] .playlistDetailPage__visibilityBadge--public {
   background: rgba(34, 197, 94, 0.12);
   color: #16a34a;
 }
 
-:root[data-theme="light"] .playlistDetailPage__visibilityBadge--private {
+:root[data-theme='light'] .playlistDetailPage__visibilityBadge--private {
   background: rgba(107, 114, 128, 0.12);
   color: #6b7280;
 }

@@ -57,7 +57,9 @@
   object-fit: cover;
   flex-shrink: 0;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .albumPage__heroCover:hover {
@@ -118,7 +120,9 @@
   font-size: 14px;
   color: var(--color-text-primary, #ffffff);
   cursor: pointer;
-  transition: opacity 0.2s ease, text-decoration 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    text-decoration 0.2s ease;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -320,7 +324,7 @@
   }
 
   .albumPage__trackSection {
-    padding: 0 8px;
+    padding: 0;
   }
 
   .albumPage__moreFromArtist {
@@ -386,7 +390,7 @@
   }
 
   .albumPage__trackSection {
-    padding: 0 6px;
+    padding: 0;
   }
 
   .albumPage__moreFromArtist {
@@ -483,16 +487,16 @@
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .albumPage__hero {
+:root[data-theme='light'] .albumPage__hero {
   background: rgba(209, 213, 219, 0.35); /* Light gray with transparency */
   backdrop-filter: blur(10px);
 }
 
-:root[data-theme="light"] .albumPage__imageModal {
+:root[data-theme='light'] .albumPage__imageModal {
   background: rgba(229, 231, 235, 0.95); /* Light gray modal background */
 }
 
-:root[data-theme="light"] .albumPage__imageDimensions {
+:root[data-theme='light'] .albumPage__imageDimensions {
   background: rgba(209, 213, 219, 0.85); /* Light gray for image info */
   box-shadow: 0 4px 12px rgba(31, 41, 55, 0.25);
 }
