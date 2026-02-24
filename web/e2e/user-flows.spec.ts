@@ -114,7 +114,7 @@ test.describe('Playlists', () => {
 
     // Seleccionar al menos una canción (requerido para habilitar el botón)
     // Buscar una canción usando el buscador del modal (mínimo 2 caracteres)
-    const searchInput = page.locator('input[placeholder*="Buscar"]');
+    const searchInput = page.locator('input[placeholder*="título o artista"]');
     await expect(searchInput).toBeVisible({ timeout: 3000 });
 
     // Esperar a que la búsqueda retorne resultados del API
