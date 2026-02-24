@@ -112,8 +112,21 @@ test.describe('Playlists', () => {
 
     await nameInput.first().fill(playlistName);
 
+    // Seleccionar al menos una canción (requerido para habilitar el botón)
+    // Buscar una canción usando el buscador del modal
+    const searchInput = page.locator('input[placeholder*="Buscar por título"]');
+    await expect(searchInput).toBeVisible({ timeout: 3000 });
+    await searchInput.fill('a');
+
+    // Esperar a que aparezcan resultados y seleccionar el primero
+    const firstTrack = page.locator('[class*="trackItem"]').first();
+    await expect(firstTrack).toBeVisible({ timeout: 5000 });
+    await firstTrack.click();
+
     // Guardar
-    await page.getByRole('button', { name: /Crear|Guardar|Save|Submit/i }).click();
+    const submitButton = page.getByRole('button', { name: /Crear|Guardar|Save|Submit/i });
+    await expect(submitButton).toBeEnabled({ timeout: 5000 });
+    await submitButton.click();
 
     // Verificar que se creó - debe aparecer en la lista
     await expect(page.getByText(playlistName)).toBeVisible({ timeout: 10000 });
