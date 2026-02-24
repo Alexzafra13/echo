@@ -1,6 +1,19 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio, Maximize2 } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
+  Volume2,
+  VolumeX,
+  Shuffle,
+  Repeat,
+  Repeat1,
+  ListMusic,
+  Radio,
+  Maximize2,
+} from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
 import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
@@ -73,11 +86,15 @@ export function AudioPlayer() {
   }, []);
 
   // Visibilidad según preferencia, viewport y NowPlayingView
-  const shouldHide = isNowPlayingOpen ? true :
-    isMobile ? false :
-    preference === 'footer' ? false :
-    preference === 'sidebar' ? true :
-    isMiniMode;
+  const shouldHide = isNowPlayingOpen
+    ? true
+    : isMobile
+      ? false
+      : preference === 'footer'
+        ? false
+        : preference === 'sidebar'
+          ? true
+          : isMiniMode;
 
   useClickOutsideRef(queueRef, () => setIsQueueOpen(false), isQueueOpen);
   useClickOutsideRef(menuRef, () => setIsMenuOpen(false), isMenuOpen);
@@ -88,9 +105,7 @@ export function AudioPlayer() {
 
     const needsFooterSpacer = isMobile
       ? hasContent
-      : hasContent &&
-        preference !== 'sidebar' &&
-        !(preference === 'dynamic' && isMiniMode);
+      : hasContent && preference !== 'sidebar' && !(preference === 'dynamic' && isMiniMode);
 
     if (needsFooterSpacer) {
       document.body.classList.add('has-footer-player');
@@ -106,9 +121,10 @@ export function AudioPlayer() {
   const colorSourceUrl = useMemo(() => {
     if (isRadioMode) return currentRadioStation?.favicon || undefined;
     if (currentTrack) {
-      const rawUrl = currentTrack.album?.cover ||
-                     currentTrack.coverImage ||
-                     (currentTrack.albumId ? `/api/images/albums/${currentTrack.albumId}/cover` : undefined);
+      const rawUrl =
+        currentTrack.album?.cover ||
+        currentTrack.coverImage ||
+        (currentTrack.albumId ? `/api/images/albums/${currentTrack.albumId}/cover` : undefined);
       return rawUrl ? getCoverUrl(rawUrl) : undefined;
     }
     return undefined;
@@ -117,25 +133,31 @@ export function AudioPlayer() {
 
   const SWIPE_THRESHOLD = 60;
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (!isMobile || isRadioMode) return;
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    isSwiping.current = false;
-  }, [isMobile, isRadioMode]);
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isMobile || isRadioMode) return;
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+      isSwiping.current = false;
+    },
+    [isMobile, isRadioMode]
+  );
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isMobile || isRadioMode) return;
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isMobile || isRadioMode) return;
 
-    const deltaX = e.touches[0].clientX - touchStartX.current;
-    const deltaY = e.touches[0].clientY - touchStartY.current;
+      const deltaX = e.touches[0].clientX - touchStartX.current;
+      const deltaY = e.touches[0].clientY - touchStartY.current;
 
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-      isSwiping.current = true;
-      const limitedOffset = Math.max(-100, Math.min(100, deltaX));
-      setSwipeOffset(limitedOffset);
-    }
-  }, [isMobile, isRadioMode]);
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+        isSwiping.current = true;
+        const limitedOffset = Math.max(-100, Math.min(100, deltaX));
+        setSwipeOffset(limitedOffset);
+      }
+    },
+    [isMobile, isRadioMode]
+  );
 
   const handleTouchEnd = useCallback(() => {
     if (!isMobile || isRadioMode || !isSwiping.current) {
@@ -186,7 +208,7 @@ export function AudioPlayer() {
     setIsQueueOpen(!isQueueOpen);
   };
 
-  const { title, artist, cover, albumId, albumName } = getPlayerDisplayInfo(
+  const { title, artist, cover, albumId, albumName, artistId } = getPlayerDisplayInfo(
     isRadioMode,
     currentRadioStation,
     currentTrack
@@ -198,7 +220,15 @@ export function AudioPlayer() {
     }
   };
 
+  const handleGoToArtist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isRadioMode && artistId) {
+      setLocation(`/artists/${artistId}`);
+    }
+  };
+
   const canNavigateToAlbum = !isRadioMode && albumId;
+  const canNavigateToArtist = !isRadioMode && artistId;
 
   const handleTrackInfoClick = () => {
     if (isMobile) {
@@ -206,20 +236,29 @@ export function AudioPlayer() {
     }
   };
 
-  const coverSwipeStyles = isMobile && !isRadioMode ? {
-    opacity: swipeDirection ? 0 : 1,
-    transition: 'opacity 0.2s ease-out',
-  } as React.CSSProperties : undefined;
+  const coverSwipeStyles =
+    isMobile && !isRadioMode
+      ? ({
+          opacity: swipeDirection ? 0 : 1,
+          transition: 'opacity 0.2s ease-out',
+        } as React.CSSProperties)
+      : undefined;
 
-  const textSwipeStyles = isMobile && !isRadioMode ? {
-    transform: swipeDirection
-      ? `translateX(${swipeDirection === 'left' ? '-120%' : '120%'})`
-      : swipeOffset !== 0
-        ? `translateX(${swipeOffset * 1.2}px)`
-        : undefined,
-    opacity: swipeDirection ? 0 : 1 - Math.abs(swipeOffset) / 250,
-    transition: swipeDirection || swipeOffset === 0 ? 'transform 0.2s ease-out, opacity 0.2s ease-out' : 'none',
-  } as React.CSSProperties : undefined;
+  const textSwipeStyles =
+    isMobile && !isRadioMode
+      ? ({
+          transform: swipeDirection
+            ? `translateX(${swipeDirection === 'left' ? '-120%' : '120%'})`
+            : swipeOffset !== 0
+              ? `translateX(${swipeOffset * 1.2}px)`
+              : undefined,
+          opacity: swipeDirection ? 0 : 1 - Math.abs(swipeOffset) / 250,
+          transition:
+            swipeDirection || swipeOffset === 0
+              ? 'transform 0.2s ease-out, opacity 0.2s ease-out'
+              : 'none',
+        } as React.CSSProperties)
+      : undefined;
 
   return (
     <div
@@ -231,7 +270,6 @@ export function AudioPlayer() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-
       <div
         className={`${styles.trackInfo} ${isMobile ? styles['trackInfo--clickable'] : ''}`}
         onClick={handleTrackInfoClick}
@@ -256,19 +294,17 @@ export function AudioPlayer() {
         </div>
         <div className={styles.trackDetails} style={textSwipeStyles}>
           <div className={styles.trackTitle}>{title}</div>
-          <div className={styles.trackArtist}>{artist}</div>
-          {canNavigateToAlbum && albumName && (
-            <div
-              className={styles.trackAlbum}
-              onClick={!isMobile ? handleGoToAlbum : undefined}
-              title={!isMobile ? `Ir al álbum: ${albumName}` : undefined}
-            >
-              {albumName}
-            </div>
-          )}
+          <div
+            className={`${styles.trackArtist} ${canNavigateToArtist && !isMobile ? styles['trackArtist--clickable'] : ''}`}
+            onClick={canNavigateToArtist && !isMobile ? handleGoToArtist : undefined}
+          >
+            {artist}
+          </div>
+          {canNavigateToAlbum && albumName && <div className={styles.trackAlbum}>{albumName}</div>}
           {isRadioMode && radioMetadata && (
             <div className={styles.trackMetadata}>
-              {radioMetadata.title || `${radioMetadata.artist || ''} - ${radioMetadata.song || ''}`.trim()}
+              {radioMetadata.title ||
+                `${radioMetadata.artist || ''} - ${radioMetadata.song || ''}`.trim()}
             </div>
           )}
         </div>
@@ -295,11 +331,7 @@ export function AudioPlayer() {
                 <Shuffle size={16} />
               </button>
 
-              <button
-                className={styles.controlButton}
-                onClick={playPrevious}
-                aria-label="Anterior"
-              >
+              <button className={styles.controlButton} onClick={playPrevious} aria-label="Anterior">
                 <SkipBack size={20} />
               </button>
 
@@ -311,11 +343,7 @@ export function AudioPlayer() {
                 {isPlaying ? <Pause size={24} /> : <Play size={24} />}
               </button>
 
-              <button
-                className={styles.controlButton}
-                onClick={playNext}
-                aria-label="Siguiente"
-              >
+              <button className={styles.controlButton} onClick={playNext} aria-label="Siguiente">
                 <SkipForward size={20} />
               </button>
 
@@ -334,18 +362,26 @@ export function AudioPlayer() {
 
       <div className={styles.volumeControl}>
         {isRadioMode && (
-          <div className={`${styles.liveIndicator} ${
-            radioSignalStatus === 'good' ? styles['liveIndicator--good'] :
-            radioSignalStatus === 'weak' ? styles['liveIndicator--weak'] :
-            radioSignalStatus === 'error' ? styles['liveIndicator--error'] :
-            ''
-          }`}>
+          <div
+            className={`${styles.liveIndicator} ${
+              radioSignalStatus === 'good'
+                ? styles['liveIndicator--good']
+                : radioSignalStatus === 'weak'
+                  ? styles['liveIndicator--weak']
+                  : radioSignalStatus === 'error'
+                    ? styles['liveIndicator--error']
+                    : ''
+            }`}
+          >
             <Radio size={16} className={styles.liveAntenna} />
             <span className={styles.liveText}>
-              {radioSignalStatus === 'good' ? 'EN VIVO' :
-               radioSignalStatus === 'weak' ? 'SEÑAL DÉBIL' :
-               radioSignalStatus === 'error' ? 'SIN SEÑAL' :
-               'EN VIVO'}
+              {radioSignalStatus === 'good'
+                ? 'EN VIVO'
+                : radioSignalStatus === 'weak'
+                  ? 'SEÑAL DÉBIL'
+                  : radioSignalStatus === 'error'
+                    ? 'SIN SEÑAL'
+                    : 'EN VIVO'}
             </span>
           </div>
         )}
@@ -373,7 +409,11 @@ export function AudioPlayer() {
             onClick={toggleMute}
             aria-label={volume === 0 ? 'Activar sonido' : 'Silenciar'}
           >
-            {volume === 0 ? <VolumeX size={22} strokeWidth={1.5} /> : <Volume2 size={22} strokeWidth={1.5} />}
+            {volume === 0 ? (
+              <VolumeX size={22} strokeWidth={1.5} />
+            ) : (
+              <Volume2 size={22} strokeWidth={1.5} />
+            )}
           </button>
           <input
             type="range"
@@ -409,9 +449,7 @@ export function AudioPlayer() {
         />
       </div>
 
-      {!isRadioMode && (
-        <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />
-      )}
+      {!isRadioMode && <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />}
 
       <NowPlayingView
         isOpen={isNowPlayingOpen}
