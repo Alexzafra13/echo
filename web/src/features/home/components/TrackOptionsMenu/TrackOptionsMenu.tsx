@@ -1,6 +1,17 @@
-import { MoreVertical, ListPlus, Plus, Disc, User, Info, Trash2, Download } from 'lucide-react';
+import {
+  MoreVertical,
+  ListPlus,
+  Plus,
+  Disc,
+  User,
+  Info,
+  Trash2,
+  Download,
+  Star,
+} from 'lucide-react';
 import { useDropdownMenu } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
+import { RatingStars } from '@shared/components/ui/RatingStars';
 import type { Track } from '../../types';
 import styles from './TrackOptionsMenu.module.css';
 
@@ -63,9 +74,14 @@ export function TrackOptionsMenu({
             style={{
               position: 'fixed',
               top: effectivePosition.top !== undefined ? `${effectivePosition.top}px` : undefined,
-              bottom: effectivePosition.bottom !== undefined ? `${effectivePosition.bottom}px` : undefined,
-              right: effectivePosition.right !== undefined ? `${effectivePosition.right}px` : undefined,
-              left: effectivePosition.left !== undefined ? `${effectivePosition.left}px` : undefined,
+              bottom:
+                effectivePosition.bottom !== undefined
+                  ? `${effectivePosition.bottom}px`
+                  : undefined,
+              right:
+                effectivePosition.right !== undefined ? `${effectivePosition.right}px` : undefined,
+              left:
+                effectivePosition.left !== undefined ? `${effectivePosition.left}px` : undefined,
               maxHeight: `${effectivePosition.maxHeight}px`,
               pointerEvents: isClosing ? 'none' : 'auto',
             }}
@@ -149,6 +165,19 @@ export function TrackOptionsMenu({
                 </button>
               </>
             )}
+
+            {/* Rating */}
+            <div className={styles.trackOptionsMenu__separator} />
+            <div
+              className={styles.trackOptionsMenu__ratingRow}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Star size={16} />
+              <span>Calificar</span>
+              <div className={styles.trackOptionsMenu__ratingStars}>
+                <RatingStars itemId={track.id} itemType="track" size={16} />
+              </div>
+            </div>
           </div>
         </Portal>
       )}
