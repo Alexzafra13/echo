@@ -8,6 +8,7 @@ import { useRemoteAlbum, useConnectedServers, useStartImport, useImports } from 
 import { Button, Portal } from '@shared/components/ui';
 import { handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer } from '@features/player/context/PlayerContext';
+import { useAuthStore } from '@shared/store/authStore';
 import { useDropdownMenu, useModal, useDominantColor, useDocumentTitle } from '@shared/hooks';
 import { logger } from '@shared/utils/logger';
 import type { Track } from '@shared/types/track.types';
@@ -26,6 +27,9 @@ export default function SharedAlbumPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [isImportedLocal, setIsImportedLocal] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+
+  const authUser = useAuthStore((s) => s.user);
+  const isAdmin = authUser?.isAdmin === true;
 
   const { data: album, isLoading, error } = useRemoteAlbum(serverId, albumId);
   useDocumentTitle(album?.name);
@@ -384,22 +388,24 @@ export default function SharedAlbumPage() {
                       }}
                       data-placement={menuPosition.placement}
                     >
-                      <button
-                        className={styles.sharedAlbumPage__optionsOption}
-                        onClick={(e) => handleOptionClick(e, handleImport)}
-                        disabled={isImporting || isImported}
-                      >
-                        {isImporting ? (
-                          <Loader2 size={16} className={styles.sharedAlbumPage__spinner} />
-                        ) : isImported ? (
-                          <Check size={16} />
-                        ) : (
-                          <Download size={16} />
-                        )}
-                        <span>
-                          {isImported ? 'Álbum importado' : isImporting ? 'Importando...' : 'Importar a mi servidor'}
-                        </span>
-                      </button>
+                      {isAdmin && (
+                        <button
+                          className={styles.sharedAlbumPage__optionsOption}
+                          onClick={(e) => handleOptionClick(e, handleImport)}
+                          disabled={isImporting || isImported}
+                        >
+                          {isImporting ? (
+                            <Loader2 size={16} className={styles.sharedAlbumPage__spinner} />
+                          ) : isImported ? (
+                            <Check size={16} />
+                          ) : (
+                            <Download size={16} />
+                          )}
+                          <span>
+                            {isImported ? 'Álbum importado' : isImporting ? 'Importando...' : 'Importar a mi servidor'}
+                          </span>
+                        </button>
+                      )}
                     </div>
                   </Portal>
                 )}

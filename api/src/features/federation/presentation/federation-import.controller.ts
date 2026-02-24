@@ -31,6 +31,7 @@ import { IsString, IsNotEmpty } from 'class-validator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { AdminGuard } from '@shared/guards/admin.guard';
 import { Public } from '@shared/decorators/public.decorator';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { User } from '@infrastructure/database/schema';
@@ -70,6 +71,7 @@ export class FederationImportController {
   ) {}
 
   @Post()
+  @UseGuards(AdminGuard)
   @ApiOperation({
     summary: 'Iniciar importación de álbum',
     description: 'Inicia la importación de un álbum desde un servidor federado conectado. ' +
@@ -80,8 +82,8 @@ export class FederationImportController {
     status: 201,
     description: 'Importación iniciada',
   })
+  @ApiResponse({ status: 403, description: 'Solo administradores pueden importar álbumes' })
   @ApiResponse({ status: 404, description: 'Servidor no encontrado' })
-  @ApiResponse({ status: 403, description: 'No tienes permiso para descargar de este servidor' })
   @ApiResponse({ status: 502, description: 'Error al conectar con el servidor remoto' })
   async startImport(
     @CurrentUser() user: User,
@@ -168,6 +170,7 @@ export class FederationImportController {
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
   @ApiOperation({
     summary: 'Cancelar importación',
     description: 'Cancela una importación pendiente',

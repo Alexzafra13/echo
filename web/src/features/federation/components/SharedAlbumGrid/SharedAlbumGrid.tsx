@@ -4,6 +4,7 @@ import { Download, Check, Loader2, Users, Plus, AlertTriangle, X } from 'lucide-
 import { AxiosError } from 'axios';
 import type { SharedAlbum } from '../../types';
 import { useStartImport, useConnectedServers, useImports } from '../../hooks/useSharedLibraries';
+import { useAuthStore } from '@shared/store/authStore';
 import { logger } from '@shared/utils/logger';
 import styles from './SharedAlbumGrid.module.css';
 
@@ -37,6 +38,8 @@ export function SharedAlbumGrid({
   showEmptyState = false,
 }: SharedAlbumGridProps) {
   const [, setLocation] = useLocation();
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.isAdmin === true;
   const startImport = useStartImport();
   const [importingAlbums, setImportingAlbums] = useState<Set<string>>(new Set());
   const [importedAlbums, setImportedAlbums] = useState<Set<string>>(new Set());
@@ -246,7 +249,7 @@ export function SharedAlbumGrid({
                     {album.serverName}
                   </div>
                 )}
-                {showImportButton && (
+                {showImportButton && isAdmin && (
                   <button
                     className={`${styles.sharedAlbumGrid__importButton} ${isImported ? styles['sharedAlbumGrid__importButton--success'] : ''}`}
                     onClick={(e) => handleImportClick(e, album)}
