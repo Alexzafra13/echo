@@ -8,7 +8,7 @@ import { useRemoteAlbum, useConnectedServers, useStartImport } from '../../hooks
 import { Button, Portal } from '@shared/components/ui';
 import { handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer } from '@features/player/context/PlayerContext';
-import { useDropdownMenu, useModal, useDominantColor } from '@shared/hooks';
+import { useDropdownMenu, useModal, useDominantColor, useDocumentTitle } from '@shared/hooks';
 import { logger } from '@shared/utils/logger';
 import type { Track } from '@shared/types/track.types';
 import type { RemoteTrack } from '../../types';
@@ -28,6 +28,7 @@ export default function SharedAlbumPage() {
   const [importError, setImportError] = useState<string | null>(null);
 
   const { data: album, isLoading, error } = useRemoteAlbum(serverId, albumId);
+  useDocumentTitle(album?.name);
   const dominantColor = useDominantColor(album?.coverUrl);
   const { data: servers } = useConnectedServers();
   const startImport = useStartImport();
@@ -132,14 +133,23 @@ export default function SharedAlbumPage() {
   // Load cover dimensions when modal opens
   useEffect(() => {
     if (imageLightboxModal.isOpen && coverUrl) {
+      let cancelled = false;
       const img = new window.Image();
       img.onload = () => {
-        setCoverDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+        if (!cancelled) {
+          setCoverDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+        }
       };
       img.onerror = () => {
-        setCoverDimensions(null);
+        if (!cancelled) {
+          setCoverDimensions(null);
+        }
       };
       img.src = coverUrl;
+      return () => {
+        cancelled = true;
+        img.src = '';
+      };
     } else if (!imageLightboxModal.isOpen) {
       setCoverDimensions(null);
     }
@@ -259,6 +269,7 @@ export default function SharedAlbumPage() {
                 src={coverUrl}
                 alt={album.name}
                 className={styles.sharedAlbumPage__heroCover}
+                decoding="async"
                 onError={handleImageError}
                 onClick={imageLightboxModal.open}
               />
@@ -379,7 +390,7 @@ export default function SharedAlbumPage() {
 
           {/* Error banner */}
           {importError && (
-            <div className={styles.sharedAlbumPage__errorBanner}>
+            <div className={styles.sharedAlbumPage__errorBanner} role="alert">
               <AlertTriangle size={20} />
               <div className={styles.sharedAlbumPage__errorContent}>
                 <span className={styles.sharedAlbumPage__errorMessage}>{importError}</span>
@@ -415,7 +426,8 @@ export default function SharedAlbumPage() {
                       role="button"
                       tabIndex={0}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
                           isTrackPlaying ? handleTogglePlayPause() : handlePlayTrack(index);
                         }
                       }}

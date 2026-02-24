@@ -181,7 +181,7 @@ export function SharedAlbumGrid({
 
       {/* Error banner */}
       {importError && (
-        <div className={`${styles.sharedAlbumGrid__errorBanner} ${isDismissing ? styles['sharedAlbumGrid__errorBanner--dismissing'] : ''}`}>
+        <div className={`${styles.sharedAlbumGrid__errorBanner} ${isDismissing ? styles['sharedAlbumGrid__errorBanner--dismissing'] : ''}`} role="alert">
           <AlertTriangle size={20} />
           <div className={styles.sharedAlbumGrid__errorContent}>
             <span className={styles.sharedAlbumGrid__errorMessage}>{importError.message}</span>
@@ -210,7 +210,10 @@ export function SharedAlbumGrid({
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAlbumClick(album);
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleAlbumClick(album);
+                }
               }}
             >
               <div className={styles.sharedAlbumGrid__coverWrapper}>
@@ -220,6 +223,7 @@ export function SharedAlbumGrid({
                     alt={album.name}
                     className={styles.sharedAlbumGrid__cover}
                     loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className={styles.sharedAlbumGrid__coverPlaceholder}>
@@ -237,6 +241,7 @@ export function SharedAlbumGrid({
                     onClick={(e) => handleImportClick(e, album)}
                     disabled={isImporting || isImported}
                     title={isImported ? 'Importado' : 'Importar a mi servidor'}
+                    aria-label={isImported ? `${album.name} importado` : `Importar ${album.name}`}
                   >
                     {isImporting ? (
                       <Loader2 size={16} className={styles.sharedAlbumGrid__spinner} />
