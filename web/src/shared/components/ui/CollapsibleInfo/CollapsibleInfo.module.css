@@ -1,15 +1,15 @@
 /* CollapsibleInfo Component Styles */
 
 .infoBox {
-  background: rgba(59, 130, 246, 0.08);
+  background: var(--info-05);
   border: 1px solid var(--info-30);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
 .infoBox:hover {
-  background: rgba(59, 130, 246, 0.12);
+  background: var(--info-10);
   border-color: rgba(59, 130, 246, 0.4);
 }
 
@@ -26,7 +26,7 @@
 }
 
 .infoBox__header:hover {
-  background: rgba(59, 130, 246, 0.05);
+  background: var(--info-05);
 }
 
 .infoBox__headerLeft {
@@ -91,7 +91,7 @@
   border-radius: 4px;
   font-family: 'Courier New', monospace;
   font-size: 13px;
-  color: #60a5fa;
+  color: var(--color-info);
 }
 
 @keyframes slideDown {

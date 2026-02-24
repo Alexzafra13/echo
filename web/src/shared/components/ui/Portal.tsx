@@ -27,7 +27,7 @@ export function Portal({ children, containerId = 'portal-root' }: PortalProps) {
       portalContainer.style.width = '100%';
       portalContainer.style.height = '100%';
       portalContainer.style.pointerEvents = 'none';
-      portalContainer.style.zIndex = '9999';
+      portalContainer.style.zIndex = '9510';
       document.body.appendChild(portalContainer);
     }
 

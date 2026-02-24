@@ -11,7 +11,12 @@ export function useAlbumMetadataSync(albumId?: string, artistId?: string) {
     if (!eventSource) return;
 
     const handleAlbumCoverUpdated = (e: MessageEvent) => {
-      const data: AlbumCoverUpdatedEvent = JSON.parse(e.data);
+      let data: AlbumCoverUpdatedEvent;
+      try {
+        data = JSON.parse(e.data);
+      } catch {
+        return;
+      }
 
       if (albumId && data.albumId !== albumId) return;
 

@@ -14,8 +14,8 @@ export function ErrorState({
   className,
 }: ErrorStateProps) {
   return (
-    <div className={`${styles.errorState} ${className || ''}`}>
-      <AlertTriangle size={48} className={styles.icon} />
+    <div className={`${styles.errorState} ${className || ''}`} role="alert">
+      <AlertTriangle size={48} className={styles.icon} aria-hidden="true" />
       <p className={styles.message}>{message}</p>
       {onRetry && (
         <Button variant="outline" onClick={onRetry}>

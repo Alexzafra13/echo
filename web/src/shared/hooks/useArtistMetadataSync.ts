@@ -11,7 +11,12 @@ export function useArtistMetadataSync(artistId?: string) {
     if (!eventSource) return;
 
     const handleArtistImagesUpdated = (e: MessageEvent) => {
-      const data: ArtistImagesUpdatedEvent = JSON.parse(e.data);
+      let data: ArtistImagesUpdatedEvent;
+      try {
+        data = JSON.parse(e.data);
+      } catch {
+        return;
+      }
       if (artistId && data.artistId !== artistId) return;
 
       queryClient.refetchQueries({

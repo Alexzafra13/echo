@@ -31,7 +31,7 @@ export function BackButton({ text = 'Volver', onBack, className }: BackButtonPro
       className={`${styles.backButton} ${className || ''}`}
       onClick={handleClick}
       type="button"
-      aria-label="Go back"
+      aria-label="Volver atrás"
     >
       <div className={styles.backButton__iconContainer}>
         <ChevronLeft size={20} className={styles.backButton__icon} />

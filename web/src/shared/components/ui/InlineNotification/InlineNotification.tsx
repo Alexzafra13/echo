@@ -45,14 +45,19 @@ export function InlineNotification({
   }, [autoHideMs, onDismiss]);
 
   return (
-    <div className={`${styles.notification} ${styles[type]} ${className}`}>
-      <Icon size={16} className={styles.icon} />
+    <div
+      className={`${styles.notification} ${styles[type]} ${className}`}
+      role={type === 'error' ? 'alert' : 'status'}
+      aria-live={type === 'error' ? 'assertive' : 'polite'}
+    >
+      <Icon size={16} className={styles.icon} aria-hidden="true" />
       <span className={styles.message}>{message}</span>
       {onDismiss && (
         <button
           className={styles.dismissButton}
           onClick={onDismiss}
-          aria-label="Cerrar notificacion"
+          aria-label="Cerrar notificación"
+          type="button"
         >
           <X size={14} />
         </button>

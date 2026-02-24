@@ -10,7 +10,7 @@
  * - Support for custom headers with icons and subtitles
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -49,6 +49,8 @@ export function Modal({
   className,
   closeLabel = 'Cerrar',
 }: ModalProps) {
+  // Unique ID for aria-labelledby to support multiple modals
+  const titleId = useId();
   // Focus trap for accessibility
   const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen);
 
@@ -94,7 +96,7 @@ export function Modal({
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
     >
       <div
         ref={focusTrapRef}
@@ -110,7 +112,7 @@ export function Modal({
               </div>
             )}
             <div className={styles.modalTitleWrapper}>
-              <h2 id="modal-title" className={styles.modalTitle}>{title}</h2>
+              <h2 id={titleId} className={styles.modalTitle}>{title}</h2>
               {subtitle && <p className={styles.modalSubtitle}>{subtitle}</p>}
             </div>
           </div>
