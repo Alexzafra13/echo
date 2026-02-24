@@ -320,7 +320,7 @@ jobs:
           PGPASSWORD: music_password
         run: |
           echo "Seeding test data for E2E..."
-          psql -h localhost -U music_admin -d music_server <<'SQL'
+          psql -v ON_ERROR_STOP=1 -h localhost -U music_admin -d music_server <<'SQL'
             -- Artists
             INSERT INTO artists (id, name, album_count, song_count)
             VALUES
@@ -345,6 +345,18 @@ jobs:
               ('c0000000-0000-0000-0000-000000000006', 'Blue Sky', 'b0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000002', 'Beta Beats', 'Beta Band', '/music/beta/blue.mp3', 240, 2);
           SQL
           echo "✅ Test data seeded successfully"
+
+          echo "Verifying seed data..."
+          TRACK_COUNT=$(psql -t -h localhost -U music_admin -d music_server -c "SELECT count(*) FROM tracks;")
+          echo "Tracks in database: $TRACK_COUNT"
+          if [ "$(echo $TRACK_COUNT | tr -d ' ')" -lt 1 ]; then
+            echo "❌ No tracks found in database after seeding!"
+            exit 1
+          fi
+
+          echo "Verifying search works..."
+          curl -s http://localhost:3000/api/tracks/search/al | head -200
+          echo ""
 
       - name: Run Playwright tests
         working-directory: web
