@@ -37,6 +37,8 @@ export function RelatedArtistsSection({
               <img
                 src={getArtistImageUrl(relArtist.id, 'profile')}
                 alt={relArtist.name}
+                loading="lazy"
+                decoding="async"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   const fallback = e.currentTarget.nextElementSibling as HTMLElement;

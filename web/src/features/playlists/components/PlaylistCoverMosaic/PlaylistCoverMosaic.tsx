@@ -24,6 +24,8 @@ function SingleCoverImage({ albumId, playlistName }: { albumId: string; playlist
       alt={playlistName}
       className={styles.mosaic__single}
       onError={() => setHasError(true)}
+      loading="lazy"
+      decoding="async"
     />
   );
 }
@@ -45,6 +47,8 @@ function GridCoverImage({ albumId, alt }: { albumId: string; alt: string }) {
       alt={alt}
       className={styles.mosaic__gridImage}
       onError={() => setHasError(true)}
+      loading="lazy"
+      decoding="async"
     />
   );
 }

@@ -15,6 +15,8 @@ export function AlbumCard({ album }: AlbumCardProps) {
           src={album.coverUrl}
           alt={album.name}
           className={styles.publicProfilePage__albumCover}
+          loading="lazy"
+          decoding="async"
         />
       ) : (
         <div className={styles.publicProfilePage__albumPlaceholder}>

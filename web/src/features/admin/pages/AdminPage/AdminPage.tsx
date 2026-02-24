@@ -13,6 +13,7 @@ import { MaintenanceTab } from '../../components/MetadataSettingsPanel/Maintenan
 import { UsersPanel } from '../../components/UsersPanel';
 import { LogsPanel } from '../../components/LogsPanel';
 import { FederationPanel } from '../../components/FederationPanel';
+import { useDocumentTitle } from '@shared/hooks';
 import styles from './AdminPage.module.css';
 
 interface Tab {
@@ -29,6 +30,7 @@ const validTabs = ['dashboard', 'library', 'metadata', 'maintenance', 'users', '
  * Solo accesible para usuarios con rol admin
  */
 export default function AdminPage() {
+  useDocumentTitle('Administración');
   const searchString = useSearch();
   const urlParams = new URLSearchParams(searchString);
   const tabFromUrl = urlParams.get('tab');

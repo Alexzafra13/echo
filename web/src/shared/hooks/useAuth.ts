@@ -15,10 +15,10 @@ export const useAuth = () => {
 
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginRequest) => authService.login(credentials),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setAuth(data.user, data.accessToken, data.refreshToken);
 
-      Promise.all([
+      await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['user'] }),
         queryClient.invalidateQueries({ queryKey: ['admin'] }),
         queryClient.invalidateQueries({ queryKey: ['playlists'] }),

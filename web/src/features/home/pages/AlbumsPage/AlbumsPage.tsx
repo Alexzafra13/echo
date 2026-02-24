@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearch, useLocation } from 'wouter';
 import { Search, X, Library, Server } from 'lucide-react';
+import { useDocumentTitle } from '@shared/hooks';
 import { Header } from '@shared/components/layout/Header';
 import { Pagination, Select } from '@shared/components/ui';
 import { Sidebar, AlbumGrid } from '../../components';
@@ -28,6 +29,8 @@ export default function AlbumsPage() {
   const [, setLocation] = useLocation();
   const searchParams = new URLSearchParams(useSearch());
   const sourceParam = searchParams.get('source');
+
+  useDocumentTitle('Álbumes');
 
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -260,7 +263,7 @@ export default function AlbumsPage() {
                 <div className={styles.albumsPage__errorState}>
                   <p>Error al cargar los álbumes</p>
                   <button
-                    onClick={() => window.location.reload()}
+                    onClick={() => activeQuery.refetch()}
                     className={styles.albumsPage__retryButton}
                   >
                     Reintentar

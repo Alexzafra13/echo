@@ -5,7 +5,7 @@ import { Sidebar } from '@features/home/components';
 import { Pagination } from '@shared/components/ui';
 import { useGridDimensions } from '@features/home/hooks';
 import { usePlayer } from '@features/player/context/PlayerContext';
-import { useModal } from '@shared/hooks';
+import { useModal, useDocumentTitle } from '@shared/hooks';
 import {
   RadioStationCard,
   RadioSearchBar,
@@ -80,6 +80,7 @@ const initialRadioState: RadioPageState = {
 };
 
 export default function RadioPage() {
+  useDocumentTitle('Radio');
   const { playRadio, currentRadioStation, isPlaying, isRadioMode, radioMetadata } = usePlayer();
 
   const contentRef = useRef<HTMLDivElement>(null);

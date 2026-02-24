@@ -113,7 +113,9 @@ function App() {
           {/* Home Route (Protected) */}
           <Route path="/home">
             <ProtectedRoute>
-              <HomePage />
+              <ErrorBoundary>
+                <HomePage />
+              </ErrorBoundary>
             </ProtectedRoute>
           </Route>
 
@@ -155,7 +157,9 @@ function App() {
           {/* Album Detail Route (Protected) */}
           <Route path="/album/:id">
             <ProtectedRoute>
-              <AlbumPage />
+              <ErrorBoundary>
+                <AlbumPage />
+              </ErrorBoundary>
             </ProtectedRoute>
           </Route>
 
@@ -169,7 +173,9 @@ function App() {
           {/* Artist Detail Route (Protected) */}
           <Route path="/artists/:id">
             <ProtectedRoute>
-              <ArtistDetailPage />
+              <ErrorBoundary>
+                <ArtistDetailPage />
+              </ErrorBoundary>
             </ProtectedRoute>
           </Route>
 
@@ -183,7 +189,9 @@ function App() {
           {/* Playlist Detail Route (Protected) */}
           <Route path="/playlists/:id">
             <ProtectedRoute>
-              <PlaylistDetailPage />
+              <ErrorBoundary>
+                <PlaylistDetailPage />
+              </ErrorBoundary>
             </ProtectedRoute>
           </Route>
 
@@ -253,7 +261,9 @@ function App() {
           {/* Admin Route (Protected - Admin Only) */}
           <Route path="/admin">
             <AdminRoute>
-              <AdminPage />
+              <ErrorBoundary>
+                <AdminPage />
+              </ErrorBoundary>
             </AdminRoute>
           </Route>
 
