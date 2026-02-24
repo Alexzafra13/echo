@@ -46,6 +46,8 @@ vi.mock('@features/player', () => ({
 // Mock shared hooks
 vi.mock('@shared/hooks', () => ({
   useAlbumMetadataSync: vi.fn(),
+  useDocumentTitle: vi.fn(),
+  useDominantColor: vi.fn(() => '100, 150, 200'),
   useModal: vi.fn(() => ({
     isOpen: false,
     data: null,

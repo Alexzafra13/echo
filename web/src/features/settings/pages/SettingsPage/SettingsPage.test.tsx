@@ -30,6 +30,7 @@ const mockThemeState = {
 
 vi.mock('@shared/hooks', () => ({
   useTheme: () => mockThemeState,
+  useDocumentTitle: vi.fn(),
 }));
 
 const mockHomePreferences = {

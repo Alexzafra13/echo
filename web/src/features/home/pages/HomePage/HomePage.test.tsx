@@ -81,6 +81,7 @@ vi.mock('@features/federation', () => ({
 // Mock shared hooks
 vi.mock('@shared/hooks', () => ({
   useAutoRefreshOnScan: vi.fn(),
+  useDocumentTitle: vi.fn(),
 }));
 
 // Mock layout components

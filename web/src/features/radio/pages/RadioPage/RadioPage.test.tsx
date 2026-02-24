@@ -48,6 +48,7 @@ vi.mock('@features/player/context/PlayerContext', () => ({
 // Mock shared hooks
 vi.mock('@shared/hooks', () => ({
   useModal: () => ({ isOpen: false, open: vi.fn(), close: vi.fn() }),
+  useDocumentTitle: vi.fn(),
 }));
 
 vi.mock('@features/home/hooks', () => ({
