@@ -107,7 +107,7 @@ test.describe('Playlists', () => {
     await createButton.click();
 
     // Esperar modal o formulario
-    const nameInput = page.locator('input[name="name"], input[placeholder*="nombre"], input[placeholder*="name"]');
+    const nameInput = page.locator('input[placeholder="Mi Playlist..."], input[name="name"], input[placeholder*="playlist" i]');
     await expect(nameInput.first()).toBeVisible({ timeout: 5000 });
 
     await nameInput.first().fill(playlistName);
