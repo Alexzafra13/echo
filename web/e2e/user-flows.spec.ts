@@ -100,8 +100,8 @@ test.describe('Playlists', () => {
       ).first()
     ).toBeVisible({ timeout: 15000 });
 
-    // Buscar botón de crear
-    const createButton = page.getByRole('button', { name: /Crear|Nueva|New|Create/i });
+    // Buscar botón de crear (usar first() porque puede haber uno en header y otro en empty state)
+    const createButton = page.getByRole('button', { name: /Crear|Nueva|New|Create/i }).first();
     await expect(createButton).toBeVisible({ timeout: 5000 });
 
     await createButton.click();
