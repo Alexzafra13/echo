@@ -11,6 +11,7 @@ import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlay
 import { Playlist, UpdatePlaylistDto } from '../../types';
 import { logger } from '@shared/utils/logger';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
+import { useDocumentTitle } from '@shared/hooks';
 import styles from './PlaylistsPage.module.css';
 
 /**
@@ -18,6 +19,7 @@ import styles from './PlaylistsPage.module.css';
  * Displays user's playlists
  */
 export default function PlaylistsPage() {
+  useDocumentTitle('Playlists');
   const [, setLocation] = useLocation();
 
   const [page, setPage] = useState(1);

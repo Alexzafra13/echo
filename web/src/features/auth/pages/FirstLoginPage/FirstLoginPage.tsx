@@ -195,9 +195,9 @@ export default function FirstLoginPage() {
               <div className={styles.requirements}>
                 <p className={styles.requirementsTitle}>Requisitos de contraseña:</p>
                 <ul className={styles.requirementsList}>
-                  {requirements.map((req, index) => (
+                  {requirements.map((req) => (
                     <li
-                      key={index}
+                      key={req.label}
                       className={`${styles.requirement} ${req.met ? styles.requirementMet : ''}`}
                     >
                       {req.met ? (

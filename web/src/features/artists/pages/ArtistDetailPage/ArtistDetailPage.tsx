@@ -9,7 +9,7 @@ import { useArtist, useArtistAlbums, useArtistStats, useArtistTopTracks, useRela
 import type { ArtistTopTrack, RelatedArtist } from '../../types';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, useAutoPlaylists } from '@features/home/hooks';
 import { usePlaylistsByArtist } from '@features/playlists/hooks/usePlaylists';
-import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
+import { useAuth, useArtistMetadataSync, useAlbumMetadataSync, useDocumentTitle } from '@shared/hooks';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { getArtistInitials } from '../../utils/artist-image.utils';
 import { logger } from '@shared/utils/logger';
@@ -43,6 +43,7 @@ export default function ArtistDetailPage() {
 
   // Fetch artist details
   const { data: artist, isLoading: loadingArtist, error: artistError } = useArtist(id);
+  useDocumentTitle(artist?.name);
 
   // Fetch albums for this artist directly from the API
   const { data: artistAlbumsData } = useArtistAlbums(id);

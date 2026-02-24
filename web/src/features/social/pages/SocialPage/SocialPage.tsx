@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { Users, Search, X, UserPlus, CheckCircle, Share2, Globe, Music } from 'lucide-react';
+import { useDocumentTitle } from '@shared/hooks';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
@@ -27,6 +28,7 @@ import styles from './SocialPage.module.css';
  * Main social hub: friends, listening now, activity feed
  */
 export default function SocialPage() {
+  useDocumentTitle('Social');
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');

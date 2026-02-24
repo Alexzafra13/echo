@@ -1,7 +1,7 @@
 import { useSearch, useLocation } from 'wouter';
 import { Disc, User as UserIcon, Music } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
-import { useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
+import { useArtistMetadataSync, useAlbumMetadataSync, useDocumentTitle } from '@shared/hooks';
 import { Sidebar } from '../../components';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
 import { useArtistSearch } from '@features/artists/hooks';
@@ -22,6 +22,7 @@ export function SearchResultsPage() {
   const [, setLocation] = useLocation();
   const searchParams = new URLSearchParams(useSearch());
   const query = searchParams.get('q') || '';
+  useDocumentTitle(query ? `Buscar: ${query}` : 'Buscar');
 
   // Fetch results from all three sources
   const { data: artistData, isLoading: loadingArtists } = useArtistSearch(query, { take: 20 });

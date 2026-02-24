@@ -4,7 +4,7 @@ import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components'
 import { HeaderWithSearch } from '@shared/components/layout/Header';
 import { ActionCardsRow } from '@shared/components/ActionCardsRow';
 import { useFeaturedAlbum, useRecentAlbums, useTopPlayedAlbums, useGridDimensions, useAutoPlaylists, categorizeAutoPlaylists, randomSelect, useAlbumsRecentlyPlayed } from '../../hooks';
-import { useAutoRefreshOnScan } from '@shared/hooks';
+import { useAutoRefreshOnScan, useDocumentTitle } from '@shared/hooks';
 import { useHomePreferences } from '@features/settings/hooks';
 import { usePlaylists } from '@features/playlists/hooks/usePlaylists';
 import { useFavoriteStations, useDeleteFavoriteStation } from '@features/radio/hooks';
@@ -26,6 +26,7 @@ import styles from './HomePage.module.css';
 export default function HomePage() {
   // Auto-refresh when scan completes
   useAutoRefreshOnScan();
+  useDocumentTitle('Inicio');
 
   // Responsive state for mobile detection
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -412,7 +413,7 @@ export default function HomePage() {
               <div className={styles['albumGrid__sectionTitle--loading']} />
               <div className={styles['albumGrid__grid--loading']}>
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className={styles['albumCard--loading']}>
+                  <div key={`skeleton-${i}`} className={styles['albumCard--loading']}>
                     <div className={styles['albumCard__cover--loading']} />
                     <div className={styles['albumCard__title--loading']} />
                     <div className={styles['albumCard__artist--loading']} />

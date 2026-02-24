@@ -3,7 +3,7 @@ import { Settings, Palette, Globe, Check, Music, Volume2, Home, ChevronUp, Chevr
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { Switch } from '@shared/components/ui';
-import { useTheme } from '@shared/hooks';
+import { useTheme, useDocumentTitle } from '@shared/hooks';
 import { useHomePreferences, useUpdateHomePreferences } from '../../hooks';
 import { useLibraryAnalysisSettings } from '../../hooks/useLibraryAnalysisSettings';
 import { usePlayer } from '@features/player';
@@ -28,6 +28,7 @@ const SECTION_LABELS: Record<HomeSectionId, string> = {
  * User settings page with home customization, appearance, audio and playback options
  */
 export function SettingsPage() {
+  useDocumentTitle('Ajustes');
   const { themePreference, setThemePreference, theme } = useTheme();
   const { data: homePreferences, isLoading: isLoadingHome } = useHomePreferences();
   const { mutate: updateHome, isPending: isSavingHome, isSuccess: isSuccessHome } = useUpdateHomePreferences();

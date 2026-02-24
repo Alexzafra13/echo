@@ -7,7 +7,7 @@ import { SearchInput, EmptyState, ErrorState } from '@shared/components/ui';
 import { Sidebar } from '@features/home/components';
 import { ArtistCard } from '../../components';
 import { useArtists } from '../../hooks';
-import { useArtistMetadataSync } from '@shared/hooks';
+import { useArtistMetadataSync, useDocumentTitle } from '@shared/hooks';
 import styles from './ArtistsPage.module.css';
 
 /** A flat row: either a letter header or an artist card */
@@ -21,6 +21,7 @@ type VirtualRow =
  * Uses virtualization to handle large libraries (500+ artists) efficiently.
  */
 export default function ArtistsPage() {
+  useDocumentTitle('Artistas');
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);

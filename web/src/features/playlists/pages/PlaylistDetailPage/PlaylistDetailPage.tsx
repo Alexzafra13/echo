@@ -6,7 +6,7 @@ import { TrackList } from '@features/home/components';
 import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist, useDeletePlaylist, useReorderPlaylistTracks } from '../../hooks/usePlaylists';
 import { usePlayer } from '@features/player';
 import { Button } from '@shared/components/ui';
-import { useModal, useDominantColor } from '@shared/hooks';
+import { useModal, useDominantColor, useDocumentTitle } from '@shared/hooks';
 import { PlaylistCoverMosaic, PlaylistOptionsMenu, EditPlaylistModal, DeletePlaylistModal } from '../../components';
 import { UpdatePlaylistDto } from '../../types';
 import type { Track as SharedTrack } from '@shared/types/track.types';
@@ -33,6 +33,7 @@ export default function PlaylistDetailPage() {
   const deleteModal = useModal();
 
   const { data: playlist, isLoading: loadingPlaylist, error: playlistError } = usePlaylist(id!);
+  useDocumentTitle(playlist?.name);
   const { data: playlistTracks, isLoading: loadingTracks } = usePlaylistTracks(id!);
   const updatePlaylistMutation = useUpdatePlaylist();
   const deletePlaylistMutation = useDeletePlaylist();

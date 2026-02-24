@@ -72,7 +72,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
       userId: request.id,
       username: request.username,
       name: request.name,
-      timestamp: new Date().toISOString(), // TODO: use actual timestamp from backend
+      timestamp: request.friendsSince || new Date().toISOString(),
     })) || [];
 
   // Fetch alertas críticas del sistema (admin only)

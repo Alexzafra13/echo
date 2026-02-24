@@ -8,7 +8,7 @@ import { AlbumCoverSelectorModal } from '@features/admin/components/AlbumCoverSe
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { useArtistAlbums } from '@features/artists/hooks';
 import { usePlayer, Track } from '@features/player';
-import { useAlbumMetadataSync, useModal, useDominantColor } from '@shared/hooks';
+import { useAlbumMetadataSync, useModal, useDominantColor, useDocumentTitle } from '@shared/hooks';
 import { Button } from '@shared/components/ui';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { toPlayerTracks } from '@shared/utils/track.utils';
@@ -35,6 +35,7 @@ export default function AlbumPage() {
   useAlbumMetadataSync(id);
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
+  useDocumentTitle(album?.title);
   const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
 
   // Fetch other albums from the same artist

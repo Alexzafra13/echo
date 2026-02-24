@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { ToggleSwitch } from '@shared/components/ui';
-import { useAuth, useModal, useDominantColor } from '@shared/hooks';
+import { useAuth, useModal, useDominantColor, useDocumentTitle } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { useChangePassword, useUpdateProfile } from '../../hooks';
 import { usePrivacySettings, useUpdatePrivacySettings } from '@features/settings/hooks';
@@ -19,6 +19,7 @@ import styles from './ProfilePage.module.css';
  * User profile page with account information, name editing, and password change
  */
 export function ProfilePage() {
+  useDocumentTitle('Mi Perfil');
   const { user } = useAuth();
   const updateUser = useAuthStore((state) => state.updateUser);
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
