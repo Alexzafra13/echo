@@ -107,10 +107,10 @@ test.describe('Playlists', () => {
     await createButton.click();
 
     // Esperar modal o formulario
-    const nameInput = page.locator('input[placeholder="Mi Playlist..."], input[name="name"], input[placeholder*="playlist" i]');
-    await expect(nameInput.first()).toBeVisible({ timeout: 5000 });
+    const nameInput = page.locator('input[placeholder="Mi Playlist..."]');
+    await expect(nameInput).toBeVisible({ timeout: 5000 });
 
-    await nameInput.first().fill(playlistName);
+    await nameInput.fill(playlistName);
 
     // Seleccionar al menos una canción (requerido para habilitar el botón)
     // Buscar una canción usando el buscador del modal (mínimo 2 caracteres)
@@ -130,8 +130,8 @@ test.describe('Playlists', () => {
     await expect(firstTrack).toBeVisible({ timeout: 10000 });
     await firstTrack.click();
 
-    // Guardar
-    const submitButton = page.getByRole('button', { name: /Crear|Guardar|Save|Submit/i });
+    // Guardar - el botón del modal muestra "Crear Playlist (N)" con el conteo de tracks
+    const submitButton = page.getByRole('button', { name: /Crear Playlist \(\d+\)/i });
     await expect(submitButton).toBeEnabled({ timeout: 5000 });
     await submitButton.click();
 
