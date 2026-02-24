@@ -51,7 +51,9 @@
   object-fit: cover;
   flex-shrink: 0;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .sharedAlbumPage__heroCover:hover {
@@ -158,7 +160,10 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
   box-shadow: 0 4px 16px rgba(237, 104, 66, 0.4);
 }
 
@@ -574,7 +579,7 @@
   }
 
   .sharedAlbumPage__trackSection {
-    padding: 0 8px;
+    padding: 0;
   }
 
   .sharedAlbumPage__trackHeader {
@@ -614,21 +619,21 @@
   }
 
   .sharedAlbumPage__trackSection {
-    padding: 0 6px;
+    padding: 0;
   }
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .sharedAlbumPage__hero {
+:root[data-theme='light'] .sharedAlbumPage__hero {
   background: rgba(209, 213, 219, 0.35);
   backdrop-filter: blur(10px);
 }
 
-:root[data-theme="light"] .sharedAlbumPage__imageModal {
+:root[data-theme='light'] .sharedAlbumPage__imageModal {
   background: rgba(229, 231, 235, 0.95);
 }
 
-:root[data-theme="light"] .sharedAlbumPage__imageDimensions {
+:root[data-theme='light'] .sharedAlbumPage__imageDimensions {
   background: rgba(209, 213, 219, 0.85);
   box-shadow: 0 4px 12px rgba(31, 41, 55, 0.25);
 }
