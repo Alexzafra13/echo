@@ -20,7 +20,7 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  padding: calc(84px + 2rem) 3rem calc(40px + var(--player-bottom-spacer, 0px)); /* 84px for header + dynamic player spacer */
+  padding: calc(84px + 2rem) 30px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px for header + dynamic player spacer */
 }
 
 .genrePlaylistsPage__content::-webkit-scrollbar {
@@ -192,9 +192,9 @@
 /* Grid - Same as AlbumGrid */
 .genrePlaylistsPage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
-  padding: 0;
+  padding: 0 20px;
 }
 
 /* Playlist Card - matches AlbumCard styling */

@@ -58,10 +58,9 @@
 
 .playlistGrid__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-  padding: 0 20px;
-  /* NO min-height aquí - el grid debe ocupar solo lo necesario */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-5);
+  padding: 0 var(--space-5);
 }
 
 /* Playlist Card */
@@ -85,12 +84,6 @@
   aspect-ratio: 1;
   border-radius: 4px;
   overflow: hidden;
-}
-
-/* Hacer que PlaylistCover ocupe todo el espacio */
-.playlistCard__coverContainer > * {
-  width: 100% !important;
-  height: 100% !important;
 }
 
 .playlistCard__info {
@@ -131,8 +124,8 @@
 /* Tablet */
 @media (max-width: 1200px) {
   .playlistGrid__grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-4);
   }
 
   .playlistGrid__title {
