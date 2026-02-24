@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus, FileX } from 'lucide-react';
+import {
+  Bell,
+  Music,
+  Disc,
+  Check,
+  X,
+  AlertTriangle,
+  Database,
+  HardDrive,
+  UserPlus,
+  FileX,
+} from 'lucide-react';
 import { useMetadataEnrichment, useClickOutside } from '@shared/hooks';
 import { usePendingRequests } from '@features/social/hooks';
 import { apiClient } from '@shared/services/api';
@@ -46,10 +57,15 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>([]);
 
   // Use hook for click outside and scroll close
-  const { ref: dropdownRef, isClosing, close } = useClickOutside<HTMLDivElement>(
-    () => setShowNotifications(false),
-    { enabled: showNotifications, animationDuration: 200 }
-  );
+  const {
+    ref: dropdownRef,
+    isClosing,
+    close,
+  } = useClickOutside<HTMLDivElement>(() => setShowNotifications(false), {
+    enabled: showNotifications,
+    animationDuration: 200,
+    scrollCloseDelay: 0,
+  });
 
   // Metadata enrichment notifications (admin only)
   const {
@@ -157,7 +173,6 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, isAdmin]);
-
 
   /**
    * Obtener ícono según el tipo
@@ -268,7 +283,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
 
   // Contar total de notificaciones importantes
   const friendRequestCount = friendRequestNotifications.length;
-  const adminNotificationCount = isAdmin ? (systemAlerts.length + metadataUnreadCount) : 0;
+  const adminNotificationCount = isAdmin ? systemAlerts.length + metadataUnreadCount : 0;
   const totalCount = friendRequestCount + adminNotificationCount;
 
   return (
@@ -287,14 +302,14 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
         title={`${totalCount} notificaciones`}
       >
         <Bell size={20} />
-        {totalCount > 0 && (
-          <span className={styles.notifications__badge}>{totalCount}</span>
-        )}
+        {totalCount > 0 && <span className={styles.notifications__badge}>{totalCount}</span>}
       </button>
 
       {/* Dropdown */}
       {showNotifications && (
-        <div className={`${styles.notifications__dropdown} ${isClosing ? styles['notifications__dropdown--closing'] : ''}`}>
+        <div
+          className={`${styles.notifications__dropdown} ${isClosing ? styles['notifications__dropdown--closing'] : ''}`}
+        >
           {/* Header */}
           <div className={styles.notifications__header}>
             <h3 className={styles.notifications__title}>Notificaciones</h3>
@@ -325,9 +340,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
             {allNotifications.length === 0 ? (
               <div className={styles.notifications__empty}>
                 <Bell size={32} className={styles.notifications__emptyIcon} />
-                <p className={styles.notifications__emptyText}>
-                  No hay notificaciones
-                </p>
+                <p className={styles.notifications__emptyText}>No hay notificaciones</p>
               </div>
             ) : (
               allNotifications.map((item) => {
@@ -345,35 +358,29 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
                       isSystemAlert && 'type' in item && item.type === 'error'
                         ? styles['notifications__item--error']
                         : ''
-                    } ${
-                      isFriendRequest ? styles['notifications__item--friendRequest'] : ''
-                    }`}
+                    } ${isFriendRequest ? styles['notifications__item--friendRequest'] : ''}`}
                     onClick={() => handleNotificationClick(item)}
                   >
                     {/* Icon */}
-                    <div className={`${styles.notifications__itemIcon} ${
-                      isFriendRequest ? styles['notifications__itemIcon--friendRequest'] : ''
-                    }`}>
+                    <div
+                      className={`${styles.notifications__itemIcon} ${
+                        isFriendRequest ? styles['notifications__itemIcon--friendRequest'] : ''
+                      }`}
+                    >
                       {getIcon(item)}
                     </div>
 
                     {/* Content */}
                     <div className={styles.notifications__itemContent}>
-                      <p className={styles.notifications__itemTitle}>
-                        {info.title}
-                      </p>
-                      <p className={styles.notifications__itemMessage}>
-                        {info.message}
-                      </p>
+                      <p className={styles.notifications__itemTitle}>{info.title}</p>
+                      <p className={styles.notifications__itemMessage}>{info.message}</p>
                       <p className={styles.notifications__itemTime}>
                         {getRelativeTime(item.timestamp)}
                       </p>
                     </div>
 
                     {/* Unread indicator */}
-                    {isUnread && (
-                      <div className={styles.notifications__itemUnreadDot} />
-                    )}
+                    {isUnread && <div className={styles.notifications__itemUnreadDot} />}
                   </div>
                 );
               })

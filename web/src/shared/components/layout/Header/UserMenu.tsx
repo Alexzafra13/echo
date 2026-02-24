@@ -36,19 +36,14 @@ interface UserMenuProps {
  * />
  * ```
  */
-export function UserMenu({
-  user,
-  avatarTimestamp,
-  isOpen,
-  onOpenChange,
-  onLogout,
-}: UserMenuProps) {
+export function UserMenu({ user, avatarTimestamp, isOpen, onOpenChange, onLogout }: UserMenuProps) {
   const [, setLocation] = useLocation();
 
-  const { ref, isClosing, close } = useClickOutside<HTMLDivElement>(
-    () => onOpenChange(false),
-    { enabled: isOpen, animationDuration: 200 }
-  );
+  const { ref, isClosing, close } = useClickOutside<HTMLDivElement>(() => onOpenChange(false), {
+    enabled: isOpen,
+    animationDuration: 200,
+    scrollCloseDelay: 0,
+  });
 
   const handleToggle = () => {
     if (isOpen) {
