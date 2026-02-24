@@ -67,7 +67,10 @@
 }
 
 .labelChar {
-  transition: transform 0.3s ease, font-size 0.3s ease, color 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    font-size 0.3s ease,
+    color 0.3s ease;
   transition-delay: calc(var(--index) * 0.03s);
 }
 
@@ -78,7 +81,7 @@
   transform: translateY(-50%);
   left: var(--space-3);
   font-size: var(--text-sm);
-  background: transparent;
+  background: var(--input-label-bg, var(--bg-elevated));
   padding: 0 var(--space-2);
 }
 
@@ -229,7 +232,7 @@
   transform: translateY(-50%);
   left: var(--space-3);
   font-size: var(--text-sm);
-  background: transparent;
+  background: var(--input-label-bg, var(--bg-elevated));
   padding: 0 var(--space-2);
 }
 

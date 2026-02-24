@@ -52,6 +52,7 @@
   box-shadow: 0 8px 32px var(--black-40);
   border: 1px solid var(--white-10);
   width: 100%;
+  --input-label-bg: rgb(20, 21, 31);
 }
 
 .header {
