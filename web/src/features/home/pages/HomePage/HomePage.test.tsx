@@ -22,7 +22,7 @@ vi.mock('../../hooks', () => ({
   useTopPlayedAlbums: vi.fn(),
   useAlbumsRecentlyPlayed: vi.fn(),
   useAutoPlaylists: vi.fn(),
-  useGridDimensions: vi.fn(() => ({ itemsPerPage: 6 })),
+  useGridDimensions: vi.fn(() => ({ itemsPerPage: 6, columns: 3 })),
   categorizeAutoPlaylists: vi.fn((playlists) => ({
     waveMix: playlists?.find((p: { type: string }) => p.type === 'wave'),
     artistPlaylists: playlists?.filter((p: { type: string }) => p.type === 'artist') || [],
