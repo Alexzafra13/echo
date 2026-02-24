@@ -54,36 +54,39 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
     }
   }, [enabled]);
 
-  const close = useCallback((callback?: () => void) => {
-    if (callback) {
-      pendingCallbackRef.current = callback;
-    }
+  const close = useCallback(
+    (callback?: () => void) => {
+      if (callback) {
+        pendingCallbackRef.current = callback;
+      }
 
-    if (isClosingRef.current) {
-      return;
-    }
+      if (isClosingRef.current) {
+        return;
+      }
 
-    if (animationDuration > 0) {
-      isClosingRef.current = true;
-      setIsClosing(true);
+      if (animationDuration > 0) {
+        isClosingRef.current = true;
+        setIsClosing(true);
 
-      timeoutRef.current = setTimeout(() => {
+        timeoutRef.current = setTimeout(() => {
+          onClose();
+          if (pendingCallbackRef.current) {
+            pendingCallbackRef.current();
+            pendingCallbackRef.current = null;
+          }
+          isClosingRef.current = false;
+          setIsClosing(false);
+        }, animationDuration);
+      } else {
         onClose();
         if (pendingCallbackRef.current) {
           pendingCallbackRef.current();
           pendingCallbackRef.current = null;
         }
-        isClosingRef.current = false;
-        setIsClosing(false);
-      }, animationDuration);
-    } else {
-      onClose();
-      if (pendingCallbackRef.current) {
-        pendingCallbackRef.current();
-        pendingCallbackRef.current = null;
       }
-    }
-  }, [onClose, animationDuration]);
+    },
+    [onClose, animationDuration]
+  );
 
   useEffect(() => {
     if (!enabled) return;
@@ -102,18 +105,36 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
   }, [enabled, close]);
 
   // Cerrar al hacer scroll con umbral mínimo
+  // Soporta scroll en cualquier contenedor (no solo window)
   useEffect(() => {
     if (!enabled || !closeOnScroll) return;
 
-    let scrollStartY = window.scrollY;
     let accumulatedScroll = 0;
     let scrollTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let lastScrollTarget: EventTarget | null = null;
+    let lastScrollY = 0;
 
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollDelta = Math.abs(currentScrollY - scrollStartY);
+    const getScrollY = (target: EventTarget | null): number => {
+      if (!target || target === document || target === document.documentElement) {
+        return window.scrollY;
+      }
+      return (target as HTMLElement).scrollTop ?? 0;
+    };
+
+    const handleScroll = (e: Event) => {
+      const target = e.target;
+      const currentScrollY = getScrollY(target);
+
+      // Reset tracking when scroll target changes
+      if (target !== lastScrollTarget) {
+        lastScrollTarget = target;
+        lastScrollY = currentScrollY;
+        return;
+      }
+
+      const scrollDelta = Math.abs(currentScrollY - lastScrollY);
       accumulatedScroll += scrollDelta;
-      scrollStartY = currentScrollY;
+      lastScrollY = currentScrollY;
 
       if (accumulatedScroll >= scrollThreshold) {
         if (scrollTimeoutId) {
