@@ -54,7 +54,16 @@ interface TrackListProps {
  *   onTrackPlay={(track) => play(track.id)}
  * />
  */
-export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum = false, hideAlbumCover = false, onRemoveFromPlaylist, onMoveUp, onMoveDown }: TrackListProps) {
+export function TrackList({
+  tracks,
+  onTrackPlay,
+  currentTrackId,
+  hideGoToAlbum = false,
+  hideAlbumCover = false,
+  onRemoveFromPlaylist,
+  onMoveUp,
+  onMoveDown,
+}: TrackListProps) {
   const canReorder = !!(onMoveUp && onMoveDown);
   const [, setLocation] = useLocation();
   const { addToQueue, isPlaying: playerIsPlaying, togglePlayPause } = usePlayer();
@@ -64,7 +73,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
 
   // Detect if album has multiple discs
   const discInfo = useMemo(() => {
-    const discNumbers = new Set(tracks.map(t => t.discNumber || 1));
+    const discNumbers = new Set(tracks.map((t) => t.discNumber || 1));
     const hasMultipleDiscs = discNumbers.size > 1;
     const sortedDiscs = Array.from(discNumbers).sort((a, b) => a - b);
     return { hasMultipleDiscs, discs: sortedDiscs };
@@ -96,44 +105,56 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handlePlay = useCallback((track: Track) => {
-    onTrackPlay?.(track);
-  }, [onTrackPlay]);
+  const handlePlay = useCallback(
+    (track: Track) => {
+      onTrackPlay?.(track);
+    },
+    [onTrackPlay]
+  );
 
   // Track options handlers - memoized to prevent unnecessary re-renders
   const handleAddToPlaylist = useCallback((track: Track) => {
     setSelectedTrackForPlaylist(track);
   }, []);
 
-  const handleAddToQueue = useCallback((track: Track) => {
-    // Map track to player format
-    const playerTrack = {
-      id: track.id,
-      title: track.title,
-      artist: track.artistName || 'Unknown Artist',
-      albumId: track.albumId,
-      albumName: track.albumName,
-      duration: track.duration || 0,
-      coverImage: track.albumId ? `/api/albums/${track.albumId}/cover` : undefined,
-      trackNumber: track.trackNumber,
-      // Audio normalization data (LUFS)
-      rgTrackGain: track.rgTrackGain,
-      rgTrackPeak: track.rgTrackPeak,
-    };
-    addToQueue(playerTrack);
-  }, [addToQueue]);
+  const handleAddToQueue = useCallback(
+    (track: Track) => {
+      // Map track to player format
+      const playerTrack = {
+        id: track.id,
+        title: track.title,
+        artist: track.artistName || 'Unknown Artist',
+        albumId: track.albumId,
+        albumName: track.albumName,
+        duration: track.duration || 0,
+        coverImage: track.albumId ? `/api/albums/${track.albumId}/cover` : undefined,
+        trackNumber: track.trackNumber,
+        // Audio normalization data (LUFS)
+        rgTrackGain: track.rgTrackGain,
+        rgTrackPeak: track.rgTrackPeak,
+      };
+      addToQueue(playerTrack);
+    },
+    [addToQueue]
+  );
 
-  const handleGoToAlbum = useCallback((track: Track) => {
-    if (track.albumId) {
-      setLocation(`/album/${track.albumId}`);
-    }
-  }, [setLocation]);
+  const handleGoToAlbum = useCallback(
+    (track: Track) => {
+      if (track.albumId) {
+        setLocation(`/album/${track.albumId}`);
+      }
+    },
+    [setLocation]
+  );
 
-  const handleGoToArtist = useCallback((track: Track) => {
-    if (track.artistId) {
-      setLocation(`/artists/${track.artistId}`);
-    }
-  }, [setLocation]);
+  const handleGoToArtist = useCallback(
+    (track: Track) => {
+      if (track.artistId) {
+        setLocation(`/artists/${track.artistId}`);
+      }
+    },
+    [setLocation]
+  );
 
   const handleShowInfo = useCallback((track: Track) => {
     setSelectedTrackForInfo(track);
@@ -153,9 +174,12 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
     const isCurrentTrack = currentTrackId === track.id;
     const isPlayingThisTrack = isCurrentTrack && playerIsPlaying;
     const isMissingTrack = track.isMissing === true;
-    const coverUrl = track.albumId ? `/api/albums/${track.albumId}/cover` : '/placeholder-album.png';
+    const coverUrl = track.albumId
+      ? `/api/albums/${track.albumId}/cover`
+      : '/placeholder-album.png';
     // Use playlistOrder if available (for playlists), otherwise use trackNumber
-    const displayNumber = track.playlistOrder !== undefined ? track.playlistOrder : (track.trackNumber || index + 1);
+    const displayNumber =
+      track.playlistOrder !== undefined ? track.playlistOrder : track.trackNumber || index + 1;
 
     // Build class names
     const trackClasses = [
@@ -163,7 +187,9 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
       isCurrentTrack ? styles['trackList__track--active'] : '',
       isMissingTrack ? styles['trackList__track--missing'] : '',
       canReorder ? styles['trackList__track--reorderable'] : '',
-    ].filter(Boolean).join(' ');
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     // Handle click - toggle play/pause if current track, otherwise play
     const handleTrackClick = () => {
@@ -189,9 +215,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
             <Ghost size={16} className={styles.trackList__ghostIcon} />
           ) : (
             <>
-              <span className={styles.trackList__trackNumber}>
-                {displayNumber}
-              </span>
+              <span className={styles.trackList__trackNumber}>{displayNumber}</span>
               <button
                 className={styles.trackList__playButton}
                 onClick={(e) => {
@@ -246,7 +270,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
 
         {/* Track info (cover + title + artist) */}
         <div className={styles.trackList__trackInfo}>
-          {!hideAlbumCover && (
+          {(!hideAlbumCover || isMobile) && (
             <img
               src={coverUrl}
               alt={track.albumName || track.title}
@@ -261,7 +285,10 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
           <div className={styles.trackList__trackText}>
             <span className={styles.trackList__trackTitle}>{track.title}</span>
             {track.artistName && (
-              <span className={styles.trackList__trackArtist}>{track.artistName}</span>
+              <span className={styles.trackList__trackArtist}>
+                {track.artistName}
+                {isMobile && track.duration ? ` · ${formatDuration(track.duration)}` : ''}
+              </span>
             )}
           </div>
         </div>
@@ -277,9 +304,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
         </div>
 
         {/* Duration */}
-        <span className={styles.trackList__trackDuration}>
-          {formatDuration(track.duration)}
-        </span>
+        <span className={styles.trackList__trackDuration}>{formatDuration(track.duration)}</span>
 
         {/* Rating Stars - Only render on desktop to avoid API rate limits */}
         {!isMobile && !isMissingTrack && (
@@ -326,7 +351,9 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
 
   return (
     <div className={styles.trackList}>
-      <div className={`${styles.trackList__header} ${canReorder ? styles['trackList__header--reorderable'] : ''}`}>
+      <div
+        className={`${styles.trackList__header} ${canReorder ? styles['trackList__header--reorderable'] : ''}`}
+      >
         <span className={styles.trackList__headerNumber}>#</span>
         {canReorder && <span className={styles.trackList__headerReorder}>Orden</span>}
         <span className={styles.trackList__headerTitle}>Título</span>
@@ -337,18 +364,16 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
 
       <div className={styles.trackList__tracks}>
         {/* Render with disc separators if multiple discs, otherwise render flat list */}
-        {discInfo.hasMultipleDiscs && tracksByDisc ? (
-          // Multiple discs: render with separators
-          discInfo.discs.map(discNumber => (
-            <div key={`disc-group-${discNumber}`}>
-              {renderDiscSeparator(discNumber)}
-              {tracksByDisc.get(discNumber)?.map((track, index) => renderTrackRow(track, index))}
-            </div>
-          ))
-        ) : (
-          // Single disc: render flat list
-          tracks.map((track, index) => renderTrackRow(track, index))
-        )}
+        {discInfo.hasMultipleDiscs && tracksByDisc
+          ? // Multiple discs: render with separators
+            discInfo.discs.map((discNumber) => (
+              <div key={`disc-group-${discNumber}`}>
+                {renderDiscSeparator(discNumber)}
+                {tracksByDisc.get(discNumber)?.map((track, index) => renderTrackRow(track, index))}
+              </div>
+            ))
+          : // Single disc: render flat list
+            tracks.map((track, index) => renderTrackRow(track, index))}
       </div>
 
       {/* Add to Playlist Modal */}

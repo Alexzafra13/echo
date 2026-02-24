@@ -324,7 +324,7 @@
   gap: 12px;
 }
 
-/* ===== Responsive Design - iOS Style ===== */
+/* ===== Responsive Design - Spotify-style Mobile ===== */
 
 /* Mobile */
 @media (max-width: 768px) {
@@ -333,7 +333,7 @@
   }
 
   .trackList__header {
-    display: none; /* Ocultar header en móvil - estilo iOS */
+    display: none; /* Ocultar header en móvil */
   }
 
   .trackList__discSeparator {
@@ -346,48 +346,38 @@
   }
 
   .trackList__track {
-    grid-template-columns: 40px 1fr auto 40px; /* 4 columnas: play | info | duración | menú */
-    gap: 10px; /* Reducido de 14px */
-    padding: 8px 12px; /* Reducido de 12px 16px */
-    border-radius: 8px; /* iOS rounded */
+    grid-template-columns: 1fr 40px; /* Spotify-style: info | menú */
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+
+  /* Hide number cell, format, rating, duration columns on mobile */
+  .trackList__numberCell,
+  .trackList__trackFormat,
+  .trackList__trackRating,
+  .trackList__trackDuration {
+    display: none;
   }
 
   /* Mobile reorderable track */
   .trackList__track--reorderable {
-    grid-template-columns: 40px 1fr auto 36px 40px;
-    /* Explicit grid positions for visual reordering */
+    grid-template-columns: 1fr 36px 40px; /* info | reorder | menú */
   }
 
   .trackList__track--reorderable > .trackList__numberCell {
-    grid-column: 1;
-    grid-row: 1;
+    display: none;
   }
 
   .trackList__track--reorderable > .trackList__reorderButtons {
-    grid-column: 4;
-    grid-row: 1;
     flex-direction: column;
     gap: 0;
   }
 
-  .trackList__track--reorderable > .trackList__trackInfo {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .trackList__track--reorderable > .trackList__trackDuration {
-    grid-column: 3;
-    grid-row: 1;
-  }
-
-  .trackList__track--reorderable > .trackList__menuButton {
-    grid-column: 5;
-    grid-row: 1;
-  }
-
-  /* Hide format/rating columns on mobile reorderable */
+  /* Hide format/rating/duration columns on mobile reorderable */
   .trackList__track--reorderable > .trackList__trackFormat,
-  .trackList__track--reorderable > .trackList__trackRating {
+  .trackList__track--reorderable > .trackList__trackRating,
+  .trackList__track--reorderable > .trackList__trackDuration {
     display: none;
   }
 
@@ -416,67 +406,24 @@
     height: 16px;
   }
 
-  .trackList__numberCell {
-    width: 40px; /* Reducido de 48px */
-    height: 40px; /* Reducido de 48px */
-  }
-
-  .trackList__trackFormat,
-  .trackList__trackRating {
-    display: none; /* Hide on mobile */
-  }
-
   .trackList__trackInfo {
-    gap: 10px; /* Reducido de 14px */
+    gap: 12px;
   }
 
   .trackList__trackCover {
-    width: 40px; /* Reducido de 48px para filas más compactas */
-    height: 40px; /* Reducido de 48px */
-    border-radius: 6px; /* iOS rounded */
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
   }
 
   .trackList__trackTitle {
-    font-size: 14px; /* Reducido de 15px */
+    font-size: 15px;
     font-weight: 500;
   }
 
   .trackList__trackArtist {
-    font-size: 12px; /* Reducido de 13px */
-  }
-
-  .trackList__trackDuration {
-    font-size: 12px; /* Reducido de 13px */
-    text-align: right;
-  }
-
-  .trackList__playButton {
-    width: 28px; /* Reducido de 32px */
-    height: 28px; /* Reducido de 32px */
-    display: none; /* Hidden by default on mobile, show on hover/active */
-  }
-
-  .trackList__playButton svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .trackList__trackNumber {
-    display: flex; /* Show track number on mobile */
     font-size: 13px;
-  }
-
-  /* Show play button on hover/touch in mobile */
-  .trackList__track:hover .trackList__trackNumber,
-  .trackList__track:active .trackList__trackNumber,
-  .trackList__track--active .trackList__trackNumber {
-    display: none;
-  }
-
-  .trackList__track:hover .trackList__playButton,
-  .trackList__track:active .trackList__playButton,
-  .trackList__track--active .trackList__playButton {
-    display: flex;
+    color: var(--color-text-tertiary, #6b7280);
   }
 }
 
@@ -487,14 +434,14 @@
   }
 
   .trackList__track {
-    grid-template-columns: 36px 1fr auto 36px; /* 4 columnas: play | info | duración | menú */
-    gap: 8px; /* Reducido */
-    padding: 6px 10px; /* Más compacto */
+    grid-template-columns: 1fr 36px; /* Spotify-style: info | menú */
+    gap: 6px;
+    padding: 6px 10px;
   }
 
   /* Small mobile reorderable track */
   .trackList__track--reorderable {
-    grid-template-columns: 36px 1fr auto 32px 36px;
+    grid-template-columns: 1fr 32px 36px;
   }
 
   .trackList__reorderButton {
@@ -508,44 +455,20 @@
     height: 14px;
   }
 
-  .trackList__numberCell {
-    width: 36px; /* Más pequeño */
-    height: 36px;
-  }
-
   .trackList__trackInfo {
-    gap: 8px; /* Reducido */
+    gap: 10px;
   }
 
   .trackList__trackCover {
-    width: 36px; /* Más compacto para pantallas muy pequeñas */
-    height: 36px;
+    width: 40px;
+    height: 40px;
   }
 
   .trackList__trackTitle {
-    font-size: 13px; /* Ligeramente más pequeño */
+    font-size: 14px;
   }
 
   .trackList__trackArtist {
-    font-size: 11px; /* Más pequeño */
-  }
-
-  .trackList__trackDuration {
-    font-size: 11px; /* Más pequeño */
-    text-align: right;
-  }
-
-  .trackList__playButton {
-    width: 26px; /* Más compacto */
-    height: 26px;
-  }
-
-  .trackList__playButton svg {
-    width: 12px;
-    height: 12px;
-  }
-
-  .trackList__trackNumber {
-    font-size: 12px; /* Más pequeño */
+    font-size: 12px;
   }
 }

@@ -36,7 +36,7 @@
   background: var(--primary-15);
 }
 
-/* Dropdown Menu - Portal rendered with fixed positioning */
+/* ===== Desktop: Dropdown Menu ===== */
 .trackOptionsMenu__dropdown {
   min-width: 200px;
   overflow-y: auto;
@@ -45,17 +45,14 @@
   box-shadow: 0 8px 32px var(--black-40);
   border: 1px solid var(--white-10);
   padding: 4px;
-  /* Position, top, left/right, max-height set via inline styles */
 }
 
-/* Animation when dropdown opens below (default) */
-.trackOptionsMenu__dropdown[data-placement="bottom"] {
+.trackOptionsMenu__dropdown[data-placement='bottom'] {
   transform-origin: top right;
   animation: scaleInFromTop 0.15s ease;
 }
 
-/* Animation when dropdown opens above */
-.trackOptionsMenu__dropdown[data-placement="top"] {
+.trackOptionsMenu__dropdown[data-placement='top'] {
   transform-origin: bottom right;
   animation: scaleInFromBottom 0.15s ease;
 }
@@ -82,12 +79,11 @@
   }
 }
 
-/* Closing animations */
-.trackOptionsMenu__dropdown--closing[data-placement="bottom"] {
+.trackOptionsMenu__dropdown--closing[data-placement='bottom'] {
   animation: scaleOutToTop 0.15s ease forwards;
 }
 
-.trackOptionsMenu__dropdown--closing[data-placement="top"] {
+.trackOptionsMenu__dropdown--closing[data-placement='top'] {
   animation: scaleOutToBottom 0.15s ease forwards;
 }
 
@@ -113,11 +109,11 @@
   }
 }
 
-/* Menu Option */
+/* ===== Shared: Menu Options ===== */
 .trackOptionsMenu__option {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
   padding: 10px 12px;
   background: none;
@@ -147,7 +143,7 @@
   color: var(--color-primary-500, #ed6842);
 }
 
-/* Danger Option (for destructive actions like remove) */
+/* Danger Option */
 .trackOptionsMenu__optionDanger {
   color: #ef4444;
 }
@@ -171,43 +167,241 @@
   margin: 4px 0;
 }
 
+/* Rating Row */
+.trackOptionsMenu__ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-primary, #ffffff);
+}
+
+.trackOptionsMenu__ratingRow svg {
+  color: var(--text-tertiary, #6b7280);
+  flex-shrink: 0;
+}
+
+.trackOptionsMenu__ratingStars {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+/* ===== Mobile: Bottom Sheet ===== */
+
+/* Overlay backdrop */
+.trackOptionsMenu__overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--black-70);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: fadeIn 0.3s ease;
+}
+
+.trackOptionsMenu__overlay--closing {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+/* Bottom sheet panel */
+.trackOptionsMenu__sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 85vh;
+  background: var(--bg-elevated, #1a1a2e);
+  border-radius: 16px 16px 0 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  animation: sheetSlideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.trackOptionsMenu__sheet--closing {
+  animation: sheetSlideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Drag handle */
+.trackOptionsMenu__sheetHandle {
+  width: 36px;
+  height: 4px;
+  background: var(--white-30);
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+/* Track info header */
+.trackOptionsMenu__sheetHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.trackOptionsMenu__sheetCover {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px var(--black-30);
+}
+
+.trackOptionsMenu__sheetInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.trackOptionsMenu__sheetTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackOptionsMenu__sheetArtist {
+  font-size: 13px;
+  color: var(--text-secondary, #b8bcc8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackOptionsMenu__sheetClose {
+  background: var(--white-10);
+  border: none;
+  color: var(--text-secondary, #b8bcc8);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.trackOptionsMenu__sheetClose:active {
+  background: var(--white-15);
+  color: var(--text-primary);
+}
+
+/* Scrollable options area */
+.trackOptionsMenu__sheetContent {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 12px 16px;
+}
+
+/* Larger touch targets for mobile sheet */
+.trackOptionsMenu__sheet .trackOptionsMenu__option {
+  padding: 14px 12px;
+  font-size: 15px;
+  gap: 16px;
+  border-radius: 10px;
+}
+
+.trackOptionsMenu__sheet .trackOptionsMenu__ratingRow {
+  padding: 14px 12px;
+  font-size: 15px;
+  gap: 16px;
+}
+
+.trackOptionsMenu__sheet .trackOptionsMenu__separator {
+  margin: 4px 8px;
+}
+
+/* Sheet animations */
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheetSlideDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 /* ===== Mobile: Always show trigger button ===== */
 @media (max-width: 768px) {
   .trackOptionsMenu__trigger,
   :global(.trackOptionsMenu__trigger) {
-    opacity: 1; /* Siempre visible en móvil - no hay hover en táctil */
+    opacity: 1;
   }
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .trackOptionsMenu__dropdown {
+:root[data-theme='light'] .trackOptionsMenu__dropdown {
   background: var(--bg-surface);
   border: 1px solid var(--border-base);
   box-shadow: 0 8px 32px rgba(31, 41, 55, 0.2);
 }
 
-:root[data-theme="light"] .trackOptionsMenu__option {
+:root[data-theme='light'] .trackOptionsMenu__sheet {
+  background: var(--bg-surface);
+}
+
+:root[data-theme='light'] .trackOptionsMenu__option {
   color: var(--text-primary);
 }
 
-:root[data-theme="light"] .trackOptionsMenu__option:hover {
+:root[data-theme='light'] .trackOptionsMenu__option:hover {
   background: var(--color-hover);
 }
 
-:root[data-theme="light"] .trackOptionsMenu__option:active {
+:root[data-theme='light'] .trackOptionsMenu__option:active {
   background: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .trackOptionsMenu__option svg {
+:root[data-theme='light'] .trackOptionsMenu__option svg {
   color: var(--text-secondary);
 }
 
-:root[data-theme="light"] .trackOptionsMenu__separator {
+:root[data-theme='light'] .trackOptionsMenu__separator {
   background: var(--border-base);
 }
 
-:root[data-theme="light"] .trackOptionsMenu__trigger:hover,
-:root[data-theme="light"] :global(.trackOptionsMenu__trigger):hover {
+:root[data-theme='light'] .trackOptionsMenu__trigger:hover,
+:root[data-theme='light'] :global(.trackOptionsMenu__trigger):hover {
   background: var(--color-hover);
   color: var(--text-primary);
 }
