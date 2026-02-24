@@ -21,7 +21,11 @@ interface CreatePlaylistModalProps {
   isLoading?: boolean;
 }
 
-export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: CreatePlaylistModalProps) {
+export function CreatePlaylistModal({
+  onClose,
+  onSubmit,
+  isLoading = false,
+}: CreatePlaylistModalProps) {
   const [name, setName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTracks, setSelectedTracks] = useState<SelectedTrack[]>([]);
@@ -29,7 +33,9 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [error, setError] = useState('');
 
-  const { data: searchResults, isLoading: searchLoading } = useTrackSearch(searchQuery, { take: 8 });
+  const { data: searchResults, isLoading: searchLoading } = useTrackSearch(searchQuery, {
+    take: 8,
+  });
 
   useEffect(() => {
     const loadRecent = async () => {
@@ -61,7 +67,10 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
     }
 
     try {
-      await onSubmit(name.trim(), selectedTracks.map(t => t.id));
+      await onSubmit(
+        name.trim(),
+        selectedTracks.map((t) => t.id)
+      );
       onClose();
     } catch (error) {
       setError(getApiErrorMessage(error, 'Error al crear la playlist'));
@@ -72,33 +81,35 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
     if (!track || typeof track !== 'object') return;
 
     const isRecentlyPlayed = 'trackId' in track;
-    const trackData = isRecentlyPlayed && (track as RecentlyPlayed).track
-      ? (track as RecentlyPlayed).track!
-      : track as Track;
-    const trackId = isRecentlyPlayed
-      ? (track as RecentlyPlayed).trackId
-      : (track as Track).id;
+    const trackData =
+      isRecentlyPlayed && (track as RecentlyPlayed).track
+        ? (track as RecentlyPlayed).track!
+        : (track as Track);
+    const trackId = isRecentlyPlayed ? (track as RecentlyPlayed).trackId : (track as Track).id;
 
-    const isSelected = selectedTracks.some(t => t.id === trackId);
+    const isSelected = selectedTracks.some((t) => t.id === trackId);
 
     if (isSelected) {
-      setSelectedTracks(prev => prev.filter(t => t.id !== trackId));
+      setSelectedTracks((prev) => prev.filter((t) => t.id !== trackId));
     } else {
-      setSelectedTracks(prev => [...prev, {
-        id: trackId,
-        title: trackData.title,
-        artistName: trackData.artistName,
-        albumId: 'albumId' in trackData ? (trackData.albumId as string | undefined) : undefined,
-      }]);
+      setSelectedTracks((prev) => [
+        ...prev,
+        {
+          id: trackId,
+          title: trackData.title,
+          artistName: trackData.artistName,
+          albumId: 'albumId' in trackData ? (trackData.albumId as string | undefined) : undefined,
+        },
+      ]);
     }
     setError('');
   };
 
-  const isTrackSelected = (trackId: string) => selectedTracks.some(t => t.id === trackId);
+  const isTrackSelected = (trackId: string) => selectedTracks.some((t) => t.id === trackId);
 
   const canCreate = name.trim().length > 0 && selectedTracks.length > 0;
 
-  const filteredRecent = recentTracks.filter(r => !isTrackSelected(r.trackId));
+  const filteredRecent = recentTracks.filter((r) => !isTrackSelected(r.trackId));
 
   return (
     <Modal isOpen={true} onClose={onClose} title="Nueva Playlist">
@@ -181,14 +192,16 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
                   <span>Cargando sugerencias...</span>
                 </div>
               ) : filteredRecent.length > 0 ? (
-                filteredRecent.slice(0, 6).map((recent, index) => (
-                  <TrackItem
-                    key={`recent-${recent.trackId}-${index}`}
-                    track={recent}
-                    isSelected={isTrackSelected(recent.trackId)}
-                    onToggle={() => toggleTrack(recent)}
-                  />
-                ))
+                filteredRecent
+                  .slice(0, 6)
+                  .map((recent, index) => (
+                    <TrackItem
+                      key={`recent-${recent.trackId}-${index}`}
+                      track={recent}
+                      isSelected={isTrackSelected(recent.trackId)}
+                      onToggle={() => toggleTrack(recent)}
+                    />
+                  ))
               ) : recentTracks.length === 0 ? (
                 <div className={styles.emptyState}>
                   <Music size={24} />
@@ -206,7 +219,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
               Canciones seleccionadas ({selectedTracks.length})
             </span>
             <div className={styles.selectedList}>
-              {selectedTracks.map(track => (
+              {selectedTracks.map((track) => (
                 <div key={track.id} className={styles.selectedItem}>
                   {track.albumId ? (
                     <>
@@ -216,7 +229,10 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
                         className={styles.selectedCover}
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
-                          (e.currentTarget.nextElementSibling as HTMLElement)?.style.setProperty('display', 'flex');
+                          (e.currentTarget.nextElementSibling as HTMLElement)?.style.setProperty(
+                            'display',
+                            'flex'
+                          );
                         }}
                       />
                       <div className={styles.selectedCoverPlaceholder} style={{ display: 'none' }}>
@@ -237,7 +253,9 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
                   <button
                     type="button"
                     className={styles.removeButton}
-                    onClick={() => setSelectedTracks(prev => prev.filter(t => t.id !== track.id))}
+                    onClick={() =>
+                      setSelectedTracks((prev) => prev.filter((t) => t.id !== track.id))
+                    }
                   >
                     <X size={14} />
                   </button>
@@ -250,20 +268,13 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
         {error && <div className={styles.error}>{error}</div>}
 
         <div className={styles.actions}>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={isLoading || !canCreate}
-          >
-            {isLoading ? 'Creando...' : `Crear Playlist${selectedTracks.length > 0 ? ` (${selectedTracks.length})` : ''}`}
+          <Button type="submit" variant="primary" disabled={isLoading || !canCreate}>
+            {isLoading
+              ? 'Creando...'
+              : `Crear Playlist${selectedTracks.length > 0 ? ` (${selectedTracks.length})` : ''}`}
           </Button>
         </div>
       </form>
@@ -283,14 +294,16 @@ function TrackItem({ track, isSelected, onToggle }: TrackItemProps) {
   }
 
   const isRecentlyPlayed = 'trackId' in track;
-  const trackData = isRecentlyPlayed && (track as RecentlyPlayed).track
-    ? (track as RecentlyPlayed).track!
-    : track as Track;
+  const trackData =
+    isRecentlyPlayed && (track as RecentlyPlayed).track
+      ? (track as RecentlyPlayed).track!
+      : (track as Track);
   const albumId = 'albumId' in trackData ? (trackData.albumId as string | undefined) : undefined;
 
   return (
     <button
       type="button"
+      data-testid="track-item"
       className={`${styles.trackItem} ${isSelected ? styles.trackItemSelected : ''}`}
       onClick={onToggle}
     >
@@ -310,9 +323,7 @@ function TrackItem({ track, isSelected, onToggle }: TrackItemProps) {
       </div>
       <div className={styles.trackInfo}>
         <span className={styles.trackTitle}>{trackData.title}</span>
-        {trackData.artistName && (
-          <span className={styles.trackArtist}>{trackData.artistName}</span>
-        )}
+        {trackData.artistName && <span className={styles.trackArtist}>{trackData.artistName}</span>}
       </div>
       <div className={styles.trackAction}>
         {isSelected ? (

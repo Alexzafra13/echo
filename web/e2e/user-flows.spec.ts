@@ -113,14 +113,14 @@ test.describe('Playlists', () => {
     await nameInput.first().fill(playlistName);
 
     // Seleccionar al menos una canción (requerido para habilitar el botón)
-    // Buscar una canción usando el buscador del modal
+    // Buscar una canción usando el buscador del modal (mínimo 2 caracteres)
     const searchInput = page.locator('input[placeholder*="Buscar por título"]');
     await expect(searchInput).toBeVisible({ timeout: 3000 });
-    await searchInput.fill('a');
+    await searchInput.fill('al');
 
     // Esperar a que aparezcan resultados y seleccionar el primero
-    const firstTrack = page.locator('[class*="trackItem"]').first();
-    await expect(firstTrack).toBeVisible({ timeout: 5000 });
+    const firstTrack = page.getByTestId('track-item').first();
+    await expect(firstTrack).toBeVisible({ timeout: 8000 });
     await firstTrack.click();
 
     // Guardar
