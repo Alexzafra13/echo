@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useCallback, useMemo, useEffect, useRef, useReducer } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import headerStyles from '@shared/components/layout/Header/Header.module.css';
 import { Sidebar } from '@features/home/components';
@@ -32,6 +32,53 @@ import { Radio, Music2 } from 'lucide-react';
 import { logger } from '@shared/utils/logger';
 import styles from './RadioPage.module.css';
 
+// Unified state for all interdependent radio page UI state.
+// Using a reducer prevents impossible state combinations (e.g. search open
+// with empty query) and ensures page resets when filters/country change.
+interface RadioPageState {
+  selectedCountry: string;
+  activeFilter: string;
+  searchQuery: string;
+  currentPage: number;
+  isSearchPanelOpen: boolean;
+}
+
+type RadioPageAction =
+  | { type: 'SET_COUNTRY'; country: string }
+  | { type: 'SET_FILTER'; filter: string }
+  | { type: 'SEARCH'; query: string }
+  | { type: 'SEARCH_FOCUS' }
+  | { type: 'SELECT_RESULT' }
+  | { type: 'CLOSE_SEARCH' }
+  | { type: 'SET_PAGE'; page: number };
+
+function radioPageReducer(state: RadioPageState, action: RadioPageAction): RadioPageState {
+  switch (action.type) {
+    case 'SET_COUNTRY':
+      return { ...state, selectedCountry: action.country, currentPage: 1 };
+    case 'SET_FILTER':
+      return { ...state, activeFilter: action.filter, currentPage: 1 };
+    case 'SEARCH':
+      return { ...state, searchQuery: action.query, isSearchPanelOpen: action.query.length >= 2 };
+    case 'SEARCH_FOCUS':
+      return state.searchQuery.length >= 2 ? { ...state, isSearchPanelOpen: true } : state;
+    case 'SELECT_RESULT':
+      return { ...state, isSearchPanelOpen: false, searchQuery: '' };
+    case 'CLOSE_SEARCH':
+      return { ...state, isSearchPanelOpen: false };
+    case 'SET_PAGE':
+      return { ...state, currentPage: action.page };
+  }
+}
+
+const initialRadioState: RadioPageState = {
+  selectedCountry: '',
+  activeFilter: 'top',
+  searchQuery: '',
+  currentPage: 1,
+  isSearchPanelOpen: false,
+};
+
 export default function RadioPage() {
   const { playRadio, currentRadioStation, isPlaying, isRadioMode, radioMetadata } = usePlayer();
 
@@ -44,11 +91,8 @@ export default function RadioPage() {
 
   const { data: userCountry } = useUserCountry();
   const { data: apiCountries = [] } = useRadioCountries();
-  const [selectedCountry, setSelectedCountry] = useState<string>('');
-  const [activeFilter, setActiveFilter] = useState<string>('top');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
+  const [state, dispatch] = useReducer(radioPageReducer, initialRadioState);
+  const { selectedCountry, activeFilter, searchQuery, currentPage, isSearchPanelOpen } = state;
 
   const countryModal = useModal();
   const genreModal = useModal();
@@ -89,7 +133,7 @@ export default function RadioPage() {
 
   useEffect(() => {
     if (userCountry?.countryCode && !selectedCountry) {
-      setSelectedCountry(userCountry.countryCode);
+      dispatch({ type: 'SET_COUNTRY', country: userCountry.countryCode });
     }
   }, [userCountry, selectedCountry]);
 
@@ -98,7 +142,7 @@ export default function RadioPage() {
   useEffect(() => {
     if (!hasInitializedFilter.current && favoriteStations.length > 0) {
       hasInitializedFilter.current = true;
-      setActiveFilter('favorites');
+      dispatch({ type: 'SET_FILTER', filter: 'favorites' });
     }
   }, [favoriteStations.length]);
 
@@ -144,41 +188,35 @@ export default function RadioPage() {
     : stations;
 
   const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-    setIsSearchPanelOpen(query.length >= 2);
+    dispatch({ type: 'SEARCH', query });
   }, []);
 
   const handleSearchFocus = useCallback(() => {
-    if (searchQuery.length >= 2) {
-      setIsSearchPanelOpen(true);
-    }
-  }, [searchQuery]);
+    dispatch({ type: 'SEARCH_FOCUS' });
+  }, []);
 
   const handleSearchBlur = useCallback(() => {
   }, []);
 
   const handleResultSelect = useCallback((station: RadioStation | RadioBrowserStation) => {
     playRadio(station);
-    setIsSearchPanelOpen(false);
-    setSearchQuery('');
+    dispatch({ type: 'SELECT_RESULT' });
   }, [playRadio]);
 
   const handleCloseSearchPanel = useCallback(() => {
-    setIsSearchPanelOpen(false);
+    dispatch({ type: 'CLOSE_SEARCH' });
   }, []);
 
   const handleCountryChange = useCallback((countryCode: string) => {
-    setSelectedCountry(countryCode);
-    setCurrentPage(1);
+    dispatch({ type: 'SET_COUNTRY', country: countryCode });
   }, []);
 
   const handleFilterChange = useCallback((filterId: string) => {
-    setActiveFilter(filterId);
-    setCurrentPage(1);
+    dispatch({ type: 'SET_FILTER', filter: filterId });
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
+    dispatch({ type: 'SET_PAGE', page });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 

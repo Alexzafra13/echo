@@ -22,22 +22,36 @@ export const apiClient = axios.create({
   timeout: 10000,
 });
 
-// Refresh token lock to prevent multiple simultaneous refresh attempts
-let isRefreshing = false;
-let refreshSubscribers: { resolve: (token: string) => void; reject: (error: Error) => void }[] = [];
+// Single shared promise for token refresh - all concurrent 401s wait on the same promise.
+// This eliminates the race condition where multiple requests could trigger
+// simultaneous refresh attempts or resolve/reject subscribers out of order.
+let refreshPromise: Promise<string> | null = null;
 
-function subscribeTokenRefresh(resolve: (token: string) => void, reject: (error: Error) => void) {
-  refreshSubscribers.push({ resolve, reject });
-}
+function refreshAccessToken(): Promise<string> {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
 
-function onTokenRefreshed(token: string) {
-  refreshSubscribers.forEach(({ resolve }) => resolve(token));
-  refreshSubscribers = [];
-}
+  refreshPromise = (async () => {
+    const refreshToken = useAuthStore.getState().refreshToken;
 
-function onRefreshFailed(error: Error) {
-  refreshSubscribers.forEach(({ reject }) => reject(error));
-  refreshSubscribers = [];
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+      refreshToken,
+    });
+
+    const { accessToken, refreshToken: newRefreshToken } = response.data;
+    useAuthStore.getState().setTokens(accessToken, newRefreshToken);
+
+    return accessToken as string;
+  })().finally(() => {
+    refreshPromise = null;
+  });
+
+  return refreshPromise;
 }
 
 // Request interceptor: Add auth token to requests
@@ -66,54 +80,14 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // If already refreshing, wait for the refresh to complete
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          subscribeTokenRefresh(
-            (token: string) => {
-              if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${token}`;
-              }
-              resolve(apiClient(originalRequest));
-            },
-            (error: Error) => {
-              reject(error);
-            }
-          );
-        });
-      }
-
-      isRefreshing = true;
-
       try {
-        const refreshToken = useAuthStore.getState().refreshToken;
+        const accessToken = await refreshAccessToken();
 
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
-        // Call refresh token endpoint
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refreshToken,
-        });
-
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-
-        // Update tokens in store
-        useAuthStore.getState().setTokens(accessToken, newRefreshToken);
-
-        isRefreshing = false;
-        onTokenRefreshed(accessToken);
-
-        // Retry original request with new token
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         }
         return apiClient(originalRequest);
       } catch (refreshError) {
-        isRefreshing = false;
-        onRefreshFailed(refreshError as Error);
-
         // If refresh fails, clear auth and redirect to login
         useAuthStore.getState().clearAuth();
         navigateTo('/login');
