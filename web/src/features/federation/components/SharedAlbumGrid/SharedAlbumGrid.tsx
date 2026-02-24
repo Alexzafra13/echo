@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Download, Check, Loader2, Users, Plus, AlertTriangle, X } from 'lucide-react';
 import { AxiosError } from 'axios';
 import type { SharedAlbum } from '../../types';
-import { useStartImport, useConnectedServers } from '../../hooks/useSharedLibraries';
+import { useStartImport, useConnectedServers, useImports } from '../../hooks/useSharedLibraries';
 import { logger } from '@shared/utils/logger';
 import styles from './SharedAlbumGrid.module.css';
 
@@ -29,7 +29,7 @@ export function SharedAlbumGrid({
   title,
   albums,
   showViewAll = false,
-  viewAllPath = '/shared-libraries',
+  viewAllPath = '/albums?source=shared',
   mobileScroll = false,
   mobileLayout = 'scroll',
   showImportButton = true,
@@ -43,6 +43,17 @@ export function SharedAlbumGrid({
   const [importError, setImportError] = useState<{ message: string; serverName?: string } | null>(null);
   const [isDismissing, setIsDismissing] = useState(false);
   const { data: servers } = useConnectedServers();
+  const { data: existingImports } = useImports();
+
+  // Build set of already-imported album keys from backend data
+  const alreadyImportedKeys = useMemo(() => {
+    if (!existingImports) return new Set<string>();
+    return new Set(
+      existingImports
+        .filter((imp) => imp.status === 'completed' || imp.status === 'downloading' || imp.status === 'pending')
+        .map((imp) => `${imp.connectedServerId}-${imp.remoteAlbumId}`)
+    );
+  }, [existingImports]);
 
   // Function to dismiss error with animation
   const dismissError = () => {
@@ -200,7 +211,7 @@ export function SharedAlbumGrid({
         {albums.map((album) => {
           const albumKey = `${album.serverId}-${album.id}`;
           const isImporting = importingAlbums.has(albumKey);
-          const isImported = importedAlbums.has(albumKey);
+          const isImported = importedAlbums.has(albumKey) || alreadyImportedKeys.has(albumKey);
 
           return (
             <div

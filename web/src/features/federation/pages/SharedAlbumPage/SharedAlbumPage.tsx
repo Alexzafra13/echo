@@ -4,7 +4,7 @@ import { Download, Check, Loader2, Server, Play, Pause, Shuffle, MoreHorizontal,
 import { AxiosError } from 'axios';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
-import { useRemoteAlbum, useConnectedServers, useStartImport } from '../../hooks';
+import { useRemoteAlbum, useConnectedServers, useStartImport, useImports } from '../../hooks';
 import { Button, Portal } from '@shared/components/ui';
 import { handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer } from '@features/player/context/PlayerContext';
@@ -24,7 +24,7 @@ export default function SharedAlbumPage() {
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const imageLightboxModal = useModal();
   const [isImporting, setIsImporting] = useState(false);
-  const [isImported, setIsImported] = useState(false);
+  const [isImportedLocal, setIsImportedLocal] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
 
   const { data: album, isLoading, error } = useRemoteAlbum(serverId, albumId);
@@ -32,6 +32,13 @@ export default function SharedAlbumPage() {
   const dominantColor = useDominantColor(album?.coverUrl);
   const { data: servers } = useConnectedServers();
   const startImport = useStartImport();
+  const { data: existingImports } = useImports();
+
+  // Check if this album was already imported (from backend or local optimistic state)
+  const isImported = isImportedLocal || (existingImports?.some(
+    (imp) => imp.remoteAlbumId === albumId && imp.connectedServerId === serverId
+      && (imp.status === 'completed' || imp.status === 'downloading' || imp.status === 'pending')
+  ) ?? false);
   const { playQueue, currentTrack, isPlaying, play, pause, setShuffle } = usePlayer();
 
   const server = servers?.find(s => s.id === serverId);
@@ -174,7 +181,7 @@ export default function SharedAlbumPage() {
     setIsImporting(true);
     try {
       await startImport.mutateAsync({ serverId, remoteAlbumId: albumId });
-      setIsImported(true);
+      setIsImportedLocal(true);
     } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Failed to start import:', err);
