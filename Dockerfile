@@ -4,6 +4,10 @@
 # ============================================
 # Single container with Backend + Frontend
 # Using BuildKit cache for faster rebuilds
+#
+# Platforms: linux/amd64, linux/arm64
+# Compatible: Linux, Raspberry Pi 3/4/5,
+#             Synology NAS (DSM 7.2+), macOS, Windows
 # ============================================
 
 # ----------------------------------------

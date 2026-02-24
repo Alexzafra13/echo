@@ -13,6 +13,12 @@
 #   mkdir echo && cd echo
 #   curl -O https://raw.githubusercontent.com/Alexzafra13/echo/main/docker-compose.yml
 #
+# PLATAFORMAS SOPORTADAS:
+#   - Linux (x86_64, ARM64)
+#   - Raspberry Pi 3/4/5 (ARM64, mínimo 2GB RAM)
+#   - Synology NAS (DSM 7.2+ Container Manager)
+#   - Windows / macOS (Docker Desktop)
+#
 # =============================================
 
 services:
@@ -32,10 +38,11 @@ services:
       # El :ro significa solo lectura (recomendado)
       #
       # EJEMPLOS:
-      # - /home/juan/Musica:/music:ro
-      # - /mnt/nas/canciones:/nas:ro
-      # - /media/disco-usb:/usb:ro
-      # - "D:/Mi Musica:/music:ro"  # Windows
+      # - /home/juan/Musica:/music:ro           # Linux
+      # - /volume1/music:/music:ro              # Synology NAS
+      # - /volume1/Media/Music:/media-music:ro  # Synology NAS
+      # - /media/disco-usb:/usb:ro              # Disco USB
+      # - "D:/Mi Musica:/music:ro"              # Windows
       #
       # Por defecto se montan /mnt y /media:
       - /mnt:/mnt:ro
