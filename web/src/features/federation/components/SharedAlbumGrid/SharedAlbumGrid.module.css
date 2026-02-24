@@ -58,7 +58,7 @@
 
 .sharedAlbumGrid__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
   padding: 0 20px;
 }
@@ -220,7 +220,7 @@
 /* Tablet */
 @media (max-width: 1200px) {
   .sharedAlbumGrid__grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 16px;
   }
 

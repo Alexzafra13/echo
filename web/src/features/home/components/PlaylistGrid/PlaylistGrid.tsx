@@ -65,7 +65,7 @@ export function PlaylistGrid({
                 coverColor={playlist.coverColor}
                 coverImageUrl={playlist.coverImageUrl}
                 artistName={playlist.metadata.artistName}
-                size="medium"
+                size="responsive"
               />
             </div>
             <h3 className={styles.playlistCard__name}>{playlist.name}</h3>

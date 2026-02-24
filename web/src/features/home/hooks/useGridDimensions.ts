@@ -19,8 +19,8 @@ interface GridDimensions {
  * que caben en el viewport basándose en el tamaño de ventana y breakpoints CSS.
  *
  * Breakpoints sincronizados con AlbumGrid.module.css:
- * - Desktop (>1200px): minWidth 200px, gap 20px
- * - Tablet (768-1200px): minWidth 180px, gap 16px
+ * - Desktop (>1200px): minWidth 220px, gap 20px
+ * - Tablet (768-1200px): minWidth 200px, gap 16px
  * - Mobile (480-768px): minWidth 140px, gap 12px
  * - Small Mobile (<480px): 2 columnas fijas, gap 10px
  */
@@ -109,12 +109,12 @@ function getBreakpointConfig(
 ) {
   const configs = {
     desktop: {
-      minItemWidth: 200,
+      minItemWidth: 220,
       gap: 20,
       padding: customPadding ?? 40, // 20px cada lado
     },
     tablet: {
-      minItemWidth: 180,
+      minItemWidth: 200,
       gap: 16,
       padding: customPadding ?? 40,
     },
