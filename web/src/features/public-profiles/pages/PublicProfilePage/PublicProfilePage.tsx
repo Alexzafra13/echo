@@ -1,4 +1,3 @@
-import { CSSProperties } from 'react';
 import { useParams } from 'wouter';
 import { Lock, User as UserIcon, TrendingUp } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
@@ -11,6 +10,7 @@ import {
   useRemoveFriendship,
 } from '@features/social/hooks';
 import { useQueryClient } from '@tanstack/react-query';
+import { useDominantColor } from '@shared/hooks';
 import { Avatar } from './Avatar';
 import { ListeningNowBadge } from './ListeningNowBadge';
 import { FriendButton } from './FriendButton';
@@ -18,16 +18,7 @@ import { ArtistCard } from './ArtistCard';
 import { AlbumCard } from './AlbumCard';
 import { TrackItem, formatPlayCount } from './TrackItem';
 import { PlaylistCard } from './PlaylistCard';
-import { useImageColor } from './useImageColor';
 import styles from './PublicProfilePage.module.css';
-
-// =============================================================================
-// Types
-// =============================================================================
-
-interface HeroColorStyle extends CSSProperties {
-  '--hero-color': string;
-}
 
 // =============================================================================
 // Main Component
@@ -72,8 +63,8 @@ export function PublicProfilePage() {
     }
   };
 
-  // Extract hero color from user avatar (or fallback to consistent color based on userId)
-  const heroColor = useImageColor(profile?.user.avatarUrl, userId);
+  // Extract dominant color from user avatar for hero gradient
+  const dominantColor = useDominantColor(profile?.user.avatarUrl);
 
   // Loading state
   if (isLoading) {
@@ -125,20 +116,18 @@ export function PublicProfilePage() {
           <div className={styles.publicProfilePage__content}>
             <div
               className={styles.publicProfilePage__hero}
-              style={{ '--hero-color': heroColor } as HeroColorStyle}
+              style={{
+                background: `linear-gradient(180deg,
+                  rgba(${dominantColor}, 0.5) 0%,
+                  rgba(${dominantColor}, 0.3) 40%,
+                  transparent 100%)`,
+              }}
             >
-              <div className={styles.publicProfilePage__heroGradient} />
               <div className={styles.publicProfilePage__heroContent}>
-                <Avatar
-                  avatarUrl={user.avatarUrl}
-                  name={user.name}
-                  username={user.username}
-                />
+                <Avatar avatarUrl={user.avatarUrl} name={user.name} username={user.username} />
                 <div className={styles.publicProfilePage__heroInfo}>
                   <span className={styles.publicProfilePage__profileLabel}>Perfil</span>
-                  <h1 className={styles.publicProfilePage__name}>
-                    {user.name || user.username}
-                  </h1>
+                  <h1 className={styles.publicProfilePage__name}>{user.name || user.username}</h1>
                 </div>
               </div>
             </div>
@@ -186,20 +175,18 @@ export function PublicProfilePage() {
           {/* Hero Section */}
           <div
             className={styles.publicProfilePage__hero}
-            style={{ '--hero-color': heroColor } as HeroColorStyle}
+            style={{
+              background: `linear-gradient(180deg,
+                rgba(${dominantColor}, 0.5) 0%,
+                rgba(${dominantColor}, 0.3) 40%,
+                transparent 100%)`,
+            }}
           >
-            <div className={styles.publicProfilePage__heroGradient} />
             <div className={styles.publicProfilePage__heroContent}>
-              <Avatar
-                avatarUrl={user.avatarUrl}
-                name={user.name}
-                username={user.username}
-              />
+              <Avatar avatarUrl={user.avatarUrl} name={user.name} username={user.username} />
               <div className={styles.publicProfilePage__heroInfo}>
                 <span className={styles.publicProfilePage__profileLabel}>Perfil</span>
-                <h1 className={styles.publicProfilePage__name}>
-                  {user.name || user.username}
-                </h1>
+                <h1 className={styles.publicProfilePage__name}>{user.name || user.username}</h1>
 
                 {/* Meta info */}
                 <div className={styles.publicProfilePage__meta}>
@@ -221,9 +208,7 @@ export function PublicProfilePage() {
                 </div>
 
                 {/* Bio */}
-                {user.bio && (
-                  <p className={styles.publicProfilePage__bio}>{user.bio}</p>
-                )}
+                {user.bio && <p className={styles.publicProfilePage__bio}>{user.bio}</p>}
               </div>
 
               {/* Listening Now - positioned to the right */}
@@ -284,9 +269,7 @@ export function PublicProfilePage() {
             {settings.showTopAlbums && topAlbums && topAlbums.length > 0 && (
               <section className={styles.publicProfilePage__section}>
                 <div className={styles.publicProfilePage__sectionHeader}>
-                  <h2 className={styles.publicProfilePage__sectionTitle}>
-                    Álbumes más escuchados
-                  </h2>
+                  <h2 className={styles.publicProfilePage__sectionTitle}>Álbumes más escuchados</h2>
                 </div>
                 <div className={styles.publicProfilePage__albumsGrid}>
                   {topAlbums.map((album) => (
@@ -300,9 +283,7 @@ export function PublicProfilePage() {
             {settings.showPlaylists && playlists && playlists.length > 0 && (
               <section className={styles.publicProfilePage__section}>
                 <div className={styles.publicProfilePage__sectionHeader}>
-                  <h2 className={styles.publicProfilePage__sectionTitle}>
-                    Playlists públicas
-                  </h2>
+                  <h2 className={styles.publicProfilePage__sectionTitle}>Playlists públicas</h2>
                 </div>
                 <div className={styles.publicProfilePage__playlistGrid}>
                   {playlists.map((playlist) => (
