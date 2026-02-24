@@ -1,4 +1,3 @@
-import ffmpegStatic from 'ffmpeg-static';
 import * as fs from 'fs';
 
 /**
@@ -20,21 +19,31 @@ function ensureExecutable(filePath: string): boolean {
 }
 
 /**
- * Get the path to the FFmpeg binary
- * Uses ffmpeg-static if available and executable, otherwise falls back to system ffmpeg
+ * Get the path to the FFmpeg binary.
+ * In production (Docker), uses the system ffmpeg installed via apk.
+ * In development, tries ffmpeg-static npm package as fallback.
  */
 export function getFfmpegPath(): string {
-  if (ffmpegStatic && typeof ffmpegStatic === 'string' && fs.existsSync(ffmpegStatic)) {
-    if (ensureExecutable(ffmpegStatic)) return ffmpegStatic;
+  // Try optional npm package (useful for local dev without system ffmpeg)
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+    const ffmpegStatic = require('ffmpeg-static');
+    if (ffmpegStatic && typeof ffmpegStatic === 'string' && fs.existsSync(ffmpegStatic)) {
+      if (ensureExecutable(ffmpegStatic)) return ffmpegStatic;
+    }
+  } catch {
+    // Package not installed (production Docker image), fall through to system binary
   }
   return 'ffmpeg';
 }
 
 /**
- * Get the path to the FFprobe binary
- * Uses @ffprobe-installer/ffprobe if available and executable, otherwise falls back to system ffprobe
+ * Get the path to the FFprobe binary.
+ * In production (Docker), uses the system ffprobe installed via apk.
+ * In development, tries @ffprobe-installer/ffprobe npm package as fallback.
  */
 export function getFfprobePath(): string {
+  // Try optional npm package (useful for local dev without system ffprobe)
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
@@ -42,7 +51,7 @@ export function getFfprobePath(): string {
       if (ensureExecutable(ffprobeInstaller.path)) return ffprobeInstaller.path;
     }
   } catch {
-    // Package not available, fall through
+    // Package not installed (production Docker image), fall through to system binary
   }
   return 'ffprobe';
 }

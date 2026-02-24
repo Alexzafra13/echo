@@ -47,9 +47,6 @@ importers:
       '@fastify/static':
         specifier: ^8.3.0
         version: 8.3.0
-      '@ffprobe-installer/ffprobe':
-        specifier: ^2.1.2
-        version: 2.1.2
       '@nestjs/bullmq':
         specifier: ^11.0.4
         version: 11.0.4(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8)(bullmq@5.62.0)
@@ -119,9 +116,6 @@ importers:
       fastify:
         specifier: '>=5.7.3'
         version: 5.7.4
-      ffmpeg-static:
-        specifier: 5.3.0
-        version: 5.3.0
       icecast-parser:
         specifier: ^4.0.2
         version: 4.0.2
@@ -249,6 +243,13 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+    optionalDependencies:
+      '@ffprobe-installer/ffprobe':
+        specifier: ^2.1.2
+        version: 2.1.2
+      ffmpeg-static:
+        specifier: 5.3.0
+        version: 5.3.0
 
   web:
     dependencies:
@@ -8563,6 +8564,7 @@ snapshots:
       concat-stream: 2.0.0
       http-response-object: 3.0.2
       parse-cache-control: 1.0.1
+    optional: true
 
   '@drizzle-team/brocli@0.10.2': {}
 
@@ -8921,6 +8923,7 @@ snapshots:
       '@ffprobe-installer/linux-x64': 5.2.0
       '@ffprobe-installer/win32-ia32': 5.1.0
       '@ffprobe-installer/win32-x64': 5.1.0
+    optional: true
 
   '@ffprobe-installer/linux-arm64@5.2.0':
     optional: true
@@ -10210,7 +10213,8 @@ snapshots:
     dependencies:
       '@types/node': 24.9.1
 
-  '@types/node@10.17.60': {}
+  '@types/node@10.17.60':
+    optional: true
 
   '@types/node@24.9.1':
     dependencies:
@@ -10578,6 +10582,7 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   agent-base@7.1.4: {}
 
@@ -11056,7 +11061,8 @@ snapshots:
 
   caniuse-lite@1.0.30001762: {}
 
-  caseless@0.12.0: {}
+  caseless@0.12.0:
+    optional: true
 
   chai@4.5.0:
     dependencies:
@@ -11267,6 +11273,7 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
       typedarray: 0.0.6
+    optional: true
 
   concurrently@9.2.1:
     dependencies:
@@ -11715,7 +11722,8 @@ snapshots:
 
   entities@6.0.1: {}
 
-  env-paths@2.2.1: {}
+  env-paths@2.2.1:
+    optional: true
 
   environment@1.1.0: {}
 
@@ -12252,6 +12260,7 @@ snapshots:
       progress: 2.0.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   figures@2.0.0:
     dependencies:
@@ -12648,6 +12657,7 @@ snapshots:
   http-response-object@3.0.2:
     dependencies:
       '@types/node': 10.17.60
+    optional: true
 
   http-status-codes@2.3.0:
     optional: true
@@ -12658,6 +12668,7 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   https-proxy-agent@7.0.6:
     dependencies:
@@ -15549,7 +15560,8 @@ snapshots:
     dependencies:
       is-typedarray: 1.0.0
 
-  typedarray@0.0.6: {}
+  typedarray@0.0.6:
+    optional: true
 
   typescript@5.8.3: {}
 
