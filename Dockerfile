@@ -53,11 +53,12 @@ WORKDIR /deps
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY api/package.json ./api/
 
-# Install production dependencies with cache + deploy
+# Install production dependencies WITHOUT optional deps (ffmpeg-static, @ffprobe-installer/ffprobe)
+# These are only needed for local dev; in Docker we use system ffmpeg from apk
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm --filter=echo-api deploy --prod --legacy /prod
+    pnpm --filter=echo-api deploy --prod --no-optional --legacy /prod
 
-# Clean up unnecessary files from node_modules (~20-30MB savings)
+# Clean up unnecessary files from node_modules
 RUN find /prod/node_modules -type f \( \
     -name "*.md" -o \
     -name "*.ts" -o \
@@ -109,9 +110,6 @@ WORKDIR /app
 
 # Copy production node_modules from deps stage
 COPY --from=deps --chown=echoapp:nodejs /prod/node_modules ./node_modules
-
-# Ensure ffmpeg/ffprobe binaries from npm packages have execute permissions
-RUN find ./node_modules -type f \( -name "ffmpeg" -o -name "ffprobe" \) -exec chmod +x {} + 2>/dev/null || true
 
 # Copy only migration SQL files (no TypeScript schemas needed at runtime)
 # This saves ~1MB and avoids shipping source code
