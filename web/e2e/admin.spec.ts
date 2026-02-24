@@ -46,7 +46,7 @@ test.describe('Panel de Administración', () => {
 
       // Click en Mantenimiento
       await page.getByRole('button', { name: /Mantenimiento/i }).click();
-      await expect(page.getByText('Almacenamiento')).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText('Almacenamiento', { exact: true })).toBeVisible({ timeout: 15000 });
     });
   });
 

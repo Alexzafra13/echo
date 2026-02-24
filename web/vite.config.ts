@@ -87,6 +87,14 @@ export default defineConfig({
       // via websocket.service.ts to avoid Vite proxy issues with Socket.IO
     },
   },
+  preview: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     // Enable source maps for production debugging (optional)
     sourcemap: false,
