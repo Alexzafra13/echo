@@ -31,7 +31,6 @@ import { IsString, IsNotEmpty } from 'class-validator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
-import { AdminGuard } from '@shared/guards/admin.guard';
 import { Public } from '@shared/decorators/public.decorator';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { User } from '@infrastructure/database/schema';
@@ -57,9 +56,6 @@ class StartImportDto {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class FederationImportController {
-  private static readonly MAX_SSE_CONNECTIONS_PER_USER = 3;
-  private readonly activeSSEConnections = new Map<string, number>();
-
   constructor(
     @InjectPinoLogger(FederationImportController.name)
     private readonly logger: PinoLogger,
@@ -71,7 +67,6 @@ export class FederationImportController {
   ) {}
 
   @Post()
-  @UseGuards(AdminGuard)
   @ApiOperation({
     summary: 'Iniciar importación de álbum',
     description: 'Inicia la importación de un álbum desde un servidor federado conectado. ' +
@@ -82,8 +77,8 @@ export class FederationImportController {
     status: 201,
     description: 'Importación iniciada',
   })
-  @ApiResponse({ status: 403, description: 'Solo administradores pueden importar álbumes' })
   @ApiResponse({ status: 404, description: 'Servidor no encontrado' })
+  @ApiResponse({ status: 403, description: 'No tienes permiso para descargar de este servidor' })
   @ApiResponse({ status: 502, description: 'Error al conectar con el servidor remoto' })
   async startImport(
     @CurrentUser() user: User,
@@ -170,7 +165,6 @@ export class FederationImportController {
   }
 
   @Delete(':id')
-  @UseGuards(AdminGuard)
   @ApiOperation({
     summary: 'Cancelar importación',
     description: 'Cancela una importación pendiente',
@@ -227,24 +221,7 @@ export class FederationImportController {
       });
     }
 
-    // Enforce per-user connection limit
-    const currentCount = this.activeSSEConnections.get(userId) || 0;
-    if (currentCount >= FederationImportController.MAX_SSE_CONNECTIONS_PER_USER) {
-      this.logger.warn(
-        { userId, currentCount },
-        'SSE connection rejected: max connections per user reached'
-      );
-      return new Observable((subscriber) => {
-        subscriber.next({
-          type: 'error',
-          data: { message: 'Too many active connections' },
-        } as MessageEvent);
-        subscriber.complete();
-      });
-    }
-
-    this.activeSSEConnections.set(userId, currentCount + 1);
-    this.logger.info({ userId, connections: currentCount + 1 }, 'SSE client connected for import progress');
+    this.logger.info({ userId }, 'SSE client connected for import progress');
 
     return new Observable((subscriber) => {
       // Send initial connected event
@@ -274,13 +251,7 @@ export class FederationImportController {
 
       // Cleanup on client disconnect
       request.raw.on('close', () => {
-        const count = this.activeSSEConnections.get(userId) || 1;
-        if (count <= 1) {
-          this.activeSSEConnections.delete(userId);
-        } else {
-          this.activeSSEConnections.set(userId, count - 1);
-        }
-        this.logger.info({ userId, connections: count - 1 }, 'SSE client disconnected from import progress');
+        this.logger.info({ userId }, 'SSE client disconnected from import progress');
         subscription.unsubscribe();
         clearInterval(keepaliveInterval);
         subscriber.complete();

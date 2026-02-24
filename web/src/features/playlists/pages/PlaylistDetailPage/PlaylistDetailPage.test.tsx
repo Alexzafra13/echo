@@ -120,6 +120,8 @@ vi.mock('@shared/hooks', () => ({
     open: vi.fn(),
     close: vi.fn(),
   }),
+  useDocumentTitle: vi.fn(),
+  useDominantColor: vi.fn(() => '100, 150, 200'),
 }));
 
 // Mock playlist components

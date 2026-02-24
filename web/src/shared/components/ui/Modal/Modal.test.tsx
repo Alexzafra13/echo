@@ -33,7 +33,7 @@ describe('Modal', () => {
     it('should render close button with aria-label', () => {
       render(<Modal {...defaultProps} />);
 
-      const closeButton = screen.getByLabelText('Cerrar modal');
+      const closeButton = screen.getByLabelText('Cerrar');
       expect(closeButton).toBeInTheDocument();
     });
 
@@ -42,7 +42,8 @@ describe('Modal', () => {
 
       const dialog = screen.getByRole('dialog');
       expect(dialog).toHaveAttribute('aria-modal', 'true');
-      expect(dialog).toHaveAttribute('aria-labelledby', 'modal-title');
+      // aria-labelledby uses a generated ID from useId()
+      expect(dialog).toHaveAttribute('aria-labelledby');
     });
   });
 
@@ -51,7 +52,7 @@ describe('Modal', () => {
       const onClose = vi.fn();
       render(<Modal {...defaultProps} onClose={onClose} />);
 
-      const closeButton = screen.getByLabelText('Cerrar modal');
+      const closeButton = screen.getByLabelText('Cerrar');
       fireEvent.click(closeButton);
 
       expect(onClose).toHaveBeenCalledTimes(1);

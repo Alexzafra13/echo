@@ -58,6 +58,8 @@ vi.mock('@shared/hooks', () => ({
     open: mockOpenModal,
     close: mockCloseModal,
   }),
+  useDocumentTitle: vi.fn(),
+  useDominantColor: vi.fn(() => '100, 150, 200'),
 }));
 
 // Mock auth store
@@ -680,12 +682,16 @@ describe('ProfilePage', () => {
   });
 
   describe('Dynamic background color', () => {
-    it('should extract dominant color from avatar', async () => {
-      render(<ProfilePage />);
+    it('should use dominant color from avatar via useDominantColor hook', () => {
+      const { container } = render(<ProfilePage />);
 
-      await waitFor(() => {
-        expect(mockExtractDominantColor).toHaveBeenCalled();
-      });
+      // The useDominantColor mock returns '100, 150, 200', which should be applied to the background
+      const contentEl = container.querySelector('[class*="profilePage__content"]');
+      expect(contentEl).toBeTruthy();
+      if (contentEl) {
+        const style = (contentEl as HTMLElement).getAttribute('style');
+        expect(style).toContain('100, 150, 200');
+      }
     });
   });
 });

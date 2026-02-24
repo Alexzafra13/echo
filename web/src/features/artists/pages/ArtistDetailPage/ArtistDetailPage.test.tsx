@@ -42,6 +42,7 @@ vi.mock('@shared/hooks', () => ({
   useAuth: vi.fn(),
   useArtistMetadataSync: vi.fn(),
   useAlbumMetadataSync: vi.fn(),
+  useDocumentTitle: vi.fn(),
   useModal: vi.fn(() => ({
     isOpen: false,
     data: null,

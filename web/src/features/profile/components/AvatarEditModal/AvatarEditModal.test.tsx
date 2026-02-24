@@ -162,7 +162,9 @@ describe('AvatarEditModal', () => {
       // Mock FileReader
       const mockFileReader = {
         readAsDataURL: vi.fn(),
+        abort: vi.fn(),
         result: 'data:image/jpeg;base64,test',
+        readyState: 0,
         onloadend: null as (() => void) | null,
       };
       vi.spyOn(global, 'FileReader').mockImplementation(
@@ -190,7 +192,9 @@ describe('AvatarEditModal', () => {
 
       const mockFileReader = {
         readAsDataURL: vi.fn(),
+        abort: vi.fn(),
         result: 'data:image/jpeg;base64,test',
+        readyState: 0,
         onloadend: null as (() => void) | null,
       };
       vi.spyOn(global, 'FileReader').mockImplementation(
@@ -230,7 +234,9 @@ describe('AvatarEditModal', () => {
 
       const mockFileReader = {
         readAsDataURL: vi.fn(),
+        abort: vi.fn(),
         result: 'data:image/jpeg;base64,test',
+        readyState: 0,
         onloadend: null as (() => void) | null,
       };
       vi.spyOn(global, 'FileReader').mockImplementation(
