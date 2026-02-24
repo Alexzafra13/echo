@@ -54,7 +54,7 @@
 /* Login form card */
 .formCard {
   width: 100%;
-  background: rgba(20, 30, 48, 0.95);
+  background: rgb(20, 30, 48);
   backdrop-filter: blur(10px);
   border-radius: 10px;
   padding: 50px 60px 40px;

@@ -82,7 +82,8 @@
   left: var(--space-3);
   font-size: var(--text-sm);
   background: var(--input-label-bg, var(--bg-elevated));
-  padding: 0 var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: 4px;
 }
 
 .input:focus ~ .label .labelChar {
@@ -233,7 +234,8 @@
   left: var(--space-3);
   font-size: var(--text-sm);
   background: var(--input-label-bg, var(--bg-elevated));
-  padding: 0 var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: 4px;
 }
 
 .hasValue .label .labelChar {

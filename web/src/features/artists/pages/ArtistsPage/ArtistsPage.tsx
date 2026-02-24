@@ -62,7 +62,7 @@ export default function ArtistsPage() {
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollContainerRef.current,
-    estimateSize: (index) => (rows[index].type === 'letter' ? 56 : 64),
+    estimateSize: (index) => (rows[index].type === 'letter' ? 56 : 80),
     overscan: 15,
   });
 
@@ -138,6 +138,7 @@ export default function ArtistsPage() {
                           left: 0,
                           width: '100%',
                           transform: `translateY(${virtualRow.start}px)`,
+                          paddingBottom: row.type === 'artist' ? '8px' : undefined,
                         }}
                       >
                         {row.type === 'letter' ? (
