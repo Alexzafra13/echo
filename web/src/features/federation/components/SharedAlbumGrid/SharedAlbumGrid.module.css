@@ -167,6 +167,17 @@
   background: var(--color-success, #22c55e);
 }
 
+.sharedAlbumGrid__importButton--inProgress {
+  opacity: 1;
+  transform: scale(1);
+  background: rgba(239, 68, 68, 0.85);
+  color: white;
+}
+
+.sharedAlbumGrid__importButton--inProgress:hover {
+  background: rgba(239, 68, 68, 1);
+}
+
 /* Spinner animation */
 .sharedAlbumGrid__spinner {
   animation: spin 1s linear infinite;

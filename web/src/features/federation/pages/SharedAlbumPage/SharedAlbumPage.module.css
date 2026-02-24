@@ -259,6 +259,14 @@
   cursor: not-allowed;
 }
 
+.sharedAlbumPage__optionsOption--danger {
+  color: #ef4444;
+}
+
+.sharedAlbumPage__optionsOption--danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+}
+
 /* Track Section */
 .sharedAlbumPage__trackSection {
   padding: 0 32px;

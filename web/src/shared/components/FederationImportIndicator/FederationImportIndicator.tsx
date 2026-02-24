@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import { Download, CheckCircle, XCircle } from 'lucide-react';
+import { Download, CheckCircle, XCircle, X } from 'lucide-react';
 import { useImportProgressSSE } from '@features/federation/hooks/useImportProgressSSE';
+import { useCancelImport } from '@features/federation/hooks/useSharedLibraries';
+import { useAuthStore } from '@shared/store/authStore';
 import styles from './FederationImportIndicator.module.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export function FederationImportIndicator() {
   const { activeImports, hasActiveImports } = useImportProgressSSE();
+  const cancelImport = useCancelImport();
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.isAdmin === true;
   const [imageError, setImageError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -38,7 +43,7 @@ export function FederationImportIndicator() {
   const currentImport = activeImports[0] || previousImportRef.current;
   if (!currentImport) return null;
 
-  const { albumName, artistName, status, progress, currentTrack, totalTracks, serverId, remoteAlbumId } =
+  const { importId, albumName, artistName, status, progress, currentTrack, totalTracks, serverId, remoteAlbumId } =
     currentImport;
 
   const coverUrl = serverId && remoteAlbumId
@@ -57,11 +62,19 @@ export function FederationImportIndicator() {
     }
   };
 
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (importId && status === 'downloading') {
+      cancelImport.mutate(importId);
+    }
+  };
+
   // Truncate album name for display
   const displayName = albumName.length > 18 ? `${albumName.slice(0, 16)}...` : albumName;
 
   // Show cover or icon
   const hasCover = coverUrl && !imageError;
+  const canCancel = isAdmin && status === 'downloading';
 
   return (
     <div
@@ -126,6 +139,18 @@ export function FederationImportIndicator() {
               : `${currentTrack}/${totalTracks}`}
         </span>
       </div>
+
+      {/* Cancel button */}
+      {canCancel && (
+        <button
+          className={styles.cancelButton}
+          onClick={handleCancel}
+          title="Cancelar importación"
+          aria-label="Cancelar importación"
+        >
+          <X size={12} />
+        </button>
+      )}
 
       {activeImports.length > 1 && (
         <span className={styles.badge}>+{activeImports.length - 1}</span>

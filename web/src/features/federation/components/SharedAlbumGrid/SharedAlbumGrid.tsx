@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { Download, Check, Loader2, Users, Plus, AlertTriangle, X } from 'lucide-react';
+import { Download, Check, Loader2, Users, Plus, AlertTriangle, X, Square } from 'lucide-react';
 import { AxiosError } from 'axios';
 import type { SharedAlbum } from '../../types';
-import { useStartImport, useConnectedServers, useImports } from '../../hooks/useSharedLibraries';
+import { useStartImport, useCancelImport, useConnectedServers, useImports } from '../../hooks/useSharedLibraries';
 import { useAuthStore } from '@shared/store/authStore';
 import { logger } from '@shared/utils/logger';
 import styles from './SharedAlbumGrid.module.css';
@@ -41,21 +41,29 @@ export function SharedAlbumGrid({
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.isAdmin === true;
   const startImport = useStartImport();
+  const cancelImport = useCancelImport();
   const [importingAlbums, setImportingAlbums] = useState<Set<string>>(new Set());
   const [importedAlbums, setImportedAlbums] = useState<Set<string>>(new Set());
+  const [cancellingAlbums, setCancellingAlbums] = useState<Set<string>>(new Set());
   const [importError, setImportError] = useState<{ message: string; serverName?: string } | null>(null);
   const [isDismissing, setIsDismissing] = useState(false);
   const { data: servers } = useConnectedServers();
   const { data: existingImports } = useImports();
 
-  // Build set of already-imported album keys from backend data
-  const alreadyImportedKeys = useMemo(() => {
-    if (!existingImports) return new Set<string>();
-    return new Set(
-      existingImports
-        .filter((imp) => imp.status === 'completed' || imp.status === 'downloading' || imp.status === 'pending')
-        .map((imp) => `${imp.connectedServerId}-${imp.remoteAlbumId}`)
-    );
+  // Build separate sets for completed vs in-progress imports
+  const { completedKeys, inProgressMap } = useMemo(() => {
+    const completed = new Set<string>();
+    const inProgress = new Map<string, string>(); // albumKey -> importId
+    if (!existingImports) return { completedKeys: completed, inProgressMap: inProgress };
+    for (const imp of existingImports) {
+      const key = `${imp.connectedServerId}-${imp.remoteAlbumId}`;
+      if (imp.status === 'completed') {
+        completed.add(key);
+      } else if (imp.status === 'downloading' || imp.status === 'pending') {
+        inProgress.set(key, imp.id);
+      }
+    }
+    return { completedKeys: completed, inProgressMap: inProgress };
   }, [existingImports]);
 
   // Function to dismiss error with animation
@@ -130,6 +138,30 @@ export function SharedAlbumGrid({
       setImportError({ message: errorMessage, serverName: album.serverName });
     } finally {
       setImportingAlbums((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(albumKey);
+        return newSet;
+      });
+    }
+  };
+
+  const handleCancelClick = async (e: React.MouseEvent, album: SharedAlbum) => {
+    e.stopPropagation();
+
+    const albumKey = `${album.serverId}-${album.id}`;
+    const importId = inProgressMap.get(albumKey);
+    if (!importId || cancellingAlbums.has(albumKey)) return;
+
+    setCancellingAlbums((prev) => new Set(prev).add(albumKey));
+    try {
+      await cancelImport.mutateAsync(importId);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        logger.error('Failed to cancel import:', error);
+      }
+      setImportError({ message: 'Error al cancelar la importación', serverName: album.serverName });
+    } finally {
+      setCancellingAlbums((prev) => {
         const newSet = new Set(prev);
         newSet.delete(albumKey);
         return newSet;
@@ -214,7 +246,9 @@ export function SharedAlbumGrid({
         {albums.map((album) => {
           const albumKey = `${album.serverId}-${album.id}`;
           const isImporting = importingAlbums.has(albumKey);
-          const isImported = importedAlbums.has(albumKey) || alreadyImportedKeys.has(albumKey);
+          const isCompleted = importedAlbums.has(albumKey) || completedKeys.has(albumKey);
+          const isInProgress = inProgressMap.has(albumKey);
+          const isCancelling = cancellingAlbums.has(albumKey);
 
           return (
             <div
@@ -249,17 +283,32 @@ export function SharedAlbumGrid({
                     {album.serverName}
                   </div>
                 )}
-                {showImportButton && isAdmin && (
+                {showImportButton && isAdmin && isInProgress && (
                   <button
-                    className={`${styles.sharedAlbumGrid__importButton} ${isImported ? styles['sharedAlbumGrid__importButton--success'] : ''}`}
+                    className={`${styles.sharedAlbumGrid__importButton} ${styles['sharedAlbumGrid__importButton--inProgress']}`}
+                    onClick={(e) => handleCancelClick(e, album)}
+                    disabled={isCancelling}
+                    title="Cancelar importación"
+                    aria-label={`Cancelar importación de ${album.name}`}
+                  >
+                    {isCancelling ? (
+                      <Loader2 size={16} className={styles.sharedAlbumGrid__spinner} />
+                    ) : (
+                      <Square size={12} fill="currentColor" />
+                    )}
+                  </button>
+                )}
+                {showImportButton && isAdmin && !isInProgress && (
+                  <button
+                    className={`${styles.sharedAlbumGrid__importButton} ${isCompleted ? styles['sharedAlbumGrid__importButton--success'] : ''}`}
                     onClick={(e) => handleImportClick(e, album)}
-                    disabled={isImporting || isImported}
-                    title={isImported ? 'Importado' : 'Importar a mi servidor'}
-                    aria-label={isImported ? `${album.name} importado` : `Importar ${album.name}`}
+                    disabled={isImporting || isCompleted}
+                    title={isCompleted ? 'Importado' : 'Importar a mi servidor'}
+                    aria-label={isCompleted ? `${album.name} importado` : `Importar ${album.name}`}
                   >
                     {isImporting ? (
                       <Loader2 size={16} className={styles.sharedAlbumGrid__spinner} />
-                    ) : isImported ? (
+                    ) : isCompleted ? (
                       <Check size={16} />
                     ) : (
                       <Download size={16} />
