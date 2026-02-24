@@ -14,6 +14,8 @@ vi.mock('../../hooks', () => ({
   useRemoteAlbum: vi.fn(),
   useConnectedServers: vi.fn(),
   useStartImport: vi.fn(),
+  useCancelImport: vi.fn(),
+  useImports: vi.fn(),
 }));
 
 // Mock player context
@@ -31,6 +33,13 @@ vi.mock('@shared/hooks', () => ({
     openWith: vi.fn(),
     close: vi.fn(),
   })),
+  useDocumentTitle: vi.fn(),
+  useDominantColor: vi.fn(() => '100, 150, 200'),
+}));
+
+// Mock auth store
+vi.mock('@shared/store/authStore', () => ({
+  useAuthStore: vi.fn((selector) => selector({ user: { id: 'user-1', isAdmin: true } })),
 }));
 
 // Mock components
@@ -106,6 +115,14 @@ describe('SharedAlbumPage', () => {
     vi.mocked(federationHooks.useStartImport).mockReturnValue({
       mutateAsync: vi.fn().mockResolvedValue({}),
     } as unknown as ReturnType<typeof federationHooks.useStartImport>);
+
+    vi.mocked(federationHooks.useCancelImport).mockReturnValue({
+      mutateAsync: vi.fn().mockResolvedValue({}),
+    } as unknown as ReturnType<typeof federationHooks.useCancelImport>);
+
+    vi.mocked(federationHooks.useImports).mockReturnValue({
+      data: [],
+    } as unknown as ReturnType<typeof federationHooks.useImports>);
 
     vi.mocked(playerContext.usePlayer).mockReturnValue({
       playQueue: vi.fn(),
