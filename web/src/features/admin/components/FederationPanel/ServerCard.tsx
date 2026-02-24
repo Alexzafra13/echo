@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import {
   Server,
   RefreshCw,
@@ -21,7 +22,7 @@ interface ServerCardProps {
   isSyncing: boolean;
 }
 
-export function ServerCard({ server, onSync, onDisconnect, isSyncing }: ServerCardProps) {
+export const ServerCard = memo(function ServerCard({ server, onSync, onDisconnect, isSyncing }: ServerCardProps) {
   return (
     <div className={styles.serverCard}>
       <div className={styles.serverHeader}>
@@ -102,4 +103,4 @@ export function ServerCard({ server, onSync, onDisconnect, isSyncing }: ServerCa
       </div>
     </div>
   );
-}
+});

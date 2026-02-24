@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Edit2, Trash2, Key, UserX, UserCheck } from 'lucide-react';
 import { User } from '../../api/users.api';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
@@ -13,7 +14,7 @@ interface UserRowProps {
   onPermanentDelete: (user: User) => void;
 }
 
-export function UserRow({
+export const UserRow = memo(function UserRow({
   user,
   onEdit,
   onResetPassword,
@@ -126,4 +127,4 @@ export function UserRow({
       </td>
     </tr>
   );
-}
+});

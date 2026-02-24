@@ -42,9 +42,10 @@ export function useWebSocketConnection(
 
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
-  const eventsRef = useRef(events);
-
-  eventsRef.current = events;
+  const onConnectRef = useRef(onConnect);
+  const onDisconnectRef = useRef(onDisconnect);
+  onConnectRef.current = onConnect;
+  onDisconnectRef.current = onDisconnect;
 
   const emit = useCallback(<T = unknown>(event: string, data?: T) => {
     if (socketRef.current?.connected) {
@@ -64,6 +65,7 @@ export function useWebSocketConnection(
     }
   }, []);
 
+  // Connect socket when namespace/token/enabled changes
   useEffect(() => {
     if (!enabled || !token) {
       socketRef.current = null;
@@ -77,38 +79,24 @@ export function useWebSocketConnection(
 
       const handleConnect = () => {
         setIsConnected(true);
-        onConnect?.();
+        onConnectRef.current?.();
       };
 
       const handleDisconnect = () => {
         setIsConnected(false);
-        onDisconnect?.();
+        onDisconnectRef.current?.();
       };
 
       socket.on('connect', handleConnect);
       socket.on('disconnect', handleDisconnect);
 
-      eventsRef.current.forEach(({ event, handler }) => {
-        socket.on(event, handler as (...args: unknown[]) => void);
-      });
-
-      // Si ya está conectado, ejecutar handleConnect
       if (socket.connected) {
         handleConnect();
       }
 
-      // Cleanup
       return () => {
         socket.off('connect', handleConnect);
         socket.off('disconnect', handleDisconnect);
-
-        // Remover eventos registrados
-        eventsRef.current.forEach(({ event, handler }) => {
-          socket.off(event, handler as (...args: unknown[]) => void);
-        });
-
-        // No desconectamos el socket para permitir múltiples hooks
-        // El WebSocketService maneja la conexión compartida
       };
     } catch (error) {
       if (import.meta.env.DEV) {
@@ -117,7 +105,28 @@ export function useWebSocketConnection(
       socketRef.current = null;
       setIsConnected(false);
     }
-  }, [namespace, token, enabled, onConnect, onDisconnect]);
+  }, [namespace, token, enabled]);
+
+  // Register/unregister event handlers separately so they can be updated
+  // without reconnecting the socket. Captures the exact handlers at registration
+  // time to ensure cleanup removes the same references that were added.
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket || events.length === 0) return;
+
+    // Capture the current handlers for deterministic cleanup
+    const registeredHandlers = events.map(({ event, handler }) => {
+      const castHandler = handler as (...args: unknown[]) => void;
+      socket.on(event, castHandler);
+      return { event, handler: castHandler };
+    });
+
+    return () => {
+      registeredHandlers.forEach(({ event, handler }) => {
+        socket.off(event, handler);
+      });
+    };
+  }, [events]);
 
   return {
     socket: socketRef.current,
