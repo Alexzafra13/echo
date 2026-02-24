@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components';
 import { HeaderWithSearch } from '@shared/components/layout/Header';
 import { ActionCardsRow } from '@shared/components/ActionCardsRow';
+import type { AutoPlaylist } from '@shared/services/recommendations.service';
 import { useFeaturedAlbum, useRecentAlbums, useTopPlayedAlbums, useGridDimensions, useAutoPlaylists, categorizeAutoPlaylists, randomSelect, useAlbumsRecentlyPlayed } from '../../hooks';
 import { useAutoRefreshOnScan, useDocumentTitle } from '@shared/hooks';
 import { useHomePreferences } from '@features/settings/hooks';
@@ -32,7 +33,7 @@ export default function HomePage() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Calculate how many albums we need for 2 rows dynamically
-  const { itemsPerPage: gridAlbums } = useGridDimensions({
+  const { itemsPerPage: gridAlbums, columns: gridColumns } = useGridDimensions({
     maxRows: 2,
     headerHeight: 450,
   });
@@ -213,12 +214,21 @@ export default function HomePage() {
     // Genre Mix: genre playlists only (same count as albums - 2 rows)
     const randomGenres = randomSelect(genrePlaylists, neededAlbums);
 
+    // Truncate to complete rows so items don't stretch unevenly in the last row
+    const truncateToFullRows = (items: AutoPlaylist[]) => {
+      if (isMobile || gridColumns <= 0) return items.slice(0, neededAlbums);
+      const available = Math.min(items.length, neededAlbums);
+      const fullRowItems = Math.floor(available / gridColumns) * gridColumns;
+      // Show at least 1 full row
+      return items.slice(0, fullRowItems || Math.min(items.length, gridColumns));
+    };
+
     return {
-      artistMixPlaylists: artistMix.slice(0, neededAlbums),
-      genreMixPlaylists: randomGenres.slice(0, neededAlbums),
+      artistMixPlaylists: truncateToFullRows(artistMix),
+      genreMixPlaylists: truncateToFullRows(randomGenres),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoPlaylists, neededAlbums, isMobile, refreshKey]);
+  }, [autoPlaylists, neededAlbums, isMobile, gridColumns, refreshKey]);
 
   // Auto-rotate hero section every 20 seconds
   useEffect(() => {
@@ -259,10 +269,18 @@ export default function HomePage() {
       ? { type: 'album', data: featuredAlbum }
       : null;
 
+  // Truncate album arrays to fill complete grid rows (avoid stretching in last incomplete row)
+  const truncateAlbumsToFullRows = (albums: Album[]) => {
+    if (isMobile || gridColumns <= 0) return albums.slice(0, neededAlbums);
+    const available = Math.min(albums.length, neededAlbums);
+    const fullRowItems = Math.floor(available / gridColumns) * gridColumns;
+    return albums.slice(0, fullRowItems || Math.min(albums.length, gridColumns));
+  };
+
   // Display albums based on calculated grid size (2 rows that fill the screen width)
-  const displayedRecentAlbums = recentAlbums?.slice(0, neededAlbums) || [];
-  const displayedTopPlayedAlbums = topPlayedAlbums?.slice(0, neededAlbums) || [];
-  const displayedRecentlyPlayedAlbums = recentlyPlayedAlbums?.data?.slice(0, neededAlbums) || [];
+  const displayedRecentAlbums = truncateAlbumsToFullRows(recentAlbums || []);
+  const displayedTopPlayedAlbums = truncateAlbumsToFullRows(topPlayedAlbums || []);
+  const displayedRecentlyPlayedAlbums = truncateAlbumsToFullRows(recentlyPlayedAlbums?.data || []);
 
   // Render a section by ID
   const renderSection = useCallback((sectionId: HomeSectionId): ReactNode => {
