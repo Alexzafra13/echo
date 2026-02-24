@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { Download, Check, Loader2, Server, Play, Pause, Shuffle, MoreHorizontal, AlertTriangle, X } from 'lucide-react';
+import { Download, Check, Loader2, Server, Play, Pause, Shuffle, MoreHorizontal, AlertTriangle, X, Square } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
-import { useRemoteAlbum, useConnectedServers, useStartImport, useImports } from '../../hooks';
+import { useRemoteAlbum, useConnectedServers, useStartImport, useCancelImport, useImports } from '../../hooks';
 import { Button, Portal } from '@shared/components/ui';
 import { handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer } from '@features/player/context/PlayerContext';
@@ -26,6 +26,7 @@ export default function SharedAlbumPage() {
   const imageLightboxModal = useModal();
   const [isImporting, setIsImporting] = useState(false);
   const [isImportedLocal, setIsImportedLocal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
 
   const authUser = useAuthStore((s) => s.user);
@@ -36,13 +37,16 @@ export default function SharedAlbumPage() {
   const dominantColor = useDominantColor(album?.coverUrl);
   const { data: servers } = useConnectedServers();
   const startImport = useStartImport();
+  const cancelImportMutation = useCancelImport();
   const { data: existingImports } = useImports();
 
-  // Check if this album was already imported (from backend or local optimistic state)
-  const isImported = isImportedLocal || (existingImports?.some(
+  // Find existing import entry for this album
+  const existingImport = existingImports?.find(
     (imp) => imp.remoteAlbumId === albumId && imp.connectedServerId === serverId
-      && (imp.status === 'completed' || imp.status === 'downloading' || imp.status === 'pending')
-  ) ?? false);
+  );
+  const isCompleted = isImportedLocal || existingImport?.status === 'completed';
+  const isInProgress = existingImport?.status === 'downloading' || existingImport?.status === 'pending';
+  const isImported = isCompleted || isInProgress;
   const { playQueue, currentTrack, isPlaying, play, pause, setShuffle } = usePlayer();
 
   const server = servers?.find(s => s.id === serverId);
@@ -212,6 +216,21 @@ export default function SharedAlbumPage() {
       setImportError(errorMessage);
     } finally {
       setIsImporting(false);
+    }
+  };
+
+  const handleCancelImport = async () => {
+    if (!existingImport?.id || isCancelling) return;
+    setIsCancelling(true);
+    try {
+      await cancelImportMutation.mutateAsync(existingImport.id);
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        logger.error('Failed to cancel import:', err);
+      }
+      setImportError('Error al cancelar la importación');
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -388,21 +407,35 @@ export default function SharedAlbumPage() {
                       }}
                       data-placement={menuPosition.placement}
                     >
-                      {isAdmin && (
+                      {isAdmin && isInProgress && (
+                        <button
+                          className={`${styles.sharedAlbumPage__optionsOption} ${styles['sharedAlbumPage__optionsOption--danger']}`}
+                          onClick={(e) => handleOptionClick(e, handleCancelImport)}
+                          disabled={isCancelling}
+                        >
+                          {isCancelling ? (
+                            <Loader2 size={16} className={styles.sharedAlbumPage__spinner} />
+                          ) : (
+                            <Square size={14} fill="currentColor" />
+                          )}
+                          <span>{isCancelling ? 'Cancelando...' : 'Cancelar importación'}</span>
+                        </button>
+                      )}
+                      {isAdmin && !isInProgress && (
                         <button
                           className={styles.sharedAlbumPage__optionsOption}
                           onClick={(e) => handleOptionClick(e, handleImport)}
-                          disabled={isImporting || isImported}
+                          disabled={isImporting || isCompleted}
                         >
                           {isImporting ? (
                             <Loader2 size={16} className={styles.sharedAlbumPage__spinner} />
-                          ) : isImported ? (
+                          ) : isCompleted ? (
                             <Check size={16} />
                           ) : (
                             <Download size={16} />
                           )}
                           <span>
-                            {isImported ? 'Álbum importado' : isImporting ? 'Importando...' : 'Importar a mi servidor'}
+                            {isCompleted ? 'Álbum importado' : isImporting ? 'Importando...' : 'Importar a mi servidor'}
                           </span>
                         </button>
                       )}

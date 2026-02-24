@@ -60,6 +60,8 @@ export interface ExportedTrackMetadata {
   comment: string | null;
   lyrics: string | null;
   bpm: number | null;
+  initialKey: string | null;
+  outroStart: number | null;
   rgAlbumGain: number | null;
   rgAlbumPeak: number | null;
   rgTrackGain: number | null;
@@ -152,7 +154,8 @@ export class AlbumImportService implements OnModuleInit {
 
     const existingAlbum = await this.checkForDuplicateAlbum(
       metadata.album.name,
-      metadata.album.artistName
+      metadata.album.artistName,
+      metadata.album.mbzAlbumId
     );
 
     if (existingAlbum) {
@@ -296,16 +299,31 @@ export class AlbumImportService implements OnModuleInit {
 
   private async checkForDuplicateAlbum(
     albumName: string,
-    artistName: string
+    artistName: string,
+    mbzAlbumId?: string | null
   ): Promise<{ id: string } | null> {
-    const [existing] = await this.drizzle.db
+    // Check by name + artist (case-insensitive)
+    const [byName] = await this.drizzle.db
       .select({ id: albums.id })
       .from(albums)
       .innerJoin(artists, eq(albums.albumArtistId, artists.id))
       .where(and(ilike(albums.name, albumName), ilike(artists.name, artistName)))
       .limit(1);
 
-    return existing ?? null;
+    if (byName) return byName;
+
+    // Also check by MusicBrainz album ID if available
+    if (mbzAlbumId) {
+      const [byMbz] = await this.drizzle.db
+        .select({ id: albums.id })
+        .from(albums)
+        .where(eq(albums.mbzAlbumId, mbzAlbumId))
+        .limit(1);
+
+      if (byMbz) return byMbz;
+    }
+
+    return null;
   }
 
   private async checkForPendingImport(
@@ -717,6 +735,8 @@ export class AlbumImportService implements OnModuleInit {
       comment: trackMeta.comment,
       lyrics: trackMeta.lyrics,
       bpm: trackMeta.bpm,
+      initialKey: trackMeta.initialKey,
+      outroStart: trackMeta.outroStart,
       path: trackPath,
       // Preservar ReplayGain/LUFS del servidor origen para evitar re-análisis
       rgAlbumGain: trackMeta.rgAlbumGain,

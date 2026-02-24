@@ -608,6 +608,9 @@ export class FederationPublicController {
         comment: tracks.comment,
         lyrics: tracks.lyrics,
         bpm: tracks.bpm,
+        // Audio analysis
+        initialKey: tracks.initialKey,
+        outroStart: tracks.outroStart,
         // ReplayGain data
         rgAlbumGain: tracks.rgAlbumGain,
         rgAlbumPeak: tracks.rgAlbumPeak,
@@ -672,6 +675,9 @@ export class FederationPublicController {
         comment: t.comment,
         lyrics: t.lyrics,
         bpm: t.bpm,
+        // Audio analysis
+        initialKey: t.initialKey,
+        outroStart: t.outroStart,
         // ReplayGain/LUFS - the key data for normalization
         rgAlbumGain: t.rgAlbumGain,
         rgAlbumPeak: t.rgAlbumPeak,
