@@ -50,42 +50,42 @@
 .success {
   background-color: var(--success-10);
   border: 1px solid var(--success-30);
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .success .dismissButton {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 /* Error variant */
 .error {
   background-color: var(--error-10);
   border: 1px solid var(--error-30);
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .error .dismissButton {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 /* Warning variant */
 .warning {
   background-color: var(--warning-10);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  color: #f59e0b;
+  border: 1px solid var(--warning-20);
+  color: var(--color-warning);
 }
 
 .warning .dismissButton {
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 /* Info variant */
 .info {
   background-color: var(--info-10);
   border: 1px solid var(--info-30);
-  color: #3b82f6;
+  color: var(--color-info);
 }
 
 .info .dismissButton {
-  color: #3b82f6;
+  color: var(--color-info);
 }

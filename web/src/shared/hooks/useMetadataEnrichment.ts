@@ -69,46 +69,62 @@ export function useMetadataEnrichment(_token: string | null, isAdmin: boolean) {
     const onError = () => setIsConnected(false);
 
     const handleStarted = (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
-      setProgress({
-        ...data,
-        current: 0,
-        step: 'Iniciando...',
-        percentage: 0,
-      });
+      try {
+        const data = JSON.parse(e.data);
+        setProgress({
+          ...data,
+          current: 0,
+          step: 'Iniciando...',
+          percentage: 0,
+        });
+      } catch {
+        logger.error('[MetadataEnrichment] Failed to parse started event');
+      }
     };
 
     const handleProgress = (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
-      setProgress(data);
+      try {
+        const data = JSON.parse(e.data);
+        setProgress(data);
+      } catch {
+        logger.error('[MetadataEnrichment] Failed to parse progress event');
+      }
     };
 
     const handleCompleted = (e: MessageEvent) => {
-      const data: EnrichmentCompletedData = JSON.parse(e.data);
-      setProgress(null);
+      try {
+        const data: EnrichmentCompletedData = JSON.parse(e.data);
+        setProgress(null);
 
-      if (data.bioUpdated || data.imagesUpdated || data.coverUpdated) {
-        setNotifications((prev) => [
-          ...prev,
-          {
-            id: `${data.entityId}-${Date.now()}`,
-            entityType: data.entityType,
-            entityId: data.entityId,
-            entityName: data.entityName,
-            bioUpdated: data.bioUpdated,
-            imagesUpdated: data.imagesUpdated,
-            coverUpdated: data.coverUpdated,
-            timestamp: data.timestamp,
-            read: false,
-          },
-        ]);
+        if (data.bioUpdated || data.imagesUpdated || data.coverUpdated) {
+          setNotifications((prev) => [
+            ...prev,
+            {
+              id: `${data.entityId}-${Date.now()}`,
+              entityType: data.entityType,
+              entityId: data.entityId,
+              entityName: data.entityName,
+              bioUpdated: data.bioUpdated,
+              imagesUpdated: data.imagesUpdated,
+              coverUpdated: data.coverUpdated,
+              timestamp: data.timestamp,
+              read: false,
+            },
+          ]);
+        }
+      } catch {
+        logger.error('[MetadataEnrichment] Failed to parse completed event');
       }
     };
 
     const handleError = (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
-      if (import.meta.env.DEV) {
-        logger.error(`Enrichment error: ${data.entityName} - ${data.error}`);
+      try {
+        const data = JSON.parse(e.data);
+        if (import.meta.env.DEV) {
+          logger.error(`Enrichment error: ${data.entityName} - ${data.error}`);
+        }
+      } catch {
+        logger.error('[MetadataEnrichment] Failed to parse error event');
       }
       setProgress(null);
     };

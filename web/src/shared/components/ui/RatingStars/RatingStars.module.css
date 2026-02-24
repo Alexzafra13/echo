@@ -11,7 +11,7 @@
   padding: 0;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #666;
+  color: var(--color-slate-500);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,48 +41,48 @@
 
 /* Default state - gray stars */
 .starButton svg {
-  fill: #666;
+  fill: var(--color-slate-500);
   transition: fill 0.3s ease;
 }
 
 /* Star 1 - Red (Malo) */
 .star1 svg,
 .starButton.star1 svg {
-  fill: #ef4444;
+  fill: var(--color-error);
 }
 
-.hover1 svg {
-  fill: #a23c3c !important;
+.starButton.hover1 svg {
+  fill: #a23c3c;
 }
 
 /* Star 2 - Orange (Regular) */
 .star2 svg,
 .starButton.star2 svg {
-  fill: #e06c2b;
+  fill: var(--color-primary-600);
 }
 
-.hover2 svg {
-  fill: #99542d !important;
+.starButton.hover2 svg {
+  fill: #99542d;
 }
 
 /* Star 3 - Yellow (Bueno) */
 .star3 svg,
 .starButton.star3 svg {
-  fill: #eab308;
+  fill: var(--color-warning);
 }
 
-.hover3 svg {
-  fill: #9f7e18 !important;
+.starButton.hover3 svg {
+  fill: #9f7e18;
 }
 
 /* Star 4 - Green (Muy bueno) */
 .star4 svg,
 .starButton.star4 svg {
-  fill: #19c37d;
+  fill: var(--color-success);
 }
 
-.hover4 svg {
-  fill: #22885e !important;
+.starButton.hover4 svg {
+  fill: var(--color-success-dark);
 }
 
 /* Star 5 - Purple (Excelente) */
@@ -91,11 +91,11 @@
   fill: #ab68ff;
 }
 
-.hover5 svg {
-  fill: #7951ac !important;
+.starButton.hover5 svg {
+  fill: #7951ac;
 }
 
 /* Hover effect for unfilled stars */
 .starButton:hover:not(:disabled):not(.star1):not(.star2):not(.star3):not(.star4):not(.star5) svg {
-  fill: #ff9e0b;
+  fill: var(--color-warning);
 }
