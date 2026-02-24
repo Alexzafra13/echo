@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import styles from '../MetadataConflictsPanel.module.css';
 
 interface ArtistSidebarItemProps {
@@ -10,7 +11,7 @@ interface ArtistSidebarItemProps {
 /**
  * Sidebar artist item component
  */
-export function ArtistSidebarItem({
+export const ArtistSidebarItem = memo(function ArtistSidebarItem({
   artistName,
   conflictCount,
   isSelected,
@@ -27,4 +28,4 @@ export function ArtistSidebarItem({
       </div>
     </button>
   );
-}
+});

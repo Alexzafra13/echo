@@ -18,9 +18,11 @@ export const useAuth = () => {
     onSuccess: (data) => {
       setAuth(data.user, data.accessToken, data.refreshToken);
 
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      queryClient.invalidateQueries({ queryKey: ['admin'] });
-      queryClient.invalidateQueries({ queryKey: ['playlists'] });
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['user'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin'] }),
+        queryClient.invalidateQueries({ queryKey: ['playlists'] }),
+      ]);
 
       if (data.mustChangePassword) {
         setLocation('/first-login');

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { Users, Search, X, UserPlus, CheckCircle, Share2, Globe, Music } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
@@ -29,12 +29,21 @@ import styles from './SocialPage.module.css';
 export default function SocialPage() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Debounce search query to avoid firing a request on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const { data: overview, isLoading } = useSocialOverview();
   const { data: searchResults, refetch: refetchSearch } = useSearchUsers(
-    searchQuery,
-    searchQuery.length >= 2
+    debouncedSearchQuery,
+    debouncedSearchQuery.length >= 2
   );
 
   useListeningNowSSE();
@@ -82,6 +91,11 @@ export default function SocialPage() {
     }
   };
 
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
+  }, []);
+
   const handleUserClick = (userId: string) => setLocation(`/user/${userId}`);
   const handleTargetClick = (url: string) => setLocation(url);
 
@@ -107,12 +121,12 @@ export default function SocialPage() {
           autoComplete="off"
         />
         {searchQuery && (
-          <button onClick={() => setSearchQuery('')} className={styles.headerSearch__clear}>
+          <button onClick={handleClearSearch} className={styles.headerSearch__clear}>
             <X size={16} />
           </button>
         )}
       </div>
-      {searchQuery.length >= 2 && (
+      {debouncedSearchQuery.length >= 2 && (
         <div className={styles.headerSearch__results}>
           {searchResults && searchResults.length > 0 ? (
             searchResults.map((user) => (
