@@ -130,6 +130,18 @@ export default function SharedAlbumPage() {
     }
   }, [isPlaying, play, pause]);
 
+  // Close lightbox on Escape key
+  useEffect(() => {
+    if (!imageLightboxModal.isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        imageLightboxModal.close();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [imageLightboxModal.isOpen, imageLightboxModal.close]);
+
   // Load cover dimensions when modal opens
   useEffect(() => {
     if (imageLightboxModal.isOpen && coverUrl) {

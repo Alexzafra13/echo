@@ -254,7 +254,9 @@ function App() {
           {/* Federation Album Route (Protected) */}
           <Route path="/federation/album/:serverId/:albumId">
             <ProtectedRoute>
-              <SharedAlbumPage />
+              <ErrorBoundary>
+                <SharedAlbumPage />
+              </ErrorBoundary>
             </ProtectedRoute>
           </Route>
 
