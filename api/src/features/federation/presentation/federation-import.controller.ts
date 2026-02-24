@@ -56,6 +56,9 @@ class StartImportDto {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class FederationImportController {
+  private static readonly MAX_SSE_CONNECTIONS_PER_USER = 3;
+  private readonly activeSSEConnections = new Map<string, number>();
+
   constructor(
     @InjectPinoLogger(FederationImportController.name)
     private readonly logger: PinoLogger,
@@ -221,7 +224,24 @@ export class FederationImportController {
       });
     }
 
-    this.logger.info({ userId }, 'SSE client connected for import progress');
+    // Enforce per-user connection limit
+    const currentCount = this.activeSSEConnections.get(userId) || 0;
+    if (currentCount >= FederationImportController.MAX_SSE_CONNECTIONS_PER_USER) {
+      this.logger.warn(
+        { userId, currentCount },
+        'SSE connection rejected: max connections per user reached'
+      );
+      return new Observable((subscriber) => {
+        subscriber.next({
+          type: 'error',
+          data: { message: 'Too many active connections' },
+        } as MessageEvent);
+        subscriber.complete();
+      });
+    }
+
+    this.activeSSEConnections.set(userId, currentCount + 1);
+    this.logger.info({ userId, connections: currentCount + 1 }, 'SSE client connected for import progress');
 
     return new Observable((subscriber) => {
       // Send initial connected event
@@ -251,7 +271,13 @@ export class FederationImportController {
 
       // Cleanup on client disconnect
       request.raw.on('close', () => {
-        this.logger.info({ userId }, 'SSE client disconnected from import progress');
+        const count = this.activeSSEConnections.get(userId) || 1;
+        if (count <= 1) {
+          this.activeSSEConnections.delete(userId);
+        } else {
+          this.activeSSEConnections.set(userId, count - 1);
+        }
+        this.logger.info({ userId, connections: count - 1 }, 'SSE client disconnected from import progress');
         subscription.unsubscribe();
         clearInterval(keepaliveInterval);
         subscriber.complete();

@@ -1,4 +1,4 @@
-import { Injectable, Inject, ConflictException } from '@nestjs/common';
+import { Injectable, Inject, ConflictException, OnModuleInit } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { eq, and, ilike } from 'drizzle-orm';
 import * as fs from 'fs/promises';
@@ -7,7 +7,7 @@ import * as path from 'path';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { albums, artists, tracks, settings } from '@infrastructure/database/schema';
+import { albums, artists, tracks, settings, albumImportQueue } from '@infrastructure/database/schema';
 import {
   IFederationRepository,
   FEDERATION_REPOSITORY,
@@ -92,7 +92,11 @@ export interface AlbumImportProgressEvent {
 }
 
 @Injectable()
-export class AlbumImportService {
+export class AlbumImportService implements OnModuleInit {
+  private static readonly MAX_CONCURRENT_IMPORTS = 2;
+  private activeImportCount = 0;
+  private readonly cancelledImports = new Set<string>();
+
   constructor(
     @InjectPinoLogger(AlbumImportService.name)
     private readonly logger: PinoLogger,
@@ -101,6 +105,43 @@ export class AlbumImportService {
     private readonly drizzle: DrizzleService,
     private readonly importProgressService: ImportProgressService
   ) {}
+
+  /**
+   * Called on module init to recover imports stuck in 'downloading' state
+   * (e.g., after a server crash/restart)
+   */
+  async onModuleInit(): Promise<void> {
+    await this.recoverStuckImports();
+  }
+
+  private async recoverStuckImports(): Promise<void> {
+    try {
+      const stuckImports = await this.drizzle.db
+        .select({ id: albumImportQueue.id })
+        .from(albumImportQueue)
+        .where(eq(albumImportQueue.status, 'downloading'));
+
+      if (stuckImports.length > 0) {
+        this.logger.warn(
+          { count: stuckImports.length },
+          'Found stuck imports in downloading state, marking as failed'
+        );
+
+        for (const imp of stuckImports) {
+          await this.repository.updateAlbumImportStatus(
+            imp.id,
+            'failed',
+            'Import interrupted by server restart'
+          );
+        }
+      }
+    } catch (error) {
+      this.logger.error(
+        { error: error instanceof Error ? error.message : error },
+        'Failed to recover stuck imports'
+      );
+    }
+  }
 
   async startImport(
     userId: string,
@@ -155,14 +196,72 @@ export class AlbumImportService {
       'Album import queued'
     );
 
-    this.processImport(importEntry.id, server, metadata).catch((error) => {
-      this.logger.error(
-        { importId: importEntry.id, error: error instanceof Error ? error.message : error },
-        'Album import failed'
+    // Check concurrency limit before starting background process
+    if (this.activeImportCount >= AlbumImportService.MAX_CONCURRENT_IMPORTS) {
+      this.logger.info(
+        { importId: importEntry.id, activeImports: this.activeImportCount },
+        'Import queued, waiting for slot (max concurrent imports reached)'
       );
-    });
+      // Import stays in 'pending' state; will be picked up when a slot opens
+      this.scheduleNextImport(server);
+    } else {
+      this.startBackgroundImport(importEntry.id, server, metadata);
+    }
 
     return importEntry;
+  }
+
+  private startBackgroundImport(
+    importId: string,
+    server: ConnectedServer,
+    metadata: ExportedAlbumMetadata
+  ): void {
+    this.activeImportCount++;
+    this.processImport(importId, server, metadata)
+      .catch((error) => {
+        this.logger.error(
+          { importId, error: error instanceof Error ? error.message : error },
+          'Album import failed'
+        );
+      })
+      .finally(() => {
+        this.activeImportCount--;
+        this.cancelledImports.delete(importId);
+        this.scheduleNextImport(server);
+      });
+  }
+
+  /**
+   * After an import finishes, check if there are pending imports to start
+   */
+  private async scheduleNextImport(lastServer: ConnectedServer): Promise<void> {
+    if (this.activeImportCount >= AlbumImportService.MAX_CONCURRENT_IMPORTS) {
+      return;
+    }
+
+    try {
+      const pendingImports = await this.repository.findPendingAlbumImports();
+      if (pendingImports.length === 0) return;
+
+      const nextImport = pendingImports[0];
+      const server = await this.repository.findConnectedServerById(nextImport.connectedServerId);
+      if (!server) {
+        await this.repository.updateAlbumImportStatus(
+          nextImport.id,
+          'failed',
+          'Connected server no longer exists'
+        );
+        return;
+      }
+
+      const metadata = await this.fetchAlbumMetadata(server, nextImport.remoteAlbumId);
+      this.startBackgroundImport(nextImport.id, server, metadata);
+    } catch (error) {
+      this.logger.error(
+        { error: error instanceof Error ? error.message : error },
+        'Failed to schedule next import'
+      );
+    }
   }
 
   async getImportStatus(importId: string): Promise<AlbumImportQueue | null> {
@@ -175,12 +274,24 @@ export class AlbumImportService {
 
   async cancelImport(importId: string): Promise<boolean> {
     const importEntry = await this.repository.findAlbumImportById(importId);
-    if (!importEntry || importEntry.status !== 'pending') {
+    if (!importEntry) {
       return false;
     }
 
-    await this.repository.updateAlbumImportStatus(importId, 'cancelled');
-    return true;
+    if (importEntry.status === 'pending') {
+      await this.repository.updateAlbumImportStatus(importId, 'cancelled');
+      return true;
+    }
+
+    if (importEntry.status === 'downloading') {
+      // Signal the download loop to stop
+      this.cancelledImports.add(importId);
+      await this.repository.updateAlbumImportStatus(importId, 'cancelled');
+      this.logger.info({ importId }, 'Download cancellation requested');
+      return true;
+    }
+
+    return false;
   }
 
   private async checkForDuplicateAlbum(
@@ -358,6 +469,13 @@ export class AlbumImportService {
       let downloadedSize = 0;
 
       for (const track of metadata.tracks) {
+        // Check if import was cancelled between tracks
+        if (this.cancelledImports.has(importId)) {
+          this.logger.info({ importId }, 'Import cancelled by user, stopping download');
+          this.emitProgress(importEntry, 'failed', downloadedTracks, downloadedSize, 'Cancelled by user');
+          return;
+        }
+
         const trackPath = await this.downloadTrack(
           server,
           track,
