@@ -7,6 +7,7 @@ import { logger } from '@shared/utils/logger';
 // Global EventSource instance to prevent multiple connections
 let globalEventSource: EventSource | null = null;
 let globalUserId: string | null = null;
+let globalToken: string | null = null;
 // Track cleanup timers for proper disposal
 const cleanupTimers = new Set<ReturnType<typeof setTimeout>>();
 
@@ -35,18 +36,19 @@ export function useImportProgressSSE() {
       return;
     }
 
-    // If already connected for this user, skip
-    if (globalEventSource && globalUserId === user.id && globalEventSource.readyState !== EventSource.CLOSED) {
+    // If already connected for this user with the same token, skip
+    if (globalEventSource && globalUserId === user.id && globalToken === token && globalEventSource.readyState !== EventSource.CLOSED) {
       return;
     }
 
-    // Close existing connection if user changed
+    // Close existing connection (user changed or token refreshed)
     if (globalEventSource) {
       globalEventSource.close();
       globalEventSource = null;
     }
 
     globalUserId = user.id;
+    globalToken = token;
 
     // Build SSE URL - pass JWT token for authentication (EventSource can't send headers)
     const baseUrl = import.meta.env.VITE_API_URL || '';
@@ -120,8 +122,10 @@ export function useImportProgressSSE() {
       globalEventSource.close();
       globalEventSource = null;
       globalUserId = null;
+      globalToken = null;
       cleanupTimers.forEach(clearTimeout);
       cleanupTimers.clear();
+      useImportProgressStore.getState().clearAll();
       setConnected(false);
     }
   }, [user?.id, setConnected]);

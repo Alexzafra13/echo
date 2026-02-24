@@ -4,10 +4,11 @@ import { Download, Check, Loader2, Server, Play, Pause, Shuffle, MoreHorizontal,
 import { AxiosError } from 'axios';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
-import { useRemoteAlbum, useConnectedServers, useStartImport } from '../../hooks';
+import { useRemoteAlbum, useConnectedServers, useStartImport, useImports } from '../../hooks';
 import { Button, Portal } from '@shared/components/ui';
 import { handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer } from '@features/player/context/PlayerContext';
+import { useAuthStore } from '@shared/store/authStore';
 import { useDropdownMenu, useModal, useDominantColor, useDocumentTitle } from '@shared/hooks';
 import { logger } from '@shared/utils/logger';
 import type { Track } from '@shared/types/track.types';
@@ -24,14 +25,24 @@ export default function SharedAlbumPage() {
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const imageLightboxModal = useModal();
   const [isImporting, setIsImporting] = useState(false);
-  const [isImported, setIsImported] = useState(false);
+  const [isImportedLocal, setIsImportedLocal] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+
+  const authUser = useAuthStore((s) => s.user);
+  const isAdmin = authUser?.isAdmin === true;
 
   const { data: album, isLoading, error } = useRemoteAlbum(serverId, albumId);
   useDocumentTitle(album?.name);
   const dominantColor = useDominantColor(album?.coverUrl);
   const { data: servers } = useConnectedServers();
   const startImport = useStartImport();
+  const { data: existingImports } = useImports();
+
+  // Check if this album was already imported (from backend or local optimistic state)
+  const isImported = isImportedLocal || (existingImports?.some(
+    (imp) => imp.remoteAlbumId === albumId && imp.connectedServerId === serverId
+      && (imp.status === 'completed' || imp.status === 'downloading' || imp.status === 'pending')
+  ) ?? false);
   const { playQueue, currentTrack, isPlaying, play, pause, setShuffle } = usePlayer();
 
   const server = servers?.find(s => s.id === serverId);
@@ -130,6 +141,18 @@ export default function SharedAlbumPage() {
     }
   }, [isPlaying, play, pause]);
 
+  // Close lightbox on Escape key
+  useEffect(() => {
+    if (!imageLightboxModal.isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        imageLightboxModal.close();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [imageLightboxModal.isOpen, imageLightboxModal.close]);
+
   // Load cover dimensions when modal opens
   useEffect(() => {
     if (imageLightboxModal.isOpen && coverUrl) {
@@ -162,7 +185,7 @@ export default function SharedAlbumPage() {
     setIsImporting(true);
     try {
       await startImport.mutateAsync({ serverId, remoteAlbumId: albumId });
-      setIsImported(true);
+      setIsImportedLocal(true);
     } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Failed to start import:', err);
@@ -365,22 +388,24 @@ export default function SharedAlbumPage() {
                       }}
                       data-placement={menuPosition.placement}
                     >
-                      <button
-                        className={styles.sharedAlbumPage__optionsOption}
-                        onClick={(e) => handleOptionClick(e, handleImport)}
-                        disabled={isImporting || isImported}
-                      >
-                        {isImporting ? (
-                          <Loader2 size={16} className={styles.sharedAlbumPage__spinner} />
-                        ) : isImported ? (
-                          <Check size={16} />
-                        ) : (
-                          <Download size={16} />
-                        )}
-                        <span>
-                          {isImported ? 'Álbum importado' : isImporting ? 'Importando...' : 'Importar a mi servidor'}
-                        </span>
-                      </button>
+                      {isAdmin && (
+                        <button
+                          className={styles.sharedAlbumPage__optionsOption}
+                          onClick={(e) => handleOptionClick(e, handleImport)}
+                          disabled={isImporting || isImported}
+                        >
+                          {isImporting ? (
+                            <Loader2 size={16} className={styles.sharedAlbumPage__spinner} />
+                          ) : isImported ? (
+                            <Check size={16} />
+                          ) : (
+                            <Download size={16} />
+                          )}
+                          <span>
+                            {isImported ? 'Álbum importado' : isImporting ? 'Importando...' : 'Importar a mi servidor'}
+                          </span>
+                        </button>
+                      )}
                     </div>
                   </Portal>
                 )}

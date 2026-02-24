@@ -67,6 +67,9 @@ export function FederationPanel() {
   const revokeAccessModal = useModal<AccessToken>();
   const deleteAccessModal = useModal<AccessToken>();
 
+  // Track which server is currently syncing (to avoid disabling all sync buttons)
+  const [syncingServerId, setSyncingServerId] = useState<string | null>(null);
+
   // Notifications
   const { notification, showSuccess, showError, dismiss } = useNotification();
 
@@ -127,11 +130,14 @@ export function FederationPanel() {
   };
 
   const handleSync = async (server: ConnectedServer) => {
+    setSyncingServerId(server.id);
     try {
       await syncMutation.mutateAsync(server.id);
       showSuccess(`Sincronizado con ${server.name}`);
     } catch {
       showError('Error al sincronizar');
+    } finally {
+      setSyncingServerId(null);
     }
   };
 
@@ -395,7 +401,7 @@ export function FederationPanel() {
                     server={server}
                     onSync={handleSync}
                     onDisconnect={(s) => disconnectModal.openWith(s)}
-                    isSyncing={syncMutation.isPending}
+                    isSyncing={syncingServerId === server.id}
                   />
                 ))}
               </div>
