@@ -299,6 +299,7 @@ export default function AlbumPage() {
                   albumTitle={album?.title}
                   albumArtist={album?.artist}
                   albumCoverUrl={coverUrl}
+                  dominantColor={dominantColor}
                 />
               </div>
             </div>

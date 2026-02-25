@@ -12,6 +12,7 @@ interface AlbumOptionsMenuProps {
   albumTitle?: string;
   albumArtist?: string;
   albumCoverUrl?: string;
+  dominantColor?: string;
 }
 
 export function AlbumOptionsMenu({
@@ -22,6 +23,7 @@ export function AlbumOptionsMenu({
   albumTitle,
   albumArtist,
   albumCoverUrl,
+  dominantColor,
 }: AlbumOptionsMenuProps) {
   const { user } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -200,8 +202,11 @@ export function AlbumOptionsMenu({
           <div
             ref={dragSheetRef}
             className={`${styles.albumOptionsMenu__sheet} ${sheetClosing ? styles['albumOptionsMenu__sheet--closing'] : ''}`}
+            style={{ '--dominant-color': dominantColor } as React.CSSProperties}
           >
-            <div className={styles.albumOptionsMenu__sheetHandle} />
+            <div className={styles.albumOptionsMenu__sheetHandleArea}>
+              <div className={styles.albumOptionsMenu__sheetHandle} />
+            </div>
 
             {/* Album info header */}
             <div className={styles.albumOptionsMenu__sheetHeader}>

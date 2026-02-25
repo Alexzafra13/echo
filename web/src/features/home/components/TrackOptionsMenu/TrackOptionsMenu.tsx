@@ -261,7 +261,9 @@ export function TrackOptionsMenu({
             className={`${styles.trackOptionsMenu__sheet} ${sheetClosing ? styles['trackOptionsMenu__sheet--closing'] : ''}`}
           >
             {/* Drag handle */}
-            <div className={styles.trackOptionsMenu__sheetHandle} />
+            <div className={styles.trackOptionsMenu__sheetHandleArea}>
+              <div className={styles.trackOptionsMenu__sheetHandle} />
+            </div>
 
             {/* Track info header */}
             <div className={styles.trackOptionsMenu__sheetHeader}>

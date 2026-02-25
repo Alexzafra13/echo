@@ -250,8 +250,16 @@
   height: 4px;
   background: var(--white-30);
   border-radius: 2px;
-  margin: 10px auto 0;
+  margin: 0 auto;
   flex-shrink: 0;
+  touch-action: none;
+}
+
+.albumOptionsMenu__sheetHandleArea {
+  padding: 10px 0 6px;
+  display: flex;
+  justify-content: center;
+  touch-action: none;
 }
 
 .albumOptionsMenu__sheetHeader {
@@ -259,6 +267,8 @@
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
+  background: linear-gradient(180deg, rgba(var(--dominant-color), 0.15), transparent);
+  border-bottom: 1px solid var(--white-08);
 }
 
 .albumOptionsMenu__sheetCover {
@@ -318,6 +328,7 @@
   padding: 4px 12px 16px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
 }
 
 /* Mobile sheet option - larger touch targets */
