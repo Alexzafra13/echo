@@ -12,7 +12,12 @@ import { useAlbumMetadataSync, useModal, useDominantColor, useDocumentTitle } fr
 import { Button } from '@shared/components/ui';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { toPlayerTracks } from '@shared/utils/track.utils';
-import { getArtistImageUrl, useAlbumCoverMetadata, getAlbumCoverUrl, useArtistImages } from '../../hooks';
+import {
+  getArtistImageUrl,
+  useAlbumCoverMetadata,
+  getAlbumCoverUrl,
+  useArtistImages,
+} from '../../hooks';
 import { logger } from '@shared/utils/logger';
 import { downloadService } from '@shared/services/download.service';
 import styles from './AlbumPage.module.css';
@@ -25,7 +30,9 @@ export default function AlbumPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(
+    null
+  );
   const imageLightboxModal = useModal();
   const infoModal = useModal();
   const coverSelectorModal = useModal();
@@ -44,7 +51,7 @@ export default function AlbumPage() {
   // Filter out the current album from artist's discography
   const moreFromArtist = useMemo(() => {
     if (!artistAlbumsData?.data || !id) return [];
-    return artistAlbumsData.data.filter(a => a.id !== id);
+    return artistAlbumsData.data.filter((a) => a.id !== id);
   }, [artistAlbumsData?.data, id]);
 
   // Fetch artist images metadata for tag-based cache busting on artist avatar
@@ -53,15 +60,13 @@ export default function AlbumPage() {
   const { data: coverMeta } = useAlbumCoverMetadata(id);
 
   // Derive cover key from metadata tag instead of using unnecessary state
-  const coverKey = useMemo(
-    () => coverMeta?.cover.tag || 'default',
-    [coverMeta?.cover.tag]
-  );
+  const coverKey = useMemo(() => coverMeta?.cover.tag || 'default', [coverMeta?.cover.tag]);
 
   // Get cover URL with tag-based cache busting
-  const coverUrl = id && coverMeta?.cover.exists
-    ? getAlbumCoverUrl(id, coverMeta.cover.tag)
-    : getCoverUrl(album?.coverImage);
+  const coverUrl =
+    id && coverMeta?.cover.exists
+      ? getAlbumCoverUrl(id, coverMeta.cover.tag)
+      : getCoverUrl(album?.coverImage);
 
   // Extract dominant color from album cover
   const dominantColor = useDominantColor(coverUrl);
@@ -132,7 +137,7 @@ export default function AlbumPage() {
   const handleTrackPlay = (track: Track) => {
     if (!tracks) return;
     const playerTracks = toPlayerTracks(tracks, albumContext);
-    const trackIndex = tracks.findIndex(t => t.id === track.id);
+    const trackIndex = tracks.findIndex((t) => t.id === track.id);
     playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
   };
 
@@ -157,11 +162,11 @@ export default function AlbumPage() {
     // Force immediate refetch to update album data with new cover
     queryClient.refetchQueries({
       queryKey: ['album', id],
-      type: 'active'
+      type: 'active',
     });
     queryClient.refetchQueries({
       queryKey: ['album-cover-metadata', id],
-      type: 'active'
+      type: 'active',
     });
 
     // Close the modal
@@ -216,7 +221,7 @@ export default function AlbumPage() {
             background: `linear-gradient(180deg,
               rgba(${dominantColor}, 0.4) 0%,
               rgba(${dominantColor}, 0.2) 25%,
-              transparent 60%)`
+              transparent 60%)`,
           }}
         >
           {/* Album hero section */}
@@ -243,7 +248,11 @@ export default function AlbumPage() {
                 >
                   {album.artistId && (
                     <img
-                      src={getArtistImageUrl(album.artistId, 'profile', artistImages?.images.profile?.tag)}
+                      src={getArtistImageUrl(
+                        album.artistId,
+                        'profile',
+                        artistImages?.images.profile?.tag
+                      )}
                       alt={album.artist}
                       className={styles.albumPage__heroArtistAvatar}
                       onError={(e) => {
@@ -287,6 +296,9 @@ export default function AlbumPage() {
                   onShowInfo={handleShowAlbumInfo}
                   onDownload={handleDownloadAlbum}
                   onChangeCover={handleChangeCover}
+                  albumTitle={album?.title}
+                  albumArtist={album?.artist}
+                  albumCoverUrl={coverUrl}
                 />
               </div>
             </div>
@@ -299,7 +311,13 @@ export default function AlbumPage() {
                 <p>Cargando canciones...</p>
               </div>
             ) : tracks && tracks.length > 0 ? (
-              <TrackList tracks={tracks} onTrackPlay={handleTrackPlay} currentTrackId={currentTrack?.id} hideGoToAlbum={true} hideAlbumCover={true} />
+              <TrackList
+                tracks={tracks}
+                onTrackPlay={handleTrackPlay}
+                currentTrackId={currentTrack?.id}
+                hideGoToAlbum={true}
+                hideAlbumCover={true}
+              />
             ) : (
               <div className={styles.albumPage__emptyTracks}>
                 <p>No se encontraron canciones en este álbum</p>
@@ -310,9 +328,7 @@ export default function AlbumPage() {
           {/* More from this artist */}
           {moreFromArtist.length > 0 && (
             <div className={styles.albumPage__moreFromArtist}>
-              <h2 className={styles.albumPage__moreFromArtistTitle}>
-                Más de {album.artist}
-              </h2>
+              <h2 className={styles.albumPage__moreFromArtistTitle}>Más de {album.artist}</h2>
               <div className={styles.albumPage__moreFromArtistGrid}>
                 {moreFromArtist.map((otherAlbum) => (
                   <AlbumCard
@@ -331,10 +347,7 @@ export default function AlbumPage() {
 
       {/* Image Modal/Lightbox */}
       {imageLightboxModal.isOpen && (
-        <div
-          className={styles.albumPage__imageModal}
-          onClick={imageLightboxModal.close}
-        >
+        <div className={styles.albumPage__imageModal} onClick={imageLightboxModal.close}>
           <div className={styles.albumPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
             <img
               key={`modal-cover-${coverKey}`}
@@ -354,11 +367,7 @@ export default function AlbumPage() {
 
       {/* Album Info Modal */}
       {infoModal.isOpen && album && (
-        <AlbumInfoModal
-          album={album}
-          tracks={tracks || []}
-          onClose={infoModal.close}
-        />
+        <AlbumInfoModal album={album} tracks={tracks || []} onClose={infoModal.close} />
       )}
 
       {/* Album Cover Selector Modal */}
