@@ -360,50 +360,14 @@
     display: none;
   }
 
-  /* Mobile reorderable track */
+  /* Mobile reorderable track - same layout as normal tracks */
   .trackList__track--reorderable {
-    grid-template-columns: 1fr 36px 40px; /* info | reorder | menú */
+    grid-template-columns: 1fr 40px; /* Same as non-reorderable: info | menú */
   }
 
-  .trackList__track--reorderable > .trackList__numberCell {
+  /* Hide reorder buttons on mobile - not usable on touch */
+  .trackList__reorderButtons {
     display: none;
-  }
-
-  .trackList__track--reorderable > .trackList__reorderButtons {
-    flex-direction: column;
-    gap: 0;
-  }
-
-  /* Hide format/rating/duration columns on mobile reorderable */
-  .trackList__track--reorderable > .trackList__trackFormat,
-  .trackList__track--reorderable > .trackList__trackRating,
-  .trackList__track--reorderable > .trackList__trackDuration {
-    display: none;
-  }
-
-  .trackList__reorderButton {
-    padding: 4px;
-    width: 28px;
-    height: 18px;
-    background: transparent;
-    border-radius: 4px;
-  }
-
-  .trackList__reorderButton:disabled {
-    opacity: 0.25;
-  }
-
-  .trackList__reorderButton:not(:disabled) {
-    color: var(--color-text-secondary, #b8bcc8);
-  }
-
-  .trackList__reorderButton:active:not(:disabled) {
-    color: var(--color-primary, #ed6842);
-  }
-
-  .trackList__reorderButton svg {
-    width: 16px;
-    height: 16px;
   }
 
   .trackList__trackInfo {
@@ -439,20 +403,9 @@
     padding: 6px 2px;
   }
 
-  /* Small mobile reorderable track */
+  /* Small mobile reorderable track - same as non-reorderable */
   .trackList__track--reorderable {
-    grid-template-columns: 1fr 32px 36px;
-  }
-
-  .trackList__reorderButton {
-    width: 24px;
-    height: 16px;
-    padding: 2px;
-  }
-
-  .trackList__reorderButton svg {
-    width: 14px;
-    height: 14px;
+    grid-template-columns: 1fr 36px;
   }
 
   .trackList__trackInfo {
