@@ -61,12 +61,12 @@ export default function PlaylistDetailPage() {
   const dominantColors = useDominantColors(albumCoverUrls);
 
   // Build a multi-color gradient from the extracted colors
+  // Fades to transparent so the textured background (--gradient-textured) shows through
   const playlistGradient = (() => {
-    const base = 'rgba(10, 14, 39, 1)';
     const c = dominantColors;
-    if (c.length === 0) return `linear-gradient(180deg, ${base} 0%, ${base} 100%)`;
+    if (c.length === 0) return undefined;
     if (c.length === 1) {
-      return `linear-gradient(180deg, rgba(${c[0]}, 0.6) 0%, rgba(${c[0]}, 0.3) 25%, ${base} 60%)`;
+      return `linear-gradient(180deg, rgba(${c[0]}, 0.6) 0%, rgba(${c[0]}, 0.3) 25%, transparent 60%)`;
     }
     // Multiple colors: radial gradient blobs at different positions
     const blobs = [
@@ -75,7 +75,7 @@ export default function PlaylistDetailPage() {
       c[2] ? `radial-gradient(ellipse at 0% 40%, rgba(${c[2]}, 0.3) 0%, transparent 50%)` : '',
       c[3] ? `radial-gradient(ellipse at 100% 30%, rgba(${c[3]}, 0.25) 0%, transparent 50%)` : '',
     ].filter(Boolean);
-    return [...blobs, `linear-gradient(180deg, transparent 40%, ${base} 70%)`].join(', ');
+    return blobs.join(', ');
   })();
 
   // First cover URL for the playlist options menu
@@ -234,7 +234,11 @@ export default function PlaylistDetailPage() {
 
         <div
           className={styles.playlistDetailPage__content}
-          style={{ '--playlist-bg': playlistGradient } as React.CSSProperties}
+          style={
+            playlistGradient
+              ? ({ '--playlist-bg': playlistGradient } as React.CSSProperties)
+              : undefined
+          }
         >
           {/* Playlist hero section */}
           <div className={styles.playlistDetailPage__hero}>
