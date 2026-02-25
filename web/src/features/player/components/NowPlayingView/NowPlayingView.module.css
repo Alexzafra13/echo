@@ -17,16 +17,18 @@
   transform: translateY(100%);
   visibility: hidden;
   pointer-events: none;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              visibility 0s linear 0.35s;
+  transition:
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s linear 0.35s;
 }
 
 .nowPlaying--open {
   transform: translateY(0) !important;
   visibility: visible;
   pointer-events: auto;
-  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
-              visibility 0s linear 0s;
+  transition:
+    transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+    visibility 0s linear 0s;
 }
 
 /* Background with gradient from dominant color - fully opaque */
@@ -154,7 +156,9 @@
   overflow: hidden;
   box-shadow: 0 20px 60px var(--black-60);
   flex-shrink: 0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   position: relative;
   z-index: 2;
 }
@@ -457,12 +461,26 @@
 /* ===== Desktop Styles ===== */
 @media (min-width: 769px) {
   .nowPlaying {
-    /* Solid color background from album */
     background: rgb(12, 12, 12);
     backdrop-filter: none;
     padding: 40px 60px;
     justify-content: center;
     gap: 12px;
+    transition:
+      transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0s linear 0.35s,
+      padding 0.35s ease;
+  }
+
+  .nowPlaying--open {
+    transition:
+      transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+      visibility 0s linear 0s,
+      padding 0.35s ease;
+  }
+
+  .nowPlaying--withQueue {
+    padding-right: 440px;
   }
 
   .nowPlaying__background {
@@ -848,7 +866,12 @@
   .nowPlaying {
     padding: 20px 40px;
     gap: 4px;
-    overflow-y: hidden; /* No scroll - everything must fit */
+    overflow-y: auto;
+    justify-content: safe center;
+  }
+
+  .nowPlaying--withQueue {
+    padding-right: 420px;
   }
 
   .nowPlaying__header {
@@ -856,8 +879,8 @@
   }
 
   .nowPlaying__coverContainer {
-    width: min(45vh, 400px);
-    max-width: 400px;
+    width: min(40vh, 380px);
+    max-width: 380px;
     margin-bottom: 16px;
     box-shadow: 0 24px 60px var(--black-60);
   }
@@ -948,6 +971,12 @@
   .nowPlaying {
     padding: 16px 32px;
     gap: 4px;
+    overflow-y: auto;
+    justify-content: safe center;
+  }
+
+  .nowPlaying--withQueue {
+    padding-right: 400px;
   }
 
   .nowPlaying__header {
@@ -955,8 +984,8 @@
   }
 
   .nowPlaying__coverContainer {
-    width: min(40vh, 320px);
-    max-width: 320px;
+    width: min(35vh, 280px);
+    max-width: 280px;
     margin-bottom: 12px;
   }
 
