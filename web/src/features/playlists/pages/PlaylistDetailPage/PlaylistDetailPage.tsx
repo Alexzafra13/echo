@@ -13,7 +13,7 @@ import {
 } from '../../hooks/usePlaylists';
 import { usePlayer } from '@features/player';
 import { Button } from '@shared/components/ui';
-import { useModal, useDominantColor, useDocumentTitle } from '@shared/hooks';
+import { useModal, useDominantColors, useDocumentTitle } from '@shared/hooks';
 import {
   PlaylistCoverMosaic,
   PlaylistOptionsMenu,
@@ -52,12 +52,34 @@ export default function PlaylistDetailPage() {
   const removeTrackMutation = useRemoveTrackFromPlaylist();
   const reorderTracksMutation = useReorderPlaylistTracks();
 
-  // Extract dominant color from first album cover in playlist
-  const playlistCoverUrl = (() => {
-    const firstAlbumId = (playlistTracks?.tracks || []).find((t) => t.albumId)?.albumId;
-    return firstAlbumId ? `/api/albums/${firstAlbumId}/cover` : undefined;
+  // Extract dominant colors from up to 4 unique album covers in the playlist
+  const albumCoverUrls = (() => {
+    const tracks = playlistTracks?.tracks || [];
+    const uniqueAlbumIds = Array.from(new Set(tracks.map((t) => t.albumId).filter(Boolean)));
+    return uniqueAlbumIds.slice(0, 4).map((id) => `/api/albums/${id}/cover`);
   })();
-  const dominantColor = useDominantColor(playlistCoverUrl);
+  const dominantColors = useDominantColors(albumCoverUrls);
+
+  // Build a multi-color gradient from the extracted colors
+  const playlistGradient = (() => {
+    const base = 'rgba(10, 14, 39, 1)';
+    const c = dominantColors;
+    if (c.length === 0) return `linear-gradient(180deg, ${base} 0%, ${base} 100%)`;
+    if (c.length === 1) {
+      return `linear-gradient(180deg, rgba(${c[0]}, 0.6) 0%, rgba(${c[0]}, 0.3) 25%, ${base} 60%)`;
+    }
+    // Multiple colors: radial gradient blobs at different positions
+    const blobs = [
+      `radial-gradient(ellipse at 20% 0%, rgba(${c[0]}, 0.55) 0%, transparent 55%)`,
+      `radial-gradient(ellipse at 80% 0%, rgba(${c[1] || c[0]}, 0.45) 0%, transparent 55%)`,
+      c[2] ? `radial-gradient(ellipse at 0% 40%, rgba(${c[2]}, 0.3) 0%, transparent 50%)` : '',
+      c[3] ? `radial-gradient(ellipse at 100% 30%, rgba(${c[3]}, 0.25) 0%, transparent 50%)` : '',
+    ].filter(Boolean);
+    return [...blobs, `linear-gradient(180deg, transparent 40%, ${base} 70%)`].join(', ');
+  })();
+
+  // First cover URL for the playlist options menu
+  const playlistCoverUrl = albumCoverUrls[0];
 
   const handlePlayAll = () => {
     const tracks = playlistTracks?.tracks || [];
@@ -212,12 +234,7 @@ export default function PlaylistDetailPage() {
 
         <div
           className={styles.playlistDetailPage__content}
-          style={{
-            background: `linear-gradient(180deg,
-              rgba(${dominantColor}, 0.6) 0%,
-              rgba(${dominantColor}, 0.3) 25%,
-              rgba(10, 14, 39, 1) 60%)`,
-          }}
+          style={{ '--playlist-bg': playlistGradient } as React.CSSProperties}
         >
           {/* Playlist hero section */}
           <div className={styles.playlistDetailPage__hero}>
@@ -301,7 +318,7 @@ export default function PlaylistDetailPage() {
                   isPublic={playlist.public}
                   playlistName={playlist.name}
                   playlistCoverUrl={playlistCoverUrl}
-                  dominantColor={dominantColor}
+                  dominantColor={dominantColors[0]}
                 />
               </div>
             </div>

@@ -28,7 +28,11 @@ vi.mock('@shared/components/layout/Header', () => ({
 
 vi.mock('@features/home/components', () => ({
   Sidebar: () => <nav data-testid="sidebar">Sidebar</nav>,
-  TrackList: ({ tracks, onTrackPlay, onRemoveFromPlaylist }: {
+  TrackList: ({
+    tracks,
+    onTrackPlay,
+    onRemoveFromPlaylist,
+  }: {
     tracks: Array<{ id: string; title: string }>;
     onTrackPlay?: (track: { id: string }) => void;
     onRemoveFromPlaylist?: (track: { id: string }) => void;
@@ -47,7 +51,12 @@ vi.mock('@features/home/components', () => ({
 
 // Mock UI components
 vi.mock('@shared/components/ui', () => ({
-  Button: ({ children, onClick, disabled, leftIcon }: {
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    leftIcon,
+  }: {
     children: React.ReactNode;
     onClick?: () => void;
     disabled?: boolean;
@@ -87,7 +96,11 @@ const mockReorderTracksMutation = { mutateAsync: vi.fn() };
 
 vi.mock('../../hooks/usePlaylists', () => ({
   usePlaylist: () => ({
-    data: mockState.playlistLoading ? undefined : (mockState.playlistError ? undefined : mockPlaylist),
+    data: mockState.playlistLoading
+      ? undefined
+      : mockState.playlistError
+        ? undefined
+        : mockPlaylist,
     isLoading: mockState.playlistLoading,
     error: mockState.playlistError,
   }),
@@ -121,16 +134,13 @@ vi.mock('@shared/hooks', () => ({
     close: vi.fn(),
   }),
   useDocumentTitle: vi.fn(),
-  useDominantColor: vi.fn(() => '100, 150, 200'),
+  useDominantColors: vi.fn(() => ['100, 150, 200']),
 }));
 
 // Mock playlist components
 vi.mock('../../components', () => ({
   PlaylistCoverMosaic: () => <div data-testid="playlist-cover">Cover</div>,
-  PlaylistOptionsMenu: ({ onEdit, onDelete }: {
-    onEdit: () => void;
-    onDelete: () => void;
-  }) => (
+  PlaylistOptionsMenu: ({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) => (
     <div data-testid="options-menu">
       <button onClick={onEdit}>Edit</button>
       <button onClick={onDelete}>Delete</button>
@@ -151,7 +161,8 @@ vi.mock('@shared/utils/colorExtractor', () => ({
 }));
 
 vi.mock('@shared/utils/format', () => ({
-  formatDuration: (seconds: number) => `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`,
+  formatDuration: (seconds: number) =>
+    `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`,
 }));
 
 vi.mock('@shared/utils/avatar.utils', () => ({
