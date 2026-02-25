@@ -24,7 +24,10 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  background: linear-gradient(180deg, var(--primary-15) 0%, rgba(15, 18, 24, 1) 40%);
+  background-color: var(--bg-base, #0f1218);
+  background-image:
+    var(--playlist-bg, linear-gradient(180deg, var(--primary-15) 0%, rgba(15, 18, 24, 1) 40%)),
+    var(--gradient-textured);
 }
 
 /* Hero Section */
@@ -112,8 +115,8 @@
 }
 
 .playlistDetailPage__visibilityBadge--private {
-  background: rgba(156, 163, 175, 0.15);
-  color: #9ca3af;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
 }
 
 .playlistDetailPage__heroTitle {
@@ -419,6 +422,6 @@
 }
 
 :root[data-theme='light'] .playlistDetailPage__visibilityBadge--private {
-  background: rgba(107, 114, 128, 0.12);
-  color: #6b7280;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
 }
