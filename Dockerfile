@@ -21,13 +21,15 @@ RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
 WORKDIR /build
 
 # Copy workspace configuration first (better cache)
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY web/package.json ./web/
 COPY api/package.json ./api/
 
 # Install ALL dependencies with BuildKit cache for faster rebuilds
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+# Use TARGETARCH to avoid cache conflicts in multi-platform builds
+ARG TARGETARCH
+RUN --mount=type=cache,id=pnpm-${TARGETARCH},target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --network-concurrency=8
 
 # Build Frontend
 WORKDIR /build/web
@@ -54,12 +56,13 @@ RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
 WORKDIR /deps
 
 # Copy workspace config
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY api/package.json ./api/
 
 # Install production dependencies WITHOUT optional deps (ffmpeg-static, @ffprobe-installer/ffprobe)
 # These are only needed for local dev; in Docker we use system ffmpeg from apk
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+ARG TARGETARCH
+RUN --mount=type=cache,id=pnpm-${TARGETARCH},target=/root/.local/share/pnpm/store \
     pnpm --filter=echo-api deploy --prod --no-optional --legacy /prod
 
 # Clean up unnecessary files from node_modules
