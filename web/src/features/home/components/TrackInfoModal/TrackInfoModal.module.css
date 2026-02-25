@@ -1,5 +1,7 @@
 /* TrackInfoModal Styles */
 
+/* ===== Desktop: Centered Modal ===== */
+
 .trackInfoModal {
   position: fixed;
   inset: 0;
@@ -19,6 +21,15 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 
@@ -84,7 +95,11 @@
   display: flex;
   gap: 24px;
   padding: 24px;
-  background: linear-gradient(135deg, var(--primary-15), rgba(237, 104, 66, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(var(--dominant-color), 0.2),
+    rgba(var(--dominant-color), 0.05)
+  );
   border-bottom: 1px solid var(--white-10);
 }
 
@@ -106,12 +121,16 @@
 .trackInfoModal__coverPlaceholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--primary-30), var(--primary-10));
+  background: linear-gradient(
+    135deg,
+    rgba(var(--dominant-color), 0.3),
+    rgba(var(--dominant-color), 0.1)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  color: var(--color-primary, #ed6842);
+  color: rgb(var(--dominant-color));
   opacity: 0.5;
 }
 
@@ -163,10 +182,10 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--color-primary, #ed6842);
+  color: rgb(var(--dominant-color));
   margin: 0;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--primary-20);
+  border-bottom: 1px solid rgba(var(--dominant-color), 0.2);
 }
 
 .trackInfoModal__infoGrid {
@@ -261,7 +280,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -417,36 +437,164 @@
   font-style: italic;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .trackInfoModal {
-    padding: 0;
-  }
+/* ===== Mobile: Bottom Sheet ===== */
 
-  .trackInfoModal__content {
-    max-width: 100%;
-    max-height: 100vh;
-    border-radius: 0;
-  }
+/* Overlay */
+.trackInfoModal__overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--black-60);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: fadeIn 0.3s ease;
+  pointer-events: auto;
+}
 
-  .trackInfoModal__hero {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
+.trackInfoModal__overlay--closing {
+  animation: fadeOut 0.3s ease forwards;
+}
 
-  .trackInfoModal__cover {
-    width: 180px;
-    height: 180px;
+/* Bottom sheet panel */
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
   }
+  to {
+    transform: translateY(0);
+  }
+}
 
-  .trackInfoModal__infoRow {
-    grid-template-columns: 1fr;
-    gap: 4px;
+@keyframes sheetSlideDown {
+  from {
+    transform: translateY(0);
   }
+  to {
+    transform: translateY(100%);
+  }
+}
 
-  .trackInfoModal__infoLabel {
-    text-align: left;
-    font-size: 12px;
-  }
+.trackInfoModal__sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 90vh;
+  background: var(--bg-elevated, #1a1a2e);
+  border-radius: 16px 16px 0 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  animation: sheetSlideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  pointer-events: auto;
+}
+
+.trackInfoModal__sheet--closing {
+  animation: sheetSlideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Drag handle */
+.trackInfoModal__sheetHandle {
+  width: 36px;
+  height: 4px;
+  background: var(--white-30);
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+/* Track info header */
+.trackInfoModal__sheetHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, rgba(var(--dominant-color), 0.15), transparent);
+  border-bottom: 1px solid var(--white-08);
+  flex-shrink: 0;
+}
+
+.trackInfoModal__sheetCover {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px var(--black-30);
+}
+
+.trackInfoModal__sheetInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.trackInfoModal__sheetTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackInfoModal__sheetArtist {
+  font-size: 13px;
+  color: var(--text-secondary, #b8bcc8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackInfoModal__sheetClose {
+  background: var(--white-10);
+  border: none;
+  color: var(--text-secondary, #b8bcc8);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.trackInfoModal__sheetClose:active {
+  background: var(--white-15);
+}
+
+/* Scrollable content */
+.trackInfoModal__sheetContent {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 60px + var(--player-bottom-spacer, 0px));
+  scrollbar-width: none;
+}
+
+.trackInfoModal__sheetContent::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile section adjustments inside sheet */
+.trackInfoModal__sheetContent .trackInfoModal__sections {
+  padding: 16px 20px;
+  gap: 20px;
+}
+
+.trackInfoModal__sheetContent .trackInfoModal__infoRow {
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.trackInfoModal__sheetContent .trackInfoModal__infoLabel {
+  text-align: left;
+  font-size: 12px;
+}
+
+.trackInfoModal__sheetContent .trackInfoModal__lyrics {
+  max-height: none;
 }
