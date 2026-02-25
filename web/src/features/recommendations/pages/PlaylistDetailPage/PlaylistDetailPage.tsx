@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { Play, Shuffle } from 'lucide-react';
 import { z } from 'zod';
@@ -11,6 +11,7 @@ import { formatDuration } from '@shared/utils/format';
 import { PlaylistCover } from '../../components/PlaylistCover';
 import { useArtistImages, getArtistImageUrl } from '@features/home/hooks';
 import { useArtist } from '@features/artists/hooks';
+import { useDominantColors } from '@shared/hooks';
 import type { AutoPlaylist } from '@shared/services/recommendations.service';
 import type { Track as HomeTrack } from '@features/home/types';
 import type { Track as PlayerTrack } from '@features/player/types';
@@ -20,40 +21,52 @@ import styles from './PlaylistDetailPage.module.css';
 
 // Zod schema for validating playlist data from sessionStorage
 // Using passthrough() to allow additional fields from API that aren't explicitly defined
-const AutoPlaylistSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string(),
-  type: z.enum(['wave-mix', 'artist', 'genre', 'mood']),
-  coverColor: z.string().optional().nullable(),
-  coverImageUrl: z.string().optional().nullable(),
-  metadata: z.object({
-    totalTracks: z.number(),
-    avgScore: z.number(),
-    artistName: z.string().optional().nullable(),
-    artistId: z.string().optional().nullable(),
-    genreName: z.string().optional().nullable(),
-    // Allow additional metadata fields (topGenres, topArtists, temporalDistribution, etc.)
-  }).passthrough(),
-  tracks: z.array(z.object({
-    // Support both 'score' and 'totalScore' field names from API
-    score: z.number().optional(),
-    totalScore: z.number().optional(),
-    trackId: z.string().optional(),
-    rank: z.number().optional(),
-    track: z.object({
-      id: z.string(),
-      title: z.string(),
-      artistName: z.string().optional().nullable(),
-      albumName: z.string().optional().nullable(),
-      albumId: z.string().optional().nullable(),
-      artistId: z.string().optional().nullable(),
-      duration: z.number().optional().nullable(),
-    }).passthrough().optional().nullable(),
-    // Allow additional track fields (breakdown, album, etc.)
-  }).passthrough()),
-  // Allow additional playlist fields (userId, createdAt, expiresAt, etc.)
-}).passthrough();
+const AutoPlaylistSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string(),
+    type: z.enum(['wave-mix', 'artist', 'genre', 'mood']),
+    coverColor: z.string().optional().nullable(),
+    coverImageUrl: z.string().optional().nullable(),
+    metadata: z
+      .object({
+        totalTracks: z.number(),
+        avgScore: z.number(),
+        artistName: z.string().optional().nullable(),
+        artistId: z.string().optional().nullable(),
+        genreName: z.string().optional().nullable(),
+        // Allow additional metadata fields (topGenres, topArtists, temporalDistribution, etc.)
+      })
+      .passthrough(),
+    tracks: z.array(
+      z
+        .object({
+          // Support both 'score' and 'totalScore' field names from API
+          score: z.number().optional(),
+          totalScore: z.number().optional(),
+          trackId: z.string().optional(),
+          rank: z.number().optional(),
+          track: z
+            .object({
+              id: z.string(),
+              title: z.string(),
+              artistName: z.string().optional().nullable(),
+              albumName: z.string().optional().nullable(),
+              albumId: z.string().optional().nullable(),
+              artistId: z.string().optional().nullable(),
+              duration: z.number().optional().nullable(),
+            })
+            .passthrough()
+            .optional()
+            .nullable(),
+          // Allow additional track fields (breakdown, album, etc.)
+        })
+        .passthrough()
+    ),
+    // Allow additional playlist fields (userId, createdAt, expiresAt, etc.)
+  })
+  .passthrough();
 
 /**
  * PlaylistDetailPage Component
@@ -185,6 +198,46 @@ export function PlaylistDetailPage() {
     return playlist.coverImageUrl || null;
   };
 
+  // For genre/wave-mix playlists: pick a random album cover as background
+  const genreBackgroundUrl = useMemo(() => {
+    if (!playlist || playlist.type === 'artist') return null;
+    const albumIds = new Set<string>();
+    for (const st of playlist.tracks) {
+      if (st.track?.albumId) albumIds.add(st.track.albumId);
+    }
+    const ids = Array.from(albumIds);
+    if (ids.length === 0) return null;
+    const randomId = ids[Math.floor(Math.random() * ids.length)];
+    return `/api/albums/${randomId}/cover`;
+  }, [playlist]);
+
+  // Extract dominant colors from genre/wave-mix playlist album covers for gradient
+  const genreAlbumCoverUrls = useMemo(() => {
+    if (!playlist || playlist.type === 'artist') return [];
+    const albumIds = new Set<string>();
+    for (const st of playlist.tracks) {
+      if (st.track?.albumId) albumIds.add(st.track.albumId);
+    }
+    return Array.from(albumIds)
+      .slice(0, 4)
+      .map((id) => `/api/albums/${id}/cover`);
+  }, [playlist]);
+  const genreDominantColors = useDominantColors(genreAlbumCoverUrls);
+
+  // Build multi-color gradient for genre/wave-mix playlists
+  const genreGradientStyle = useMemo(() => {
+    if (!playlist || playlist.type === 'artist') return undefined;
+    const c = genreDominantColors;
+    if (c.length === 0) return undefined;
+    const blobs = [
+      `radial-gradient(ellipse at 20% 0%, rgba(${c[0]}, 0.5) 0%, transparent 55%)`,
+      c[1] ? `radial-gradient(ellipse at 80% 0%, rgba(${c[1]}, 0.4) 0%, transparent 55%)` : '',
+      c[2] ? `radial-gradient(ellipse at 0% 40%, rgba(${c[2]}, 0.3) 0%, transparent 50%)` : '',
+      c[3] ? `radial-gradient(ellipse at 100% 30%, rgba(${c[3]}, 0.25) 0%, transparent 50%)` : '',
+    ].filter(Boolean);
+    return { '--playlist-bg': blobs.join(', ') } as React.CSSProperties;
+  }, [playlist, genreDominantColors]);
+
   if (!playlist) {
     return null;
   }
@@ -192,28 +245,36 @@ export function PlaylistDetailPage() {
   const tracks = convertToHomeTracks(playlist);
   const totalDuration = tracks.reduce((sum, track) => sum + (track.duration || 0), 0);
   const isArtistPlaylist = playlist.type === 'artist';
-  const backgroundUrl = getBackgroundUrl();
+  const hasHeroBackground = isArtistPlaylist || genreBackgroundUrl;
+  const backgroundUrl = isArtistPlaylist ? getBackgroundUrl() : genreBackgroundUrl;
 
   // Get background position from artist data if available
   const backgroundPosition = artist?.backgroundPosition || 'center top';
 
   return (
-    <div className={`${styles.playlistDetailPage} ${isArtistPlaylist ? styles['playlistDetailPage--artistMobile'] : ''}`}>
+    <div
+      className={`${styles.playlistDetailPage} ${hasHeroBackground ? styles['playlistDetailPage--heroMobile'] : ''}`}
+    >
       <Sidebar />
 
       <main className={styles.playlistDetailPage__main}>
         <Header showBackButton disableSearch />
 
-        <div className={styles.playlistDetailPage__content}>
+        <div
+          className={styles.playlistDetailPage__content}
+          style={isArtistPlaylist ? undefined : genreGradientStyle}
+        >
           {/* Hero Section */}
-          <div className={`${styles.playlistDetailPage__hero} ${isArtistPlaylist ? styles['playlistDetailPage__hero--artist'] : ''}`}>
-            {/* Background for artist playlists */}
-            {isArtistPlaylist && backgroundUrl && (
+          <div
+            className={`${styles.playlistDetailPage__hero} ${hasHeroBackground ? styles['playlistDetailPage__hero--withBg'] : ''} ${isArtistPlaylist ? styles['playlistDetailPage__hero--artist'] : ''}`}
+          >
+            {/* Background image */}
+            {backgroundUrl && (
               <div
-                className={styles.playlistDetailPage__background}
+                className={`${styles.playlistDetailPage__background} ${!isArtistPlaylist ? styles['playlistDetailPage__background--genre'] : ''}`}
                 style={{
                   backgroundImage: `url(${backgroundUrl})`,
-                  backgroundPosition: backgroundPosition,
+                  backgroundPosition: isArtistPlaylist ? backgroundPosition : 'center center',
                 }}
               />
             )}
@@ -255,19 +316,11 @@ export function PlaylistDetailPage() {
 
           {/* Actions */}
           <div className={styles.playlistDetailPage__actions}>
-            <Button
-              variant="primary"
-              onClick={handlePlayAll}
-              disabled={tracks.length === 0}
-            >
+            <Button variant="primary" onClick={handlePlayAll} disabled={tracks.length === 0}>
               <Play size={20} fill="currentColor" />
               Reproducir
             </Button>
-            <Button
-              variant="secondary"
-              onClick={handleShufflePlay}
-              disabled={tracks.length === 0}
-            >
+            <Button variant="secondary" onClick={handleShufflePlay} disabled={tracks.length === 0}>
               <Shuffle size={20} />
               Aleatorio
             </Button>
