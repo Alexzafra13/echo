@@ -3,7 +3,7 @@ import { X, Music2 } from 'lucide-react';
 import type { Track } from '../../types';
 import { formatDuration, formatFileSize, formatBitrate, formatDate } from '@shared/utils/format';
 import { getCoverUrl } from '@shared/utils/cover.utils';
-import { useTrackDjAnalysis, useDominantColor } from '@shared/hooks';
+import { useTrackDjAnalysis, useDominantColor, useSheetDragToClose } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
 import styles from './TrackInfoModal.module.css';
 
@@ -47,6 +47,12 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
       onClose();
     }
   }, [closing, isMobile, onClose]);
+
+  // Drag-down-to-close for mobile bottom sheet
+  const { sheetRef, scrollRef, overlayRef } = useSheetDragToClose({
+    onClose,
+    enabled: isMobile,
+  });
 
   const colorStyle = {
     '--dominant-color': dominantColor,
@@ -309,12 +315,14 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
       <Portal>
         {/* Overlay */}
         <div
+          ref={overlayRef}
           className={`${styles.trackInfoModal__overlay} ${closing ? styles['trackInfoModal__overlay--closing'] : ''}`}
           onClick={handleClose}
         />
 
         {/* Bottom sheet */}
         <div
+          ref={sheetRef}
           className={`${styles.trackInfoModal__sheet} ${closing ? styles['trackInfoModal__sheet--closing'] : ''}`}
           style={colorStyle}
           onClick={(e) => e.stopPropagation()}
@@ -346,7 +354,9 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
           </div>
 
           {/* Scrollable content */}
-          <div className={styles.trackInfoModal__sheetContent}>{renderSections()}</div>
+          <div ref={scrollRef} className={styles.trackInfoModal__sheetContent}>
+            {renderSections()}
+          </div>
         </div>
       </Portal>
     );

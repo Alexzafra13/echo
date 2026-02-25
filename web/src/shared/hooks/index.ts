@@ -2,7 +2,12 @@ export { useAuth } from './useAuth';
 export { useAutoRefreshOnScan } from './useAutoRefreshOnScan';
 export { useTheme } from './useTheme';
 export { useWebSocketConnection } from './useWebSocketConnection';
-export type { WebSocketNamespace, WebSocketEventHandler, UseWebSocketConnectionOptions, UseWebSocketConnectionReturn } from './useWebSocketConnection';
+export type {
+  WebSocketNamespace,
+  WebSocketEventHandler,
+  UseWebSocketConnectionOptions,
+  UseWebSocketConnectionReturn,
+} from './useWebSocketConnection';
 export { useScannerWebSocket } from './useScannerWebSocket';
 export { useLufsProgress } from './useLufsProgress';
 export type { LufsProgress } from './useLufsProgress';
@@ -10,14 +15,23 @@ export { useGlobalScanProgress } from './useGlobalScanProgress';
 export { useMetadataEnrichment } from './useMetadataEnrichment';
 export type { EnrichmentNotification, EnrichmentProgress } from './useMetadataEnrichment';
 export { useMetadataSSE } from './useMetadataSSE';
-export type { ArtistImagesUpdatedEvent, AlbumCoverUpdatedEvent, CacheInvalidationEvent } from './useMetadataSSE';
+export type {
+  ArtistImagesUpdatedEvent,
+  AlbumCoverUpdatedEvent,
+  CacheInvalidationEvent,
+} from './useMetadataSSE';
 export { useArtistMetadataSync } from './useArtistMetadataSync';
 export { useAlbumMetadataSync } from './useAlbumMetadataSync';
 export { useDropdownPosition } from './useDropdownPosition';
 export { useDropdownMenu } from './useDropdownMenu';
 export type { UseDropdownMenuOptions, UseDropdownMenuReturn } from './useDropdownMenu';
 export { useFileUpload } from './useFileUpload';
-export type { FileUploadOptions, FileUploadState, FileUploadActions, UseFileUploadReturn } from './useFileUpload';
+export type {
+  FileUploadOptions,
+  FileUploadState,
+  FileUploadActions,
+  UseFileUploadReturn,
+} from './useFileUpload';
 export { useScrollDetection } from './useScrollDetection';
 export type { UseScrollDetectionOptions, UseScrollDetectionReturn } from './useScrollDetection';
 export { useClickOutside } from './useClickOutside';
@@ -33,3 +47,4 @@ export { useNotification } from './useNotification';
 export { useTrackDjAnalysis } from './useTrackDjAnalysis';
 export { useDjProgressListener } from './useDjProgressListener';
 export { useDocumentTitle } from './useDocumentTitle';
+export { useSheetDragToClose } from './useSheetDragToClose';

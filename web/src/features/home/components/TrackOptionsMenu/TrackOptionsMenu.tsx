@@ -11,7 +11,7 @@ import {
   Star,
   X,
 } from 'lucide-react';
-import { useDropdownMenu } from '@shared/hooks';
+import { useDropdownMenu, useSheetDragToClose } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
 import { RatingStars } from '@shared/components/ui/RatingStars';
 import type { Track } from '../../types';
@@ -97,6 +97,19 @@ export function TrackOptionsMenu({
       };
     }
   }, [sheetOpen]);
+
+  // Drag-down-to-close for mobile bottom sheet
+  const {
+    sheetRef: dragSheetRef,
+    scrollRef: dragScrollRef,
+    overlayRef: dragOverlayRef,
+  } = useSheetDragToClose({
+    onClose: () => {
+      setSheetOpen(false);
+      setSheetClosing(false);
+    },
+    enabled: isMobile && sheetOpen,
+  });
 
   const coverUrl = track.albumId ? `/api/albums/${track.albumId}/cover` : '/placeholder-album.png';
 
@@ -239,10 +252,12 @@ export function TrackOptionsMenu({
       {isMobile && sheetOpen && (
         <Portal>
           <div
+            ref={dragOverlayRef}
             className={`${styles.trackOptionsMenu__overlay} ${sheetClosing ? styles['trackOptionsMenu__overlay--closing'] : ''}`}
             onClick={closeSheet}
           />
           <div
+            ref={dragSheetRef}
             className={`${styles.trackOptionsMenu__sheet} ${sheetClosing ? styles['trackOptionsMenu__sheet--closing'] : ''}`}
           >
             {/* Drag handle */}
@@ -272,7 +287,7 @@ export function TrackOptionsMenu({
             <div className={styles.trackOptionsMenu__separator} />
 
             {/* Options */}
-            <div className={styles.trackOptionsMenu__sheetContent}>
+            <div ref={dragScrollRef} className={styles.trackOptionsMenu__sheetContent}>
               {renderOptions(handleSheetOptionClick)}
             </div>
           </div>
