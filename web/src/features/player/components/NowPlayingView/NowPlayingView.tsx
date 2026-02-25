@@ -246,7 +246,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
 
   return createPortal(
     <div
-      className={`${styles.nowPlaying} ${isOpen ? styles['nowPlaying--open'] : ''}`}
+      className={`${styles.nowPlaying} ${isOpen ? styles['nowPlaying--open'] : ''} ${isDesktop && isQueueOpen && !isQueueClosing ? styles['nowPlaying--withQueue'] : ''}`}
       style={dragStyles}
       onTouchStart={isOpen ? handleTouchStart : undefined}
       onTouchMove={isOpen ? handleTouchMove : undefined}
@@ -281,9 +281,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       />
 
       {/* Progress Bar */}
-      {!isRadioMode && (
-        <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />
-      )}
+      {!isRadioMode && <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />}
 
       {/* Controls */}
       <PlaybackControls

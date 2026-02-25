@@ -35,10 +35,7 @@ const FIXED_TIME_STEP = 1;
  * Desktop: diagonal beams moving up
  * Mobile: subtle pulsing color blobs in the gradient area
  */
-function BeamsBackgroundComponent({
-  dominantColor,
-  intensity = 'strong',
-}: BeamsBackgroundProps) {
+function BeamsBackgroundComponent({ dominantColor, intensity = 'strong' }: BeamsBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const beamsRef = useRef<Beam[]>([]);
   const animationFrameRef = useRef<number>(0);
@@ -125,16 +122,29 @@ function BeamsBackgroundComponent({
       ctx.translate(beam.x, beam.y);
       ctx.rotate((beam.angle * Math.PI) / 180);
 
-      const pulsingOpacity = beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2) * intensityMultiplier;
+      const pulsingOpacity =
+        beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2) * intensityMultiplier;
       const gradient = ctx.createLinearGradient(0, 0, 0, beam.length);
       const saturation = '80%';
       const lightness = '60%';
 
       gradient.addColorStop(0, `hsla(${beam.hue}, ${saturation}, ${lightness}, 0)`);
-      gradient.addColorStop(0.1, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`);
-      gradient.addColorStop(0.4, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity})`);
-      gradient.addColorStop(0.6, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity})`);
-      gradient.addColorStop(0.9, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`);
+      gradient.addColorStop(
+        0.1,
+        `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`
+      );
+      gradient.addColorStop(
+        0.4,
+        `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity})`
+      );
+      gradient.addColorStop(
+        0.6,
+        `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity})`
+      );
+      gradient.addColorStop(
+        0.9,
+        `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`
+      );
       gradient.addColorStop(1, `hsla(${beam.hue}, ${saturation}, ${lightness}, 0)`);
 
       ctx.fillStyle = gradient;
@@ -147,18 +157,19 @@ function BeamsBackgroundComponent({
       ctx.save();
 
       // Pulsing opacity - fades in and out smoothly
-      const pulsingOpacity = beam.opacity * (0.3 + Math.sin(beam.pulse) * 0.7) * intensityMultiplier;
+      const pulsingOpacity =
+        beam.opacity * (0.3 + Math.sin(beam.pulse) * 0.7) * intensityMultiplier;
 
-      const gradient = ctx.createRadialGradient(
-        beam.x, beam.y, 0,
-        beam.x, beam.y, beam.width
-      );
+      const gradient = ctx.createRadialGradient(beam.x, beam.y, 0, beam.x, beam.y, beam.width);
 
       const saturation = '70%';
       const lightness = '55%';
 
       gradient.addColorStop(0, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity})`);
-      gradient.addColorStop(0.5, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`);
+      gradient.addColorStop(
+        0.5,
+        `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`
+      );
       gradient.addColorStop(1, `hsla(${beam.hue}, ${saturation}, ${lightness}, 0)`);
 
       ctx.fillStyle = gradient;
@@ -182,9 +193,7 @@ function BeamsBackgroundComponent({
       const totalBeams = mobile ? 12 : Math.floor(MINIMUM_BEAMS * 1.5); // 12 blobs on mobile
 
       beamsRef.current = Array.from({ length: totalBeams }, () =>
-        mobile
-          ? createMobileBlob(width, height)
-          : createDesktopBeam(canvas.width, canvas.height)
+        mobile ? createMobileBlob(width, height) : createDesktopBeam(canvas.width, canvas.height)
       );
     };
 
@@ -235,7 +244,6 @@ function BeamsBackgroundComponent({
       style={{
         position: 'absolute',
         inset: 0,
-        filter: 'blur(15px)',
         zIndex: 0,
         pointerEvents: 'none',
       }}
