@@ -3,11 +3,23 @@ import { Play, Shuffle, Music, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { TrackList } from '@features/home/components';
-import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist, useDeletePlaylist, useReorderPlaylistTracks } from '../../hooks/usePlaylists';
+import {
+  usePlaylist,
+  usePlaylistTracks,
+  useUpdatePlaylist,
+  useRemoveTrackFromPlaylist,
+  useDeletePlaylist,
+  useReorderPlaylistTracks,
+} from '../../hooks/usePlaylists';
 import { usePlayer } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { useModal, useDominantColor, useDocumentTitle } from '@shared/hooks';
-import { PlaylistCoverMosaic, PlaylistOptionsMenu, EditPlaylistModal, DeletePlaylistModal } from '../../components';
+import {
+  PlaylistCoverMosaic,
+  PlaylistOptionsMenu,
+  EditPlaylistModal,
+  DeletePlaylistModal,
+} from '../../components';
 import { UpdatePlaylistDto } from '../../types';
 import type { Track as SharedTrack } from '@shared/types/track.types';
 import { formatDuration } from '@shared/utils/format';
@@ -75,7 +87,7 @@ export default function PlaylistDetailPage() {
     const tracks = playlistTracks?.tracks || [];
     if (tracks.length === 0) return;
     const playerTracks = toPlayerTracks(tracks);
-    const trackIndex = tracks.findIndex(t => t.id === track.id);
+    const trackIndex = tracks.findIndex((t) => t.id === track.id);
     playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
   };
 
@@ -108,7 +120,7 @@ export default function PlaylistDetailPage() {
     try {
       await updatePlaylistMutation.mutateAsync({
         id,
-        dto: { public: !playlist.public }
+        dto: { public: !playlist.public },
       });
     } catch (error) {
       logger.error('Error toggling playlist visibility:', error);
@@ -121,7 +133,7 @@ export default function PlaylistDetailPage() {
     if (currentTracks.length < 2) return;
 
     // Create new order: swap with previous track
-    const newOrder = currentTracks.map(t => t.id);
+    const newOrder = currentTracks.map((t) => t.id);
     [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
 
     try {
@@ -140,7 +152,7 @@ export default function PlaylistDetailPage() {
     if (index >= currentTracks.length - 1) return;
 
     // Create new order: swap with next track
-    const newOrder = currentTracks.map(t => t.id);
+    const newOrder = currentTracks.map((t) => t.id);
     [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
 
     try {
@@ -189,9 +201,7 @@ export default function PlaylistDetailPage() {
   const tracks = playlistTracks?.tracks || [];
 
   // Extract unique album IDs for the mosaic
-  const albumIds = tracks
-    .map((track) => track.albumId)
-    .filter((id): id is string => !!id);
+  const albumIds = tracks.map((track) => track.albumId).filter((id): id is string => !!id);
 
   return (
     <div className={styles.playlistDetailPage}>
@@ -206,7 +216,7 @@ export default function PlaylistDetailPage() {
             background: `linear-gradient(180deg,
               rgba(${dominantColor}, 0.6) 0%,
               rgba(${dominantColor}, 0.3) 25%,
-              rgba(10, 14, 39, 1) 60%)`
+              rgba(10, 14, 39, 1) 60%)`,
           }}
         >
           {/* Playlist hero section */}
@@ -220,16 +230,16 @@ export default function PlaylistDetailPage() {
             <div className={styles.playlistDetailPage__heroInfo}>
               <div className={styles.playlistDetailPage__heroTypeRow}>
                 <span className={styles.playlistDetailPage__heroType}>Playlist</span>
-                <span className={`${styles.playlistDetailPage__visibilityBadge} ${playlist.public ? styles['playlistDetailPage__visibilityBadge--public'] : styles['playlistDetailPage__visibilityBadge--private']}`}>
+                <span
+                  className={`${styles.playlistDetailPage__visibilityBadge} ${playlist.public ? styles['playlistDetailPage__visibilityBadge--public'] : styles['playlistDetailPage__visibilityBadge--private']}`}
+                >
                   {playlist.public ? <Globe size={14} /> : <Lock size={14} />}
                   {playlist.public ? 'Pública' : 'Privada'}
                 </span>
               </div>
               <h1 className={styles.playlistDetailPage__heroTitle}>{playlist.name}</h1>
               {playlist.description && (
-                <p className={styles.playlistDetailPage__heroDescription}>
-                  {playlist.description}
-                </p>
+                <p className={styles.playlistDetailPage__heroDescription}>{playlist.description}</p>
               )}
               <div className={styles.playlistDetailPage__heroMeta}>
                 {playlist.ownerName && playlist.ownerId && (
@@ -249,7 +259,9 @@ export default function PlaylistDetailPage() {
                     <span className={styles.playlistDetailPage__heroDivider}>•</span>
                   </>
                 )}
-                <span>{playlist.songCount} {playlist.songCount === 1 ? 'canción' : 'canciones'}</span>
+                <span>
+                  {playlist.songCount} {playlist.songCount === 1 ? 'canción' : 'canciones'}
+                </span>
                 {playlist.duration > 0 && (
                   <>
                     <span className={styles.playlistDetailPage__heroDivider}>•</span>
@@ -265,7 +277,9 @@ export default function PlaylistDetailPage() {
                   size="lg"
                   onClick={handlePlayAll}
                   leftIcon={<Play size={20} fill="currentColor" />}
-                  disabled={!playlistTracks || !playlistTracks.tracks || playlistTracks.tracks.length === 0}
+                  disabled={
+                    !playlistTracks || !playlistTracks.tracks || playlistTracks.tracks.length === 0
+                  }
                 >
                   Reproducir
                 </Button>
@@ -274,7 +288,9 @@ export default function PlaylistDetailPage() {
                   size="lg"
                   onClick={handleShufflePlay}
                   leftIcon={<Shuffle size={20} />}
-                  disabled={!playlistTracks || !playlistTracks.tracks || playlistTracks.tracks.length === 0}
+                  disabled={
+                    !playlistTracks || !playlistTracks.tracks || playlistTracks.tracks.length === 0
+                  }
                 >
                   Aleatorio
                 </Button>
@@ -283,6 +299,9 @@ export default function PlaylistDetailPage() {
                   onToggleVisibility={handleToggleVisibility}
                   onDelete={deleteModal.open}
                   isPublic={playlist.public}
+                  playlistName={playlist.name}
+                  playlistCoverUrl={playlistCoverUrl}
+                  dominantColor={dominantColor}
                 />
               </div>
             </div>
@@ -318,10 +337,7 @@ export default function PlaylistDetailPage() {
 
       {/* Image Modal/Lightbox */}
       {imageModal.isOpen && playlist.coverImageUrl && (
-        <div
-          className={styles.playlistDetailPage__imageModal}
-          onClick={imageModal.close}
-        >
+        <div className={styles.playlistDetailPage__imageModal} onClick={imageModal.close}>
           <div
             className={styles.playlistDetailPage__imageModalContent}
             onClick={(e) => e.stopPropagation()}

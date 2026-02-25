@@ -290,8 +290,16 @@
   height: 4px;
   background: var(--white-30);
   border-radius: 2px;
-  margin: 10px auto 0;
+  margin: 0 auto;
   flex-shrink: 0;
+  touch-action: none;
+}
+
+.albumInfoModal__sheetHandleArea {
+  padding: 10px 0 6px;
+  display: flex;
+  justify-content: center;
+  touch-action: none;
 }
 
 .albumInfoModal__sheetHeader {
@@ -363,6 +371,7 @@
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 60px + var(--player-bottom-spacer, 0px));
   scrollbar-width: none;
+  overscroll-behavior: none;
 }
 
 .albumInfoModal__sheetContent::-webkit-scrollbar {

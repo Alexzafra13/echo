@@ -210,7 +210,9 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
           style={colorStyle}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className={styles.albumInfoModal__sheetHandle} />
+          <div className={styles.albumInfoModal__sheetHandleArea}>
+            <div className={styles.albumInfoModal__sheetHandle} />
+          </div>
 
           <div className={styles.albumInfoModal__sheetHeader}>
             <img src={coverUrl} alt={album.title} className={styles.albumInfoModal__sheetCover} />
