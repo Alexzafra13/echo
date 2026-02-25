@@ -24,9 +24,8 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  background-color: var(--bg-base, #0f1218);
   background-image:
-    var(--playlist-bg, linear-gradient(180deg, var(--primary-15) 0%, rgba(15, 18, 24, 1) 40%)),
+    var(--playlist-bg, linear-gradient(180deg, var(--primary-15) 0%, transparent 40%)),
     var(--gradient-textured);
 }
 
@@ -404,7 +403,9 @@
 }
 
 :root[data-theme='light'] .playlistDetailPage__content {
-  background: linear-gradient(180deg, rgba(237, 104, 66, 0.08) 0%, #e5e7eb 40%);
+  background-image:
+    var(--playlist-bg, linear-gradient(180deg, rgba(237, 104, 66, 0.08) 0%, transparent 40%)),
+    var(--gradient-textured);
 }
 
 :root[data-theme='light'] .playlistDetailPage__hero {
