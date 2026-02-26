@@ -65,15 +65,14 @@ const GenrePlaylistsPage = lazy(() =>
     default: m.GenrePlaylistsPage,
   }))
 );
-const SocialPage = lazy(() => import('@features/social').then((m) => ({ default: m.SocialPage })));
+const SocialPage = lazy(() =>
+  import('@features/social').then((m) => ({ default: m.SocialPage }))
+);
 const TrendingPage = lazy(() =>
   import('@features/social').then((m) => ({ default: m.TrendingPage }))
 );
 const SharedAlbumPage = lazy(() =>
   import('@features/federation').then((m) => ({ default: m.SharedAlbumPage }))
-);
-const ChatPage = lazy(() =>
-  import('@features/chat/pages/ChatPage').then((m) => ({ default: m.ChatPage }))
 );
 
 function App() {
@@ -261,12 +260,6 @@ function App() {
             </ProtectedRoute>
           </Route>
 
-          <Route path="/~">
-            <ProtectedRoute>
-              <ChatPage />
-            </ProtectedRoute>
-          </Route>
-
           {/* Admin Route (Protected - Admin Only) */}
           <Route path="/admin">
             <AdminRoute>
@@ -282,7 +275,9 @@ function App() {
           </Route>
 
           {/* 404 - Redirect to home or login */}
-          <Route>{isAuthenticated ? <Redirect to="/home" /> : <Redirect to="/login" />}</Route>
+          <Route>
+            {isAuthenticated ? <Redirect to="/home" /> : <Redirect to="/login" />}
+          </Route>
         </Switch>
       </Suspense>
 
