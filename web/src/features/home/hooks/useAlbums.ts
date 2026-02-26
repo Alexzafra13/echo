@@ -26,6 +26,18 @@ export function useTopPlayedAlbums(take?: number) {
 }
 
 /**
+ * Hook to fetch top played albums for the authenticated user
+ */
+export function useUserTopPlayedAlbums(take?: number) {
+  return useQuery({
+    queryKey: ['albums', 'user-top-played', take],
+    queryFn: () => albumsService.getUserTopPlayed(take),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+}
+
+/**
  * Hook to fetch featured album for hero section
  */
 export function useFeaturedAlbum() {

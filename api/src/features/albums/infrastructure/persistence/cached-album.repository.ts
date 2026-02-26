@@ -20,7 +20,7 @@ export class CachedAlbumRepository
     baseRepository: DrizzleAlbumRepository,
     cache: RedisService,
     @InjectPinoLogger(CachedAlbumRepository.name)
-    logger: PinoLogger,
+    logger: PinoLogger
   ) {
     super(
       baseRepository,
@@ -33,22 +33,18 @@ export class CachedAlbumRepository
         entityTtl: cacheConfig.ttl.album,
         searchTtl: cacheConfig.ttl.search,
       },
-      Album.reconstruct,
+      Album.reconstruct
     );
   }
 
-  async findByArtistId(
-    artistId: string,
-    skip: number,
-    take: number,
-  ): Promise<Album[]> {
+  async findByArtistId(artistId: string, skip: number, take: number): Promise<Album[]> {
     const cacheKey = `${this.config.listKeyPrefix}artist:${artistId}:${skip}:${take}`;
 
     return this.getCachedOrFetch(
       cacheKey,
       () => this.baseRepository.findByArtistId(artistId, skip, take),
       this.entityTtl,
-      true,
+      true
     );
   }
 
@@ -59,7 +55,7 @@ export class CachedAlbumRepository
       cacheKey,
       () => this.baseRepository.findRecent(take),
       this.RECENT_TTL,
-      true,
+      true
     );
   }
 
@@ -70,7 +66,7 @@ export class CachedAlbumRepository
       cacheKey,
       () => this.baseRepository.findMostPlayed(take),
       this.MOST_PLAYED_TTL,
-      true,
+      true
     );
   }
 
@@ -102,6 +98,11 @@ export class CachedAlbumRepository
     return count;
   }
 
+  // Sin caché - específico por usuario
+  async findMostPlayedByUser(userId: string, take: number): Promise<Album[]> {
+    return this.baseRepository.findMostPlayedByUser(userId, take);
+  }
+
   // Sin caché - rápido con índice de BD
   async findAlphabetically(skip: number, take: number): Promise<Album[]> {
     return this.baseRepository.findAlphabetically(skip, take);
@@ -118,11 +119,7 @@ export class CachedAlbumRepository
   }
 
   // Sin caché - específico por usuario
-  async findFavorites(
-    userId: string,
-    skip: number,
-    take: number,
-  ): Promise<Album[]> {
+  async findFavorites(userId: string, skip: number, take: number): Promise<Album[]> {
     return this.baseRepository.findFavorites(userId, skip, take);
   }
 
@@ -132,10 +129,7 @@ export class CachedAlbumRepository
     return created;
   }
 
-  override async update(
-    id: string,
-    album: Partial<Album>,
-  ): Promise<Album | null> {
+  override async update(id: string, album: Partial<Album>): Promise<Album | null> {
     const updated = await this.baseRepository.update(id, album);
 
     if (updated) {

@@ -315,7 +315,7 @@ describe('AlbumPage', () => {
       fireEvent.click(screen.getByText('Reproducir'));
 
       expect(mockSetShuffle).toHaveBeenCalledWith(false);
-      expect(mockPlayQueue).toHaveBeenCalledWith(expect.any(Array), 0);
+      expect(mockPlayQueue).toHaveBeenCalledWith(expect.any(Array), 0, 'album');
     });
 
     it('should enable shuffle when clicking Aleatorio', () => {
@@ -363,7 +363,7 @@ describe('AlbumPage', () => {
 
       fireEvent.click(screen.getByText('Song Two'));
 
-      expect(mockPlayQueue).toHaveBeenCalledWith(expect.any(Array), 1);
+      expect(mockPlayQueue).toHaveBeenCalledWith(expect.any(Array), 1, 'album');
     });
 
     it('should show loading state for tracks', () => {
