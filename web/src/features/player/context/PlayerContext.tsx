@@ -10,7 +10,16 @@
  * - useRadioPlayback: Radio station streaming
  */
 
-import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  ReactNode,
+} from 'react';
 import { Track, PlayerContextValue, RadioStation } from '../types';
 import { useStreamToken } from '../hooks/useStreamToken';
 import { usePlayerSettingsStore } from '../store';
@@ -46,8 +55,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const setCrossfadeSmartModeStore = usePlayerSettingsStore((s) => s.setCrossfadeSmartMode);
   const setCrossfadeTempoMatchStore = usePlayerSettingsStore((s) => s.setCrossfadeTempoMatch);
   const setNormalizationEnabledStore = usePlayerSettingsStore((s) => s.setNormalizationEnabled);
-  const setNormalizationTargetLufsStore = usePlayerSettingsStore((s) => s.setNormalizationTargetLufs);
-  const setNormalizationPreventClippingStore = usePlayerSettingsStore((s) => s.setNormalizationPreventClipping);
+  const setNormalizationTargetLufsStore = usePlayerSettingsStore(
+    (s) => s.setNormalizationTargetLufs
+  );
+  const setNormalizationPreventClippingStore = usePlayerSettingsStore(
+    (s) => s.setNormalizationPreventClipping
+  );
   const setAutoplayEnabledStore = usePlayerSettingsStore((s) => s.setAutoplayEnabled);
 
   const autoplay = useAutoplay();
@@ -120,6 +133,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const playTracking = usePlayTracking({
     audioElements,
     isShuffle: queue.isShuffle,
+    isAutoplayActive,
   });
 
   // ========== RADIO PLAYBACK ==========
@@ -228,154 +242,179 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Uses custom streamUrl if available (for federated/remote tracks)
    * Now async to wait for token if not yet available
    */
-  const getStreamUrl = useCallback(async (track: Track): Promise<string | null> => {
-    // Try to get token from cache first
-    let token: string | null = streamTokenData?.token ?? null;
+  const getStreamUrl = useCallback(
+    async (track: Track): Promise<string | null> => {
+      // Try to get token from cache first
+      let token: string | null = streamTokenData?.token ?? null;
 
-    // If no token in cache, wait for it to load
-    if (!token) {
-      logger.debug('[Player] Token not in cache, waiting for it...');
-      token = await ensureToken();
-    }
+      // If no token in cache, wait for it to load
+      if (!token) {
+        logger.debug('[Player] Token not in cache, waiting for it...');
+        token = await ensureToken();
+      }
 
-    if (!token) {
-      logger.error('[Player] Stream token not available after waiting');
-      return null;
-    }
+      if (!token) {
+        logger.error('[Player] Stream token not available after waiting');
+        return null;
+      }
 
-    // If track has a custom stream URL (e.g., federated track), add token to it
-    if (track.streamUrl) {
-      const separator = track.streamUrl.includes('?') ? '&' : '?';
-      return `${track.streamUrl}${separator}token=${token}`;
-    }
+      // If track has a custom stream URL (e.g., federated track), add token to it
+      if (track.streamUrl) {
+        const separator = track.streamUrl.includes('?') ? '&' : '?';
+        return `${track.streamUrl}${separator}token=${token}`;
+      }
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-    return `${API_BASE_URL}/tracks/${track.id}/stream?token=${token}`;
-  }, [streamTokenData?.token, ensureToken]);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      return `${API_BASE_URL}/tracks/${track.id}/stream?token=${token}`;
+    },
+    [streamTokenData?.token, ensureToken]
+  );
 
   /**
    * Play a track with optional crossfade
    */
-  const playTrack = useCallback(async (track: Track, withCrossfade: boolean = false) => {
-    const streamUrl = await getStreamUrl(track);
-    if (!streamUrl) {
-      logger.warn('[Player] Cannot play track: stream URL unavailable');
-      // Reset crossfading ref if it was set early by onCrossfadeTrigger
-      crossfade.clearCrossfade();
-      return;
-    }
+  const playTrack = useCallback(
+    async (track: Track, withCrossfade: boolean = false) => {
+      const streamUrl = await getStreamUrl(track);
+      if (!streamUrl) {
+        logger.warn('[Player] Cannot play track: stream URL unavailable');
+        // Reset crossfading ref if it was set early by onCrossfadeTrigger
+        crossfade.clearCrossfade();
+        return;
+      }
 
-    // Exit radio mode if active (must await to prevent race condition)
-    if (radio.isRadioMode) {
-      await radio.stopRadio();
-    }
+      // Exit radio mode if active (must await to prevent race condition)
+      if (radio.isRadioMode) {
+        await radio.stopRadio();
+      }
 
-    // Use isCrossfadingRef as a synchronous guard: if onCrossfadeTrigger already set it
-    // to true, we MUST take the crossfade path even if `isPlaying` is stale in this closure.
-    // When crossfade settings change, the callback cascade (performCrossfade → crossfade →
-    // playTrack → handlePlayNext → playNextRef) updates asynchronously via useEffect.
-    // During that gap, a stale playTrack with isPlaying=false could take the else branch,
-    // calling clearCrossfade() while both audio elements are already playing.
-    if (withCrossfade && crossfadeSettings.enabled && (isPlaying || crossfade.isCrossfadingRef.current)) {
-      // Crossfade: apply gain ONLY to the inactive audio element
-      // This prevents the current track from jumping in volume
-      const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
-      normalization.applyGainToAudio(track, inactiveId);
+      // Use isCrossfadingRef as a synchronous guard: if onCrossfadeTrigger already set it
+      // to true, we MUST take the crossfade path even if `isPlaying` is stale in this closure.
+      // When crossfade settings change, the callback cascade (performCrossfade → crossfade →
+      // playTrack → handlePlayNext → playNextRef) updates asynchronously via useEffect.
+      // During that gap, a stale playTrack with isPlaying=false could take the else branch,
+      // calling clearCrossfade() while both audio elements are already playing.
+      if (
+        withCrossfade &&
+        crossfadeSettings.enabled &&
+        (isPlaying || crossfade.isCrossfadingRef.current)
+      ) {
+        // Crossfade: apply gain ONLY to the inactive audio element
+        // This prevents the current track from jumping in volume
+        const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
+        normalization.applyGainToAudio(track, inactiveId);
 
-      // Prepare next track on inactive audio
-      logger.debug('[Player] Starting crossfade to:', track.title);
-      crossfade.prepareCrossfade(streamUrl);
+        // Prepare next track on inactive audio
+        logger.debug('[Player] Starting crossfade to:', track.title);
+        crossfade.prepareCrossfade(streamUrl);
 
-      // Update track state
-      setCurrentTrack(track);
+        // Update track state
+        setCurrentTrack(track);
 
-      // Start crossfade transition. On mobile, playInactive() can fail due to
-      // autoplay policy. If crossfade fails, fall back to normal (non-crossfade) playback.
-      // Pass BPM values for tempo matching (outgoing track BPM from ref, incoming from track param)
-      const crossfadeStarted = await crossfade.performCrossfade(currentTrackBpmRef.current, track.bpm);
+        // Start crossfade transition. On mobile, playInactive() can fail due to
+        // autoplay policy. If crossfade fails, fall back to normal (non-crossfade) playback.
+        // Pass BPM values for tempo matching (outgoing track BPM from ref, incoming from track param)
+        const crossfadeStarted = await crossfade.performCrossfade(
+          currentTrackBpmRef.current,
+          track.bpm
+        );
 
-      if (!crossfadeStarted) {
-        // Crossfade failed - fall back to normal playback so the music doesn't stop
-        logger.warn('[Player] Crossfade failed on mobile, falling back to normal playback');
+        if (!crossfadeStarted) {
+          // Crossfade failed - fall back to normal playback so the music doesn't stop
+          logger.warn('[Player] Crossfade failed on mobile, falling back to normal playback');
+          isTransitioningRef.current = true;
+          normalization.applyGain(track);
+          audioElements.stopInactive();
+          audioElements.loadOnActive(streamUrl);
+
+          try {
+            await audioElements.playActive();
+          } catch (error) {
+            logger.warn('[Player] Fallback play failed, retrying:', (error as Error).message);
+            try {
+              await audioElements.playActive(false);
+            } catch (retryError) {
+              logger.error('[Player] Fallback retry failed:', (retryError as Error).message);
+            }
+          } finally {
+            isTransitioningRef.current = false;
+            if (audioElements.getActiveAudio()?.paused) {
+              setIsPlaying(false);
+            }
+          }
+        }
+
+        // Start new play session
+        playTracking.startPlaySession(track);
+      } else {
+        // Normal play (no crossfade) - apply gain to both elements
         isTransitioningRef.current = true;
         normalization.applyGain(track);
+
+        crossfade.clearCrossfade();
         audioElements.stopInactive();
         audioElements.loadOnActive(streamUrl);
+
+        setCurrentTrack(track);
+        playTracking.startPlaySession(track);
 
         try {
           await audioElements.playActive();
         } catch (error) {
-          logger.warn('[Player] Fallback play failed, retrying:', (error as Error).message);
+          // On mobile, play() can fail due to autoplay policy (NotAllowedError)
+          // or load interruption (AbortError). Retry without buffer wait as fallback.
+          logger.warn('[Player] Play failed, retrying:', (error as Error).message);
           try {
             await audioElements.playActive(false);
           } catch (retryError) {
-            logger.error('[Player] Fallback retry failed:', (retryError as Error).message);
+            logger.error('[Player] Retry failed:', (retryError as Error).message);
           }
         } finally {
           isTransitioningRef.current = false;
+          // Sync isPlaying with actual audio state after transition completes.
+          // Pause events were suppressed during transition, so we need to check
+          // if play actually succeeded or if the audio is still paused.
           if (audioElements.getActiveAudio()?.paused) {
             setIsPlaying(false);
           }
         }
       }
 
-      // Start new play session
-      playTracking.startPlaySession(track);
-    } else {
-      // Normal play (no crossfade) - apply gain to both elements
-      isTransitioningRef.current = true;
-      normalization.applyGain(track);
-
-      crossfade.clearCrossfade();
-      audioElements.stopInactive();
-      audioElements.loadOnActive(streamUrl);
-
-      setCurrentTrack(track);
-      playTracking.startPlaySession(track);
-
-      try {
-        await audioElements.playActive();
-      } catch (error) {
-        // On mobile, play() can fail due to autoplay policy (NotAllowedError)
-        // or load interruption (AbortError). Retry without buffer wait as fallback.
-        logger.warn('[Player] Play failed, retrying:', (error as Error).message);
-        try {
-          await audioElements.playActive(false);
-        } catch (retryError) {
-          logger.error('[Player] Retry failed:', (retryError as Error).message);
-        }
-      } finally {
-        isTransitioningRef.current = false;
-        // Sync isPlaying with actual audio state after transition completes.
-        // Pause events were suppressed during transition, so we need to check
-        // if play actually succeeded or if the audio is still paused.
-        if (audioElements.getActiveAudio()?.paused) {
-          setIsPlaying(false);
-        }
-      }
-    }
-
-    // Note: crossfadeStartedRef is now reset inside clearCrossfade() which runs
-    // when the crossfade completes (finishCrossfade) or when a new track starts
-    // normally (non-crossfade path calls clearCrossfade). No need for a separate
-    // resetCrossfadeFlag() call here, which previously ran while the crossfade
-    // animation was still in progress and caused race conditions.
-  }, [getStreamUrl, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization]);
+      // Note: crossfadeStartedRef is now reset inside clearCrossfade() which runs
+      // when the crossfade completes (finishCrossfade) or when a new track starts
+      // normally (non-crossfade path calls clearCrossfade). No need for a separate
+      // resetCrossfadeFlag() call here, which previously ran while the crossfade
+      // animation was still in progress and caused race conditions.
+    },
+    [
+      getStreamUrl,
+      radio,
+      crossfadeSettings.enabled,
+      isPlaying,
+      crossfade,
+      audioElements,
+      playTracking,
+      normalization,
+    ]
+  );
 
   /**
    * Play - either a new track or resume current playback
    */
-  const play = useCallback((track?: Track, withCrossfade: boolean = false) => {
-    if (track) {
-      playTrack(track, withCrossfade);
-    } else if (currentTrack && !radio.isRadioMode) {
-      // Resume current track
-      audioElements.playActive();
-    } else if (radio.isRadioMode && radio.currentStation) {
-      // Resume radio
-      radio.resumeRadio();
-    }
-  }, [playTrack, currentTrack, radio, audioElements]);
+  const play = useCallback(
+    (track?: Track, withCrossfade: boolean = false) => {
+      if (track) {
+        playTrack(track, withCrossfade);
+      } else if (currentTrack && !radio.isRadioMode) {
+        // Resume current track
+        audioElements.playActive();
+      } else if (radio.isRadioMode && radio.currentStation) {
+        // Resume radio
+        radio.resumeRadio();
+      }
+    },
+    [playTrack, currentTrack, radio, audioElements]
+  );
 
   /**
    * Pause playback
@@ -396,24 +435,30 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   /**
    * Seek to time
    */
-  const seek = useCallback((time: number) => {
-    audioElements.seek(time);
-    setCurrentTime(time);
-    // Reset crossfade flag so timing check can re-trigger after seek.
-    // Without this, seeking backward after a crossfade trigger point
-    // leaves the flag set, preventing crossfade from ever firing again.
-    crossfade.resetCrossfadeFlag();
-  }, [audioElements, crossfade]);
+  const seek = useCallback(
+    (time: number) => {
+      audioElements.seek(time);
+      setCurrentTime(time);
+      // Reset crossfade flag so timing check can re-trigger after seek.
+      // Without this, seeking backward after a crossfade trigger point
+      // leaves the flag set, preventing crossfade from ever firing again.
+      crossfade.resetCrossfadeFlag();
+    },
+    [audioElements, crossfade]
+  );
 
   /**
    * Set volume (applies normalization gain automatically)
    */
-  const setVolume = useCallback((volume: number) => {
-    // Update user volume state (for slider UI)
-    setUserVolumeState(volume);
-    // Update normalization hook's user volume (it will apply effective volume to audio elements)
-    normalization.setUserVolume(volume);
-  }, [normalization]);
+  const setVolume = useCallback(
+    (volume: number) => {
+      // Update user volume state (for slider UI)
+      setUserVolumeState(volume);
+      // Update normalization hook's user volume (it will apply effective volume to audio elements)
+      normalization.setUserVolume(volume);
+    },
+    [normalization]
+  );
 
   /**
    * Toggle play/pause
@@ -432,80 +477,93 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Trigger autoplay with similar artists
    * @returns true if autoplay was triggered, false otherwise
    */
-  const triggerAutoplay = useCallback(async (useCrossfade: boolean = false): Promise<boolean> => {
-    const canAutoplay = autoplaySettings.enabled && currentTrack?.artistId && !radio.isRadioMode;
+  const triggerAutoplay = useCallback(
+    async (useCrossfade: boolean = false): Promise<boolean> => {
+      const canAutoplay = autoplaySettings.enabled && currentTrack?.artistId && !radio.isRadioMode;
 
-    if (!canAutoplay || !currentTrack?.artistId) {
-      logger.debug('[Player] Cannot autoplay - conditions not met');
-      setIsPlaying(false);
-      setIsAutoplayActive(false);
-      setAutoplaySourceArtist(null);
-      // Reset crossfading state if it was set early by onCrossfadeTrigger
-      crossfade.clearCrossfade();
-      return false;
-    }
+      if (!canAutoplay || !currentTrack?.artistId) {
+        logger.debug('[Player] Cannot autoplay - conditions not met');
+        setIsPlaying(false);
+        setIsAutoplayActive(false);
+        setAutoplaySourceArtist(null);
+        // Reset crossfading state if it was set early by onCrossfadeTrigger
+        crossfade.clearCrossfade();
+        return false;
+      }
 
-    logger.debug('[Player] Triggering autoplay for artist:', currentTrack.artistId);
+      logger.debug('[Player] Triggering autoplay for artist:', currentTrack.artistId);
 
-    const currentQueueIds = new Set(queue.queue.map(t => t.id));
-    const result = await autoplay.loadSimilarArtistTracks(
-      currentTrack.artistId,
-      currentQueueIds
-    );
+      const currentQueueIds = new Set(queue.queue.map((t) => t.id));
+      const result = await autoplay.loadSimilarArtistTracks(currentTrack.artistId, currentQueueIds);
 
-    if (result.tracks.length > 0) {
-      logger.debug(`[Player] Autoplay: loaded ${result.tracks.length} tracks from similar artists`);
-      setIsAutoplayActive(true);
-      setAutoplaySourceArtist(result.sourceArtistName);
+      if (result.tracks.length > 0) {
+        logger.debug(
+          `[Player] Autoplay: loaded ${result.tracks.length} tracks from similar artists`
+        );
+        setIsAutoplayActive(true);
+        setAutoplaySourceArtist(result.sourceArtistName);
 
-      // Calculate next index BEFORE adding to queue
-      const nextIndex = queue.queue.length;
-      // Add tracks to queue and play
-      queue.addToQueue(result.tracks);
-      queue.setCurrentIndex(nextIndex);
-      playTrack(result.tracks[0], useCrossfade);
-      return true;
-    } else {
-      logger.debug('[Player] Autoplay: no similar tracks found');
-      setIsPlaying(false);
-      setIsAutoplayActive(false);
-      setAutoplaySourceArtist(null);
-      // Reset crossfading state if it was set early by onCrossfadeTrigger
-      crossfade.clearCrossfade();
-      return false;
-    }
-  }, [autoplaySettings.enabled, currentTrack, radio.isRadioMode, queue, autoplay, playTrack, crossfade]);
+        // Calculate next index BEFORE adding to queue
+        const nextIndex = queue.queue.length;
+        // Add tracks to queue and play
+        queue.addToQueue(result.tracks);
+        queue.setCurrentIndex(nextIndex);
+        playTrack(result.tracks[0], useCrossfade);
+        return true;
+      } else {
+        logger.debug('[Player] Autoplay: no similar tracks found');
+        setIsPlaying(false);
+        setIsAutoplayActive(false);
+        setAutoplaySourceArtist(null);
+        // Reset crossfading state if it was set early by onCrossfadeTrigger
+        crossfade.clearCrossfade();
+        return false;
+      }
+    },
+    [
+      autoplaySettings.enabled,
+      currentTrack,
+      radio.isRadioMode,
+      queue,
+      autoplay,
+      playTrack,
+      crossfade,
+    ]
+  );
 
   /**
    * Handle playing next track
    */
-  const handlePlayNext = useCallback(async (useCrossfade: boolean = false) => {
-    if (queue.queue.length === 0) {
-      crossfade.clearCrossfade();
-      return;
-    }
+  const handlePlayNext = useCallback(
+    async (useCrossfade: boolean = false) => {
+      if (queue.queue.length === 0) {
+        crossfade.clearCrossfade();
+        return;
+      }
 
-    // End current session as skipped if there's an active session
-    if (playTracking.hasActiveSession()) {
-      playTracking.endPlaySession(true);
-    }
+      // End current session as skipped if there's an active session
+      if (playTracking.hasActiveSession()) {
+        playTracking.endPlaySession(true);
+      }
 
-    const nextIndex = queue.getNextIndex();
+      const nextIndex = queue.getNextIndex();
 
-    // No next track - try autoplay
-    if (nextIndex === -1) {
-      logger.debug('[Player] No next track in queue');
-      logger.debug('[Player] Attempting autoplay');
-      await triggerAutoplay(useCrossfade);
-      return;
-    }
+      // No next track - try autoplay
+      if (nextIndex === -1) {
+        logger.debug('[Player] No next track in queue');
+        logger.debug('[Player] Attempting autoplay');
+        await triggerAutoplay(useCrossfade);
+        return;
+      }
 
-    queue.setCurrentIndex(nextIndex);
-    const nextTrack = queue.getTrackAt(nextIndex);
-    if (nextTrack) {
-      playTrack(nextTrack, useCrossfade);
-    }
-  }, [queue, playTracking, playTrack, triggerAutoplay, crossfade]);
+      queue.setCurrentIndex(nextIndex);
+      const nextTrack = queue.getTrackAt(nextIndex);
+      if (nextTrack) {
+        playTrack(nextTrack, useCrossfade);
+      }
+    },
+    [queue, playTracking, playTrack, triggerAutoplay, crossfade]
+  );
 
   // Update ref for crossfade callback
   useEffect(() => {
@@ -548,33 +606,39 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Play a queue of tracks starting at index
    * Does NOT auto-shuffle - caller is responsible for shuffle state and track order
    */
-  const playQueue = useCallback((tracks: Track[], startIndex: number = 0) => {
-    // Reset autoplay state when user starts new playback
-    setIsAutoplayActive(false);
-    setAutoplaySourceArtist(null);
-    autoplay.resetSession();
+  const playQueue = useCallback(
+    (tracks: Track[], startIndex: number = 0) => {
+      // Reset autoplay state when user starts new playback
+      setIsAutoplayActive(false);
+      setAutoplaySourceArtist(null);
+      autoplay.resetSession();
 
-    queue.setQueue(tracks, startIndex);
-    if (tracks[startIndex]) {
-      playTrack(tracks[startIndex], false);
-    }
-  }, [queue, playTrack, autoplay]);
+      queue.setQueue(tracks, startIndex);
+      if (tracks[startIndex]) {
+        playTrack(tracks[startIndex], false);
+      }
+    },
+    [queue, playTrack, autoplay]
+  );
 
   /**
    * Remove track from queue
    */
-  const removeFromQueue = useCallback((index: number) => {
-    const wasCurrentTrack = index === queue.currentIndex;
-    queue.removeFromQueue(index);
+  const removeFromQueue = useCallback(
+    (index: number) => {
+      const wasCurrentTrack = index === queue.currentIndex;
+      queue.removeFromQueue(index);
 
-    if (wasCurrentTrack && queue.queue.length > 0) {
-      // Play next track if we removed the current one
-      const nextTrack = queue.getTrackAt(queue.currentIndex);
-      if (nextTrack) {
-        playTrack(nextTrack, false);
+      if (wasCurrentTrack && queue.queue.length > 0) {
+        // Play next track if we removed the current one
+        const nextTrack = queue.getTrackAt(queue.currentIndex);
+        if (nextTrack) {
+          playTrack(nextTrack, false);
+        }
       }
-    }
-  }, [queue, playTrack]);
+    },
+    [queue, playTrack]
+  );
 
   // ========== TRACK ENDED HANDLER ==========
   // Use ref-based handler to prevent event listener churn during track transitions.
@@ -630,7 +694,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         await handlePlayNext(crossfadeSettings.enabled);
       }
     };
-  }, [audioElements, playTracking, queue, handlePlayNext, autoplaySettings.enabled, currentTrack, radio.isRadioMode, crossfadeSettings.enabled]);
+  }, [
+    audioElements,
+    playTracking,
+    queue,
+    handlePlayNext,
+    autoplaySettings.enabled,
+    currentTrack,
+    radio.isRadioMode,
+    crossfadeSettings.enabled,
+  ]);
 
   // Stable event listeners - only set up once when audio elements are created.
   // The ref indirection ensures the handler always uses the latest state
@@ -665,10 +738,17 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     // Start prefetch when we're within threshold of queue end
     if (tracksRemaining <= threshold && tracksRemaining >= 0) {
       logger.debug(`[Player] ${tracksRemaining} tracks remaining, prefetching autoplay tracks`);
-      const currentQueueIds = new Set(queue.queue.map(t => t.id));
+      const currentQueueIds = new Set(queue.queue.map((t) => t.id));
       autoplay.prefetchSimilarArtistTracks(currentTrack.artistId, currentQueueIds);
     }
-  }, [autoplaySettings.enabled, radio.isRadioMode, currentTrack, queue.currentIndex, queue.queue, autoplay]);
+  }, [
+    autoplaySettings.enabled,
+    radio.isRadioMode,
+    currentTrack,
+    queue.currentIndex,
+    queue.queue,
+    autoplay,
+  ]);
 
   // ========== MEDIA SESSION API (for mobile background playback) ==========
   useMediaSession({
@@ -698,20 +778,23 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   /**
    * Play a radio station
    */
-  const playRadio = useCallback(async (station: RadioStation | RadioBrowserStation) => {
-    try {
-      // Clear track state
-      setCurrentTrack(null);
-      queue.clearQueue();
-      crossfade.clearCrossfade();
+  const playRadio = useCallback(
+    async (station: RadioStation | RadioBrowserStation) => {
+      try {
+        // Clear track state
+        setCurrentTrack(null);
+        queue.clearQueue();
+        crossfade.clearCrossfade();
 
-      await radio.playRadio(station);
-    } catch (error) {
-      logger.error('[Player] Failed to play radio station:', (error as Error).message);
-      // Ensure we're not stuck in a bad state
-      setIsPlaying(false);
-    }
-  }, [radio, queue, crossfade]);
+        await radio.playRadio(station);
+      } catch (error) {
+        logger.error('[Player] Failed to play radio station:', (error as Error).message);
+        // Ensure we're not stuck in a bad state
+        setIsPlaying(false);
+      }
+    },
+    [radio, queue, crossfade]
+  );
 
   /**
    * Stop radio
@@ -730,47 +813,71 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // ========== CROSSFADE SETTINGS ==========
 
-  const setCrossfadeEnabled = useCallback((enabled: boolean) => {
-    setCrossfadeEnabledStore(enabled);
-  }, [setCrossfadeEnabledStore]);
+  const setCrossfadeEnabled = useCallback(
+    (enabled: boolean) => {
+      setCrossfadeEnabledStore(enabled);
+    },
+    [setCrossfadeEnabledStore]
+  );
 
-  const setCrossfadeDuration = useCallback((dur: number) => {
-    setCrossfadeDurationStore(dur);
-  }, [setCrossfadeDurationStore]);
+  const setCrossfadeDuration = useCallback(
+    (dur: number) => {
+      setCrossfadeDurationStore(dur);
+    },
+    [setCrossfadeDurationStore]
+  );
 
-  const setCrossfadeSmartMode = useCallback((enabled: boolean) => {
-    setCrossfadeSmartModeStore(enabled);
-  }, [setCrossfadeSmartModeStore]);
+  const setCrossfadeSmartMode = useCallback(
+    (enabled: boolean) => {
+      setCrossfadeSmartModeStore(enabled);
+    },
+    [setCrossfadeSmartModeStore]
+  );
 
-  const setCrossfadeTempoMatch = useCallback((enabled: boolean) => {
-    setCrossfadeTempoMatchStore(enabled);
-  }, [setCrossfadeTempoMatchStore]);
+  const setCrossfadeTempoMatch = useCallback(
+    (enabled: boolean) => {
+      setCrossfadeTempoMatchStore(enabled);
+    },
+    [setCrossfadeTempoMatchStore]
+  );
 
   // ========== NORMALIZATION SETTINGS ==========
 
-  const setNormalizationEnabled = useCallback((enabled: boolean) => {
-    setNormalizationEnabledStore(enabled);
-    // Re-apply gain with new settings
-    normalization.applyGain(currentTrack);
-  }, [setNormalizationEnabledStore, normalization, currentTrack]);
+  const setNormalizationEnabled = useCallback(
+    (enabled: boolean) => {
+      setNormalizationEnabledStore(enabled);
+      // Re-apply gain with new settings
+      normalization.applyGain(currentTrack);
+    },
+    [setNormalizationEnabledStore, normalization, currentTrack]
+  );
 
-  const setNormalizationTargetLufs = useCallback((target: -14 | -16) => {
-    setNormalizationTargetLufsStore(target);
-    // Re-apply gain with new settings
-    normalization.applyGain(currentTrack);
-  }, [setNormalizationTargetLufsStore, normalization, currentTrack]);
+  const setNormalizationTargetLufs = useCallback(
+    (target: -14 | -16) => {
+      setNormalizationTargetLufsStore(target);
+      // Re-apply gain with new settings
+      normalization.applyGain(currentTrack);
+    },
+    [setNormalizationTargetLufsStore, normalization, currentTrack]
+  );
 
-  const setNormalizationPreventClipping = useCallback((prevent: boolean) => {
-    setNormalizationPreventClippingStore(prevent);
-    // Re-apply gain with new settings
-    normalization.applyGain(currentTrack);
-  }, [setNormalizationPreventClippingStore, normalization, currentTrack]);
+  const setNormalizationPreventClipping = useCallback(
+    (prevent: boolean) => {
+      setNormalizationPreventClippingStore(prevent);
+      // Re-apply gain with new settings
+      normalization.applyGain(currentTrack);
+    },
+    [setNormalizationPreventClippingStore, normalization, currentTrack]
+  );
 
   // ========== AUTOPLAY SETTINGS ==========
 
-  const setAutoplayEnabled = useCallback((enabled: boolean) => {
-    setAutoplayEnabledStore(enabled);
-  }, [setAutoplayEnabledStore]);
+  const setAutoplayEnabled = useCallback(
+    (enabled: boolean) => {
+      setAutoplayEnabledStore(enabled);
+    },
+    [setAutoplayEnabledStore]
+  );
 
   // ========== CONTEXT VALUE ==========
 
