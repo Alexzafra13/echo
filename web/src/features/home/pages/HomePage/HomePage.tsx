@@ -4,7 +4,17 @@ import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components'
 import { HeaderWithSearch } from '@shared/components/layout/Header';
 import { ActionCardsRow } from '@shared/components/ActionCardsRow';
 import type { AutoPlaylist } from '@shared/services/recommendations.service';
-import { useFeaturedAlbum, useRecentAlbums, useTopPlayedAlbums, useGridDimensions, useAutoPlaylists, categorizeAutoPlaylists, randomSelect, useAlbumsRecentlyPlayed } from '../../hooks';
+import {
+  useFeaturedAlbum,
+  useRecentAlbums,
+  useTopPlayedAlbums,
+  useUserTopPlayedAlbums,
+  useGridDimensions,
+  useAutoPlaylists,
+  categorizeAutoPlaylists,
+  randomSelect,
+  useAlbumsRecentlyPlayed,
+} from '../../hooks';
 import { useAutoRefreshOnScan, useDocumentTitle } from '@shared/hooks';
 import { useHomePreferences } from '@features/settings/hooks';
 import { usePlaylists } from '@features/playlists/hooks/usePlaylists';
@@ -52,7 +62,10 @@ export default function HomePage() {
   const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums(
     Math.min(neededAlbums, 50) // Backend max is 50
   );
-  const { data: topPlayedAlbums, isLoading: loadingTopPlayed } = useTopPlayedAlbums(Math.min(neededAlbums, 50));
+  const { data: topPlayedAlbums, isLoading: loadingTopPlayed } = useTopPlayedAlbums(
+    Math.min(neededAlbums, 50)
+  );
+  const { data: userTopPlayedAlbums } = useUserTopPlayedAlbums(Math.min(neededAlbums, 50));
   const { data: recentlyPlayedAlbums } = useAlbumsRecentlyPlayed(Math.min(neededAlbums, 50));
   const { data: autoPlaylists } = useAutoPlaylists();
   const { data: homePreferences } = useHomePreferences();
@@ -87,9 +100,7 @@ export default function HomePage() {
         { id: 'artist-mix' as HomeSectionId, order: 1 },
       ];
     }
-    return homePreferences.homeSections
-      .filter(s => s.enabled)
-      .sort((a, b) => a.order - b.order);
+    return homePreferences.homeSections.filter((s) => s.enabled).sort((a, b) => a.order - b.order);
   }, [homePreferences]);
 
   // Hero section rotation state
@@ -113,34 +124,55 @@ export default function HomePage() {
     return diffDays >= 0 && diffDays <= days;
   };
 
-  // Create adaptive hero pool based on user activity
-  // Now includes both albums and artist playlists
+  // Create adaptive hero pool personalized per user
+  // Uses the user's own top played albums + recently played + Wave Mix playlists
+  // Falls back to global data for new users without play history
   const featuredHeroPool = useMemo((): HeroItem[] => {
     if (!recentAlbums || recentAlbums.length === 0) return [];
 
     const pool: HeroItem[] = [];
-    const topPlayed = topPlayedAlbums || [];
+    // Prefer per-user top played; fall back to global top played
+    const userTopPlayed = userTopPlayedAlbums || [];
+    const globalTopPlayed = topPlayedAlbums || [];
+    const topPlayed = userTopPlayed.length > 0 ? userTopPlayed : globalTopPlayed;
+    const userRecentlyPlayed = recentlyPlayedAlbums?.data || [];
     const recent = recentAlbums || [];
 
     // Filter albums with recent release dates (last 3 months)
-    const newReleases = recent.filter(album => isRecentRelease(album, 90));
+    const newReleases = recent.filter((album) => isRecentRelease(album, 90));
 
-    // Get artist playlists from Wave Mix (sorted by plays - first is most played)
-    const { artistPlaylists } = autoPlaylists ? categorizeAutoPlaylists(autoPlaylists) : { artistPlaylists: [] };
+    // Get artist playlists from Wave Mix (per-user, sorted by plays)
+    const { artistPlaylists } = autoPlaylists
+      ? categorizeAutoPlaylists(autoPlaylists)
+      : { artistPlaylists: [] };
 
-    // Determine user activity level
-    const hasHighActivity = topPlayed.length >= 5; // Active user
-    const hasLowActivity = topPlayed.length > 0 && topPlayed.length < 5; // Some activity
+    // Determine user activity level based on personal play history
+    const hasHighActivity = userTopPlayed.length >= 5;
+    const hasLowActivity = userTopPlayed.length > 0 && userTopPlayed.length < 5;
 
     if (hasHighActivity) {
-      // Active user: Mix of top played, new releases, artist playlists, and recent
-      pool.push(...topPlayed.slice(0, 3).map(album => ({ type: 'album' as const, data: album })));
+      // Active user: Personal top played + recently played + artist playlists
+      pool.push(...topPlayed.slice(0, 2).map((album) => ({ type: 'album' as const, data: album })));
 
-      if (newReleases.length > 0) {
-        pool.push(...randomSelect(newReleases, 1).map(album => ({ type: 'album' as const, data: album })));
+      // Add 1 recently played album (different from top played)
+      const topPlayedIds = new Set(topPlayed.slice(0, 2).map((a) => a.id));
+      const uniqueRecentlyPlayed = userRecentlyPlayed.filter((a) => !topPlayedIds.has(a.id));
+      if (uniqueRecentlyPlayed.length > 0) {
+        pool.push(
+          ...randomSelect(uniqueRecentlyPlayed, 1).map((album) => ({
+            type: 'album' as const,
+            data: album,
+          }))
+        );
       }
 
-      // Add artist playlists: 1 most played + 1 less played (from the end)
+      if (newReleases.length > 0) {
+        pool.push(
+          ...randomSelect(newReleases, 1).map((album) => ({ type: 'album' as const, data: album }))
+        );
+      }
+
+      // Add artist playlists: 1 most played + 1 less played
       if (artistPlaylists.length >= 2) {
         pool.push({ type: 'playlist' as const, data: artistPlaylists[0] });
         const lessPlayedArtists = artistPlaylists.slice(Math.floor(artistPlaylists.length / 2));
@@ -154,15 +186,34 @@ export default function HomePage() {
 
       // Fill remaining with recent albums (avoid duplicates)
       const existingAlbumIds = new Set(
-        pool.filter(item => item.type === 'album').map(item => item.data.id)
+        pool.filter((item) => item.type === 'album').map((item) => item.data.id)
       );
-      const remainingRecent = recent.filter(a => !existingAlbumIds.has(a.id));
-      pool.push(...randomSelect(remainingRecent, 2).map(album => ({ type: 'album' as const, data: album })));
-
+      const remainingRecent = recent.filter((a) => !existingAlbumIds.has(a.id));
+      pool.push(
+        ...randomSelect(remainingRecent, 2).map((album) => ({
+          type: 'album' as const,
+          data: album,
+        }))
+      );
     } else if (hasLowActivity) {
-      // Low activity: More weight on new content
-      pool.push(...topPlayed.slice(0, 1).map(album => ({ type: 'album' as const, data: album })));
-      pool.push(...randomSelect(newReleases, 2).map(album => ({ type: 'album' as const, data: album })));
+      // Low activity: Personal top played + more discovery content
+      pool.push(...topPlayed.slice(0, 1).map((album) => ({ type: 'album' as const, data: album })));
+
+      // Add recently played if available
+      const topPlayedIds = new Set(topPlayed.slice(0, 1).map((a) => a.id));
+      const uniqueRecentlyPlayed = userRecentlyPlayed.filter((a) => !topPlayedIds.has(a.id));
+      if (uniqueRecentlyPlayed.length > 0) {
+        pool.push(
+          ...randomSelect(uniqueRecentlyPlayed, 1).map((album) => ({
+            type: 'album' as const,
+            data: album,
+          }))
+        );
+      }
+
+      pool.push(
+        ...randomSelect(newReleases, 2).map((album) => ({ type: 'album' as const, data: album }))
+      );
 
       // Add 1 artist playlist (random)
       if (artistPlaylists.length > 0) {
@@ -172,27 +223,45 @@ export default function HomePage() {
 
       // Fill with recent albums
       const existingAlbumIds = new Set(
-        pool.filter(item => item.type === 'album').map(item => item.data.id)
+        pool.filter((item) => item.type === 'album').map((item) => item.data.id)
       );
-      const remainingRecent = recent.filter(a => !existingAlbumIds.has(a.id));
-      pool.push(...randomSelect(remainingRecent, 4).map(album => ({ type: 'album' as const, data: album })));
-
+      const remainingRecent = recent.filter((a) => !existingAlbumIds.has(a.id));
+      pool.push(
+        ...randomSelect(remainingRecent, 3).map((album) => ({
+          type: 'album' as const,
+          data: album,
+        }))
+      );
     } else {
-      // New user: Show new releases and recent albums only (no playlists yet)
-      pool.push(...randomSelect(newReleases, 4).map(album => ({ type: 'album' as const, data: album })));
+      // New user: No personal history, show new releases and recent albums
+      pool.push(
+        ...randomSelect(newReleases, 4).map((album) => ({ type: 'album' as const, data: album }))
+      );
 
       const existingAlbumIds = new Set(
-        pool.filter(item => item.type === 'album').map(item => item.data.id)
+        pool.filter((item) => item.type === 'album').map((item) => item.data.id)
       );
-      const remainingRecent = recent.filter(a => !existingAlbumIds.has(a.id));
-      pool.push(...randomSelect(remainingRecent, 4).map(album => ({ type: 'album' as const, data: album })));
+      const remainingRecent = recent.filter((a) => !existingAlbumIds.has(a.id));
+      pool.push(
+        ...randomSelect(remainingRecent, 4).map((album) => ({
+          type: 'album' as const,
+          data: album,
+        }))
+      );
     }
 
     // Remove duplicates and limit to 8 items
-    const uniquePool = Array.from(new Map(pool.map(item => [item.data.id, item])).values());
+    const uniquePool = Array.from(new Map(pool.map((item) => [item.data.id, item])).values());
     return uniquePool.slice(0, 8);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recentAlbums, topPlayedAlbums, autoPlaylists, refreshKey]);
+  }, [
+    recentAlbums,
+    topPlayedAlbums,
+    userTopPlayedAlbums,
+    recentlyPlayedAlbums,
+    autoPlaylists,
+    refreshKey,
+  ]);
 
   // Prepare separate playlists for artist-mix and genre-mix sections
   const { artistMixPlaylists, genreMixPlaylists } = useMemo(() => {
@@ -257,17 +326,16 @@ export default function HomePage() {
   };
 
   const handlePreviousHero = () => {
-    setCurrentHeroIndex((prev) =>
-      prev === 0 ? featuredHeroPool.length - 1 : prev - 1
-    );
+    setCurrentHeroIndex((prev) => (prev === 0 ? featuredHeroPool.length - 1 : prev - 1));
   };
 
   // Current hero item (from pool or fallback to API featured album)
-  const currentHeroItem: HeroItem | null = featuredHeroPool.length > 0
-    ? featuredHeroPool[currentHeroIndex]
-    : featuredAlbum
-      ? { type: 'album', data: featuredAlbum }
-      : null;
+  const currentHeroItem: HeroItem | null =
+    featuredHeroPool.length > 0
+      ? featuredHeroPool[currentHeroIndex]
+      : featuredAlbum
+        ? { type: 'album', data: featuredAlbum }
+        : null;
 
   // Truncate album arrays to fill complete grid rows (avoid stretching in last incomplete row)
   const truncateAlbumsToFullRows = (albums: Album[]) => {
@@ -283,112 +351,128 @@ export default function HomePage() {
   const displayedRecentlyPlayedAlbums = truncateAlbumsToFullRows(recentlyPlayedAlbums?.data || []);
 
   // Render a section by ID
-  const renderSection = useCallback((sectionId: HomeSectionId): ReactNode => {
-    switch (sectionId) {
-      case 'recent-albums':
-        if (displayedRecentAlbums.length === 0) return null;
-        return (
-          <AlbumGrid
-            key="recent-albums"
-            title="Recientemente Añadidos"
-            albums={displayedRecentAlbums}
-            showViewAll={true}
-            viewAllPath="/albums"
-          />
-        );
-      case 'artist-mix':
-        if (artistMixPlaylists.length === 0) return null;
-        return (
-          <PlaylistGrid
-            key="artist-mix"
-            title="Mix por Artista"
-            playlists={artistMixPlaylists}
-            showViewAll={true}
-            viewAllPath="/wave-mix"
-          />
-        );
-      case 'genre-mix':
-        if (genreMixPlaylists.length === 0) return null;
-        return (
-          <PlaylistGrid
-            key="genre-mix"
-            title="Mix por Género"
-            playlists={genreMixPlaylists}
-            showViewAll={true}
-            viewAllPath="/wave-mix"
-          />
-        );
-      case 'recently-played':
-        if (displayedRecentlyPlayedAlbums.length === 0) return null;
-        return (
-          <AlbumGrid
-            key="recently-played"
-            title="Escuchados Recientemente"
-            albums={displayedRecentlyPlayedAlbums}
-            showViewAll={false}
-          />
-        );
-      case 'top-played':
-        if (displayedTopPlayedAlbums.length === 0) return null;
-        return (
-          <AlbumGrid
-            key="top-played"
-            title="Más Escuchados"
-            albums={displayedTopPlayedAlbums}
-            showViewAll={false}
-          />
-        );
-      case 'my-playlists':
-        return (
-          <MyPlaylistsSection
-            key="my-playlists"
-            playlists={userPlaylists}
-            maxItems={neededPlaylists}
-          />
-        );
-      case 'favorite-radios':
-        return (
-          <FavoriteRadiosSection
-            key="favorite-radios"
-            stations={favoriteStations}
-            maxItems={neededPlaylists}
-            currentRadioStation={currentRadioStation}
-            isPlaying={isPlaying}
-            isRadioMode={isRadioMode}
-            radioMetadata={radioMetadata}
-            onPlay={playRadio}
-            onRemoveFavorite={(id) => deleteFavoriteMutation.mutate(id)}
-          />
-        );
-      case 'surprise-me':
-        return (
-          <SurpriseMeSection
-            key="surprise-me"
-            albums={randomAlbums}
-            onRefresh={handleRefreshRandom}
-          />
-        );
-      case 'shared-albums':
-        return (
-          <SharedAlbumGrid
-            key="shared-albums"
-            title="Bibliotecas Compartidas"
-            albums={sharedAlbums}
-            showViewAll={sharedAlbums.length > 0}
-            viewAllPath="/albums?source=shared"
-            showEmptyState={true}
-          />
-        );
-      default:
-        return null;
-    }
-  }, [
-    displayedRecentAlbums, displayedTopPlayedAlbums, displayedRecentlyPlayedAlbums,
-    artistMixPlaylists, genreMixPlaylists, userPlaylists, neededPlaylists,
-    favoriteStations, currentRadioStation, isPlaying, isRadioMode, radioMetadata,
-    playRadio, deleteFavoriteMutation, randomAlbums, handleRefreshRandom,
-    sharedAlbums, neededAlbums,
-  ]);
+  const renderSection = useCallback(
+    (sectionId: HomeSectionId): ReactNode => {
+      switch (sectionId) {
+        case 'recent-albums':
+          if (displayedRecentAlbums.length === 0) return null;
+          return (
+            <AlbumGrid
+              key="recent-albums"
+              title="Recientemente Añadidos"
+              albums={displayedRecentAlbums}
+              showViewAll={true}
+              viewAllPath="/albums"
+            />
+          );
+        case 'artist-mix':
+          if (artistMixPlaylists.length === 0) return null;
+          return (
+            <PlaylistGrid
+              key="artist-mix"
+              title="Mix por Artista"
+              playlists={artistMixPlaylists}
+              showViewAll={true}
+              viewAllPath="/wave-mix"
+            />
+          );
+        case 'genre-mix':
+          if (genreMixPlaylists.length === 0) return null;
+          return (
+            <PlaylistGrid
+              key="genre-mix"
+              title="Mix por Género"
+              playlists={genreMixPlaylists}
+              showViewAll={true}
+              viewAllPath="/wave-mix"
+            />
+          );
+        case 'recently-played':
+          if (displayedRecentlyPlayedAlbums.length === 0) return null;
+          return (
+            <AlbumGrid
+              key="recently-played"
+              title="Escuchados Recientemente"
+              albums={displayedRecentlyPlayedAlbums}
+              showViewAll={false}
+            />
+          );
+        case 'top-played':
+          if (displayedTopPlayedAlbums.length === 0) return null;
+          return (
+            <AlbumGrid
+              key="top-played"
+              title="Más Escuchados"
+              albums={displayedTopPlayedAlbums}
+              showViewAll={false}
+            />
+          );
+        case 'my-playlists':
+          return (
+            <MyPlaylistsSection
+              key="my-playlists"
+              playlists={userPlaylists}
+              maxItems={neededPlaylists}
+            />
+          );
+        case 'favorite-radios':
+          return (
+            <FavoriteRadiosSection
+              key="favorite-radios"
+              stations={favoriteStations}
+              maxItems={neededPlaylists}
+              currentRadioStation={currentRadioStation}
+              isPlaying={isPlaying}
+              isRadioMode={isRadioMode}
+              radioMetadata={radioMetadata}
+              onPlay={playRadio}
+              onRemoveFavorite={(id) => deleteFavoriteMutation.mutate(id)}
+            />
+          );
+        case 'surprise-me':
+          return (
+            <SurpriseMeSection
+              key="surprise-me"
+              albums={randomAlbums}
+              onRefresh={handleRefreshRandom}
+            />
+          );
+        case 'shared-albums':
+          return (
+            <SharedAlbumGrid
+              key="shared-albums"
+              title="Bibliotecas Compartidas"
+              albums={sharedAlbums}
+              showViewAll={sharedAlbums.length > 0}
+              viewAllPath="/albums?source=shared"
+              showEmptyState={true}
+            />
+          );
+        default:
+          return null;
+      }
+    },
+    [
+      displayedRecentAlbums,
+      displayedTopPlayedAlbums,
+      displayedRecentlyPlayedAlbums,
+      artistMixPlaylists,
+      genreMixPlaylists,
+      userPlaylists,
+      neededPlaylists,
+      favoriteStations,
+      currentRadioStation,
+      isPlaying,
+      isRadioMode,
+      radioMetadata,
+      playRadio,
+      deleteFavoriteMutation,
+      randomAlbums,
+      handleRefreshRandom,
+      sharedAlbums,
+      neededAlbums,
+    ]
+  );
 
   return (
     <div className={styles.homePage}>
@@ -440,9 +524,7 @@ export default function HomePage() {
               </div>
             </div>
           ) : enabledSections.length > 0 ? (
-            <>
-              {enabledSections.map(section => renderSection(section.id))}
-            </>
+            <>{enabledSections.map((section) => renderSection(section.id))}</>
           ) : (
             <div className={styles.homePage__emptyState}>
               <p>No albums found. Start by adding some music!</p>

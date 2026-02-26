@@ -1,6 +1,7 @@
 export {
   useRecentAlbums,
   useTopPlayedAlbums,
+  useUserTopPlayedAlbums,
   useFeaturedAlbum,
   useAlbum,
   useAlbums,

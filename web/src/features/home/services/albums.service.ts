@@ -6,7 +6,7 @@ import type {
   AlbumsAlphabeticalResponse,
   AlbumsByArtistResponse,
   AlbumsRecentlyPlayedResponse,
-  AlbumsFavoritesResponse
+  AlbumsFavoritesResponse,
 } from '../types';
 
 /**
@@ -79,7 +79,10 @@ export const albumsService = {
   /**
    * Get albums sorted alphabetically (A-Z)
    */
-  getAlphabetically: async (params?: { page?: number; limit?: number }): Promise<AlbumsAlphabeticalResponse> => {
+  getAlphabetically: async (params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<AlbumsAlphabeticalResponse> => {
     const { data } = await apiClient.get<AlbumsAlphabeticalResponse>('/albums/alphabetical', {
       params,
     });
@@ -89,9 +92,22 @@ export const albumsService = {
   /**
    * Get albums sorted by artist name
    */
-  getByArtist: async (params?: { page?: number; limit?: number }): Promise<AlbumsByArtistResponse> => {
+  getByArtist: async (params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<AlbumsByArtistResponse> => {
     const { data } = await apiClient.get<AlbumsByArtistResponse>('/albums/by-artist', {
       params,
+    });
+    return data;
+  },
+
+  /**
+   * Get top played albums for the authenticated user
+   */
+  getUserTopPlayed: async (take?: number): Promise<Album[]> => {
+    const { data } = await apiClient.get<Album[]>('/albums/top-played/me', {
+      params: take ? { take } : undefined,
     });
     return data;
   },
@@ -109,7 +125,10 @@ export const albumsService = {
   /**
    * Get favorite albums for the authenticated user
    */
-  getFavorites: async (params?: { page?: number; limit?: number }): Promise<AlbumsFavoritesResponse> => {
+  getFavorites: async (params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<AlbumsFavoritesResponse> => {
     const { data } = await apiClient.get<AlbumsFavoritesResponse>('/albums/favorites', {
       params,
     });
