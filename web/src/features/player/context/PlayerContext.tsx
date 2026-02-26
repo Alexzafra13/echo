@@ -20,7 +20,7 @@ import {
   useRef,
   ReactNode,
 } from 'react';
-import { Track, PlayerContextValue, RadioStation } from '../types';
+import { Track, PlayerContextValue, RadioStation, PlayContext } from '../types';
 import { useStreamToken } from '../hooks/useStreamToken';
 import { usePlayerSettingsStore } from '../store';
 import { useAudioElements } from '../hooks/useAudioElements';
@@ -80,6 +80,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // Ref to track current track's BPM for tempo-matched crossfade.
   // Used inside playTrack without adding currentTrack to its dependency array.
   const currentTrackBpmRef = useRef<number | undefined>(undefined);
+
+  // Ref to store the play context of the current queue (album, playlist, artist, etc.)
+  // This is passed to startPlaySession so all tracks in a queue inherit the originating context.
+  const queueContextRef = useRef<PlayContext | undefined>(undefined);
 
   // Ref to suppress pause events during track transitions on mobile.
   // When loading a new track, audio.load() fires a 'pause' event which sets isPlaying=false.
@@ -344,8 +348,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           }
         }
 
-        // Start new play session
-        playTracking.startPlaySession(track);
+        // Start new play session with queue context if available
+        playTracking.startPlaySession(track, queueContextRef.current);
       } else {
         // Normal play (no crossfade) - apply gain to both elements
         isTransitioningRef.current = true;
@@ -356,7 +360,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         audioElements.loadOnActive(streamUrl);
 
         setCurrentTrack(track);
-        playTracking.startPlaySession(track);
+        playTracking.startPlaySession(track, queueContextRef.current);
 
         try {
           await audioElements.playActive();
@@ -502,6 +506,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         );
         setIsAutoplayActive(true);
         setAutoplaySourceArtist(result.sourceArtistName);
+        queueContextRef.current = 'recommendation';
 
         // Calculate next index BEFORE adding to queue
         const nextIndex = queue.queue.length;
@@ -607,11 +612,15 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Does NOT auto-shuffle - caller is responsible for shuffle state and track order
    */
   const playQueue = useCallback(
-    (tracks: Track[], startIndex: number = 0) => {
+    (tracks: Track[], startIndex: number = 0, context?: PlayContext) => {
       // Reset autoplay state when user starts new playback
       setIsAutoplayActive(false);
       setAutoplaySourceArtist(null);
       autoplay.resetSession();
+
+      // Store the originating context so all tracks in this queue
+      // inherit it for play tracking (album, playlist, artist, etc.)
+      queueContextRef.current = context;
 
       queue.setQueue(tracks, startIndex);
       if (tracks[startIndex]) {

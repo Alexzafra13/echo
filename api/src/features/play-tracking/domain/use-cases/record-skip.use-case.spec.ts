@@ -1,12 +1,15 @@
 import { RecordSkipUseCase } from './record-skip.use-case';
 import { PlayEvent, PlayContext } from '../entities/play-event.entity';
 import { IPlayTrackingRepository } from '../ports';
+import { PinoLogger } from 'nestjs-pino';
 
 describe('RecordSkipUseCase', () => {
   let useCase: RecordSkipUseCase;
   let mockRepository: {
     recordSkip: jest.Mock;
+    updatePlayStats: jest.Mock;
   };
+  let mockLogger: Partial<PinoLogger>;
 
   const createMockPlayEvent = (overrides = {}): PlayEvent => ({
     id: 'play-123',
@@ -23,9 +26,18 @@ describe('RecordSkipUseCase', () => {
   beforeEach(() => {
     mockRepository = {
       recordSkip: jest.fn(),
+      updatePlayStats: jest.fn().mockResolvedValue(undefined),
     };
 
-    useCase = new RecordSkipUseCase(mockRepository as unknown as IPlayTrackingRepository);
+    mockLogger = {
+      debug: jest.fn(),
+      error: jest.fn(),
+    };
+
+    useCase = new RecordSkipUseCase(
+      mockLogger as PinoLogger,
+      mockRepository as unknown as IPlayTrackingRepository
+    );
   });
 
   describe('execute', () => {

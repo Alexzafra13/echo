@@ -1,6 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { AutoPlaylist, WaveMixConfig, TrackScore } from '../../domain/entities/track-score.entity';
+import {
+  AutoPlaylist,
+  WaveMixConfig,
+  TrackScore,
+  TemporalBalance,
+} from '../../domain/entities/track-score.entity';
 import { ScoringService } from '../../domain/services/scoring.service';
 import {
   IPlayTrackingRepository,
@@ -108,7 +113,17 @@ export class WaveMixService {
       return this.createEmptyWaveMix(userId);
     }
 
-    const finalTracks = qualifiedTracks.slice(0, finalConfig.maxTracks);
+    // Apply temporal balance: distribute tracks across time periods
+    // so the mix isn't dominated by only recent or only old favorites
+    const trackPlayStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
+    const lastPlayedMap = new Map(trackPlayStats.map((s) => [s.itemId, s.lastPlayedAt]));
+
+    const finalTracks = this.applyTemporalBalance(
+      qualifiedTracks,
+      lastPlayedMap,
+      finalConfig.temporalBalance,
+      finalConfig.maxTracks
+    );
     this.logger.info(
       { userId, selectedTracks: finalTracks.length },
       'Selected tracks for Wave Mix'
@@ -178,6 +193,91 @@ export class WaveMixService {
     }
 
     return qualifiedTracks;
+  }
+
+  /**
+   * Classify a track into a temporal bucket based on when it was last played.
+   */
+  private classifyTemporal(
+    lastPlayedAt: Date | string | undefined,
+    now: Date
+  ): 'lastWeek' | 'lastMonth' | 'lastYear' | 'older' {
+    if (!lastPlayedAt) return 'older';
+    const date = typeof lastPlayedAt === 'string' ? new Date(lastPlayedAt) : lastPlayedAt;
+    const daysSince = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSince <= 7) return 'lastWeek';
+    if (daysSince <= 30) return 'lastMonth';
+    if (daysSince <= 365) return 'lastYear';
+    return 'older';
+  }
+
+  /**
+   * Apply temporal balance to track selection.
+   * Distributes tracks across time periods (lastWeek, lastMonth, lastYear, older)
+   * according to the configured ratios, then fills remaining slots from overflow.
+   */
+  private applyTemporalBalance(
+    qualifiedTracks: TrackScore[],
+    lastPlayedMap: Map<string, Date | undefined>,
+    balance: TemporalBalance,
+    maxTracks: number
+  ): TrackScore[] {
+    const now = new Date();
+
+    // Bucket tracks by temporal period (preserving score order within each bucket)
+    const buckets: Record<keyof TemporalBalance, TrackScore[]> = {
+      lastWeek: [],
+      lastMonth: [],
+      lastYear: [],
+      older: [],
+    };
+
+    for (const track of qualifiedTracks) {
+      const period = this.classifyTemporal(lastPlayedMap.get(track.trackId), now);
+      buckets[period].push(track);
+    }
+
+    this.logger.debug(
+      {
+        lastWeek: buckets.lastWeek.length,
+        lastMonth: buckets.lastMonth.length,
+        lastYear: buckets.lastYear.length,
+        older: buckets.older.length,
+      },
+      'Temporal bucket distribution'
+    );
+
+    // Calculate target count per bucket
+    const periods: (keyof TemporalBalance)[] = ['lastWeek', 'lastMonth', 'lastYear', 'older'];
+    const targets = new Map<keyof TemporalBalance, number>();
+    for (const period of periods) {
+      targets.set(period, Math.round(maxTracks * balance[period]));
+    }
+
+    // First pass: take up to target from each bucket
+    const selected = new Set<string>();
+    const result: TrackScore[] = [];
+
+    for (const period of periods) {
+      const target = targets.get(period)!;
+      const bucket = buckets[period];
+      const take = Math.min(target, bucket.length);
+      for (let i = 0; i < take; i++) {
+        result.push(bucket[i]);
+        selected.add(bucket[i].trackId);
+      }
+    }
+
+    // Second pass: fill remaining slots from any bucket, by score order
+    if (result.length < maxTracks) {
+      const remaining = qualifiedTracks.filter((t) => !selected.has(t.trackId));
+      for (const track of remaining) {
+        if (result.length >= maxTracks) break;
+        result.push(track);
+      }
+    }
+
+    return result;
   }
 
   /**

@@ -433,6 +433,32 @@ describe('usePlayTracking', () => {
 
       expect(result.current.playSessionRef.current?.playContext).toBe('shuffle');
     });
+
+    it('should use explicit context when provided', () => {
+      const audioElements = createMockAudioElements(100, 180);
+      const { result } = renderHook(() =>
+        usePlayTracking({ audioElements, isShuffle: false, isAutoplayActive: false })
+      );
+
+      act(() => {
+        result.current.startPlaySession(createTrack('1'), 'album');
+      });
+
+      expect(result.current.playSessionRef.current?.playContext).toBe('album');
+    });
+
+    it('should override explicit context with shuffle when shuffle is active', () => {
+      const audioElements = createMockAudioElements(100, 180);
+      const { result } = renderHook(() =>
+        usePlayTracking({ audioElements, isShuffle: true, isAutoplayActive: false })
+      );
+
+      act(() => {
+        result.current.startPlaySession(createTrack('1'), 'album');
+      });
+
+      expect(result.current.playSessionRef.current?.playContext).toBe('shuffle');
+    });
   });
 
   describe('edge cases', () => {

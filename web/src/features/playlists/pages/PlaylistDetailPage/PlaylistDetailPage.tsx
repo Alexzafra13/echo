@@ -87,7 +87,7 @@ export default function PlaylistDetailPage() {
     // Disable shuffle mode for ordered playback
     setShuffle(false);
     const playerTracks = toPlayerTracks(tracks);
-    playQueue(playerTracks, 0);
+    playQueue(playerTracks, 0, 'playlist');
   };
 
   const handleShufflePlay = () => {
@@ -102,7 +102,7 @@ export default function PlaylistDetailPage() {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
     }
-    playQueue(shuffledTracks, 0);
+    playQueue(shuffledTracks, 0, 'playlist');
   };
 
   const handleTrackPlay = (track: SharedTrack) => {
@@ -110,7 +110,7 @@ export default function PlaylistDetailPage() {
     if (tracks.length === 0) return;
     const playerTracks = toPlayerTracks(tracks);
     const trackIndex = tracks.findIndex((t) => t.id === track.id);
-    playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
+    playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0, 'playlist');
   };
 
   const handleUpdatePlaylist = async (id: string, data: UpdatePlaylistDto) => {

@@ -48,6 +48,17 @@ export interface PlayerState {
   autoplaySourceArtist: string | null;
 }
 
+export type PlayContext =
+  | 'direct'
+  | 'album'
+  | 'playlist'
+  | 'artist'
+  | 'shuffle'
+  | 'radio'
+  | 'recommendation'
+  | 'search'
+  | 'queue';
+
 export interface PlayerContextValue extends PlayerState {
   play: (track?: Track) => void;
   pause: () => void;
@@ -59,7 +70,7 @@ export interface PlayerContextValue extends PlayerState {
   addToQueue: (track: Track | Track[]) => void;
   removeFromQueue: (index: number) => void;
   clearQueue: () => void;
-  playQueue: (tracks: Track[], startIndex?: number) => void;
+  playQueue: (tracks: Track[], startIndex?: number, context?: PlayContext) => void;
 
   playRadio: (station: RadioStation) => void;
   stopRadio: () => void;

@@ -116,7 +116,7 @@ export default function AlbumPage() {
     // Disable shuffle mode for ordered playback
     setShuffle(false);
     const playerTracks = toPlayerTracks(tracks, albumContext);
-    playQueue(playerTracks, 0);
+    playQueue(playerTracks, 0, 'album');
   };
 
   const handleShufflePlay = () => {
@@ -131,14 +131,14 @@ export default function AlbumPage() {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
     }
-    playQueue(shuffledTracks, 0);
+    playQueue(shuffledTracks, 0, 'album');
   };
 
   const handleTrackPlay = (track: Track) => {
     if (!tracks) return;
     const playerTracks = toPlayerTracks(tracks, albumContext);
     const trackIndex = tracks.findIndex((t) => t.id === track.id);
-    playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
+    playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0, 'album');
   };
 
   const handleShowAlbumInfo = () => {

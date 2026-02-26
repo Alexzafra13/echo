@@ -108,7 +108,7 @@ export function PlaylistDetailPage() {
     // Disable shuffle mode for ordered playback
     setShuffle(false);
     const tracks = convertToPlayerTracks(playlist);
-    playQueue(tracks);
+    playQueue(tracks, 0, 'recommendation');
   };
 
   const handleShufflePlay = () => {
@@ -127,14 +127,14 @@ export function PlaylistDetailPage() {
       [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
     }
 
-    playQueue(shuffledTracks, 0);
+    playQueue(shuffledTracks, 0, 'recommendation');
   };
 
   const handlePlayTrack = (track: HomeTrack) => {
     if (!playlist) return;
     const tracks = convertToPlayerTracks(playlist);
     const index = tracks.findIndex((t) => t.id === track.id);
-    playQueue(tracks, index);
+    playQueue(tracks, index, 'recommendation');
   };
 
   // Convert to Player Tracks (for playback)

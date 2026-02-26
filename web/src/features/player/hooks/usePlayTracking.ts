@@ -58,7 +58,10 @@ export function usePlayTracking({
    */
   const startPlaySession = useCallback(
     (track: Track, context?: PlayContext) => {
-      const playContext = context || getPlayContext();
+      // Shuffle mode always wins because it fundamentally changes the play intent
+      // (weight: 0.2 vs e.g. album: 0.6). Otherwise use the explicit context
+      // from the originating UI (album page, playlist, search, etc.)
+      const playContext = isShuffle ? 'shuffle' : context || getPlayContext();
 
       playSessionRef.current = {
         trackId: track.id,
@@ -70,7 +73,7 @@ export function usePlayTracking({
 
       logger.debug('[PlayTracking] Started session:', playSessionRef.current);
     },
-    [getPlayContext]
+    [isShuffle, getPlayContext]
   );
 
   /**
