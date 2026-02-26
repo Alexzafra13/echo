@@ -185,25 +185,38 @@ export function useCrossfadeLogic({
       }
 
       // On iOS Safari, audio.volume is read-only (always 1.0, hardware-controlled).
-      // Volume-based crossfade is impossible — instead, do an overlap transition:
-      // both tracks play simultaneously for the configured duration, then the old
-      // track is paused. This sounds like a natural mix rather than an abrupt cut.
+      // Volume-based crossfade is impossible — do a gapless-style transition:
+      // both tracks play simultaneously for a brief overlap, then the old track
+      // is paused. The overlap is kept short (max ~2s) to minimize the "double
+      // audio" effect where both songs blast at full volume. The trigger timing
+      // in checkCrossfadeTiming already compensates by firing closer to track end.
+      //
+      // With smart mode + outroStart, the transition fires when the song naturally
+      // fades, so even a brief overlap sounds clean since the outgoing audio is
+      // already at low volume.
+      //
+      // NOTE: For a future native mobile app, full volume-based crossfade
+      // with equal-power curves should be used (native audio APIs support
+      // programmatic volume control). The desktop web path below already
+      // implements the complete crossfade logic that the app can mirror.
       if (!volumeControlSupportedRef.current) {
-        const configuredFadeDuration = currentSettings.duration * 1000;
         const activeDur = activeAudio.duration;
         const activeTime = activeAudio.currentTime;
         const trackRemainingMs = (!isNaN(activeDur) && activeDur > activeTime)
           ? (activeDur - activeTime) * 1000
-          : configuredFadeDuration;
-        const overlapDuration = Math.max(1000, Math.min(configuredFadeDuration, trackRemainingMs));
+          : 2000;
+        // Short overlap: 500ms minimum prevents audible gap, 2000ms max avoids
+        // extended period of both tracks at full volume.
+        const overlapDuration = Math.max(500, Math.min(2000, trackRemainingMs));
 
-        logger.debug('[Crossfade] Volume control not supported (iOS), overlap transition', {
+        logger.debug('[Crossfade] Gapless transition (volume control not supported)', {
           overlapDuration,
+          trackRemainingMs,
         });
 
         crossfadeStartTimeRef.current = performance.now();
 
-        // Let both tracks play together, then finish after the overlap period
+        // Let both tracks play together briefly, then finish
         crossfadeTimeoutRef.current = window.setTimeout(() => {
           if (crossfadeStartTimeRef.current === null) return;
 
@@ -219,7 +232,7 @@ export function useCrossfadeLogic({
           // Clear crossfade state
           clearCrossfade();
 
-          logger.debug('[Crossfade] Overlap transition complete, now playing:', audioElements.getActiveAudioId());
+          logger.debug('[Crossfade] Gapless transition complete, now playing:', audioElements.getActiveAudioId());
           callbacksRef.current.onCrossfadeComplete?.();
         }, overlapDuration);
 
@@ -418,25 +431,37 @@ export function useCrossfadeLogic({
     const currentTime = audioElements.getCurrentTime();
     const crossfadeDuration = currentSettings.duration;
 
+    // On platforms without volume control (iOS Safari), we can't do a real
+    // volume-based crossfade — only a brief overlap where both tracks play
+    // simultaneously. Cap the trigger window so the overlap stays short and
+    // the outgoing track plays nearly to completion instead of being cut early.
+    // On desktop browsers (volume control supported), use the full configured duration.
+    const effectiveDuration = volumeControlSupportedRef.current
+      ? crossfadeDuration
+      : Math.min(crossfadeDuration, 2);
+
     // Smart mode: use track's detected outro start time if available
     // This triggers crossfade when the song naturally ends (silence/fade detected)
+    // This is the "detect when the song drops below -X dB" feature — the backend
+    // analyzes each track's audio and stores the point where the outro begins.
     if (currentSettings.smartMode && currentTrackOutroStart !== undefined && currentTrackOutroStart > 0) {
-      // Use the earlier of outroStart or (duration - crossfadeDuration) as trigger point.
-      // This ensures there's enough time for a meaningful fade even when outroStart
+      // Use the earlier of outroStart or (duration - effectiveDuration) as trigger point.
+      // This ensures there's enough time for a meaningful transition even when outroStart
       // is very close to the track end (e.g., only 2s of silence detected).
-      const normalTriggerPoint = duration - crossfadeDuration;
+      const normalTriggerPoint = duration - effectiveDuration;
       const smartTriggerPoint = Math.min(currentTrackOutroStart, normalTriggerPoint);
 
       if (
         currentTime >= smartTriggerPoint &&
         !crossfadeStartedRef.current &&
-        duration > crossfadeDuration
+        duration > effectiveDuration
       ) {
         logger.debug('[Crossfade] Smart mode: triggering crossfade', {
           currentTime,
           outroStart: currentTrackOutroStart,
           triggerPoint: smartTriggerPoint,
           duration,
+          volumeControlSupported: volumeControlSupportedRef.current,
         });
         crossfadeStartedRef.current = true;
         return true;
@@ -447,14 +472,14 @@ export function useCrossfadeLogic({
     // Normal mode: use fixed duration before track end
     const timeRemaining = duration - currentTime;
 
-    // Start crossfade when time remaining equals crossfade duration
-    // Only if we haven't already started it for this track
-    // And track is long enough
+    // Start crossfade when time remaining equals the effective duration.
+    // On iOS, this fires ~2s before end (gapless-style).
+    // On desktop, this fires at the configured duration (full crossfade).
     if (
-      timeRemaining <= crossfadeDuration &&
+      timeRemaining <= effectiveDuration &&
       timeRemaining > 0 &&
       !crossfadeStartedRef.current &&
-      duration > crossfadeDuration
+      duration > effectiveDuration
     ) {
       crossfadeStartedRef.current = true;
       return true;
