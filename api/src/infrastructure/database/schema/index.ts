@@ -22,6 +22,7 @@ export * from './system';
 export * from './social';
 export * from './federation';
 export * from './dj';
+export * from './chat';
 
 // Relations
 export * from './relations';
