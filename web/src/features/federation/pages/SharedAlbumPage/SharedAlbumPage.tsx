@@ -1,10 +1,28 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { Download, Check, Loader2, Server, Play, Pause, Shuffle, MoreHorizontal, AlertTriangle, X, Square } from 'lucide-react';
+import {
+  Download,
+  Check,
+  Loader2,
+  Server,
+  Play,
+  Pause,
+  Shuffle,
+  MoreHorizontal,
+  AlertTriangle,
+  X,
+  Square,
+} from 'lucide-react';
 import { AxiosError } from 'axios';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
-import { useRemoteAlbum, useConnectedServers, useStartImport, useCancelImport, useImports } from '../../hooks';
+import {
+  useRemoteAlbum,
+  useConnectedServers,
+  useStartImport,
+  useCancelImport,
+  useImports,
+} from '../../hooks';
 import { Button, Portal } from '@shared/components/ui';
 import { handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer } from '@features/player/context/PlayerContext';
@@ -22,7 +40,9 @@ import styles from './SharedAlbumPage.module.css';
 export default function SharedAlbumPage() {
   const { serverId, albumId } = useParams<{ serverId: string; albumId: string }>();
   const [, setLocation] = useLocation();
-  const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(
+    null
+  );
   const imageLightboxModal = useModal();
   const [isImporting, setIsImporting] = useState(false);
   const [isImportedLocal, setIsImportedLocal] = useState(false);
@@ -45,11 +65,12 @@ export default function SharedAlbumPage() {
     (imp) => imp.remoteAlbumId === albumId && imp.connectedServerId === serverId
   );
   const isCompleted = isImportedLocal || existingImport?.status === 'completed';
-  const isInProgress = existingImport?.status === 'downloading' || existingImport?.status === 'pending';
+  const isInProgress =
+    existingImport?.status === 'downloading' || existingImport?.status === 'pending';
   const isImported = isCompleted || isInProgress;
   const { playQueue, currentTrack, isPlaying, play, pause, setShuffle } = usePlayer();
 
-  const server = servers?.find(s => s.id === serverId);
+  const server = servers?.find((s) => s.id === serverId);
   const coverUrl = album?.coverUrl;
   const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -67,26 +88,29 @@ export default function SharedAlbumPage() {
   /**
    * Convert RemoteTrack to Track with proper stream URL for federated playback
    */
-  const convertToPlayableTracks = useCallback((remoteTracks: RemoteTrack[]): Track[] => {
-    if (!serverId || !album) return [];
+  const convertToPlayableTracks = useCallback(
+    (remoteTracks: RemoteTrack[]): Track[] => {
+      if (!serverId || !album) return [];
 
-    return remoteTracks.map((remoteTrack) => ({
-      id: `${serverId}-${remoteTrack.id}`, // Unique ID for player queue
-      title: remoteTrack.title,
-      artistName: remoteTrack.artistName,
-      artist: remoteTrack.artistName,
-      albumId: album.id,
-      albumName: album.name,
-      trackNumber: remoteTrack.trackNumber,
-      discNumber: remoteTrack.discNumber,
-      duration: remoteTrack.duration,
-      size: remoteTrack.size,
-      bitRate: remoteTrack.bitRate,
-      coverImage: coverUrl,
-      // Custom stream URL for federated tracks
-      streamUrl: `${API_BASE_URL}/federation/servers/${serverId}/tracks/${remoteTrack.id}/stream`,
-    }));
-  }, [serverId, album, coverUrl, API_BASE_URL]);
+      return remoteTracks.map((remoteTrack) => ({
+        id: `${serverId}-${remoteTrack.id}`, // Unique ID for player queue
+        title: remoteTrack.title,
+        artistName: remoteTrack.artistName,
+        artist: remoteTrack.artistName,
+        albumId: album.id,
+        albumName: album.name,
+        trackNumber: remoteTrack.trackNumber,
+        discNumber: remoteTrack.discNumber,
+        duration: remoteTrack.duration,
+        size: remoteTrack.size,
+        bitRate: remoteTrack.bitRate,
+        coverImage: coverUrl,
+        // Custom stream URL for federated tracks
+        streamUrl: `${API_BASE_URL}/federation/servers/${serverId}/tracks/${remoteTrack.id}/stream`,
+      }));
+    },
+    [serverId, album, coverUrl, API_BASE_URL]
+  );
 
   // Memoized playable tracks
   const playableTracks = useMemo(() => {
@@ -97,9 +121,7 @@ export default function SharedAlbumPage() {
   // Get the index of the currently playing track
   const currentPlayingIndex = useMemo(() => {
     if (!currentTrack || !album?.tracks) return -1;
-    return album.tracks.findIndex(
-      (track) => currentTrack.id === `${serverId}-${track.id}`
-    );
+    return album.tracks.findIndex((track) => currentTrack.id === `${serverId}-${track.id}`);
   }, [currentTrack, album?.tracks, serverId]);
 
   /**
@@ -108,7 +130,7 @@ export default function SharedAlbumPage() {
   const handlePlayAll = useCallback(() => {
     if (playableTracks.length === 0) return;
     setShuffle(false);
-    playQueue(playableTracks, 0);
+    playQueue(playableTracks, 0, 'album');
   }, [playableTracks, playQueue, setShuffle]);
 
   /**
@@ -123,16 +145,19 @@ export default function SharedAlbumPage() {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
     }
-    playQueue(shuffledTracks, 0);
+    playQueue(shuffledTracks, 0, 'album');
   }, [playableTracks, playQueue, setShuffle]);
 
   /**
    * Play a specific track
    */
-  const handlePlayTrack = useCallback((index: number) => {
-    if (playableTracks.length === 0 || index < 0 || index >= playableTracks.length) return;
-    playQueue(playableTracks, index);
-  }, [playableTracks, playQueue]);
+  const handlePlayTrack = useCallback(
+    (index: number) => {
+      if (playableTracks.length === 0 || index < 0 || index >= playableTracks.length) return;
+      playQueue(playableTracks, index, 'album');
+    },
+    [playableTracks, playQueue]
+  );
 
   /**
    * Toggle play/pause for the current track
@@ -285,7 +310,8 @@ export default function SharedAlbumPage() {
     );
   }
 
-  const totalDuration = album.tracks?.reduce((acc, track) => acc + (track.duration || 0), 0) || album.duration || 0;
+  const totalDuration =
+    album.tracks?.reduce((acc, track) => acc + (track.duration || 0), 0) || album.duration || 0;
 
   return (
     <div className={styles.sharedAlbumPage}>
@@ -300,7 +326,7 @@ export default function SharedAlbumPage() {
             background: `linear-gradient(180deg,
               rgba(${dominantColor}, 0.4) 0%,
               rgba(${dominantColor}, 0.2) 25%,
-              transparent 60%)`
+              transparent 60%)`,
           }}
         >
           {/* Album hero section */}
@@ -399,9 +425,14 @@ export default function SharedAlbumPage() {
                       style={{
                         position: 'fixed',
                         top: menuPosition.top !== undefined ? `${menuPosition.top}px` : undefined,
-                        bottom: menuPosition.bottom !== undefined ? `${menuPosition.bottom}px` : undefined,
-                        right: menuPosition.right !== undefined ? `${menuPosition.right}px` : undefined,
-                        left: menuPosition.left !== undefined ? `${menuPosition.left}px` : undefined,
+                        bottom:
+                          menuPosition.bottom !== undefined
+                            ? `${menuPosition.bottom}px`
+                            : undefined,
+                        right:
+                          menuPosition.right !== undefined ? `${menuPosition.right}px` : undefined,
+                        left:
+                          menuPosition.left !== undefined ? `${menuPosition.left}px` : undefined,
                         maxHeight: `${menuPosition.maxHeight}px`,
                         pointerEvents: isMenuClosing ? 'none' : 'auto',
                       }}
@@ -435,7 +466,11 @@ export default function SharedAlbumPage() {
                             <Download size={16} />
                           )}
                           <span>
-                            {isCompleted ? 'Álbum importado' : isImporting ? 'Importando...' : 'Importar a mi servidor'}
+                            {isCompleted
+                              ? 'Álbum importado'
+                              : isImporting
+                                ? 'Importando...'
+                                : 'Importar a mi servidor'}
                           </span>
                         </button>
                       )}
@@ -480,7 +515,9 @@ export default function SharedAlbumPage() {
                     <div
                       key={track.id}
                       className={`${styles.sharedAlbumPage__trackRow} ${isCurrentTrack ? styles['sharedAlbumPage__trackRow--active'] : ''}`}
-                      onClick={() => isTrackPlaying ? handleTogglePlayPause() : handlePlayTrack(index)}
+                      onClick={() =>
+                        isTrackPlaying ? handleTogglePlayPause() : handlePlayTrack(index)
+                      }
                       role="button"
                       tabIndex={0}
                       onKeyDown={(e) => {
@@ -503,10 +540,14 @@ export default function SharedAlbumPage() {
                         <Play size={14} className={styles.sharedAlbumPage__trackPlayIconHover} />
                       </span>
                       <div className={styles.sharedAlbumPage__trackInfo}>
-                        <span className={`${styles.sharedAlbumPage__trackName} ${isCurrentTrack ? styles['sharedAlbumPage__trackName--active'] : ''}`}>
+                        <span
+                          className={`${styles.sharedAlbumPage__trackName} ${isCurrentTrack ? styles['sharedAlbumPage__trackName--active'] : ''}`}
+                        >
                           {track.title}
                         </span>
-                        <span className={styles.sharedAlbumPage__trackArtist}>{track.artistName}</span>
+                        <span className={styles.sharedAlbumPage__trackArtist}>
+                          {track.artistName}
+                        </span>
                       </div>
                       <span className={styles.sharedAlbumPage__trackDuration}>
                         {formatDuration(track.duration)}
@@ -526,11 +567,11 @@ export default function SharedAlbumPage() {
 
       {/* Image Modal/Lightbox */}
       {imageLightboxModal.isOpen && coverUrl && (
-        <div
-          className={styles.sharedAlbumPage__imageModal}
-          onClick={imageLightboxModal.close}
-        >
-          <div className={styles.sharedAlbumPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.sharedAlbumPage__imageModal} onClick={imageLightboxModal.close}>
+          <div
+            className={styles.sharedAlbumPage__imageModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
             <img
               src={coverUrl}
               alt={album.name}

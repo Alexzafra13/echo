@@ -24,18 +24,19 @@ export class ScoringService {
     @Inject(USER_INTERACTIONS_REPOSITORY)
     private readonly interactionsRepo: IUserInteractionsRepository,
     @Inject(PLAY_TRACKING_REPOSITORY)
-    private readonly playTrackingRepo: IPlayTrackingRepository,
+    private readonly playTrackingRepo: IPlayTrackingRepository
   ) {}
 
   /**
    * Calculate total score for a track
-   * Formula: totalScore = (explicitFeedback * 0.45) + (implicitBehavior * 0.35) + (recency * 0.15) + (diversity * 0.05)
+   * Formula: totalScore = (explicitFeedback * 0.30) + (implicitBehavior * 0.50) + (recency * 0.18) + (diversity * 0.02)
+   * Weights defined in SCORING_WEIGHTS (track-score.entity.ts)
    */
   calculateTrackScore(
     explicitFeedback: number,
     implicitBehavior: number,
     recency: number,
-    diversity: number,
+    diversity: number
   ): number {
     const weighted =
       explicitFeedback * SCORING_WEIGHTS.explicitFeedback +
@@ -67,7 +68,7 @@ export class ScoringService {
   calculateImplicitBehavior(
     weightedPlayCount: number,
     avgCompletionRate: number,
-    playCount: number,
+    playCount: number
   ): number {
     // Weight: 70% from weighted play count, 30% from completion rate
     const weightedCountScore = Math.min(weightedPlayCount * 5, 70); // Cap at 70
@@ -122,10 +123,14 @@ export class ScoringService {
   async calculateScoreBreakdown(
     userId: string,
     trackId: string,
-    trackArtistId?: string,
+    trackArtistId?: string
   ): Promise<ScoreBreakdown> {
     // Get interaction data
-    const interaction = await this.interactionsRepo.getItemInteractionSummary(trackId, 'track', userId);
+    const interaction = await this.interactionsRepo.getItemInteractionSummary(
+      trackId,
+      'track',
+      userId
+    );
 
     // Get play stats
     const playStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
@@ -152,7 +157,7 @@ export class ScoringService {
       ? this.calculateImplicitBehavior(
           trackStats.weightedPlayCount,
           trackStats.avgCompletionRate || 0,
-          trackStats.playCount,
+          trackStats.playCount
         )
       : 0;
 
@@ -174,7 +179,7 @@ export class ScoringService {
   async calculateFullTrackScore(
     userId: string,
     trackId: string,
-    trackArtistId?: string,
+    trackArtistId?: string
   ): Promise<TrackScore> {
     const breakdown = await this.calculateScoreBreakdown(userId, trackId, trackArtistId);
 
@@ -182,7 +187,7 @@ export class ScoringService {
       breakdown.explicitFeedback,
       breakdown.implicitBehavior,
       breakdown.recency,
-      breakdown.diversity,
+      breakdown.diversity
     );
 
     return {
@@ -200,7 +205,7 @@ export class ScoringService {
   async calculateAndRankTracks(
     userId: string,
     trackIds: string[],
-    trackArtistMap?: Map<string, string>,
+    trackArtistMap?: Map<string, string>
   ): Promise<TrackScore[]> {
     if (trackIds.length === 0) {
       return [];
@@ -209,23 +214,17 @@ export class ScoringService {
     // PRE-LOAD ALL DATA ONCE (3 queries total instead of 3*N)
     // 1. Get all user interactions for tracks at once
     const allInteractions = await this.interactionsRepo.getUserInteractions(userId, 'track');
-    const interactionMap = new Map(
-      allInteractions.map((i) => [i.itemId, i]),
-    );
+    const interactionMap = new Map(allInteractions.map((i) => [i.itemId, i]));
 
     // 2. Get all track play stats once
     const trackPlayStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
-    const trackStatsMap = new Map(
-      trackPlayStats.map((s) => [s.itemId, s]),
-    );
+    const trackStatsMap = new Map(trackPlayStats.map((s) => [s.itemId, s]));
 
     // 3. Get all artist play stats once (if we have artist info)
     let artistStatsMap = new Map<string, { playCount: number }>();
     if (trackArtistMap && trackArtistMap.size > 0) {
       const artistPlayStats = await this.playTrackingRepo.getUserPlayStats(userId, 'artist');
-      artistStatsMap = new Map(
-        artistPlayStats.map((s) => [s.itemId, { playCount: s.playCount }]),
-      );
+      artistStatsMap = new Map(artistPlayStats.map((s) => [s.itemId, { playCount: s.playCount }]));
     }
 
     // Calculate total play count for diversity
@@ -245,22 +244,19 @@ export class ScoringService {
         ? this.calculateImplicitBehavior(
             trackStats.weightedPlayCount,
             trackStats.avgCompletionRate || 0,
-            trackStats.playCount,
+            trackStats.playCount
           )
         : 0;
 
       const recency = this.calculateRecency(trackStats?.lastPlayedAt);
 
-      const diversity = this.calculateDiversity(
-        artistStats?.playCount || 0,
-        totalPlayCount,
-      );
+      const diversity = this.calculateDiversity(artistStats?.playCount || 0, totalPlayCount);
 
       const totalScore = this.calculateTrackScore(
         explicitFeedback,
         implicitBehavior,
         recency,
-        diversity,
+        diversity
       );
 
       return {

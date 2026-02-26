@@ -76,11 +76,11 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
 
     if (isAlbum && albumTracks && albumTracks.length > 0) {
       const playerTracks = convertAlbumToPlayerTracks(albumTracks);
-      playQueue(playerTracks, 0);
+      playQueue(playerTracks, 0, 'album');
       logger.debug('Playing album:', album!.title, 'with', albumTracks.length, 'tracks');
     } else if (isPlaylist && playlist?.tracks && playlist.tracks.length > 0) {
       const playerTracks = convertPlaylistToPlayerTracks();
-      playQueue(playerTracks, 0);
+      playQueue(playerTracks, 0, 'playlist');
       logger.debug('Playing playlist:', playlist.name, 'with', playlist.tracks.length, 'tracks');
     } else {
       logger.warn('No tracks available for:', isAlbum ? album!.id : playlist!.id);

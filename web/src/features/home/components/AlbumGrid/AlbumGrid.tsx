@@ -28,12 +28,12 @@ export function AlbumGrid({
 
   const handlePlayClick = async (albumId: string) => {
     try {
-      const album = albums.find(a => a.id === albumId);
+      const album = albums.find((a) => a.id === albumId);
       const coverImage = album?.coverImage;
 
       const tracks = await albumsService.getAlbumTracks(albumId);
       if (tracks && tracks.length > 0) {
-        const tracksWithCover = tracks.map(track => ({
+        const tracksWithCover = tracks.map((track) => ({
           id: track.id,
           title: track.title,
           artist: track.artistName || album?.artist || 'Unknown Artist',
@@ -45,7 +45,7 @@ export function AlbumGrid({
           rgTrackGain: track.rgTrackGain,
           rgTrackPeak: track.rgTrackPeak,
         }));
-        playQueue(tracksWithCover, 0);
+        playQueue(tracksWithCover, 0, 'album');
       }
     } catch (error) {
       if (import.meta.env.DEV) {
@@ -62,19 +62,17 @@ export function AlbumGrid({
     return null;
   }
 
-  const gridClassName = mobileLayout === 'grid'
-    ? `${styles.albumGrid__grid} ${styles['albumGrid__grid--mobileGrid']}`
-    : styles.albumGrid__grid;
+  const gridClassName =
+    mobileLayout === 'grid'
+      ? `${styles.albumGrid__grid} ${styles['albumGrid__grid--mobileGrid']}`
+      : styles.albumGrid__grid;
 
   return (
     <section className={styles.albumGrid}>
       <div className={styles.albumGrid__header}>
         <h2 className={styles.albumGrid__title}>{title}</h2>
         {showViewAll && (
-          <button
-            className={styles.albumGrid__viewAllButton}
-            onClick={handleViewAllClick}
-          >
+          <button className={styles.albumGrid__viewAllButton} onClick={handleViewAllClick}>
             Ver todos →
           </button>
         )}

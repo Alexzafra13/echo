@@ -6,7 +6,11 @@ import { TrackList } from '@features/home/components/TrackList';
 import { Button } from '@shared/components/ui';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { formatDuration } from '@shared/utils/format';
-import { getDailyMix, type DailyMix, type ScoredTrack } from '@shared/services/recommendations.service';
+import {
+  getDailyMix,
+  type DailyMix,
+  type ScoredTrack,
+} from '@shared/services/recommendations.service';
 import type { Track } from '@features/home/types';
 import { logger } from '@shared/utils/logger';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
@@ -47,7 +51,7 @@ export function DailyMixPage() {
     if (!dailyMix?.tracks || dailyMix.tracks.length === 0) return;
 
     const tracks = convertScoredTracksToPlayerTracks(dailyMix.tracks);
-    playQueue(tracks);
+    playQueue(tracks, 0, 'recommendation');
   };
 
   const handlePlayTrack = (track: Track) => {
@@ -55,7 +59,7 @@ export function DailyMixPage() {
 
     const tracks = convertScoredTracksToPlayerTracks(dailyMix.tracks);
     const index = tracks.findIndex((t) => t.id === track.id);
-    playQueue(tracks, index);
+    playQueue(tracks, index, 'recommendation');
   };
 
   const handleRefresh = () => {
@@ -66,18 +70,21 @@ export function DailyMixPage() {
   const convertScoredTracksToPlayerTracks = (scoredTracks: ScoredTrack[]): Track[] => {
     return scoredTracks
       .filter((st) => st.track) // Only include tracks with data
-      .map((st) => ({
-        id: st.track!.id,
-        title: st.track!.title,
-        artistName: st.track!.artistName || 'Unknown Artist',
-        albumName: st.track!.albumName,
-        albumId: st.track!.albumId,
-        artistId: st.track!.artistId,
-        duration: st.track!.duration || 0,
-        // Audio normalization data (LUFS)
-        rgTrackGain: st.track!.rgTrackGain,
-        rgTrackPeak: st.track!.rgTrackPeak,
-      } as Track));
+      .map(
+        (st) =>
+          ({
+            id: st.track!.id,
+            title: st.track!.title,
+            artistName: st.track!.artistName || 'Unknown Artist',
+            albumName: st.track!.albumName,
+            albumId: st.track!.albumId,
+            artistId: st.track!.artistId,
+            duration: st.track!.duration || 0,
+            // Audio normalization data (LUFS)
+            rgTrackGain: st.track!.rgTrackGain,
+            rgTrackPeak: st.track!.rgTrackPeak,
+          }) as Track
+      );
   };
 
   const tracks = dailyMix ? convertScoredTracksToPlayerTracks(dailyMix.tracks) : [];
@@ -137,11 +144,7 @@ export function DailyMixPage() {
               <Play size={20} fill="currentColor" />
               Reproducir todo
             </Button>
-            <Button
-              variant="secondary"
-              onClick={handleRefresh}
-              disabled={isLoading}
-            >
+            <Button variant="secondary" onClick={handleRefresh} disabled={isLoading}>
               <RefreshCw size={18} className={isLoading ? styles.spinning : ''} />
               {isLoading ? 'Generando...' : 'Regenerar'}
             </Button>
@@ -158,21 +161,33 @@ export function DailyMixPage() {
           {showInfo && (
             <div className={styles.dailyMixPage__infoPanel}>
               <h3>¿Cómo funciona el Daily Mix?</h3>
-              <p>
-                Tu Daily Mix se genera utilizando un algoritmo inteligente que analiza:
-              </p>
+              <p>Tu Daily Mix se genera utilizando un algoritmo inteligente que analiza:</p>
               <ul>
-                <li><strong>Tus likes y ratings:</strong> Las canciones que has marcado como favoritas</li>
-                <li><strong>Tu historial de reproducción:</strong> Qué canciones escuchas más y con qué frecuencia</li>
-                <li><strong>Patrones de escucha:</strong> Contexto de reproducción y tasa de finalización</li>
-                <li><strong>Diversidad:</strong> Evita saturación de un solo artista</li>
+                <li>
+                  <strong>Tus likes y ratings:</strong> Las canciones que has marcado como favoritas
+                </li>
+                <li>
+                  <strong>Tu historial de reproducción:</strong> Qué canciones escuchas más y con
+                  qué frecuencia
+                </li>
+                <li>
+                  <strong>Patrones de escucha:</strong> Contexto de reproducción y tasa de
+                  finalización
+                </li>
+                <li>
+                  <strong>Diversidad:</strong> Evita saturación de un solo artista
+                </li>
               </ul>
               {dailyMix && dailyMix.metadata && (
                 <div className={styles.dailyMixPage__infoBreakdown}>
-                  <p><strong>Estadísticas de tu mix:</strong></p>
+                  <p>
+                    <strong>Estadísticas de tu mix:</strong>
+                  </p>
                   <ul>
                     <li>Puntuación promedio: {dailyMix.metadata.avgScore.toFixed(1)} puntos</li>
-                    <li>Artistas destacados: {dailyMix.metadata.topArtists.slice(0, 3).join(', ')}</li>
+                    <li>
+                      Artistas destacados: {dailyMix.metadata.topArtists.slice(0, 3).join(', ')}
+                    </li>
                     {dailyMix.metadata.topGenres.length > 0 && (
                       <li>Géneros: {dailyMix.metadata.topGenres.slice(0, 3).join(', ')}</li>
                     )}
@@ -208,8 +223,8 @@ export function DailyMixPage() {
               <Sparkles size={64} />
               <h2>Aún no hay suficientes datos</h2>
               <p>
-                Empieza a escuchar música, dar likes y ratings para que podamos generar
-                tu Daily Mix personalizado
+                Empieza a escuchar música, dar likes y ratings para que podamos generar tu Daily Mix
+                personalizado
               </p>
             </div>
           )}

@@ -220,6 +220,28 @@ describe('WaveMixService', () => {
       mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue(mockTopTracks);
       mockScoringService.calculateAndRankTracks.mockResolvedValue(mockScoredTracks);
       mockPlayTrackingRepo.getUserPlayHistory.mockResolvedValue(mockPlayHistory);
+      mockPlayTrackingRepo.getUserPlayStats.mockResolvedValue([
+        {
+          userId,
+          itemId: 'track-1',
+          itemType: 'track',
+          playCount: 100,
+          weightedPlayCount: 90,
+          lastPlayedAt: new Date(),
+          avgCompletionRate: 0.9,
+          skipCount: 0,
+        },
+        {
+          userId,
+          itemId: 'track-2',
+          itemType: 'track',
+          playCount: 80,
+          weightedPlayCount: 70,
+          lastPlayedAt: new Date(),
+          avgCompletionRate: 0.8,
+          skipCount: 0,
+        },
+      ]);
 
       // Act
       const result = await service.generateWaveMix(userId);
@@ -256,6 +278,18 @@ describe('WaveMixService', () => {
 
       mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue(mockTopTracks);
       mockPlayTrackingRepo.getUserPlayHistory.mockResolvedValue([]);
+      mockPlayTrackingRepo.getUserPlayStats.mockResolvedValue([
+        {
+          userId,
+          itemId: 'track-1',
+          itemType: 'track',
+          playCount: 5,
+          weightedPlayCount: 3,
+          lastPlayedAt: new Date(),
+          avgCompletionRate: 0.5,
+          skipCount: 0,
+        },
+      ]);
       mockScoringService.calculateAndRankTracks.mockResolvedValue(mockScoredTracks);
 
       // Act
