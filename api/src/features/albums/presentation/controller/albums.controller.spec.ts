@@ -13,6 +13,7 @@ import { GetAlbumsAlphabeticallyUseCase } from '../../domain/use-cases/get-album
 import { GetAlbumsByArtistUseCase } from '../../domain/use-cases/get-albums-by-artist/get-albums-by-artist.use-case';
 import { GetRecentlyPlayedAlbumsUseCase } from '../../domain/use-cases/get-recently-played-albums/get-recently-played-albums.use-case';
 import { GetFavoriteAlbumsUseCase } from '../../domain/use-cases/get-favorite-albums/get-favorite-albums.use-case';
+import { GetUserTopPlayedAlbumsUseCase } from '../../domain/use-cases/get-user-top-played-albums/get-user-top-played-albums.use-case';
 import { Album } from '../../domain/entities/album.entity';
 import { Track } from '@features/tracks/domain/entities/track.entity';
 import { NotFoundException } from '@nestjs/common';
@@ -96,6 +97,7 @@ describe('AlbumsController', () => {
         { provide: GetAlbumsByArtistUseCase, useValue: { execute: jest.fn() } },
         { provide: GetRecentlyPlayedAlbumsUseCase, useValue: { execute: jest.fn() } },
         { provide: GetFavoriteAlbumsUseCase, useValue: { execute: jest.fn() } },
+        { provide: GetUserTopPlayedAlbumsUseCase, useValue: { execute: jest.fn() } },
         { provide: getLoggerToken(AlbumsController.name), useValue: mockLogger },
       ],
     }).compile();
