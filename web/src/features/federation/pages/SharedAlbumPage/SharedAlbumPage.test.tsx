@@ -52,8 +52,21 @@ vi.mock('@features/home/components', () => ({
 }));
 
 vi.mock('@shared/components/ui', () => ({
-  Button: ({ children, onClick, disabled, leftIcon }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; leftIcon?: React.ReactNode }) => (
-    <button onClick={onClick} disabled={disabled}>{leftIcon}{children}</button>
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    leftIcon,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+    leftIcon?: React.ReactNode;
+  }) => (
+    <button onClick={onClick} disabled={disabled}>
+      {leftIcon}
+      {children}
+    </button>
   ),
   Portal: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -87,9 +100,27 @@ const mockAlbum = {
   duration: 1200,
   coverUrl: 'https://remote-server.com/cover.jpg',
   tracks: [
-    { id: 'track-1', title: 'Remote Song 1', artistName: 'Remote Artist', trackNumber: 1, duration: 240 },
-    { id: 'track-2', title: 'Remote Song 2', artistName: 'Remote Artist', trackNumber: 2, duration: 180 },
-    { id: 'track-3', title: 'Remote Song 3', artistName: 'Remote Artist', trackNumber: 3, duration: 200 },
+    {
+      id: 'track-1',
+      title: 'Remote Song 1',
+      artistName: 'Remote Artist',
+      trackNumber: 1,
+      duration: 240,
+    },
+    {
+      id: 'track-2',
+      title: 'Remote Song 2',
+      artistName: 'Remote Artist',
+      trackNumber: 2,
+      duration: 180,
+    },
+    {
+      id: 'track-3',
+      title: 'Remote Song 3',
+      artistName: 'Remote Artist',
+      trackNumber: 3,
+      duration: 200,
+    },
   ],
 };
 
@@ -251,7 +282,7 @@ describe('SharedAlbumPage', () => {
       fireEvent.click(screen.getByText('Reproducir'));
 
       expect(mockSetShuffle).toHaveBeenCalledWith(false);
-      expect(mockPlayQueue).toHaveBeenCalledWith(expect.any(Array), 0);
+      expect(mockPlayQueue).toHaveBeenCalledWith(expect.any(Array), 0, 'album');
     });
 
     it('should enable shuffle when clicking Aleatorio', () => {
@@ -328,7 +359,7 @@ describe('SharedAlbumPage', () => {
 
       fireEvent.click(screen.getByText('Remote Song 2'));
 
-      expect(mockPlayQueue).toHaveBeenCalledWith(expect.any(Array), 1);
+      expect(mockPlayQueue).toHaveBeenCalledWith(expect.any(Array), 1, 'album');
     });
 
     it('should toggle play/pause when clicking currently playing track', () => {
@@ -489,7 +520,13 @@ describe('SharedAlbumPage', () => {
         data: {
           ...mockAlbum,
           tracks: [
-            { id: 'track-1', title: 'Long Song', artistName: 'Artist', trackNumber: 1, duration: 3700 },
+            {
+              id: 'track-1',
+              title: 'Long Song',
+              artistName: 'Artist',
+              trackNumber: 1,
+              duration: 3700,
+            },
           ],
         },
         isLoading: false,
