@@ -394,85 +394,96 @@
 
 /* Artists Grid */
 .publicProfilePage__artistsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  display: flex;
   gap: var(--space-6);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: var(--space-2);
+}
+
+.publicProfilePage__artistsGrid::-webkit-scrollbar {
+  display: none;
 }
 
 .publicProfilePage__artistCard {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-5);
-  background: var(--white-03);
-  border-radius: var(--radius-base);
   text-decoration: none;
-  transition: background var(--transition-slow);
+  text-align: center;
+  flex-shrink: 0;
+  width: 100px;
+  gap: var(--space-2);
 }
 
-.publicProfilePage__artistCard:hover {
-  background: var(--white-08);
+.publicProfilePage__artistCard:hover .publicProfilePage__artistImage,
+.publicProfilePage__artistCard:hover .publicProfilePage__artistPlaceholder {
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.publicProfilePage__artistCard:hover .publicProfilePage__artistName {
+  color: var(--color-primary);
 }
 
 .publicProfilePage__artistImage {
-  width: 120px;
-  height: 120px;
+  width: 92px;
+  height: 92px;
   border-radius: var(--radius-full);
   object-fit: cover;
-  margin-bottom: var(--space-4);
-  box-shadow: 0 8px 24px var(--black-40);
+  object-position: center top;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .publicProfilePage__artistPlaceholder {
-  width: 120px;
-  height: 120px;
+  width: 92px;
+  height: 92px;
   border-radius: var(--radius-full);
   background: var(--white-10);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--space-4);
   color: var(--text-tertiary);
-  box-shadow: 0 8px 24px var(--black-40);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .publicProfilePage__artistName {
-  font-size: 15px;
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-1) 0;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
-}
-
-.publicProfilePage__artistMeta {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0;
+  transition: color var(--transition-base);
 }
 
 /* Albums Grid */
 .publicProfilePage__albumsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-5);
 }
 
 .publicProfilePage__albumCard {
   display: flex;
   flex-direction: column;
-  padding: var(--space-4);
-  background: var(--white-03);
-  border-radius: var(--radius-base);
   text-decoration: none;
-  transition: background var(--transition-slow);
+  gap: var(--space-2);
 }
 
-.publicProfilePage__albumCard:hover {
-  background: var(--white-08);
+.publicProfilePage__albumCard:hover .publicProfilePage__albumCover,
+.publicProfilePage__albumCard:hover .publicProfilePage__albumPlaceholder {
+  transform: scale(1.03);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.publicProfilePage__albumCard:hover .publicProfilePage__albumName {
+  color: var(--color-primary);
 }
 
 .publicProfilePage__albumCover {
@@ -480,8 +491,8 @@
   aspect-ratio: 1;
   border-radius: var(--radius-sm);
   object-fit: cover;
-  margin-bottom: var(--space-4);
-  box-shadow: 0 8px 24px var(--black-30);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .publicProfilePage__albumPlaceholder {
@@ -492,24 +503,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--space-4);
   color: var(--text-tertiary);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .publicProfilePage__albumName {
-  font-size: 15px;
+  font-size: var(--text-sm);
   font-weight: var(--font-semibold);
   color: var(--text-primary);
-  margin: 0 0 var(--space-1) 0;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color var(--transition-base);
 }
 
 .publicProfilePage__albumArtist {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0 0 var(--space-1) 0;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -663,22 +675,24 @@
 /* Playlist Grid */
 .publicProfilePage__playlistGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-5);
 }
 
 .publicProfilePage__playlistCard {
   display: flex;
   flex-direction: column;
-  padding: var(--space-4);
-  background: var(--white-03);
-  border-radius: var(--radius-base);
   text-decoration: none;
-  transition: background var(--transition-slow);
+  gap: var(--space-2);
 }
 
-.publicProfilePage__playlistCard:hover {
-  background: var(--white-08);
+.publicProfilePage__playlistCard:hover .publicProfilePage__playlistCoverWrapper {
+  transform: scale(1.03);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.publicProfilePage__playlistCard:hover .publicProfilePage__playlistName {
+  color: var(--color-primary);
 }
 
 .publicProfilePage__playlistCoverWrapper {
@@ -686,23 +700,24 @@
   aspect-ratio: 1;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  margin-bottom: var(--space-4);
-  box-shadow: 0 8px 24px var(--black-30);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .publicProfilePage__playlistName {
-  font-size: 15px;
+  font-size: var(--text-sm);
   font-weight: var(--font-semibold);
   color: var(--text-primary);
-  margin: 0 0 var(--space-1) 0;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color var(--transition-base);
 }
 
 .publicProfilePage__playlistMeta {
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
   margin: 0;
 }
 
@@ -883,24 +898,26 @@
   .publicProfilePage__artistsGrid,
   .publicProfilePage__albumsGrid,
   .publicProfilePage__playlistGrid {
+    margin: 0 calc(var(--space-6) * -1);
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+  }
+
+  .publicProfilePage__albumsGrid,
+  .publicProfilePage__playlistGrid {
     display: flex;
     overflow-x: auto;
     gap: var(--space-4);
     padding-bottom: var(--space-2);
-    margin: 0 calc(var(--space-6) * -1);
-    padding-left: var(--space-6);
-    padding-right: var(--space-6);
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  .publicProfilePage__artistsGrid::-webkit-scrollbar,
   .publicProfilePage__albumsGrid::-webkit-scrollbar,
   .publicProfilePage__playlistGrid::-webkit-scrollbar {
     display: none;
   }
 
-  .publicProfilePage__artistCard,
   .publicProfilePage__albumCard,
   .publicProfilePage__playlistCard {
     flex-shrink: 0;
@@ -908,10 +925,18 @@
     padding: var(--space-3);
   }
 
+  .publicProfilePage__artistsGrid {
+    gap: var(--space-4);
+  }
+
+  .publicProfilePage__artistCard {
+    width: 84px;
+  }
+
   .publicProfilePage__artistImage,
   .publicProfilePage__artistPlaceholder {
-    width: 100px;
-    height: 100px;
+    width: 76px;
+    height: 76px;
   }
 }
 
@@ -970,9 +995,18 @@
     gap: var(--space-3);
   }
 
-  .publicProfilePage__artistCard,
   .publicProfilePage__albumCard,
   .publicProfilePage__playlistCard {
     width: 130px;
+  }
+
+  .publicProfilePage__artistCard {
+    width: 72px;
+  }
+
+  .publicProfilePage__artistImage,
+  .publicProfilePage__artistPlaceholder {
+    width: 64px;
+    height: 64px;
   }
 }

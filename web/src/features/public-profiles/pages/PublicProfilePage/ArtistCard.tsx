@@ -20,11 +20,10 @@ export function ArtistCard({ artist }: ArtistCardProps) {
         />
       ) : (
         <div className={styles.publicProfilePage__artistPlaceholder}>
-          <UserIcon size={40} />
+          <UserIcon size={32} />
         </div>
       )}
-      <h3 className={styles.publicProfilePage__artistName}>{artist.name}</h3>
-      <p className={styles.publicProfilePage__artistMeta}>Artista</p>
+      <span className={styles.publicProfilePage__artistName}>{artist.name}</span>
     </Link>
   );
 }
