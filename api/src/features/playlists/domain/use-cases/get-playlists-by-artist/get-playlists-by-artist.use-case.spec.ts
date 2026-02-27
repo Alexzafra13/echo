@@ -68,13 +68,13 @@ describe('GetPlaylistsByArtistUseCase', () => {
         new Map([
           ['playlist-1', ['album-1', 'album-2']],
           ['playlist-2', ['album-3']],
-        ]),
+        ])
       );
 
       const result = await useCase.execute({ artistId: 'artist-1' });
 
-      expect(repository.findPublicByArtistId).toHaveBeenCalledWith('artist-1', 0, 20);
-      expect(repository.countPublicByArtistId).toHaveBeenCalledWith('artist-1');
+      expect(repository.findPublicByArtistId).toHaveBeenCalledWith('artist-1', 0, 20, undefined);
+      expect(repository.countPublicByArtistId).toHaveBeenCalledWith('artist-1', undefined);
       expect(repository.getBatchPlaylistAlbumIds).toHaveBeenCalledWith([
         'playlist-1',
         'playlist-2',
@@ -89,7 +89,7 @@ describe('GetPlaylistsByArtistUseCase', () => {
       (repository.findPublicByArtistId as jest.Mock).mockResolvedValue([mockPlaylists[0]]);
       (repository.countPublicByArtistId as jest.Mock).mockResolvedValue(1);
       (repository.getBatchPlaylistAlbumIds as jest.Mock).mockResolvedValue(
-        new Map([['playlist-1', ['album-1', 'album-2']]]),
+        new Map([['playlist-1', ['album-1', 'album-2']]])
       );
 
       const result = await useCase.execute({ artistId: 'artist-1' });
@@ -114,7 +114,7 @@ describe('GetPlaylistsByArtistUseCase', () => {
 
       const result = await useCase.execute({ artistId: 'artist-1', skip: 10, take: 5 });
 
-      expect(repository.findPublicByArtistId).toHaveBeenCalledWith('artist-1', 10, 5);
+      expect(repository.findPublicByArtistId).toHaveBeenCalledWith('artist-1', 10, 5, undefined);
       expect(result.skip).toBe(10);
       expect(result.take).toBe(5);
     });
@@ -126,7 +126,7 @@ describe('GetPlaylistsByArtistUseCase', () => {
 
       const result = await useCase.execute({ artistId: 'artist-1', skip: -5 });
 
-      expect(repository.findPublicByArtistId).toHaveBeenCalledWith('artist-1', 0, 20);
+      expect(repository.findPublicByArtistId).toHaveBeenCalledWith('artist-1', 0, 20, undefined);
       expect(result.skip).toBe(0);
     });
 
@@ -137,8 +137,19 @@ describe('GetPlaylistsByArtistUseCase', () => {
 
       const result = await useCase.execute({ artistId: 'artist-1', take: 500 });
 
-      expect(repository.findPublicByArtistId).toHaveBeenCalledWith('artist-1', 0, 100);
+      expect(repository.findPublicByArtistId).toHaveBeenCalledWith('artist-1', 0, 100, undefined);
       expect(result.take).toBe(100);
+    });
+
+    it('should pass userId to repository when provided', async () => {
+      (repository.findPublicByArtistId as jest.Mock).mockResolvedValue(mockPlaylists);
+      (repository.countPublicByArtistId as jest.Mock).mockResolvedValue(2);
+      (repository.getBatchPlaylistAlbumIds as jest.Mock).mockResolvedValue(new Map());
+
+      await useCase.execute({ artistId: 'artist-1', userId: 'user-1' });
+
+      expect(repository.findPublicByArtistId).toHaveBeenCalledWith('artist-1', 0, 20, 'user-1');
+      expect(repository.countPublicByArtistId).toHaveBeenCalledWith('artist-1', 'user-1');
     });
 
     it('should return empty items when no playlists found', async () => {
@@ -156,7 +167,7 @@ describe('GetPlaylistsByArtistUseCase', () => {
       (repository.findPublicByArtistId as jest.Mock).mockResolvedValue([mockPlaylists[0]]);
       (repository.countPublicByArtistId as jest.Mock).mockResolvedValue(1);
       (repository.getBatchPlaylistAlbumIds as jest.Mock).mockResolvedValue(
-        new Map([['playlist-1', ['album-1']]]),
+        new Map([['playlist-1', ['album-1']]])
       );
 
       const result = await useCase.execute({ artistId: 'artist-1' });
@@ -172,9 +183,7 @@ describe('GetPlaylistsByArtistUseCase', () => {
     });
 
     it('should propagate repository errors', async () => {
-      (repository.findPublicByArtistId as jest.Mock).mockRejectedValue(
-        new Error('Database error'),
-      );
+      (repository.findPublicByArtistId as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(useCase.execute({ artistId: 'artist-1' })).rejects.toThrow('Database error');
     });
