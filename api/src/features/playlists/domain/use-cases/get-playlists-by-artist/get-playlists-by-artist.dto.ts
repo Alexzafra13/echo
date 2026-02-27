@@ -2,6 +2,7 @@ import { PlaylistListItem, GetPlaylistsOutput } from '../get-playlists/get-playl
 
 export interface GetPlaylistsByArtistInput {
   artistId: string;
+  userId?: string;
   skip?: number;
   take?: number;
 }

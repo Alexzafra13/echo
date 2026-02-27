@@ -1,8 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { eq, desc, and, count, sql, inArray, asc, max } from 'drizzle-orm';
+import { eq, desc, and, or, count, sql, inArray, asc, max } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { createSearchPattern } from '@shared/utils';
-import { playlists, playlistTracks, tracks, albums, artists } from '@infrastructure/database/schema';
+import {
+  playlists,
+  playlistTracks,
+  tracks,
+  albums,
+  artists,
+} from '@infrastructure/database/schema';
 import { IPlaylistRepository, TrackWithPlaylistOrder } from '../../domain/ports';
 import { Playlist, PlaylistTrack, PlaylistProps } from '../../domain/entities';
 import { PlaylistMapper } from '../mappers/playlist.mapper';
@@ -67,9 +73,7 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
   }
 
   async count(): Promise<number> {
-    const result = await this.drizzle.db
-      .select({ count: count() })
-      .from(playlists);
+    const result = await this.drizzle.db.select({ count: count() }).from(playlists);
 
     return result[0]?.count ?? 0;
   }
@@ -108,11 +112,15 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
     return PlaylistMapper.toDomain(result[0]);
   }
 
-  async update(id: string, playlist: Partial<Playlist> | Partial<PlaylistProps>): Promise<Playlist | null> {
+  async update(
+    id: string,
+    playlist: Partial<Playlist> | Partial<PlaylistProps>
+  ): Promise<Playlist | null> {
     // Handle both Playlist entity and plain props object
-    const props: Partial<PlaylistProps> = 'toPrimitives' in playlist && typeof playlist.toPrimitives === 'function'
-      ? playlist.toPrimitives()
-      : playlist as Partial<PlaylistProps>;
+    const props: Partial<PlaylistProps> =
+      'toPrimitives' in playlist && typeof playlist.toPrimitives === 'function'
+        ? playlist.toPrimitives()
+        : (playlist as Partial<PlaylistProps>);
 
     const result = await this.drizzle.db
       .update(playlists)
@@ -133,10 +141,7 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.drizzle.db
-      .delete(playlists)
-      .where(eq(playlists.id, id))
-      .returning();
+    const result = await this.drizzle.db.delete(playlists).where(eq(playlists.id, id)).returning();
 
     return result.length > 0;
   }
@@ -191,12 +196,7 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
   async removeTrack(playlistId: string, trackId: string): Promise<boolean> {
     const result = await this.drizzle.db
       .delete(playlistTracks)
-      .where(
-        and(
-          eq(playlistTracks.playlistId, playlistId),
-          eq(playlistTracks.trackId, trackId),
-        ),
-      )
+      .where(and(eq(playlistTracks.playlistId, playlistId), eq(playlistTracks.trackId, trackId)))
       .returning();
 
     return result.length > 0;
@@ -289,7 +289,7 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
 
   async reorderTracks(
     playlistId: string,
-    trackOrders: Array<{ trackId: string; order: number }>,
+    trackOrders: Array<{ trackId: string; order: number }>
   ): Promise<boolean> {
     if (trackOrders.length === 0) {
       return true;
@@ -307,19 +307,25 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
         UPDATE playlist_tracks
         SET track_order = track_order + ${offset}
         WHERE playlist_id = ${playlistId}
-          AND track_id IN (${sql.join(trackIds.map(id => sql`${id}`), sql`, `)})
+          AND track_id IN (${sql.join(
+            trackIds.map((id) => sql`${id}`),
+            sql`, `
+          )})
       `);
 
       // Step 2: Update to final values
       const caseWhenClauses = trackOrders.map(
-        (item) => sql`WHEN ${item.trackId} THEN ${item.order}`,
+        (item) => sql`WHEN ${item.trackId} THEN ${item.order}`
       );
 
       await tx.execute(sql`
         UPDATE playlist_tracks
         SET track_order = CASE track_id ${sql.join(caseWhenClauses, sql` `)} ELSE track_order END
         WHERE playlist_id = ${playlistId}
-          AND track_id IN (${sql.join(trackIds.map(id => sql`${id}`), sql`, `)})
+          AND track_id IN (${sql.join(
+            trackIds.map((id) => sql`${id}`),
+            sql`, `
+          )})
       `);
 
       return true;
@@ -330,21 +336,25 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
     const result = await this.drizzle.db
       .select({ count: count() })
       .from(playlistTracks)
-      .where(
-        and(
-          eq(playlistTracks.playlistId, playlistId),
-          eq(playlistTracks.trackId, trackId),
-        ),
-      );
+      .where(and(eq(playlistTracks.playlistId, playlistId), eq(playlistTracks.trackId, trackId)));
 
     return (result[0]?.count ?? 0) > 0;
   }
 
   /**
-   * Find public playlists that contain tracks from a specific artist
+   * Find playlists that contain tracks from a specific artist.
+   * Returns public playlists + the current user's own playlists (even if private).
    */
-  async findPublicByArtistId(artistId: string, skip: number, take: number): Promise<Playlist[]> {
-    // Find all public playlists that have at least one track from this artist
+  async findPublicByArtistId(
+    artistId: string,
+    skip: number,
+    take: number,
+    userId?: string
+  ): Promise<Playlist[]> {
+    const visibilityFilter = userId
+      ? or(eq(playlists.public, true), eq(playlists.ownerId, userId))
+      : eq(playlists.public, true);
+
     const result = await this.drizzle.db
       .selectDistinct({
         playlist: playlists,
@@ -352,34 +362,29 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
       .from(playlists)
       .innerJoin(playlistTracks, eq(playlists.id, playlistTracks.playlistId))
       .innerJoin(tracks, eq(playlistTracks.trackId, tracks.id))
-      .where(
-        and(
-          eq(playlists.public, true),
-          eq(tracks.artistId, artistId),
-        ),
-      )
+      .where(and(visibilityFilter, eq(tracks.artistId, artistId)))
       .orderBy(desc(playlists.createdAt))
       .offset(skip)
       .limit(take);
 
-    return result.map(r => PlaylistMapper.toDomain(r.playlist));
+    return result.map((r) => PlaylistMapper.toDomain(r.playlist));
   }
 
   /**
-   * Count public playlists that contain tracks from a specific artist
+   * Count playlists that contain tracks from a specific artist.
+   * Counts public playlists + the current user's own playlists (even if private).
    */
-  async countPublicByArtistId(artistId: string): Promise<number> {
+  async countPublicByArtistId(artistId: string, userId?: string): Promise<number> {
+    const visibilityFilter = userId
+      ? or(eq(playlists.public, true), eq(playlists.ownerId, userId))
+      : eq(playlists.public, true);
+
     const result = await this.drizzle.db
       .selectDistinct({ id: playlists.id })
       .from(playlists)
       .innerJoin(playlistTracks, eq(playlists.id, playlistTracks.playlistId))
       .innerJoin(tracks, eq(playlistTracks.trackId, tracks.id))
-      .where(
-        and(
-          eq(playlists.public, true),
-          eq(tracks.artistId, artistId),
-        ),
-      );
+      .where(and(visibilityFilter, eq(tracks.artistId, artistId)));
 
     return result.length;
   }
