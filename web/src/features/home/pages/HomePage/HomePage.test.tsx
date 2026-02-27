@@ -20,6 +20,7 @@ vi.mock('../../hooks', () => ({
   useFeaturedAlbum: vi.fn(),
   useRecentAlbums: vi.fn(),
   useTopPlayedAlbums: vi.fn(),
+  useUserTopPlayedAlbums: vi.fn(),
   useAlbumsRecentlyPlayed: vi.fn(),
   useAutoPlaylists: vi.fn(),
   useGridDimensions: vi.fn(() => ({ itemsPerPage: 6, columns: 3 })),
@@ -192,6 +193,11 @@ describe('HomePage', () => {
       data: mockAlbums,
       isLoading: false,
     } as ReturnType<typeof homeHooks.useTopPlayedAlbums>);
+
+    vi.mocked(homeHooks.useUserTopPlayedAlbums).mockReturnValue({
+      data: mockAlbums,
+      isLoading: false,
+    } as ReturnType<typeof homeHooks.useUserTopPlayedAlbums>);
 
     vi.mocked(homeHooks.useAlbumsRecentlyPlayed).mockReturnValue({
       data: { data: mockAlbums },
