@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose -f docker-compose.dev.yml up -d)",
+      "Bash(pnpm db:push)",
+      "Bash(npx drizzle-kit push --force)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where pnpm)",
+      "Bash(npx --version)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api)"
+    ]
+  }
+}
