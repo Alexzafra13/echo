@@ -98,6 +98,7 @@
 /* Hero Crossfade Transition */
 .heroCrossfade {
   position: relative;
+  isolation: isolate; /* Contain z-index layers so they don't overlap content below */
 }
 
 .heroCrossfade__layer--entering {
