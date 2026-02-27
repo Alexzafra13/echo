@@ -57,6 +57,15 @@ export interface IArtistRepository {
    * Elimina un artista
    */
   delete(id: string): Promise<boolean>;
+
+  /**
+   * Busca artistas similares por géneros compartidos y perfil de audio
+   * Score = géneros compartidos (70%) + similaridad de audio (30%)
+   */
+  findSimilarByGenreAndAudio(
+    artistId: string,
+    limit: number,
+  ): Promise<{ artistId: string; score: number }[]>;
 }
 
 /**

@@ -306,7 +306,7 @@ describe('useArtists hooks', () => {
         }],
         artistId: 'artist-1',
         limit: 10,
-        source: 'lastfm' as const,
+        source: 'external' as const,
       };
       vi.mocked(artistsService.getRelatedArtists).mockResolvedValueOnce(mockResponse);
 

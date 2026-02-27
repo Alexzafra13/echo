@@ -264,7 +264,7 @@ describe('artistsService', () => {
         ],
         artistId: 'artist-1',
         limit: 10,
-        source: 'lastfm',
+        source: 'external',
       };
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResponse });
 
@@ -274,7 +274,7 @@ describe('artistsService', () => {
         params: { limit: 10 },
       });
       expect(result.data[0].matchScore).toBe(85);
-      expect(result.source).toBe('lastfm');
+      expect(result.source).toBe('external');
     });
 
     it('should fetch with custom limit', async () => {

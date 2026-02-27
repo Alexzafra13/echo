@@ -30,7 +30,7 @@ import { getSmartPlaylistByArtist } from '@shared/services/recommendations.servi
 
 describe('useAutoplay', () => {
   const mockRelatedArtists = {
-    source: 'lastfm',
+    source: 'external',
     data: [
       { id: 'artist-1', name: 'Similar Artist 1' },
       { id: 'artist-2', name: 'Similar Artist 2' },
@@ -143,7 +143,7 @@ describe('useAutoplay', () => {
 
     it('should return empty array when no related artists found', async () => {
       vi.mocked(artistsService.getRelatedArtists).mockResolvedValue({
-        source: 'lastfm',
+        source: 'external',
         data: [],
       });
 

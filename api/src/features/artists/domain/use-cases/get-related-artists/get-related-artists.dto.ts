@@ -24,5 +24,5 @@ export interface GetRelatedArtistsOutput {
   data: RelatedArtistData[];
   artistId: string;
   limit: number;
-  source: 'external' | 'internal' | 'none';
+  source: 'external' | 'genre' | 'internal' | 'none';
 }

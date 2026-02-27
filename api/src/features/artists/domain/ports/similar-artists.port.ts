@@ -18,7 +18,7 @@ export interface ISimilarArtistsProvider {
     mbzArtistId: string | null,
     artistName: string,
     limit?: number,
-  ): Promise<{ name: string; mbid?: string; match: number }[]>;
+  ): Promise<{ name: string; mbid?: string; match: number }[] | null>;
 }
 
 export const SIMILAR_ARTISTS_PROVIDER = 'ISimilarArtistsProvider';
