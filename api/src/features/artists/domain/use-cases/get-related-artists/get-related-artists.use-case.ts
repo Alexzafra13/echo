@@ -151,6 +151,11 @@ export class GetRelatedArtistsUseCase {
     // Create map for O(1) lookup
     const artistMap = new Map(artists.map(a => [a.id, a]));
 
+    // Normalize scores to 0-100 range relative to the highest score
+    const maxScore = internalRelated.length > 0
+      ? Math.max(...internalRelated.map(r => r.score))
+      : 1;
+
     const relatedArtists: RelatedArtistData[] = [];
     for (const stat of internalRelated) {
       const artist = artistMap.get(stat.artistId);
@@ -160,7 +165,7 @@ export class GetRelatedArtistsUseCase {
           name: artist.name,
           albumCount: artist.albumCount,
           songCount: artist.songCount,
-          matchScore: Math.round(stat.score),
+          matchScore: maxScore > 0 ? Math.round((stat.score / maxScore) * 100) : 0,
         });
       }
     }
