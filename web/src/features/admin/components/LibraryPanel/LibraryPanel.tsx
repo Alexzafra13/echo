@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FolderOpen, Check, AlertCircle, ChevronRight, ChevronUp, Music, RefreshCw } from 'lucide-react';
+import { FolderOpen, Folder, Check, AlertCircle, ChevronRight, ChevronUp, Music, RefreshCw } from 'lucide-react';
 import { getLibraryConfig, updateLibraryPath, browseDirectories, LibraryConfig, DirectoryInfo } from '../../api/library.api';
 import styles from './LibraryPanel.module.css';
 
@@ -98,7 +98,10 @@ export function LibraryPanel() {
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <h2 className={styles.title}>Biblioteca de Música</h2>
+          <div className={styles.headerTitle}>
+            <FolderOpen size={24} className={styles.headerIcon} />
+            <h2 className={styles.title}>Biblioteca de Música</h2>
+          </div>
           <p className={styles.description}>
             Configura la carpeta donde está tu colección de música
           </p>
@@ -215,7 +218,7 @@ export function LibraryPanel() {
                     onClick={() => handleBrowse(dir.path)}
                     disabled={!dir.readable || browsing}
                   >
-                    <FolderOpen size={18} />
+                    <Folder size={18} />
                     <span className={styles.directoryName}>{dir.name}</span>
                     {dir.hasMusic && (
                       <Music size={14} className={styles.musicIcon} />

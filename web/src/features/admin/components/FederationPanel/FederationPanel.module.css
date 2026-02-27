@@ -1,20 +1,14 @@
 /* FederationPanel Component Styles */
 
 .panel {
-  background: var(--white-03);
-  border-radius: 16px;
-  padding: 32px;
-  border: 1px solid var(--white-08);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  border: none;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
-  transition: all 0.2s ease;
-}
-
-.panel:hover {
-  background: var(--white-05);
-  border-color: var(--white-12);
 }
 
 .header {

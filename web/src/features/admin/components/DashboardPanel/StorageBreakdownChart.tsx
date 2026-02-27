@@ -15,8 +15,8 @@ interface StorageBreakdownChartProps {
   data: StorageBreakdown;
 }
 
-const COLORS = {
-  music: '#3b82f6',
+const COLORS: Record<string, string> = {
+  music: '#6366f1',
   metadata: '#10b981',
   avatars: '#f59e0b',
 };
@@ -29,23 +29,22 @@ export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
   // Transform data for Recharts
   // Note: "metadata" = artist/album images from external providers
   // Note: "avatars" = user profile pictures (not artist images)
-  const chartData = [
-    { name: 'Música', value: data.music, percentage: ((data.music / data.total) * 100).toFixed(1) },
+  const allData = [
+    { name: 'Música', key: 'music', value: data.music, percentage: ((data.music / data.total) * 100).toFixed(1) },
     {
       name: 'Imágenes (Artistas/Álbumes)',
+      key: 'metadata',
       value: data.metadata,
       percentage: ((data.metadata / data.total) * 100).toFixed(1),
     },
     {
       name: 'Avatares de Usuario',
+      key: 'avatars',
       value: data.avatars,
       percentage: ((data.avatars / data.total) * 100).toFixed(1),
     },
   ];
-
-  const renderCustomLabel = (props: PieLabelRenderProps & { percentage?: string }) => {
-    return `${props.percentage}%`;
-  };
+  const chartData = allData.filter(d => d.value > 0);
 
   return (
     <div className={styles.container}>
@@ -58,20 +57,23 @@ export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
       </div>
 
       <div className={styles.chartWrapper}>
-        <ResponsiveContainer width="100%" height={280}>
+        <ResponsiveContainer width="100%" height={200}>
           <PieChart>
             <Pie
               data={chartData}
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={renderCustomLabel}
-              outerRadius={90}
+              outerRadius={80}
+              innerRadius={45}
               fill="#8884d8"
               dataKey="value"
+              strokeWidth={2}
+              stroke="rgba(0,0,0,0.3)"
+              minAngle={3}
             >
-              {chartData.map((_entry, index) => (
-                <Cell key={`cell-${index}`} fill={Object.values(COLORS)[index]} />
+              {chartData.map((entry) => (
+                <Cell key={entry.key} fill={COLORS[entry.key]} />
               ))}
             </Pie>
             <Tooltip
@@ -83,15 +85,19 @@ export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
                 color: '#ffffff',
               }}
             />
-            <Legend
-              wrapperStyle={{ color: '#b8bcc8', fontSize: 13 }}
-              iconType="circle"
-              formatter={(value, entry: { payload?: { value?: number } }) =>
-                `${value}: ${formatBytes(entry.payload?.value ?? 0)}`
-              }
-            />
           </PieChart>
         </ResponsiveContainer>
+      </div>
+
+      <div className={styles.legend}>
+        {allData.map((entry) => (
+          <div key={entry.key} className={styles.legendItem}>
+            <span className={styles.legendDot} style={{ background: COLORS[entry.key] }} />
+            <span className={styles.legendLabel}>{entry.name}</span>
+            <span className={styles.legendValue}>{formatBytes(entry.value)}</span>
+            <span className={styles.legendPercent}>{entry.percentage}%</span>
+          </div>
+        ))}
       </div>
     </div>
   );

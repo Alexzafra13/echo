@@ -1,19 +1,13 @@
 /* LibraryPanel Component Styles */
 
 .panel {
-  background: var(--white-03);
-  border-radius: 16px;
-  padding: 32px;
-  border: 1px solid var(--white-08);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  border: none;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  transition: all 0.2s ease;
-}
-
-.panel:hover {
-  background: var(--white-05);
-  border-color: var(--white-12);
 }
 
 .loading {
@@ -34,11 +28,22 @@
   flex: 1;
 }
 
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.headerIcon {
+  color: #f59e0b;
+}
+
 .title {
   font-size: 24px;
   font-weight: 700;
   color: var(--color-text-primary, #ffffff);
-  margin: 0 0 8px 0;
+  margin: 0;
 }
 
 .description {
@@ -68,7 +73,7 @@
 }
 
 .pathIcon {
-  color: var(--color-primary, #6366f1);
+  color: #f59e0b;
   flex-shrink: 0;
 }
 
@@ -119,20 +124,21 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
-  background: rgba(198, 64, 29, 0.12);
-  border: 1px solid rgba(198, 64, 29, 0.35);
+  padding: 10px 18px;
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   border-radius: 10px;
-  color: #e05a30;
-  font-size: 14px;
-  font-weight: 600;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .changeButton:hover {
-  background: rgba(198, 64, 29, 0.2);
-  border-color: rgba(198, 64, 29, 0.5);
+  background: var(--white-08);
+  border-color: var(--white-15);
+  color: var(--color-text-primary, #ffffff);
   transform: translateY(-1px);
 }
 
@@ -265,9 +271,9 @@
 }
 
 .navButtonActive {
-  background: var(--color-primary, #ed6842);
-  border-color: var(--color-primary, #ed6842);
-  color: white;
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
 }
 
 /* Directory List */
@@ -309,7 +315,7 @@
 }
 
 .browserLoading svg {
-  color: var(--color-secondary-400, #22d3ee);
+  color: var(--color-text-secondary, #b8bcc8);
 }
 
 .spinner {
@@ -328,13 +334,14 @@
 .directoryItem {
   display: flex;
   align-items: center;
-  margin: 4px 8px;
+  gap: 8px;
+  padding: 4px 8px;
   border-radius: 10px;
-  transition: background 0.2s ease;
+  transition: background 0.15s ease;
 }
 
 .directoryItem:hover {
-  background: var(--white-03);
+  background: var(--white-04);
 }
 
 .directoryItemDisabled {
@@ -346,21 +353,19 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
-  background: var(--white-02);
-  border: 1px solid var(--white-04);
-  border-radius: 10px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s ease;
+  transition: color 0.15s ease;
 }
 
 .directoryButton:hover:not(:disabled) {
-  background: var(--white-08);
-  border-color: var(--white-10);
-  transform: translateX(4px);
+  color: #fbbf24;
 }
 
 .directoryButton:disabled {
@@ -368,7 +373,7 @@
 }
 
 .directoryButton svg {
-  color: var(--color-secondary-400, #22d3ee);
+  color: #fbbf24;
   flex-shrink: 0;
 }
 
@@ -377,17 +382,8 @@
 }
 
 .musicIcon {
-  color: var(--color-primary, #ed6842);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
+  color: #34d399;
+  opacity: 0.7;
 }
 
 .chevron {
@@ -395,21 +391,27 @@
 }
 
 .selectButton {
-  padding: 8px 16px;
-  margin-right: 8px;
-  background: rgba(198, 64, 29, 0.1);
-  border: 1px solid rgba(198, 64, 29, 0.3);
-  color: #e05a30;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--white-08);
+  color: var(--color-text-tertiary, #6b7280);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.directoryItem:hover .selectButton {
+  opacity: 1;
 }
 
 .selectButton:hover:not(:disabled) {
-  background: rgba(198, 64, 29, 0.2);
-  border-color: rgba(198, 64, 29, 0.5);
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
 }
 
 .selectButton:disabled {
@@ -430,27 +432,26 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
-  padding: 16px 28px;
-  background: linear-gradient(135deg, #c6401d 0%, #a33518 100%);
-  color: white;
-  border: none;
+  padding: 14px 28px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 4px 15px rgba(198, 64, 29, 0.3);
 }
 
 .selectCurrentButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #d4481f 0%, #b83a1a 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(198, 64, 29, 0.4);
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #c7d2fe;
+  transform: translateY(-1px);
 }
 
 .selectCurrentButton:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 10px rgba(198, 64, 29, 0.3);
 }
 
 .selectCurrentButton:disabled {

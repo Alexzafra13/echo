@@ -38,13 +38,13 @@
 .filters {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
-  padding: 20px 24px;
-  background: linear-gradient(135deg, var(--white-03) 0%, var(--white-02) 100%);
-  border: 1px solid var(--white-08);
-  border-radius: 16px;
-  backdrop-filter: blur(8px);
+  padding: 12px 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--white-06);
 }
 
 .filterGroup {
@@ -140,12 +140,12 @@
 
 /* Log Card */
 .logCard {
-  background: linear-gradient(135deg, var(--white-03) 0%, var(--white-02) 100%);
-  border: 1px solid var(--white-08);
-  border-radius: 14px;
-  padding: 18px 22px;
+  background: var(--white-02);
+  border: 1px solid var(--white-06);
+  border-radius: 8px;
+  padding: 14px 16px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.15s ease;
   position: relative;
   overflow: hidden;
 }
@@ -156,21 +156,17 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 4px;
-  border-radius: 4px 0 0 4px;
-  transition: width 0.2s ease;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
 }
 
 .logCard:hover {
-  background: linear-gradient(135deg, var(--white-05) 0%, var(--white-03) 100%);
-  border-color: var(--white-15);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px var(--black-20);
+  border-color: var(--white-12);
 }
 
 .logCardExpanded {
-  background: linear-gradient(135deg, var(--white-05) 0%, var(--white-04) 100%);
-  border-color: var(--white-15);
+  background: var(--white-03);
+  border-color: var(--white-10);
 }
 
 /* Level-specific left border colors */
@@ -279,11 +275,13 @@
 
 /* Log Message */
 .logMessage {
-  font-size: 14px;
+  font-size: 13px;
+  font-family: var(--font-mono, 'JetBrains Mono', 'Consolas', monospace);
   color: var(--color-text-primary, #ffffff);
-  line-height: 1.6;
+  line-height: 1.5;
   margin-bottom: 0;
   padding-left: 4px;
+  word-break: break-all;
 }
 
 /* Log Details (Expandable) */

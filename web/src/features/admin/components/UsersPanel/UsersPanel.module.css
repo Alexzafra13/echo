@@ -1,20 +1,14 @@
 /* UsersPanel Component Styles - Enhanced Design */
 
 .panel {
-  background: linear-gradient(135deg, var(--white-04) 0%, var(--white-02) 100%);
-  border-radius: var(--radius-xl);
-  padding: var(--space-8);
-  border: 1px solid var(--white-08);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  border: none;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.panel:hover {
-  background: linear-gradient(135deg, var(--white-05) 0%, var(--white-03) 100%);
-  border-color: var(--white-12);
 }
 
 .header {
@@ -22,9 +16,9 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--space-6);
-  margin-bottom: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--white-08);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--white-06);
 }
 
 .headerLeft {
@@ -32,11 +26,11 @@
 }
 
 .title {
-  font-size: 26px;
-  font-weight: var(--font-black);
+  font-size: 22px;
+  font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 var(--space-2) 0;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
 }
 
 .description {
@@ -212,8 +206,7 @@
 }
 
 .table tbody tr:hover .userAvatar {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.15);
+  border-color: var(--white-30);
 }
 
 .userAvatarImage {

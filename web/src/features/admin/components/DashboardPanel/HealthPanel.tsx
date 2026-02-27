@@ -49,17 +49,17 @@ export function HealthPanel({ health, alerts, scanStats, onNavigateToTab }: Heal
     switch (status) {
       case 'healthy':
       case 'idle':
-        return <CheckCircle2 size={16} className={styles.iconHealthy} />;
+        return <CheckCircle2 size={13} className={styles.iconHealthy} />;
       case 'degraded':
       case 'warning':
       case 'running':
-        return <AlertCircle size={16} className={styles.iconWarning} />;
+        return <AlertCircle size={13} className={styles.iconWarning} />;
       case 'down':
       case 'error':
       case 'critical':
-        return <XCircle size={16} className={styles.iconError} />;
+        return <XCircle size={13} className={styles.iconError} />;
       default:
-        return <AlertCircle size={16} className={styles.iconWarning} />;
+        return <AlertCircle size={13} className={styles.iconWarning} />;
     }
   };
 
@@ -92,7 +92,7 @@ export function HealthPanel({ health, alerts, scanStats, onNavigateToTab }: Heal
 
       <div className={styles.grid}>
         {/* Database */}
-        <div className={styles.healthItem}>
+        <div className={`${styles.healthItem} ${styles.servicePostgres}`}>
           <div className={styles.healthHeader}>
             <Database size={18} />
             <span className={styles.healthLabel}>Base de Datos</span>
@@ -104,7 +104,7 @@ export function HealthPanel({ health, alerts, scanStats, onNavigateToTab }: Heal
         </div>
 
         {/* Redis */}
-        <div className={styles.healthItem}>
+        <div className={`${styles.healthItem} ${styles.serviceRedis}`}>
           <div className={styles.healthHeader}>
             <Zap size={18} />
             <span className={styles.healthLabel}>Caché (Redis)</span>
@@ -116,7 +116,7 @@ export function HealthPanel({ health, alerts, scanStats, onNavigateToTab }: Heal
         </div>
 
         {/* Scanner */}
-        <div className={styles.healthItem}>
+        <div className={`${styles.healthItem} ${styles.serviceScanner}`}>
           <div className={styles.healthHeader}>
             <Radio size={18} />
             <span className={styles.healthLabel}>Escáner</span>
@@ -141,7 +141,7 @@ export function HealthPanel({ health, alerts, scanStats, onNavigateToTab }: Heal
         </div>
 
         {/* Storage */}
-        <div className={styles.healthItem}>
+        <div className={`${styles.healthItem} ${styles.serviceStorage}`}>
           <div className={styles.healthHeader}>
             <HardDrive size={18} />
             <span className={styles.healthLabel}>Almacenamiento</span>
@@ -153,7 +153,7 @@ export function HealthPanel({ health, alerts, scanStats, onNavigateToTab }: Heal
         </div>
 
         {/* Last.fm */}
-        <div className={styles.healthItem}>
+        <div className={`${styles.healthItem} ${styles.serviceLastfm}`}>
           <div className={styles.healthHeader}>
             <Radio size={18} />
             <span className={styles.healthLabel}>Last.fm API</span>
@@ -165,7 +165,7 @@ export function HealthPanel({ health, alerts, scanStats, onNavigateToTab }: Heal
         </div>
 
         {/* Fanart.tv */}
-        <div className={styles.healthItem}>
+        <div className={`${styles.healthItem} ${styles.serviceFanart}`}>
           <div className={styles.healthHeader}>
             <Radio size={18} />
             <span className={styles.healthLabel}>Fanart.tv API</span>
@@ -177,7 +177,7 @@ export function HealthPanel({ health, alerts, scanStats, onNavigateToTab }: Heal
         </div>
 
         {/* MusicBrainz */}
-        <div className={styles.healthItem}>
+        <div className={`${styles.healthItem} ${styles.serviceMusicbrainz}`}>
           <div className={styles.healthHeader}>
             <Radio size={18} />
             <span className={styles.healthLabel}>MusicBrainz API</span>

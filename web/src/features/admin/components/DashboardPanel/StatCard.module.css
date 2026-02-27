@@ -1,43 +1,18 @@
-/* StatCard Component Styles - Enhanced Design */
+/* StatCard Component Styles */
 
 .card {
-  background: linear-gradient(135deg, var(--white-04) 0%, var(--white-02) 100%);
-  border: 1px solid var(--white-08);
-  border-radius: 16px;
-  padding: 22px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--white-03);
+  border: 1px solid var(--white-06);
+  border-radius: 10px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Subtle gradient overlay on hover */
-.card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at 100% 0%,
-    rgba(237, 104, 66, 0.08) 0%,
-    transparent 50%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+  gap: 14px;
+  transition: border-color 0.2s ease;
 }
 
 .card:hover {
-  background: linear-gradient(135deg, var(--white-06) 0%, var(--white-04) 100%);
-  border-color: var(--white-15);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px var(--black-20),
-              0 0 0 1px rgba(237, 104, 66, 0.1);
-}
-
-.card:hover::before {
-  opacity: 1;
+  border-color: var(--white-12);
 }
 
 .header {
@@ -47,63 +22,57 @@
 }
 
 .title {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-text-tertiary, #6b7280);
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.5px;
 }
 
 .iconContainer {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.15) 0%, rgba(237, 104, 66, 0.08) 100%);
-  border: 1px solid rgba(237, 104, 66, 0.2);
-  border-radius: 12px;
-  color: var(--color-primary, #ed6842);
-  transition: all 0.3s ease;
+  width: 32px;
+  height: 32px;
+  background: var(--white-04);
+  border: none;
+  border-radius: 8px;
+  color: var(--color-text-tertiary, #6b7280);
 }
 
 .card:hover .iconContainer {
-  transform: scale(1.1) rotate(-5deg);
-  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.25);
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.2) 0%, rgba(237, 104, 66, 0.12) 100%);
+  color: var(--color-text-secondary, #b8bcc8);
 }
 
 .body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
 }
 
 .value {
-  font-size: 34px;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 600;
   color: var(--color-text-primary, #ffffff);
   line-height: 1;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
 }
 
 .subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-text-tertiary, #6b7280);
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .change {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
+  gap: 4px;
+  font-size: 11px;
   color: var(--color-success);
-  font-weight: 700;
-  padding: 5px 10px;
-  background: var(--success-10);
-  border-radius: 6px;
+  font-weight: 600;
   width: fit-content;
 }
 
@@ -111,13 +80,85 @@
   flex-shrink: 0;
 }
 
+/* Color Variants */
+.card[data-variant="music"] {
+  background: rgba(99, 102, 241, 0.06);
+  border-color: rgba(99, 102, 241, 0.15);
+}
+.card[data-variant="music"] .iconContainer {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+}
+.card[data-variant="music"] .title {
+  color: #a5b4fc;
+}
+
+.card[data-variant="disc"] {
+  background: rgba(236, 72, 153, 0.05);
+  border-color: rgba(236, 72, 153, 0.14);
+}
+.card[data-variant="disc"] .iconContainer {
+  background: rgba(236, 72, 153, 0.12);
+  color: #f472b6;
+}
+.card[data-variant="disc"] .title {
+  color: #f9a8d4;
+}
+
+.card[data-variant="users"] {
+  background: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16, 185, 129, 0.14);
+}
+.card[data-variant="users"] .iconContainer {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+}
+.card[data-variant="users"] .title {
+  color: #6ee7b7;
+}
+
+.card[data-variant="tag"] {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.14);
+}
+.card[data-variant="tag"] .iconContainer {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+.card[data-variant="tag"] .title {
+  color: #fcd34d;
+}
+
+.card[data-variant="clock"] {
+  background: rgba(14, 165, 233, 0.05);
+  border-color: rgba(14, 165, 233, 0.14);
+}
+.card[data-variant="clock"] .iconContainer {
+  background: rgba(14, 165, 233, 0.12);
+  color: #38bdf8;
+}
+.card[data-variant="clock"] .title {
+  color: #7dd3fc;
+}
+
+.card[data-variant="hard-drive"] {
+  background: rgba(20, 184, 166, 0.05);
+  border-color: rgba(20, 184, 166, 0.14);
+}
+.card[data-variant="hard-drive"] .iconContainer {
+  background: rgba(20, 184, 166, 0.12);
+  color: #2dd4bf;
+}
+.card[data-variant="hard-drive"] .title {
+  color: #5eead4;
+}
+
 /* Light Theme */
 :root[data-theme="light"] .card {
-  background: linear-gradient(135deg, var(--white-70) 0%, var(--white-50) 100%);
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(31, 41, 55, 0.08);
 }
 
 :root[data-theme="light"] .card:hover {
-  background: linear-gradient(135deg, var(--white-90) 0%, var(--white-70) 100%);
-  box-shadow: 0 12px 32px var(--black-10),
-              0 0 0 1px rgba(237, 104, 66, 0.15);
+  border-color: rgba(31, 41, 55, 0.15);
 }

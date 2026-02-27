@@ -27,7 +27,7 @@ export function StatCard({ title, value, subtitle, change, changeLabel, icon }: 
   const Icon = iconMap[icon];
 
   return (
-    <div className={styles.card}>
+    <div className={styles.card} data-variant={icon}>
       <div className={styles.header}>
         <span className={styles.title}>{title}</span>
         <div className={styles.iconContainer}>

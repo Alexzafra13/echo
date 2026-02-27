@@ -1,24 +1,24 @@
 /* StorageBreakdownChart Component Styles */
 
 .container {
-  background: var(--white-03);
-  border: 1px solid var(--white-08);
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--white-02);
+  border: 1px solid var(--white-06);
+  border-radius: 10px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   color: var(--color-text-primary, #ffffff);
 }
 
 .title {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary, #ffffff);
   margin: 0;
@@ -26,34 +26,68 @@
 }
 
 .subtitle {
-  font-size: 13px;
-  color: var(--color-text-secondary, #b8bcc8);
-  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--color-text-tertiary, #6b7280);
+  margin: 2px 0 0 0;
 }
 
 .chartWrapper {
   width: 100%;
-  height: 280px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legendLabel {
+  color: var(--color-text-secondary, #b8bcc8);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legendValue {
+  color: var(--color-text-primary, #ffffff);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.legendPercent {
+  color: var(--color-text-tertiary, #6b7280);
+  font-variant-numeric: tabular-nums;
+  min-width: 38px;
+  text-align: right;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .container {
-    padding: 20px 16px;
+    padding: 16px;
   }
 
   .chartWrapper {
-    height: 240px;
-  }
-
-  .title {
-    font-size: 16px;
-  }
-
-  .subtitle {
-    font-size: 12px;
+    height: 180px;
   }
 }

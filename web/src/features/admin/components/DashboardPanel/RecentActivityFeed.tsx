@@ -90,7 +90,7 @@ export function RecentActivityFeed({ activities }: RecentActivityFeedProps) {
 
       <div className={styles.feed}>
         {activities.map((activity) => (
-          <div key={activity.id} className={styles.activityItem}>
+          <div key={activity.id} className={styles.activityItem} data-type={activity.type}>
             <div className={styles.activityIcon}>
               {getIcon(activity.type)}
             </div>

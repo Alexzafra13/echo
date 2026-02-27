@@ -1,4 +1,4 @@
-import { LayoutDashboard, TrendingUp, TrendingDown } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, TrendingDown, Users, Sparkles, Search } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@shared/services/api';
 import { formatDuration, formatBytes } from '@shared/utils/format';
@@ -162,9 +162,7 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
             <p className={styles.subtitle}>Vista general del sistema</p>
           </div>
         </div>
-        <button onClick={handleRefresh} className={styles.refreshButton}>
-          Actualizar
-        </button>
+{/* Refresh happens automatically via staleTime */}
       </div>
 
       {/* Stats Grid */}
@@ -219,8 +217,11 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
       {/* Activity & Enrichment Stats */}
       <div className={styles.statsRow}>
         {/* User Activity */}
-        <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Actividad de Usuarios</h3>
+        <div className={`${styles.card} ${styles.cardUsers}`}>
+          <div className={styles.cardHeader}>
+            <Users size={18} />
+            <h3 className={styles.cardTitle}>Actividad de Usuarios</h3>
+          </div>
           <div className={styles.activityStats}>
             <div className={styles.activityStat}>
               <span className={styles.activityLabel}>Total</span>
@@ -244,8 +245,11 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
         </div>
 
         {/* Enrichment Stats */}
-        <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Enriquecimiento de Metadata</h3>
+        <div className={`${styles.card} ${styles.cardEnrichment}`}>
+          <div className={styles.cardHeader}>
+            <Sparkles size={18} />
+            <h3 className={styles.cardTitle}>Enriquecimiento de Metadata</h3>
+          </div>
           <div className={styles.enrichmentStats}>
             <div className={styles.enrichmentPeriod}>
               <span className={styles.periodLabel}>Hoy</span>
@@ -291,14 +295,17 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
         </div>
 
         {/* Last Scan Info */}
-        <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Último Escaneo</h3>
+        <div className={`${styles.card} ${styles.cardScan}`}>
+          <div className={styles.cardHeader}>
+            <Search size={18} />
+            <h3 className={styles.cardTitle}>Último Escaneo</h3>
+          </div>
           {stats.scanStats.lastScan.status ? (
             <div className={styles.scanInfo}>
               <div className={styles.scanStat}>
                 <span className={styles.scanLabel}>Estado</span>
                 <span className={styles.scanValue}>
-                  {stats.scanStats.lastScan.status}
+                  {{ completed: 'Completado', running: 'En curso', error: 'Error', pending: 'Pendiente' }[stats.scanStats.lastScan.status] || stats.scanStats.lastScan.status}
                 </span>
               </div>
               <div className={styles.scanStat}>

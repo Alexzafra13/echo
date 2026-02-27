@@ -12,6 +12,7 @@ import {
   Image,
   Volume2,
   Music2,
+  Library,
 } from 'lucide-react';
 import { CollapsibleInfo } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
@@ -107,7 +108,10 @@ export function ScannerPanel() {
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <h2 className={styles.title}>Librería Musical</h2>
+          <div className={styles.headerTitle}>
+            <Library size={24} className={styles.headerIcon} />
+            <h2 className={styles.title}>Librería Musical</h2>
+          </div>
           <p className={styles.description}>
             Escanea tu carpeta de música para importar canciones, álbumes y artistas
           </p>
