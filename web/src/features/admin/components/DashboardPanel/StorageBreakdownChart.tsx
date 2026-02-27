@@ -1,5 +1,4 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import type { PieLabelRenderProps } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { HardDrive } from 'lucide-react';
 import { formatBytes } from '@shared/utils/format';
 import styles from './StorageBreakdownChart.module.css';
