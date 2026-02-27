@@ -434,7 +434,9 @@
   object-fit: cover;
   object-position: center top;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .publicProfilePage__artistPlaceholder {
@@ -447,7 +449,9 @@
   justify-content: center;
   color: var(--text-tertiary);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .publicProfilePage__artistName {
@@ -492,7 +496,9 @@
   border-radius: var(--radius-sm);
   object-fit: cover;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .publicProfilePage__albumPlaceholder {
@@ -504,7 +510,9 @@
   align-items: center;
   justify-content: center;
   color: var(--text-tertiary);
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .publicProfilePage__albumName {
@@ -701,7 +709,9 @@
   border-radius: var(--radius-sm);
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .publicProfilePage__playlistName {
@@ -921,7 +931,7 @@
   .publicProfilePage__albumCard,
   .publicProfilePage__playlistCard {
     flex-shrink: 0;
-    width: 140px;
+    width: 160px;
     padding: var(--space-3);
   }
 
@@ -930,13 +940,13 @@
   }
 
   .publicProfilePage__artistCard {
-    width: 84px;
+    width: 100px;
   }
 
   .publicProfilePage__artistImage,
   .publicProfilePage__artistPlaceholder {
-    width: 76px;
-    height: 76px;
+    width: 92px;
+    height: 92px;
   }
 }
 
@@ -997,16 +1007,16 @@
 
   .publicProfilePage__albumCard,
   .publicProfilePage__playlistCard {
-    width: 130px;
+    width: 150px;
   }
 
   .publicProfilePage__artistCard {
-    width: 72px;
+    width: 80px;
   }
 
   .publicProfilePage__artistImage,
   .publicProfilePage__artistPlaceholder {
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
   }
 }
