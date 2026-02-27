@@ -3,7 +3,7 @@ import { eq, desc, count, sql, gt, and, inArray } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { DrizzleBaseRepository } from '@shared/base';
 import { createSearchPattern } from '@shared/utils';
-import { artists } from '@infrastructure/database/schema';
+import { artists, artistGenres, djAnalysis, tracks } from '@infrastructure/database/schema';
 import { Artist } from '../../domain/entities/artist.entity';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
 import { ArtistMapper } from './artist.mapper';
@@ -151,5 +151,81 @@ export class DrizzleArtistRepository
       .returning();
 
     return result[0] ? ArtistMapper.toDomain(result[0]) : null;
+  }
+
+  /**
+   * Find similar artists by shared genres (70%) + audio profile similarity (30%)
+   *
+   * 1. Finds artists sharing genres with the target
+   * 2. Computes average audio features (energy, BPM, danceability) per artist
+   * 3. Combines both signals into a 0-1 score
+   */
+  async findSimilarByGenreAndAudio(
+    artistId: string,
+    limit: number,
+  ): Promise<{ artistId: string; score: number }[]> {
+    const result = await this.drizzle.db.execute<{
+      artistId: string;
+      score: string;
+    }>(sql`
+      WITH target_genres AS (
+        SELECT genre_id FROM artist_genres WHERE artist_id = ${artistId}
+      ),
+      target_audio AS (
+        SELECT
+          AVG(da.energy) as avg_energy,
+          AVG(da.bpm) as avg_bpm,
+          AVG(da.danceability) as avg_danceability
+        FROM dj_analysis da
+        JOIN tracks t ON da.track_id = t.id
+        WHERE t.artist_id = ${artistId} AND da.status = 'completed'
+      ),
+      genre_matches AS (
+        SELECT
+          ag.artist_id,
+          COUNT(DISTINCT ag.genre_id)::float
+            / GREATEST((SELECT COUNT(*) FROM target_genres), 1) as genre_score
+        FROM artist_genres ag
+        INNER JOIN target_genres tg ON ag.genre_id = tg.genre_id
+        WHERE ag.artist_id != ${artistId}
+        GROUP BY ag.artist_id
+      ),
+      candidate_audio AS (
+        SELECT
+          t.artist_id,
+          AVG(da.energy) as avg_energy,
+          AVG(da.bpm) as avg_bpm,
+          AVG(da.danceability) as avg_danceability
+        FROM dj_analysis da
+        JOIN tracks t ON da.track_id = t.id
+        WHERE t.artist_id IN (SELECT artist_id FROM genre_matches)
+          AND da.status = 'completed'
+        GROUP BY t.artist_id
+      )
+      SELECT
+        gm.artist_id as "artistId",
+        (
+          gm.genre_score * 0.7
+          + COALESCE(
+              (1.0 - (
+                ABS(COALESCE(ca.avg_energy, 0.5) - COALESCE(ta.avg_energy, 0.5)) * 0.4
+                + LEAST(ABS(COALESCE(ca.avg_bpm, 120) - COALESCE(ta.avg_bpm, 120)) / 120.0, 1.0) * 0.3
+                + ABS(COALESCE(ca.avg_danceability, 0.5) - COALESCE(ta.avg_danceability, 0.5)) * 0.3
+              )) * 0.3,
+              gm.genre_score * 0.3
+            )
+        )::text as "score"
+      FROM genre_matches gm
+      LEFT JOIN candidate_audio ca ON gm.artist_id = ca.artist_id
+      CROSS JOIN target_audio ta
+      JOIN artists a ON gm.artist_id = a.id AND a.song_count > 0
+      ORDER BY "score" DESC
+      LIMIT ${limit}
+    `);
+
+    return result.rows.map((row) => ({
+      artistId: row.artistId,
+      score: parseFloat(row.score),
+    }));
   }
 }

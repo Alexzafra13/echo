@@ -81,4 +81,15 @@ export class CachedArtistRepository
   async findByNames(names: string[]): Promise<Map<string, Artist>> {
     return this.baseRepository.findByNames(names);
   }
+
+  /**
+   * Find similar artists by genre + audio profile - delegates to base repository
+   * Not cached (results depend on evolving genre/audio data)
+   */
+  async findSimilarByGenreAndAudio(
+    artistId: string,
+    limit: number,
+  ): Promise<{ artistId: string; score: number }[]> {
+    return this.baseRepository.findSimilarByGenreAndAudio(artistId, limit);
+  }
 }

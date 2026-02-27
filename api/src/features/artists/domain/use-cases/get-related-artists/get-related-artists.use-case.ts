@@ -6,11 +6,14 @@ import { PLAY_TRACKING_REPOSITORY, IPlayTrackingRepository } from '@features/pla
 import { GetRelatedArtistsInput, GetRelatedArtistsOutput, RelatedArtistData } from './get-related-artists.dto';
 
 /**
- * GetRelatedArtistsUseCase - Get related artists using Last.fm or internal patterns
+ * GetRelatedArtistsUseCase - Get related artists with 3-tier fallback
  *
- * Optimized with bulk queries to avoid N+1 problems:
- * - Uses findByNames() for bulk artist lookup from Last.fm results
- * - Uses findByIds() for bulk lookup from internal patterns
+ * Priority:
+ * 1. External provider (Last.fm) - best quality, requires API key + internet
+ * 2. Genre + audio profile similarity - works offline, needs genre/audio data
+ * 3. Co-listening patterns - works offline, needs multiple users
+ *
+ * Optimized with bulk queries to avoid N+1 problems
  */
 @Injectable()
 export class GetRelatedArtistsUseCase {
@@ -39,7 +42,7 @@ export class GetRelatedArtistsUseCase {
       };
     }
 
-    // 2. Try external provider if enabled
+    // 2. Try external provider if enabled (Last.fm)
     if (this.similarArtistsProvider.isEnabled()) {
       const externalResult = await this.getFromExternalProvider(artist, input.artistId, limit);
       if (externalResult) {
@@ -47,7 +50,13 @@ export class GetRelatedArtistsUseCase {
       }
     }
 
-    // 3. Fallback to internal co-listening patterns
+    // 3. Try genre + audio profile similarity
+    const genreResult = await this.getFromGenreAndAudio(input.artistId, limit);
+    if (genreResult) {
+      return genreResult;
+    }
+
+    // 4. Fallback to internal co-listening patterns
     return this.getFromInternalPatterns(input.artistId, limit);
   }
 
@@ -119,6 +128,70 @@ export class GetRelatedArtistsUseCase {
         artistId,
         limit,
         source: 'external',
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Get related artists by shared genres and audio profile similarity
+   * Uses genre overlap (70%) + audio features distance (30%)
+   */
+  private async getFromGenreAndAudio(
+    artistId: string,
+    limit: number,
+  ): Promise<GetRelatedArtistsOutput | null> {
+    const similar = await this.artistRepository.findSimilarByGenreAndAudio(
+      artistId,
+      limit * 2, // Fetch extra to filter low-quality
+    );
+
+    if (similar.length === 0) {
+      this.logger.debug('No genre/audio similar artists found, trying co-listening');
+      return null;
+    }
+
+    // Filter: keep only results with score >= 0.15 (at least some genre overlap)
+    const qualityResults = similar.filter(r => r.score >= 0.15);
+
+    if (qualityResults.length === 0) {
+      this.logger.debug('Genre/audio results too weak, trying co-listening');
+      return null;
+    }
+
+    // Bulk lookup artist details
+    const artistIds = qualityResults.slice(0, limit).map(r => r.artistId);
+    const artists = await this.artistRepository.findByIds(artistIds);
+    const artistMap = new Map(artists.map(a => [a.id, a]));
+
+    // Normalize scores to 0-100
+    const maxScore = Math.max(...qualityResults.map(r => r.score));
+
+    const relatedArtists: RelatedArtistData[] = [];
+    for (const stat of qualityResults) {
+      if (relatedArtists.length >= limit) break;
+      const artist = artistMap.get(stat.artistId);
+      if (artist) {
+        relatedArtists.push({
+          id: artist.id,
+          name: artist.name,
+          albumCount: artist.albumCount,
+          songCount: artist.songCount,
+          matchScore: maxScore > 0 ? Math.round((stat.score / maxScore) * 100) : 0,
+        });
+      }
+    }
+
+    if (relatedArtists.length > 0) {
+      this.logger.info(
+        `Found ${relatedArtists.length} related artists from genre/audio: ${relatedArtists.map(a => a.name).join(', ')}`
+      );
+      return {
+        data: relatedArtists,
+        artistId,
+        limit,
+        source: 'genre',
       };
     }
 

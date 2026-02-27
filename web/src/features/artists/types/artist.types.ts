@@ -79,5 +79,5 @@ export interface RelatedArtistsResponse {
   data: RelatedArtist[];
   artistId: string;
   limit: number;
-  source: 'external' | 'internal' | 'none';
+  source: 'external' | 'genre' | 'internal' | 'none';
 }
