@@ -95,6 +95,45 @@
   margin-top: 20px;
 }
 
+/* Hero Crossfade Transition */
+.heroCrossfade {
+  position: relative;
+}
+
+.heroCrossfade__layer--entering {
+  position: relative;
+  z-index: 2;
+  animation: heroCrossfadeIn 1.2s ease-in-out;
+}
+
+.heroCrossfade__layer--exiting {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  animation: heroCrossfadeOut 1.2s ease-in-out forwards;
+  pointer-events: none;
+}
+
+@keyframes heroCrossfadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes heroCrossfadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 /* Album Grid Loading State */
 .albumGrid--loading {
   margin-bottom: 40px;
@@ -195,7 +234,14 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, var(--primary-15), var(--primary-25), var(--primary-15), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--primary-15),
+    var(--primary-25),
+    var(--primary-15),
+    transparent
+  );
   transition: left 0.4s ease;
   border-radius: 20px;
 }

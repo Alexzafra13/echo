@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, ReactNode } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef, ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components';
 import { HeaderWithSearch } from '@shared/components/layout/Header';
@@ -337,6 +337,28 @@ export default function HomePage() {
         ? { type: 'album', data: featuredAlbum }
         : null;
 
+  // Hero crossfade: track previous item to create smooth exit animation
+  const prevHeroItemRef = useRef<HeroItem | null>(null);
+  const [exitingHeroItem, setExitingHeroItem] = useState<HeroItem | null>(null);
+
+  useEffect(() => {
+    const prevItem = prevHeroItemRef.current;
+    if (prevItem && currentHeroItem && prevItem.data.id !== currentHeroItem.data.id) {
+      setExitingHeroItem(prevItem);
+    }
+    prevHeroItemRef.current = currentHeroItem;
+  }, [currentHeroItem]);
+
+  // Auto-clear exiting hero after crossfade animation completes
+  useEffect(() => {
+    if (exitingHeroItem) {
+      const timer = setTimeout(() => {
+        setExitingHeroItem(null);
+      }, 1200); // Match CSS crossfade duration
+      return () => clearTimeout(timer);
+    }
+  }, [exitingHeroItem]);
+
   // Truncate album arrays to fill complete grid rows (avoid stretching in last incomplete row)
   const truncateAlbumsToFullRows = (albums: Album[]) => {
     if (isMobile || gridColumns <= 0) return albums.slice(0, neededAlbums);
@@ -483,7 +505,7 @@ export default function HomePage() {
         <HeaderWithSearch alwaysGlass />
 
         <div className={styles.homePage__content}>
-          {/* Hero Section */}
+          {/* Hero Section with Crossfade Transition */}
           {loadingFeatured || loadingRecent || loadingTopPlayed ? (
             <div className={styles['hero--loading']}>
               <div className={styles['hero__cover--loading']} />
@@ -494,12 +516,30 @@ export default function HomePage() {
               </div>
             </div>
           ) : currentHeroItem ? (
-            <HeroSection
-              key={currentHeroItem.data.id}
-              item={currentHeroItem}
-              onNext={handleNextHero}
-              onPrevious={handlePreviousHero}
-            />
+            <div className={styles.heroCrossfade}>
+              {exitingHeroItem && (
+                <div
+                  key={`exit-${exitingHeroItem.data.id}`}
+                  className={`${styles.heroCrossfade__layer} ${styles['heroCrossfade__layer--exiting']}`}
+                >
+                  <HeroSection
+                    item={exitingHeroItem}
+                    onNext={handleNextHero}
+                    onPrevious={handlePreviousHero}
+                  />
+                </div>
+              )}
+              <div
+                key={`enter-${currentHeroItem.data.id}`}
+                className={`${styles.heroCrossfade__layer} ${styles['heroCrossfade__layer--entering']}`}
+              >
+                <HeroSection
+                  item={currentHeroItem}
+                  onNext={handleNextHero}
+                  onPrevious={handlePreviousHero}
+                />
+              </div>
+            </div>
           ) : (
             <div className={styles.homePage__emptyState}>
               <p>No featured album available</p>
