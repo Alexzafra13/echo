@@ -108,7 +108,9 @@
   box-shadow: 0 8px 32px var(--black-60);
   border: 4px solid var(--white-10);
   cursor: pointer;
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .artistDetailPage__avatar:hover {
@@ -586,23 +588,23 @@
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .artistDetailPage {
+:root[data-theme='light'] .artistDetailPage {
   background: var(--bg-base, #e5e7eb);
   background-image: var(--gradient-textured);
 }
 
 /* Hero tiene fondo oscuro (imagen con brightness 0.4), texto debe ser blanco */
-:root[data-theme="light"] .artistDetailPage__name {
+:root[data-theme='light'] .artistDetailPage__name {
   color: #ffffff;
 }
 
-:root[data-theme="light"] .artistDetailPage__stats {
+:root[data-theme='light'] .artistDetailPage__stats {
   color: var(--white-85);
 }
 
 /* Light theme - biography doesn't need special styles in Spotify minimal */
 
-:root[data-theme="light"] .artistDetailPage__imageModal {
+:root[data-theme='light'] .artistDetailPage__imageModal {
   background: rgba(229, 231, 235, 0.95);
 }
 
@@ -811,7 +813,9 @@
   overflow: hidden;
   background: var(--white-05);
   position: relative;
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .artistDetailPage__relatedArtistAvatar img {
@@ -842,6 +846,12 @@
   text-overflow: ellipsis;
   width: 100%;
   transition: color var(--transition-base);
+}
+
+.artistDetailPage__relatedArtistScore {
+  font-size: var(--text-xxs, 0.65rem);
+  color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
 /* ===== Artist Playlists Section ===== */

@@ -12,10 +12,7 @@ interface RelatedArtistsSectionProps {
 /**
  * RelatedArtistsSection - Displays artists similar to the current one
  */
-export function RelatedArtistsSection({
-  artists,
-  onNavigate,
-}: RelatedArtistsSectionProps) {
+export function RelatedArtistsSection({ artists, onNavigate }: RelatedArtistsSectionProps) {
   if (artists.length === 0) {
     return null;
   }
@@ -45,11 +42,19 @@ export function RelatedArtistsSection({
                   if (fallback) fallback.style.display = 'flex';
                 }}
               />
-              <div className={styles.artistDetailPage__relatedArtistFallback} style={{ display: 'none' }}>
+              <div
+                className={styles.artistDetailPage__relatedArtistFallback}
+                style={{ display: 'none' }}
+              >
                 {getArtistInitials(relArtist.name)}
               </div>
             </div>
             <span className={styles.artistDetailPage__relatedArtistName}>{relArtist.name}</span>
+            {relArtist.matchScore > 0 && (
+              <span className={styles.artistDetailPage__relatedArtistScore}>
+                {relArtist.matchScore}% similar
+              </span>
+            )}
           </div>
         ))}
       </div>
