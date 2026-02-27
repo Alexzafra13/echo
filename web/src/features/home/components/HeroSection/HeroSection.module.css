@@ -23,20 +23,12 @@
   filter: blur(2px) brightness(0.5);
   transform: scale(1.05);
   transition: opacity 1.2s ease-in-out;
-  animation: fadeInBackground 1.2s ease-in-out;
   /* Fade to transparent at bottom - gradual transition for smooth blend */
   -webkit-mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 100%);
 }
 
-@keyframes fadeInBackground {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
+/* fadeInBackground removed - crossfade wrapper handles opacity */
 
 /* Navigation Buttons - Modern Glassmorphism Style */
 .heroSection__navButton {
@@ -48,11 +40,7 @@
   width: 36px;
   height: 56px;
   border-radius: 18px;
-  background: linear-gradient(
-    135deg,
-    var(--white-12) 0%,
-    var(--white-05) 100%
-  );
+  background: linear-gradient(135deg, var(--white-12) 0%, var(--white-05) 100%);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--white-15);
@@ -74,11 +62,7 @@
 }
 
 .heroSection__navButton:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(237, 104, 66, 0.85) 0%,
-    rgba(237, 104, 66, 0.65) 100%
-  );
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.85) 0%, rgba(237, 104, 66, 0.65) 100%);
   border-color: var(--white-40);
   color: var(--text-on-primary);
   transform: translateY(-50%) scale(1.08);
@@ -120,11 +104,9 @@
 
 @keyframes fadeInSlide {
   0% {
-    opacity: 0;
     transform: translateY(20px);
   }
   100% {
-    opacity: 1;
     transform: translateY(0);
   }
 }
@@ -134,7 +116,9 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: transform var(--transition-slow), filter var(--transition-slow);
+  transition:
+    transform var(--transition-slow),
+    filter var(--transition-slow);
   flex-shrink: 0;
   border-radius: var(--radius-base);
   overflow: hidden;
@@ -161,11 +145,9 @@
 
 @keyframes fadeInScale {
   0% {
-    opacity: 0;
     transform: scale(0.95);
   }
   100% {
-    opacity: 1;
     transform: scale(1);
   }
 }
@@ -183,7 +165,9 @@
   padding: 0;
   cursor: pointer;
   text-align: left;
-  transition: opacity var(--transition-slow), transform var(--transition-slow);
+  transition:
+    opacity var(--transition-slow),
+    transform var(--transition-slow);
   width: fit-content;
 }
 
@@ -552,14 +536,14 @@
 
 /* ===== Light Theme Styles ===== */
 /* El hero tiene fondo oscuro, por lo que el texto debe permanecer blanco */
-:root[data-theme="light"] .heroSection__artistName {
+:root[data-theme='light'] .heroSection__artistName {
   color: var(--text-on-primary);
 }
 
-:root[data-theme="light"] .heroSection__albumTitle {
+:root[data-theme='light'] .heroSection__albumTitle {
   color: var(--color-primary);
 }
 
-:root[data-theme="light"] .heroSection__meta {
+:root[data-theme='light'] .heroSection__meta {
   color: var(--white-85); /* Año y metadata en blanco suave */
 }
