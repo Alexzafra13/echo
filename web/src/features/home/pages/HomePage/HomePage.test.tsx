@@ -293,8 +293,9 @@ describe('HomePage', () => {
       const nextButton = screen.getByTestId('hero-next');
       fireEvent.click(nextButton);
 
-      // Hero section should still be visible
-      expect(screen.getByTestId('hero-section')).toBeInTheDocument();
+      // During crossfade, both exiting and entering hero sections are in the DOM
+      const heroSections = screen.getAllByTestId('hero-section');
+      expect(heroSections.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should navigate to previous hero on click', () => {
@@ -303,7 +304,9 @@ describe('HomePage', () => {
       const prevButton = screen.getByTestId('hero-prev');
       fireEvent.click(prevButton);
 
-      expect(screen.getByTestId('hero-section')).toBeInTheDocument();
+      // During crossfade, both exiting and entering hero sections are in the DOM
+      const heroSections = screen.getAllByTestId('hero-section');
+      expect(heroSections.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should show empty state when no albums', () => {
