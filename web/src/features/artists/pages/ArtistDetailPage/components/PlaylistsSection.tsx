@@ -67,12 +67,10 @@ export function PlaylistsSection({
                 size="medium"
               />
             </div>
-            <div className={styles.artistDetailPage__playlistInfo}>
-              <span className={styles.artistDetailPage__playlistName}>{playlist.name}</span>
-              <span className={styles.artistDetailPage__playlistMeta}>
-                {playlist.tracks.length} canciones
-              </span>
-            </div>
+            <span className={styles.artistDetailPage__playlistName}>{playlist.name}</span>
+            <span className={styles.artistDetailPage__playlistMeta}>
+              {playlist.tracks.length} canciones
+            </span>
           </div>
         ))}
         {/* User public playlists */}
@@ -88,12 +86,10 @@ export function PlaylistsSection({
                 playlistName={playlist.name}
               />
             </div>
-            <div className={styles.artistDetailPage__playlistInfo}>
-              <span className={styles.artistDetailPage__playlistName}>{playlist.name}</span>
-              <span className={styles.artistDetailPage__playlistMeta}>
-                {playlist.songCount} canciones
-              </span>
-            </div>
+            <span className={styles.artistDetailPage__playlistName}>{playlist.name}</span>
+            <span className={styles.artistDetailPage__playlistMeta}>
+              {playlist.songCount} canciones
+            </span>
           </div>
         ))}
       </div>

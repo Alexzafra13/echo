@@ -793,7 +793,7 @@
   cursor: pointer;
   text-align: center;
   flex-shrink: 0;
-  width: 96px;
+  width: 120px;
   gap: var(--space-2);
 }
 
@@ -807,8 +807,8 @@
 }
 
 .artistDetailPage__relatedArtistAvatar {
-  width: 88px;
-  height: 88px;
+  width: 112px;
+  height: 112px;
   border-radius: var(--radius-full);
   overflow: hidden;
   background: var(--white-05);
@@ -861,31 +861,36 @@
 
 .artistDetailPage__playlistsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-5);
+  padding: 0 var(--space-5);
 }
 
 .artistDetailPage__playlistCard {
   display: flex;
   flex-direction: column;
-  padding: var(--space-3);
-  background: var(--white-02);
-  border-radius: var(--radius-lg);
+  gap: var(--space-3);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: transform var(--transition-slow);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
 }
 
 .artistDetailPage__playlistCard:hover {
-  background: var(--white-05);
-  transform: translateY(-2px);
+  transform: translateY(-4px) scale(1.02);
 }
 
 .artistDetailPage__playlistCover {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: var(--radius-base);
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  margin-bottom: var(--space-3);
+  box-shadow: 0 4px 12px var(--black-30);
+  transition: box-shadow var(--transition-slow);
+}
+
+.artistDetailPage__playlistCard:hover .artistDetailPage__playlistCover {
+  box-shadow: 0 8px 24px var(--black-50);
 }
 
 .artistDetailPage__playlistCover > * {
@@ -893,24 +898,23 @@
   height: 100% !important;
 }
 
-.artistDetailPage__playlistInfo {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
 .artistDetailPage__playlistName {
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
   color: var(--text-primary);
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .artistDetailPage__playlistMeta {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ===== Responsive for new sections ===== */
@@ -981,12 +985,12 @@
   }
 
   .artistDetailPage__relatedArtist {
-    width: 80px;
+    width: 96px;
   }
 
   .artistDetailPage__relatedArtistAvatar {
-    width: 72px;
-    height: 72px;
+    width: 88px;
+    height: 88px;
   }
 
   .artistDetailPage__relatedArtistFallback {
@@ -994,24 +998,14 @@
   }
 
   .artistDetailPage__playlistsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: var(--space-3);
+    padding: 0 var(--space-4);
   }
 
   .artistDetailPage__playlistCard {
-    padding: var(--space-2);
-  }
-
-  .artistDetailPage__playlistCover {
-    margin-bottom: var(--space-2);
-  }
-
-  .artistDetailPage__playlistName {
-    font-size: var(--text-sm);
-  }
-
-  .artistDetailPage__playlistMeta {
-    font-size: var(--text-xs);
+    padding: 0;
+    gap: var(--space-2);
   }
 }
 
@@ -1034,15 +1028,16 @@
   }
 
   .artistDetailPage__relatedArtist {
-    width: 72px;
+    width: 80px;
   }
 
   .artistDetailPage__relatedArtistAvatar {
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
   }
 
   .artistDetailPage__playlistsGrid {
     grid-template-columns: repeat(2, 1fr);
+    padding: 0 var(--space-3);
   }
 }

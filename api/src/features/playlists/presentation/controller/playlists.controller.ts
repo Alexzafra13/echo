@@ -179,7 +179,8 @@ export class PlaylistsController {
   async getPlaylistsByArtist(
     @Param('artistId', ParseUUIDPipe) artistId: string,
     @Query('skip') skip?: number,
-    @Query('take') take?: number
+    @Query('take') take?: number,
+    @Req() req?: RequestWithUser
   ): Promise<PlaylistsListResponseDto> {
     const { skip: skipNum, take: takeNum } = validatePagination(skip, take, {
       maxTake: 100,
@@ -188,6 +189,7 @@ export class PlaylistsController {
 
     const result = await this.getPlaylistsByArtistUseCase.execute({
       artistId,
+      userId: req?.user?.id,
       skip: skipNum,
       take: takeNum,
     });
