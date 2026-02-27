@@ -576,11 +576,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, [handlePlayNext]);
 
   /**
-   * Play next track in queue
+   * Play next track in queue (crossfade if enabled and currently playing)
    */
   const playNext = useCallback(() => {
-    handlePlayNext(false);
-  }, [handlePlayNext]);
+    const useCrossfade = crossfadeSettings.enabled && isPlaying;
+    handlePlayNext(useCrossfade);
+  }, [handlePlayNext, crossfadeSettings.enabled, isPlaying]);
 
   /**
    * Play previous track in queue
@@ -603,9 +604,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     queue.setCurrentIndex(prevIndex);
     const prevTrack = queue.getTrackAt(prevIndex);
     if (prevTrack) {
-      playTrack(prevTrack, false);
+      const useCrossfade = crossfadeSettings.enabled && isPlaying;
+      playTrack(prevTrack, useCrossfade);
     }
-  }, [queue, audioElements, playTracking, playTrack, seek]);
+  }, [queue, audioElements, playTracking, playTrack, seek, crossfadeSettings.enabled, isPlaying]);
 
   /**
    * Play a queue of tracks starting at index
