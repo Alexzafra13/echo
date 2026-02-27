@@ -85,6 +85,9 @@ export class GetRelatedArtistsUseCase {
     for (const similar of similarArtists) {
       if (relatedArtists.length >= limit) break;
 
+      // Skip low-quality matches (less than 10% similarity)
+      if (similar.match < 0.1) continue;
+
       // O(1) lookup from map instead of N+1 queries
       const localArtist = artistMap.get(similar.name.toLowerCase());
 
@@ -130,9 +133,10 @@ export class GetRelatedArtistsUseCase {
     artistId: string,
     limit: number,
   ): Promise<GetRelatedArtistsOutput> {
+    // Fetch more than needed so we can filter low-quality results
     const internalRelated = await this.playTrackingRepository.getRelatedArtists(
       artistId,
-      limit,
+      limit * 3,
     );
 
     if (internalRelated.length === 0) {
@@ -144,20 +148,21 @@ export class GetRelatedArtistsUseCase {
       };
     }
 
+    // Filter out low-quality results: keep only those with at least 10% of the top score
+    const maxScore = Math.max(...internalRelated.map(r => r.score));
+    const minScoreThreshold = maxScore * 0.1;
+    const qualityResults = internalRelated.filter(r => r.score >= minScoreThreshold);
+
     // OPTIMIZATION: Bulk lookup all artist IDs in a single query
-    const artistIds = internalRelated.map(r => r.artistId);
+    const artistIds = qualityResults.map(r => r.artistId);
     const artists = await this.artistRepository.findByIds(artistIds);
 
     // Create map for O(1) lookup
     const artistMap = new Map(artists.map(a => [a.id, a]));
 
-    // Normalize scores to 0-100 range relative to the highest score
-    const maxScore = internalRelated.length > 0
-      ? Math.max(...internalRelated.map(r => r.score))
-      : 1;
-
     const relatedArtists: RelatedArtistData[] = [];
-    for (const stat of internalRelated) {
+    for (const stat of qualityResults) {
+      if (relatedArtists.length >= limit) break;
       const artist = artistMap.get(stat.artistId);
       if (artist) {
         relatedArtists.push({
