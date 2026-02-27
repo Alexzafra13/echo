@@ -49,12 +49,7 @@ export function RelatedArtistsSection({
                 {getArtistInitials(relArtist.name)}
               </div>
             </div>
-            <div className={styles.artistDetailPage__relatedArtistInfo}>
-              <span className={styles.artistDetailPage__relatedArtistName}>{relArtist.name}</span>
-              <span className={styles.artistDetailPage__relatedArtistMeta}>
-                {relArtist.matchScore}% similar
-              </span>
-            </div>
+            <span className={styles.artistDetailPage__relatedArtistName}>{relArtist.name}</span>
           </div>
         ))}
       </div>

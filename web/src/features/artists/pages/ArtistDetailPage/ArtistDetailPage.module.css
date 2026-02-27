@@ -772,36 +772,46 @@
 }
 
 .artistDetailPage__relatedArtistsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: var(--space-4);
+  display: flex;
+  gap: var(--space-6);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: var(--space-2);
+}
+
+.artistDetailPage__relatedArtistsGrid::-webkit-scrollbar {
+  display: none;
 }
 
 .artistDetailPage__relatedArtist {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-5) var(--space-4);
-  background: var(--white-02);
-  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all var(--transition-base);
   text-align: center;
+  flex-shrink: 0;
+  width: 96px;
+  gap: var(--space-2);
 }
 
-.artistDetailPage__relatedArtist:hover {
-  background: var(--white-05);
-  transform: translateY(-2px);
+.artistDetailPage__relatedArtist:hover .artistDetailPage__relatedArtistAvatar {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.artistDetailPage__relatedArtist:hover .artistDetailPage__relatedArtistName {
+  color: var(--color-primary);
 }
 
 .artistDetailPage__relatedArtistAvatar {
-  width: 100px;
-  height: 100px;
+  width: 88px;
+  height: 88px;
   border-radius: var(--radius-full);
   overflow: hidden;
-  margin-bottom: var(--space-3);
   background: var(--white-05);
   position: relative;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .artistDetailPage__relatedArtistAvatar img {
@@ -817,31 +827,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
   font-weight: var(--font-bold);
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: var(--text-on-primary);
 }
 
-.artistDetailPage__relatedArtistInfo {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  width: 100%;
-}
-
 .artistDetailPage__relatedArtistName {
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.artistDetailPage__relatedArtistMeta {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
+  width: 100%;
+  transition: color var(--transition-base);
 }
 
 /* ===== Artist Playlists Section ===== */
@@ -964,33 +964,23 @@
 
   /* Similar artists horizontal scroll on mobile */
   .artistDetailPage__relatedArtistsGrid {
-    display: flex;
-    overflow-x: auto;
-    gap: var(--space-4);
     margin: 0 -20px;
     padding-left: 20px;
     padding-right: 20px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .artistDetailPage__relatedArtistsGrid::-webkit-scrollbar {
-    display: none;
+    gap: var(--space-4);
   }
 
   .artistDetailPage__relatedArtist {
-    flex-shrink: 0;
-    width: 140px;
-    padding: var(--space-4) var(--space-3);
+    width: 80px;
   }
 
   .artistDetailPage__relatedArtistAvatar {
-    width: 80px;
-    height: 80px;
+    width: 72px;
+    height: 72px;
   }
 
   .artistDetailPage__relatedArtistFallback {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .artistDetailPage__playlistsGrid {
@@ -1030,6 +1020,16 @@
     margin: 0 -16px;
     padding-left: 16px;
     padding-right: 16px;
+    gap: var(--space-3);
+  }
+
+  .artistDetailPage__relatedArtist {
+    width: 72px;
+  }
+
+  .artistDetailPage__relatedArtistAvatar {
+    width: 64px;
+    height: 64px;
   }
 
   .artistDetailPage__playlistsGrid {

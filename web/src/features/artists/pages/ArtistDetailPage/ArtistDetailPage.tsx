@@ -66,11 +66,12 @@ export default function ArtistDetailPage() {
   // Fetch user public playlists containing artist tracks
   const { data: userPlaylistsData } = usePlaylistsByArtist(id, { take: 10 });
 
-  // Filter auto-playlists for this artist (Wave Mix)
+  // Filter auto-playlists relevant to this artist (artist playlists + genre playlists with their tracks)
   const autoArtistPlaylists = useMemo(() => {
     if (!autoPlaylistsData || !id) return [];
     return autoPlaylistsData.filter(
-      p => p.type === 'artist' && p.metadata.artistId === id
+      p => (p.type === 'artist' && p.metadata.artistId === id) ||
+           (p.type === 'genre' && p.tracks.some(t => t.track?.artistId === id))
     );
   }, [autoPlaylistsData, id]);
 
