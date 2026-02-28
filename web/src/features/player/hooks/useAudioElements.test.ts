@@ -420,7 +420,7 @@ describe('useAudioElements', () => {
       });
 
       expect(mockAudioInstances[1].pause).toHaveBeenCalled();
-      expect(mockAudioInstances[1].src).toBe('');
+      // src is intentionally NOT cleared to preserve autoplay permission on mobile
       expect(mockAudioInstances[1].currentTime).toBe(0);
     });
   });
@@ -769,7 +769,7 @@ describe('useAudioElements', () => {
         await result.current.stopInactive(); // Now A is inactive
       });
       expect(mockAudioInstances[0].pause).toHaveBeenCalled();
-      expect(mockAudioInstances[0].src).toBe('');
+      // src is intentionally NOT cleared to preserve autoplay permission on mobile
     });
   });
 });

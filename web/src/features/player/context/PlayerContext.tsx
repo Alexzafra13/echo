@@ -279,9 +279,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    */
   const playTrack = useCallback(
     async (track: Track, withCrossfade: boolean = false) => {
+      // Set transitioning guard early to suppress pause events during the
+      // async getStreamUrl call. Without this, on mobile PWA: track ends →
+      // both audios paused → handlePause fires → isPlaying=false →
+      // MediaSession='paused' → OS revokes audio focus → next play() fails.
+      isTransitioningRef.current = true;
+
       const streamUrl = await getStreamUrl(track);
       if (!streamUrl) {
         logger.warn('[Player] Cannot play track: stream URL unavailable');
+        isTransitioningRef.current = false;
         // Reset crossfading ref if it was set early by onCrossfadeTrigger
         crossfade.clearCrossfade();
         return;
@@ -303,6 +310,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         crossfadeSettings.enabled &&
         (isPlaying || crossfade.isCrossfadingRef.current)
       ) {
+        // Crossfade path: both audios will be playing simultaneously so
+        // handlePause won't fire. Clear the transitioning guard; crossfade
+        // manages its own state via isCrossfadingRef.
+        isTransitioningRef.current = false;
+
         // Crossfade: apply gain ONLY to the inactive audio element
         // This prevents the current track from jumping in volume
         const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
@@ -352,7 +364,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         playTracking.startPlaySession(track, queueContextRef.current);
       } else {
         // Normal play (no crossfade) - apply gain to both elements
-        isTransitioningRef.current = true;
+        // isTransitioningRef is already true from the top of playTrack
         normalization.applyGain(track);
 
         crossfade.clearCrossfade();
