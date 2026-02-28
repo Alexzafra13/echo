@@ -1,5 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Settings, Palette, Globe, Check, Music, Volume2, Home, ChevronUp, ChevronDown, GripVertical, Sun, Moon, Monitor, Database } from 'lucide-react';
+import {
+  Settings,
+  Palette,
+  Globe,
+  Check,
+  Music,
+  Home,
+  ChevronUp,
+  ChevronDown,
+  GripVertical,
+  Sun,
+  Moon,
+  Monitor,
+  Database,
+} from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { Switch } from '@shared/components/ui';
@@ -31,17 +45,17 @@ export function SettingsPage() {
   useDocumentTitle('Ajustes');
   const { themePreference, setThemePreference, theme } = useTheme();
   const { data: homePreferences, isLoading: isLoadingHome } = useHomePreferences();
-  const { mutate: updateHome, isPending: isSavingHome, isSuccess: isSuccessHome } = useUpdateHomePreferences();
+  const {
+    mutate: updateHome,
+    isPending: isSavingHome,
+    isSuccess: isSuccessHome,
+  } = useUpdateHomePreferences();
   const {
     crossfade,
     setCrossfadeEnabled,
     setCrossfadeDuration,
     setCrossfadeSmartMode,
     setCrossfadeTempoMatch,
-    normalization,
-    setNormalizationEnabled,
-    setNormalizationTargetLufs,
-    setNormalizationPreventClipping,
     autoplay,
     setAutoplayEnabled,
   } = usePlayer();
@@ -93,16 +107,16 @@ export function SettingsPage() {
 
   // Home section handlers
   const toggleSection = useCallback((id: HomeSectionId) => {
-    setHomeSections(prev =>
-      prev.map(section =>
+    setHomeSections((prev) =>
+      prev.map((section) =>
         section.id === id ? { ...section, enabled: !section.enabled } : section
       )
     );
   }, []);
 
   const moveSection = useCallback((id: HomeSectionId, direction: 'up' | 'down') => {
-    setHomeSections(prev => {
-      const index = prev.findIndex(s => s.id === id);
+    setHomeSections((prev) => {
+      const index = prev.findIndex((s) => s.id === id);
       if (index === -1) return prev;
       if (direction === 'up' && index === 0) return prev;
       if (direction === 'down' && index === prev.length - 1) return prev;
@@ -121,11 +135,10 @@ export function SettingsPage() {
   }, [homeSections, updateHome]);
 
   // Check if home sections have changed
-  const hasHomeChanges = homePreferences?.homeSections && (
-    JSON.stringify(homeSections) !== JSON.stringify(
-      [...homePreferences.homeSections].sort((a, b) => a.order - b.order)
-    )
-  );
+  const hasHomeChanges =
+    homePreferences?.homeSections &&
+    JSON.stringify(homeSections) !==
+      JSON.stringify([...homePreferences.homeSections].sort((a, b) => a.order - b.order));
 
   return (
     <div className={styles.settingsPage}>
@@ -136,409 +149,359 @@ export function SettingsPage() {
 
         <div className={styles.settingsPage__content}>
           <div className={styles.settingsPage__contentInner}>
-          {/* Header */}
-          <div className={styles.settingsPage__header}>
-            <div className={styles.settingsPage__headerIcon}>
-              <Settings size={28} />
-            </div>
-            <div>
-              <h1>Configuración</h1>
-              <p className={styles.settingsPage__subtitle}>Personaliza tu experiencia</p>
-            </div>
-          </div>
-
-          {isLoadingHome ? (
-            <div className={styles.settingsPage__loading}>Cargando...</div>
-          ) : (
-            <>
-              {/* Home Page Personalization Card */}
-              <div className={styles.settingsPage__card}>
-                <div className={styles.settingsPage__cardHeader}>
-                  <h2>
-                    <Home size={20} />
-                    Personalizar Inicio
-                  </h2>
-                </div>
-
-                <div className={styles.settingsPage__cardBody}>
-                  <p className={styles.settingsPage__cardDescription}>
-                    Elige qué secciones mostrar en tu página de inicio y en qué orden.
-                    El Hero siempre se muestra primero.
-                  </p>
-
-                  <div className={styles.settingsPage__sectionsList}>
-                    {homeSections.map((section, index) => (
-                      <div key={section.id} className={styles.settingsPage__sectionItem}>
-                        <div className={styles.settingsPage__sectionHandle}>
-                          <GripVertical size={16} />
-                        </div>
-
-                        <div className={styles.settingsPage__sectionInfo}>
-                          <span className={styles.settingsPage__sectionLabel}>
-                            {SECTION_LABELS[section.id] || section.id}
-                          </span>
-                        </div>
-
-                        <div className={styles.settingsPage__sectionActions}>
-                          <button
-                            type="button"
-                            className={styles.settingsPage__moveButton}
-                            onClick={() => moveSection(section.id, 'up')}
-                            disabled={index === 0}
-                            aria-label="Mover arriba"
-                          >
-                            <ChevronUp size={18} />
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.settingsPage__moveButton}
-                            onClick={() => moveSection(section.id, 'down')}
-                            disabled={index === homeSections.length - 1}
-                            aria-label="Mover abajo"
-                          >
-                            <ChevronDown size={18} />
-                          </button>
-                          <Switch
-                            checked={section.enabled}
-                            onChange={() => toggleSection(section.id)}
-                            aria-label={`Activar ${SECTION_LABELS[section.id] || section.id}`}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Save button and success message */}
-                  {hasHomeChanges && (
-                    <button
-                      className={styles.settingsPage__saveButton}
-                      onClick={handleSaveHome}
-                      disabled={isSavingHome}
-                    >
-                      {isSavingHome ? 'Guardando...' : 'Guardar cambios'}
-                    </button>
-                  )}
-
-                  {showSuccess && !hasHomeChanges && (
-                    <div className={styles.settingsPage__success}>
-                      <Check size={18} />
-                      Configuración guardada
-                    </div>
-                  )}
-                </div>
+            {/* Header */}
+            <div className={styles.settingsPage__header}>
+              <div className={styles.settingsPage__headerIcon}>
+                <Settings size={28} />
               </div>
+              <div>
+                <h1>Configuración</h1>
+                <p className={styles.settingsPage__subtitle}>Personaliza tu experiencia</p>
+              </div>
+            </div>
 
-              {/* Appearance Card */}
-              <div className={styles.settingsPage__card}>
-                <div className={styles.settingsPage__cardHeader}>
-                  <h2>
-                    <Palette size={20} />
-                    Apariencia
-                  </h2>
-                </div>
-
-                <div className={styles.settingsPage__cardBody}>
-                  <div className={styles.settingsPage__toggleItem}>
-                    <div className={styles.settingsPage__toggleInfo}>
-                      <span className={styles.settingsPage__toggleLabel}>Tema</span>
-                      <p className={styles.settingsPage__toggleDescription}>
-                        Elige cómo quieres que se vea la aplicación
-                      </p>
-                    </div>
+            {isLoadingHome ? (
+              <div className={styles.settingsPage__loading}>Cargando...</div>
+            ) : (
+              <>
+                {/* Home Page Personalization Card */}
+                <div className={styles.settingsPage__card}>
+                  <div className={styles.settingsPage__cardHeader}>
+                    <h2>
+                      <Home size={20} />
+                      Personalizar Inicio
+                    </h2>
                   </div>
 
-                  {/* Theme selector buttons */}
-                  <div className={styles.settingsPage__themeSelector}>
-                    <button
-                      type="button"
-                      className={`${styles.settingsPage__themeOption} ${themePreference === 'auto' ? styles['settingsPage__themeOption--active'] : ''}`}
-                      onClick={() => setThemePreference('auto')}
-                    >
-                      <Monitor size={20} />
-                      <span className={styles.settingsPage__themeOptionLabel}>Automático</span>
-                      <span className={styles.settingsPage__themeOptionDesc}>Según tu dispositivo</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className={`${styles.settingsPage__themeOption} ${themePreference === 'light' ? styles['settingsPage__themeOption--active'] : ''}`}
-                      onClick={() => setThemePreference('light')}
-                    >
-                      <Sun size={20} />
-                      <span className={styles.settingsPage__themeOptionLabel}>Claro</span>
-                      <span className={styles.settingsPage__themeOptionDesc}>Tema claro siempre</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className={`${styles.settingsPage__themeOption} ${themePreference === 'dark' ? styles['settingsPage__themeOption--active'] : ''}`}
-                      onClick={() => setThemePreference('dark')}
-                    >
-                      <Moon size={20} />
-                      <span className={styles.settingsPage__themeOptionLabel}>Oscuro</span>
-                      <span className={styles.settingsPage__themeOptionDesc}>Tema oscuro siempre</span>
-                    </button>
-                  </div>
-
-                  {/* Current theme indicator when in auto mode */}
-                  {themePreference === 'auto' && (
-                    <p className={styles.settingsPage__themeNote}>
-                      Actualmente usando tema {theme === 'dark' ? 'oscuro' : 'claro'} según tu dispositivo
+                  <div className={styles.settingsPage__cardBody}>
+                    <p className={styles.settingsPage__cardDescription}>
+                      Elige qué secciones mostrar en tu página de inicio y en qué orden. El Hero
+                      siempre se muestra primero.
                     </p>
-                  )}
-                </div>
-              </div>
 
-              {/* Language Card - Placeholder for future */}
-              <div className={styles.settingsPage__card}>
-                <div className={styles.settingsPage__cardHeader}>
-                  <h2>
-                    <Globe size={20} />
-                    Idioma
-                  </h2>
-                </div>
+                    <div className={styles.settingsPage__sectionsList}>
+                      {homeSections.map((section, index) => (
+                        <div key={section.id} className={styles.settingsPage__sectionItem}>
+                          <div className={styles.settingsPage__sectionHandle}>
+                            <GripVertical size={16} />
+                          </div>
 
-                <div className={styles.settingsPage__cardBody}>
-                  <div className={styles.settingsPage__toggleItem}>
-                    <div className={styles.settingsPage__toggleInfo}>
-                      <span className={styles.settingsPage__toggleLabel}>Idioma de la interfaz</span>
-                      <p className={styles.settingsPage__toggleDescription}>
-                        Selecciona el idioma en el que deseas ver la aplicación
-                      </p>
-                    </div>
-                    <span style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
-                      Español
-                    </span>
-                  </div>
-                </div>
-              </div>
+                          <div className={styles.settingsPage__sectionInfo}>
+                            <span className={styles.settingsPage__sectionLabel}>
+                              {SECTION_LABELS[section.id] || section.id}
+                            </span>
+                          </div>
 
-              {/* Audio Normalization Card */}
-              <div className={styles.settingsPage__card}>
-                <div className={styles.settingsPage__cardHeader}>
-                  <h2>
-                    <Volume2 size={20} />
-                    Normalización de Audio
-                  </h2>
-                </div>
-
-                <div className={styles.settingsPage__cardBody}>
-                  {/* Info note */}
-                  <div className={styles.settingsPage__infoNote}>
-                    <Music size={16} />
-                    <span>
-                      El análisis de volumen se realiza automáticamente al importar música.
-                      El servidor detecta tu hardware y ajusta la velocidad de procesamiento.
-                    </span>
-                  </div>
-
-                  {/* Normalization Toggle */}
-                  <div className={styles.settingsPage__toggleItem}>
-                    <div className={styles.settingsPage__toggleInfo}>
-                      <span className={styles.settingsPage__toggleLabel}>Normalizar volumen</span>
-                      <p className={styles.settingsPage__toggleDescription}>
-                        Iguala el volumen percibido entre canciones para evitar cambios bruscos
-                      </p>
-                    </div>
-                    <Switch
-                      checked={normalization.enabled}
-                      onChange={setNormalizationEnabled}
-                      aria-label="Normalizar volumen"
-                    />
-                  </div>
-
-                  {/* Target LUFS */}
-                  {normalization.enabled && (
-                    <>
-                      <div className={styles.settingsPage__toggleItem}>
-                        <div className={styles.settingsPage__toggleInfo}>
-                          <span className={styles.settingsPage__toggleLabel}>Nivel de referencia</span>
-                          <p className={styles.settingsPage__toggleDescription}>
-                            -16 LUFS es más conservador (mejor para auriculares), -14 LUFS es más fuerte
-                          </p>
+                          <div className={styles.settingsPage__sectionActions}>
+                            <button
+                              type="button"
+                              className={styles.settingsPage__moveButton}
+                              onClick={() => moveSection(section.id, 'up')}
+                              disabled={index === 0}
+                              aria-label="Mover arriba"
+                            >
+                              <ChevronUp size={18} />
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.settingsPage__moveButton}
+                              onClick={() => moveSection(section.id, 'down')}
+                              disabled={index === homeSections.length - 1}
+                              aria-label="Mover abajo"
+                            >
+                              <ChevronDown size={18} />
+                            </button>
+                            <Switch
+                              checked={section.enabled}
+                              onChange={() => toggleSection(section.id)}
+                              aria-label={`Activar ${SECTION_LABELS[section.id] || section.id}`}
+                            />
+                          </div>
                         </div>
-                        <select
-                          className={styles.settingsPage__select}
-                          value={normalization.targetLufs}
-                          onChange={(e) => setNormalizationTargetLufs(Number(e.target.value) as -14 | -16)}
-                        >
-                          <option value={-16}>-16 LUFS (Conservador)</option>
-                          <option value={-14}>-14 LUFS (Estándar)</option>
-                        </select>
+                      ))}
+                    </div>
+
+                    {/* Save button and success message */}
+                    {hasHomeChanges && (
+                      <button
+                        className={styles.settingsPage__saveButton}
+                        onClick={handleSaveHome}
+                        disabled={isSavingHome}
+                      >
+                        {isSavingHome ? 'Guardando...' : 'Guardar cambios'}
+                      </button>
+                    )}
+
+                    {showSuccess && !hasHomeChanges && (
+                      <div className={styles.settingsPage__success}>
+                        <Check size={18} />
+                        Configuración guardada
                       </div>
+                    )}
+                  </div>
+                </div>
 
-                      {/* Prevent Clipping */}
-                      <div className={styles.settingsPage__toggleItem}>
-                        <div className={styles.settingsPage__toggleInfo}>
-                          <span className={styles.settingsPage__toggleLabel}>Prevenir distorsión</span>
-                          <p className={styles.settingsPage__toggleDescription}>
-                            No aumenta el volumen más allá del límite seguro para evitar distorsión
-                          </p>
-                        </div>
-                        <Switch
-                          checked={normalization.preventClipping}
-                          onChange={setNormalizationPreventClipping}
-                          aria-label="Prevenir distorsión"
-                        />
+                {/* Appearance Card */}
+                <div className={styles.settingsPage__card}>
+                  <div className={styles.settingsPage__cardHeader}>
+                    <h2>
+                      <Palette size={20} />
+                      Apariencia
+                    </h2>
+                  </div>
+
+                  <div className={styles.settingsPage__cardBody}>
+                    <div className={styles.settingsPage__toggleItem}>
+                      <div className={styles.settingsPage__toggleInfo}>
+                        <span className={styles.settingsPage__toggleLabel}>Tema</span>
+                        <p className={styles.settingsPage__toggleDescription}>
+                          Elige cómo quieres que se vea la aplicación
+                        </p>
                       </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Library Analysis Card */}
-              <div className={styles.settingsPage__card}>
-                <div className={styles.settingsPage__cardHeader}>
-                  <h2>
-                    <Database size={20} />
-                    Análisis de Librería
-                  </h2>
-                </div>
-
-                <div className={styles.settingsPage__cardBody}>
-                  {/* Info note */}
-                  <div className={styles.settingsPage__infoNote}>
-                    <Music size={16} />
-                    <span>
-                      Estos análisis se ejecutan automáticamente después de cada escaneo de librería.
-                      Desactívalos si prefieres ahorrar tiempo de procesamiento.
-                    </span>
-                  </div>
-
-                  {/* LUFS Analysis Toggle */}
-                  <div className={styles.settingsPage__toggleItem}>
-                    <div className={styles.settingsPage__toggleInfo}>
-                      <span className={styles.settingsPage__toggleLabel}>Análisis LUFS</span>
-                      <p className={styles.settingsPage__toggleDescription}>
-                        Calcula los niveles de volumen (ReplayGain) para normalización de audio
-                      </p>
                     </div>
-                    <Switch
-                      checked={lufsEnabled}
-                      onChange={setLufsEnabled}
-                      disabled={isLoadingAnalysis}
-                      aria-label="Análisis LUFS"
-                    />
-                  </div>
 
-                  {/* DJ Analysis Toggle */}
-                  <div className={styles.settingsPage__toggleItem}>
-                    <div className={styles.settingsPage__toggleInfo}>
-                      <span className={styles.settingsPage__toggleLabel}>Análisis DJ</span>
-                      <p className={styles.settingsPage__toggleDescription}>
-                        Detecta BPM, tonalidad (Key) y energía para sugerencias de mezcla armónica
-                      </p>
+                    {/* Theme selector buttons */}
+                    <div className={styles.settingsPage__themeSelector}>
+                      <button
+                        type="button"
+                        className={`${styles.settingsPage__themeOption} ${themePreference === 'auto' ? styles['settingsPage__themeOption--active'] : ''}`}
+                        onClick={() => setThemePreference('auto')}
+                      >
+                        <Monitor size={20} />
+                        <span className={styles.settingsPage__themeOptionLabel}>Automático</span>
+                        <span className={styles.settingsPage__themeOptionDesc}>
+                          Según tu dispositivo
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={`${styles.settingsPage__themeOption} ${themePreference === 'light' ? styles['settingsPage__themeOption--active'] : ''}`}
+                        onClick={() => setThemePreference('light')}
+                      >
+                        <Sun size={20} />
+                        <span className={styles.settingsPage__themeOptionLabel}>Claro</span>
+                        <span className={styles.settingsPage__themeOptionDesc}>
+                          Tema claro siempre
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={`${styles.settingsPage__themeOption} ${themePreference === 'dark' ? styles['settingsPage__themeOption--active'] : ''}`}
+                        onClick={() => setThemePreference('dark')}
+                      >
+                        <Moon size={20} />
+                        <span className={styles.settingsPage__themeOptionLabel}>Oscuro</span>
+                        <span className={styles.settingsPage__themeOptionDesc}>
+                          Tema oscuro siempre
+                        </span>
+                      </button>
                     </div>
-                    <Switch
-                      checked={djEnabled}
-                      onChange={setDjEnabled}
-                      disabled={isLoadingAnalysis}
-                      aria-label="Análisis DJ"
-                    />
+
+                    {/* Current theme indicator when in auto mode */}
+                    {themePreference === 'auto' && (
+                      <p className={styles.settingsPage__themeNote}>
+                        Actualmente usando tema {theme === 'dark' ? 'oscuro' : 'claro'} según tu
+                        dispositivo
+                      </p>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Playback Card - Crossfade settings */}
-              <div className={styles.settingsPage__card}>
-                <div className={styles.settingsPage__cardHeader}>
-                  <h2>
-                    <Music size={20} />
-                    Reproducción
-                  </h2>
-                </div>
-
-                <div className={styles.settingsPage__cardBody}>
-                  {/* Crossfade Toggle */}
-                  <div className={styles.settingsPage__toggleItem}>
-                    <div className={styles.settingsPage__toggleInfo}>
-                      <span className={styles.settingsPage__toggleLabel}>Fundido entre canciones</span>
-                      <p className={styles.settingsPage__toggleDescription}>
-                        Transición suave entre canciones con fundido de audio (crossfade)
-                      </p>
-                    </div>
-                    <Switch
-                      checked={crossfade.enabled}
-                      onChange={setCrossfadeEnabled}
-                      aria-label="Fundido entre canciones"
-                    />
+                {/* Language Card - Placeholder for future */}
+                <div className={styles.settingsPage__card}>
+                  <div className={styles.settingsPage__cardHeader}>
+                    <h2>
+                      <Globe size={20} />
+                      Idioma
+                    </h2>
                   </div>
 
-                  {/* Crossfade Duration */}
-                  {crossfade.enabled && (
-                    <>
-                      <div className={styles.settingsPage__toggleItem}>
-                        <div className={styles.settingsPage__toggleInfo}>
-                          <span className={styles.settingsPage__toggleLabel}>Duración del fundido</span>
-                          <p className={styles.settingsPage__toggleDescription}>
-                            Tiempo en segundos para la transición entre canciones
-                          </p>
+                  <div className={styles.settingsPage__cardBody}>
+                    <div className={styles.settingsPage__toggleItem}>
+                      <div className={styles.settingsPage__toggleInfo}>
+                        <span className={styles.settingsPage__toggleLabel}>
+                          Idioma de la interfaz
+                        </span>
+                        <p className={styles.settingsPage__toggleDescription}>
+                          Selecciona el idioma en el que deseas ver la aplicación
+                        </p>
+                      </div>
+                      <span style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
+                        Español
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Library Analysis Card */}
+                <div className={styles.settingsPage__card}>
+                  <div className={styles.settingsPage__cardHeader}>
+                    <h2>
+                      <Database size={20} />
+                      Análisis de Librería
+                    </h2>
+                  </div>
+
+                  <div className={styles.settingsPage__cardBody}>
+                    {/* Info note */}
+                    <div className={styles.settingsPage__infoNote}>
+                      <Music size={16} />
+                      <span>
+                        Estos análisis se ejecutan automáticamente después de cada escaneo de
+                        librería. Desactívalos si prefieres ahorrar tiempo de procesamiento.
+                      </span>
+                    </div>
+
+                    {/* LUFS Analysis Toggle */}
+                    <div className={styles.settingsPage__toggleItem}>
+                      <div className={styles.settingsPage__toggleInfo}>
+                        <span className={styles.settingsPage__toggleLabel}>Análisis LUFS</span>
+                        <p className={styles.settingsPage__toggleDescription}>
+                          Calcula los niveles de volumen (ReplayGain) para normalización de audio
+                        </p>
+                      </div>
+                      <Switch
+                        checked={lufsEnabled}
+                        onChange={setLufsEnabled}
+                        disabled={isLoadingAnalysis}
+                        aria-label="Análisis LUFS"
+                      />
+                    </div>
+
+                    {/* DJ Analysis Toggle */}
+                    <div className={styles.settingsPage__toggleItem}>
+                      <div className={styles.settingsPage__toggleInfo}>
+                        <span className={styles.settingsPage__toggleLabel}>Análisis DJ</span>
+                        <p className={styles.settingsPage__toggleDescription}>
+                          Detecta BPM, tonalidad (Key) y energía para sugerencias de mezcla armónica
+                        </p>
+                      </div>
+                      <Switch
+                        checked={djEnabled}
+                        onChange={setDjEnabled}
+                        disabled={isLoadingAnalysis}
+                        aria-label="Análisis DJ"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Playback Card - Crossfade settings */}
+                <div className={styles.settingsPage__card}>
+                  <div className={styles.settingsPage__cardHeader}>
+                    <h2>
+                      <Music size={20} />
+                      Reproducción
+                    </h2>
+                  </div>
+
+                  <div className={styles.settingsPage__cardBody}>
+                    {/* Crossfade Toggle */}
+                    <div className={styles.settingsPage__toggleItem}>
+                      <div className={styles.settingsPage__toggleInfo}>
+                        <span className={styles.settingsPage__toggleLabel}>
+                          Fundido entre canciones
+                        </span>
+                        <p className={styles.settingsPage__toggleDescription}>
+                          Transición suave entre canciones con fundido de audio (crossfade)
+                        </p>
+                      </div>
+                      <Switch
+                        checked={crossfade.enabled}
+                        onChange={setCrossfadeEnabled}
+                        aria-label="Fundido entre canciones"
+                      />
+                    </div>
+
+                    {/* Crossfade Duration */}
+                    {crossfade.enabled && (
+                      <>
+                        <div className={styles.settingsPage__toggleItem}>
+                          <div className={styles.settingsPage__toggleInfo}>
+                            <span className={styles.settingsPage__toggleLabel}>
+                              Duración del fundido
+                            </span>
+                            <p className={styles.settingsPage__toggleDescription}>
+                              Tiempo en segundos para la transición entre canciones
+                            </p>
+                          </div>
+                          <div className={styles.settingsPage__sliderContainer}>
+                            <input
+                              type="range"
+                              className={styles.settingsPage__slider}
+                              min="1"
+                              max="12"
+                              step="1"
+                              value={crossfade.duration}
+                              onChange={(e) => setCrossfadeDuration(Number(e.target.value))}
+                            />
+                            <span className={styles.settingsPage__sliderValue}>
+                              {crossfade.duration}s
+                            </span>
+                          </div>
                         </div>
-                        <div className={styles.settingsPage__sliderContainer}>
-                          <input
-                            type="range"
-                            className={styles.settingsPage__slider}
-                            min="1"
-                            max="12"
-                            step="1"
-                            value={crossfade.duration}
-                            onChange={(e) => setCrossfadeDuration(Number(e.target.value))}
+
+                        {/* Smart Crossfade Toggle */}
+                        <div className={styles.settingsPage__toggleItem}>
+                          <div className={styles.settingsPage__toggleInfo}>
+                            <span className={styles.settingsPage__toggleLabel}>
+                              Fundido inteligente
+                            </span>
+                            <p className={styles.settingsPage__toggleDescription}>
+                              Detecta automáticamente el final natural de las canciones para iniciar
+                              la transición
+                            </p>
+                          </div>
+                          <Switch
+                            checked={crossfade.smartMode}
+                            onChange={setCrossfadeSmartMode}
+                            aria-label="Fundido inteligente"
                           />
-                          <span className={styles.settingsPage__sliderValue}>{crossfade.duration}s</span>
                         </div>
-                      </div>
 
-                      {/* Smart Crossfade Toggle */}
-                      <div className={styles.settingsPage__toggleItem}>
-                        <div className={styles.settingsPage__toggleInfo}>
-                          <span className={styles.settingsPage__toggleLabel}>Fundido inteligente</span>
-                          <p className={styles.settingsPage__toggleDescription}>
-                            Detecta automáticamente el final natural de las canciones para iniciar la transición
-                          </p>
+                        {/* Tempo Match Toggle */}
+                        <div className={styles.settingsPage__toggleItem}>
+                          <div className={styles.settingsPage__toggleInfo}>
+                            <span className={styles.settingsPage__toggleLabel}>
+                              Sincronización de tempo
+                            </span>
+                            <p className={styles.settingsPage__toggleDescription}>
+                              Durante el fundido, ajusta progresivamente el tempo de la canción
+                              saliente para coincidir con la entrante (estilo DJ)
+                            </p>
+                          </div>
+                          <Switch
+                            checked={crossfade.tempoMatch}
+                            onChange={setCrossfadeTempoMatch}
+                            aria-label="Sincronización de tempo"
+                          />
                         </div>
-                        <Switch
-                          checked={crossfade.smartMode}
-                          onChange={setCrossfadeSmartMode}
-                          aria-label="Fundido inteligente"
-                        />
-                      </div>
+                      </>
+                    )}
 
-                      {/* Tempo Match Toggle */}
-                      <div className={styles.settingsPage__toggleItem}>
-                        <div className={styles.settingsPage__toggleInfo}>
-                          <span className={styles.settingsPage__toggleLabel}>Sincronización de tempo</span>
-                          <p className={styles.settingsPage__toggleDescription}>
-                            Durante el fundido, ajusta progresivamente el tempo de la canción saliente para coincidir con la entrante (estilo DJ)
-                          </p>
-                        </div>
-                        <Switch
-                          checked={crossfade.tempoMatch}
-                          onChange={setCrossfadeTempoMatch}
-                          aria-label="Sincronización de tempo"
-                        />
+                    {/* Autoplay Toggle */}
+                    <div className={styles.settingsPage__toggleItem}>
+                      <div className={styles.settingsPage__toggleInfo}>
+                        <span className={styles.settingsPage__toggleLabel}>
+                          Reproducción automática
+                        </span>
+                        <p className={styles.settingsPage__toggleDescription}>
+                          Cuando termina un álbum o playlist, continúa automáticamente con artistas
+                          similares
+                        </p>
                       </div>
-                    </>
-                  )}
-
-                  {/* Autoplay Toggle */}
-                  <div className={styles.settingsPage__toggleItem}>
-                    <div className={styles.settingsPage__toggleInfo}>
-                      <span className={styles.settingsPage__toggleLabel}>Reproducción automática</span>
-                      <p className={styles.settingsPage__toggleDescription}>
-                        Cuando termina un álbum o playlist, continúa automáticamente con artistas similares
-                      </p>
+                      <Switch
+                        checked={autoplay.enabled}
+                        onChange={setAutoplayEnabled}
+                        aria-label="Reproducción automática"
+                      />
                     </div>
-                    <Switch
-                      checked={autoplay.enabled}
-                      onChange={setAutoplayEnabled}
-                      aria-label="Reproducción automática"
-                    />
                   </div>
-
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
           </div>
         </div>
       </main>

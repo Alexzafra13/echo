@@ -81,7 +81,7 @@ vi.mock('../store', () => ({
   usePlayerSettingsStore: (selector: (state: unknown) => unknown) => {
     const state = {
       crossfade: { enabled: false, duration: 5, smartMode: false },
-      normalization: { enabled: false, targetLufs: -14, preventClipping: true },
+      normalization: { enabled: false, targetLufs: -16, preventClipping: true },
       autoplay: { enabled: false },
       setCrossfadeEnabled: vi.fn(),
       setCrossfadeDuration: vi.fn(),
@@ -346,7 +346,11 @@ describe('PlayerContext', () => {
 
       render(
         <PlayerProvider>
-          <TestConsumer onMount={(player) => { playerContext = player; }} />
+          <TestConsumer
+            onMount={(player) => {
+              playerContext = player;
+            }}
+          />
         </PlayerProvider>
       );
 
@@ -410,9 +414,6 @@ describe('PlayerContext', () => {
       expect(playerContext).toHaveProperty('setCrossfadeEnabled');
       expect(playerContext).toHaveProperty('setCrossfadeDuration');
       expect(playerContext).toHaveProperty('setCrossfadeSmartMode');
-      expect(playerContext).toHaveProperty('setNormalizationEnabled');
-      expect(playerContext).toHaveProperty('setNormalizationTargetLufs');
-      expect(playerContext).toHaveProperty('setNormalizationPreventClipping');
       expect(playerContext).toHaveProperty('setAutoplayEnabled');
     });
 
@@ -421,7 +422,11 @@ describe('PlayerContext', () => {
 
       render(
         <PlayerProvider>
-          <TestConsumer onMount={(player) => { playerContext = player; }} />
+          <TestConsumer
+            onMount={(player) => {
+              playerContext = player;
+            }}
+          />
         </PlayerProvider>
       );
 

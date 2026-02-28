@@ -54,13 +54,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const setCrossfadeDurationStore = usePlayerSettingsStore((s) => s.setCrossfadeDuration);
   const setCrossfadeSmartModeStore = usePlayerSettingsStore((s) => s.setCrossfadeSmartMode);
   const setCrossfadeTempoMatchStore = usePlayerSettingsStore((s) => s.setCrossfadeTempoMatch);
-  const setNormalizationEnabledStore = usePlayerSettingsStore((s) => s.setNormalizationEnabled);
-  const setNormalizationTargetLufsStore = usePlayerSettingsStore(
-    (s) => s.setNormalizationTargetLufs
-  );
-  const setNormalizationPreventClippingStore = usePlayerSettingsStore(
-    (s) => s.setNormalizationPreventClipping
-  );
   const setAutoplayEnabledStore = usePlayerSettingsStore((s) => s.setAutoplayEnabled);
 
   const autoplay = useAutoplay();
@@ -1041,35 +1034,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     [setCrossfadeTempoMatchStore]
   );
 
-  // ========== NORMALIZATION SETTINGS ==========
-
-  const setNormalizationEnabled = useCallback(
-    (enabled: boolean) => {
-      setNormalizationEnabledStore(enabled);
-      // Re-apply gain with new settings
-      normalization.applyGain(currentTrack);
-    },
-    [setNormalizationEnabledStore, normalization, currentTrack]
-  );
-
-  const setNormalizationTargetLufs = useCallback(
-    (target: -14 | -16) => {
-      setNormalizationTargetLufsStore(target);
-      // Re-apply gain with new settings
-      normalization.applyGain(currentTrack);
-    },
-    [setNormalizationTargetLufsStore, normalization, currentTrack]
-  );
-
-  const setNormalizationPreventClipping = useCallback(
-    (prevent: boolean) => {
-      setNormalizationPreventClippingStore(prevent);
-      // Re-apply gain with new settings
-      normalization.applyGain(currentTrack);
-    },
-    [setNormalizationPreventClippingStore, normalization, currentTrack]
-  );
-
   // ========== AUTOPLAY SETTINGS ==========
 
   const setAutoplayEnabled = useCallback(
@@ -1143,11 +1107,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setCrossfadeSmartMode,
       setCrossfadeTempoMatch,
 
-      // Normalization controls
-      setNormalizationEnabled,
-      setNormalizationTargetLufs,
-      setNormalizationPreventClipping,
-
       // Autoplay controls
       setAutoplayEnabled,
     }),
@@ -1188,9 +1147,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setCrossfadeDuration,
       setCrossfadeSmartMode,
       setCrossfadeTempoMatch,
-      setNormalizationEnabled,
-      setNormalizationTargetLufs,
-      setNormalizationPreventClipping,
       autoplaySettings,
       isAutoplayActive,
       autoplaySourceArtist,
