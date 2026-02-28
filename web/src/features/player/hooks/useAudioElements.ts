@@ -346,7 +346,11 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
         }
         audio.pause();
         audio.currentTime = 0;
-        audio.src = '';
+        // Note: intentionally not clearing audio.src here. On mobile,
+        // clearing src revokes the element's autoplay permission, causing
+        // future play() calls to fail with NotAllowedError. The src is
+        // harmlessly overwritten when the element is next used for
+        // loading or crossfade (same approach as finishCrossfade).
       }
     },
     [getInactiveAudio, fadeOutAudio]
@@ -429,6 +433,15 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     const handlePause = () => {
       // Only trigger pause callback if both audios are paused (for crossfade support)
       if (audioA.paused && audioB.paused) {
+        // Skip if the active audio ended naturally — the ended handler will
+        // manage the transition to the next track. Per HTML5 spec, when a track
+        // ends the browser fires 'pause' BEFORE 'ended'. Without this guard,
+        // the pause sets isPlaying=false → MediaSession reports 'paused' →
+        // on mobile PWA the OS revokes audio focus → the next play() fails
+        // with NotAllowedError and playback stops between tracks.
+        const activeAudio = activeAudioRef.current === 'A' ? audioA : audioB;
+        if (activeAudio.ended) return;
+
         callbacksRef.current?.onPause?.();
       }
     };
