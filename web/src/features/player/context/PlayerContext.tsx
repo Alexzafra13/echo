@@ -116,7 +116,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   });
 
   // ========== AUDIO NORMALIZATION ==========
-  const normalization = useAudioNormalization(normalizationSettings);
+  // Pass setAudioVolume so normalization uses Web Audio GainNode on iOS
+  // (where HTMLAudioElement.volume is read-only)
+  const normalization = useAudioNormalization(normalizationSettings, {
+    setAudioVolume: audioElements.setAudioVolume,
+  });
 
   // Register audio elements with normalization hook (for volume-based normalization)
   // Note: userVolume is accessed via ref to avoid re-running effect on volume changes
@@ -864,7 +868,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       if (timeRemaining <= 0.5 && preloaded && !preloaded.prePlayed) {
         const inactiveAudio = audioElements.getInactiveAudio();
         if (inactiveAudio && inactiveAudio.readyState >= 3) {
-          inactiveAudio.volume = 0;
+          // Set volume to 0 via unified method (GainNode on iOS)
+          const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
+          audioElements.setAudioVolume(inactiveId, 0);
           inactiveAudio
             .play()
             .then(() => {
@@ -943,8 +949,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
       if (isPlaying && activeAudio.paused && !activeAudio.ended) {
         // State says playing but audio is actually paused — OS suspended it.
-        // Try to resume; if it fails, sync state to reality.
+        // Resume AudioContext first (may have been interrupted by iOS),
+        // then try to resume audio playback.
         logger.debug('[Player] App foregrounded: audio was suspended, attempting resume');
+        audioElements.resumeAudioContext();
         activeAudio.play().catch(() => {
           logger.warn('[Player] Resume after foreground failed, syncing state');
           setIsPlaying(false);
