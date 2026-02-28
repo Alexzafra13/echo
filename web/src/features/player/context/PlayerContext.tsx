@@ -289,6 +289,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    */
   const playTrack = useCallback(
     async (track: Track, withCrossfade: boolean = false) => {
+      // Initialize Web Audio API BEFORE any await — must be in the synchronous
+      // part of the user gesture call stack. On iOS Safari, AudioContext created
+      // after an async gap starts in "suspended" state and can't be resumed,
+      // breaking GainNode-based crossfade. This is a safety net; the primary
+      // init happens on first touchstart/click via the document listener.
+      audioElements.initWebAudio();
+
       // Set transitioning guard early to suppress pause events during the
       // async getStreamUrl call. Without this, on mobile PWA: track ends →
       // both audios paused → handlePause fires → isPlaying=false →

@@ -293,9 +293,16 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     []
   );
 
+  // Track whether the inactive element has been "blessed" (play() called once).
+  // On iOS PWA, each audio element must have play() called in a user gesture
+  // context before subsequent play() calls are allowed. Without this, the
+  // crossfade's playInactive() fails with NotAllowedError.
+  const inactiveBlessedRef = useRef(false);
+
   /**
    * Play the active audio element, waiting for buffer if needed.
    * Initializes Web Audio API on first call (requires user gesture).
+   * Also "blesses" the inactive element for future crossfade on iOS.
    */
   const playActive = useCallback(
     async (waitForBuffer: boolean = true) => {
@@ -311,13 +318,50 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
             await waitForAudioReady(audio);
           }
           await audio.play();
+
+          // "Bless" the inactive audio element for iOS autoplay permission.
+          // On iOS PWA, play() fails with NotAllowedError if the element was
+          // never played in a user gesture context. We play it silently here
+          // (GainNode at 0) so future crossfade playInactive() calls succeed.
+          if (!inactiveBlessedRef.current && webAudioReadyRef.current) {
+            const inactive = getInactiveAudio();
+            const inactiveId = activeAudioRef.current === 'A' ? 'B' : 'A';
+            if (inactive) {
+              // Minimal silent WAV (44 bytes) — plays no audible sound
+              const SILENT_WAV =
+                'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+              const prevSrc = inactive.src;
+              const gainNode = inactiveId === 'A' ? gainNodeARef.current : gainNodeBRef.current;
+              if (gainNode) gainNode.gain.value = 0;
+              inactive.src = SILENT_WAV;
+              inactive.load();
+              inactive
+                .play()
+                .then(() => {
+                  inactive.pause();
+                  // Restore previous src if any (will be overwritten by loadOnInactive later)
+                  if (prevSrc && prevSrc !== SILENT_WAV) {
+                    inactive.src = prevSrc;
+                  }
+                  inactiveBlessedRef.current = true;
+                  logger.debug('[AudioElements] Blessed inactive element for iOS crossfade');
+                })
+                .catch(() => {
+                  // Non-critical: crossfade may fall back to gapless on iOS
+                  logger.warn('[AudioElements] Could not bless inactive element');
+                  if (prevSrc && prevSrc !== SILENT_WAV) {
+                    inactive.src = prevSrc;
+                  }
+                });
+            }
+          }
         } catch (error) {
           logger.error('[AudioElements] Failed to play:', (error as Error).message);
           throw error;
         }
       }
     },
-    [getActiveAudio, waitForAudioReady, initWebAudio, resumeAudioContext]
+    [getActiveAudio, getInactiveAudio, waitForAudioReady, initWebAudio, resumeAudioContext]
   );
 
   /**
@@ -550,6 +594,52 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       setVolumeControlSupported(false);
     }
 
+    // Initialize Web Audio API on first user interaction (touchstart/click).
+    // iOS requires AudioContext to be created within a user gesture's call stack.
+    // This listener fires BEFORE any async operations (like getStreamUrl in
+    // playTrack), ensuring the AudioContext starts in "running" state on iOS.
+    // Without this, calling new AudioContext() after an await creates it in
+    // "suspended" state that can't be resumed without another user gesture.
+    const handleFirstInteraction = () => {
+      if (webAudioReadyRef.current) return;
+
+      try {
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (!AudioCtx) return;
+
+        const ctx = new AudioCtx();
+
+        const sourceA = ctx.createMediaElementSource(audioA);
+        const gainA = ctx.createGain();
+        gainA.gain.value = audioA.volume;
+        sourceA.connect(gainA);
+        gainA.connect(ctx.destination);
+
+        const sourceB = ctx.createMediaElementSource(audioB);
+        const gainB = ctx.createGain();
+        gainB.gain.value = audioB.volume;
+        sourceB.connect(gainB);
+        gainB.connect(ctx.destination);
+
+        audioContextRef.current = ctx;
+        gainNodeARef.current = gainA;
+        gainNodeBRef.current = gainB;
+        webAudioReadyRef.current = true;
+
+        volumeControlSupportedRef.current = true;
+        setVolumeControlSupported(true);
+
+        logger.debug('[AudioElements] Web Audio initialized on user gesture — state:', ctx.state);
+      } catch (e) {
+        logger.warn('[AudioElements] Web Audio init on gesture failed:', (e as Error).message);
+      }
+    };
+
+    document.addEventListener('touchstart', handleFirstInteraction, { once: true });
+    document.addEventListener('click', handleFirstInteraction, { once: true });
+
     // Create event handlers
     const createTimeUpdateHandler = (audio: HTMLAudioElement, audioId: 'A' | 'B') => () => {
       if (activeAudioRef.current === audioId) {
@@ -631,6 +721,10 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     audioB.addEventListener('stalled', handleStalled);
 
     return () => {
+      // Remove user gesture listeners if they haven't fired yet
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('click', handleFirstInteraction);
+
       // Cleanup audio A
       audioA.removeEventListener('timeupdate', handleTimeUpdateA);
       audioA.removeEventListener('loadedmetadata', handleLoadedMetadataA);
@@ -717,6 +811,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
 
     // Web Audio API
     resumeAudioContext,
+    initWebAudio,
   };
 }
 
