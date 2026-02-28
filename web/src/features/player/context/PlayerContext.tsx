@@ -91,6 +91,19 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // the browser's autoplay permission and prevent the next play() from succeeding.
   const isTransitioningRef = useRef(false);
 
+  // ========== GAPLESS PRELOAD (mobile PWA background audio continuity) ==========
+  // On mobile PWA, when a track ends and no audio is playing, the OS revokes
+  // audio focus and play() fails with NotAllowedError. Crossfade avoids this
+  // by starting the next track BEFORE the current one ends. For non-crossfade
+  // mode, we preload the next track and start it silently (vol 0) just before
+  // the current track ends, keeping the audio session alive.
+  const preloadedNextRef = useRef<{
+    trackId: string;
+    nextIndex: number;
+    track: Track;
+    prePlayed: boolean;
+  } | null>(null);
+
   // ========== AUDIO ELEMENTS ==========
   const audioElements = useAudioElements({
     initialVolume: 0.7,
@@ -375,13 +388,19 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         playTracking.startPlaySession(track, queueContextRef.current);
 
         try {
-          await audioElements.playActive();
+          // Play immediately without buffer wait to minimize the gap between
+          // tracks. On mobile PWA, waiting for buffer (3s timeout) gives the OS
+          // enough time to revoke audio focus, causing play() to fail.
+          await audioElements.playActive(false);
         } catch (error) {
-          // On mobile, play() can fail due to autoplay policy (NotAllowedError)
-          // or load interruption (AbortError). Retry without buffer wait as fallback.
-          logger.warn('[Player] Play failed, retrying:', (error as Error).message);
+          // Immediate play failed — retry with buffer wait as fallback.
+          // This covers the case where the audio needs more buffering.
+          logger.warn(
+            '[Player] Immediate play failed, retrying with buffer:',
+            (error as Error).message
+          );
           try {
-            await audioElements.playActive(false);
+            await audioElements.playActive();
           } catch (retryError) {
             logger.error('[Player] Retry failed:', (retryError as Error).message);
           }
@@ -711,8 +730,39 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         logger.debug('[Player] Repeat one - replaying current track');
         audioElements.playActive();
       } else if (hasNextTrack) {
-        logger.debug('[Player] Playing next track in queue');
-        handlePlayNext(false);
+        // Check if the next track was gapless-preloaded and is already pre-playing
+        const nextIndex = queue.getNextIndex();
+        const nextTrack = nextIndex !== -1 ? queue.getTrackAt(nextIndex) : null;
+        const preloaded = preloadedNextRef.current;
+
+        if (nextTrack && preloaded && preloaded.trackId === nextTrack.id && preloaded.prePlayed) {
+          // GAPLESS: inactive element is already playing at volume 0.
+          // Just switch and restore volume — no async gap, no play() call.
+          logger.debug('[Player] Gapless transition to:', nextTrack.title);
+          isTransitioningRef.current = true;
+          preloadedNextRef.current = null;
+
+          queue.setCurrentIndex(nextIndex);
+          setCurrentTrack(nextTrack);
+
+          // Switch: inactive (pre-playing at vol 0) becomes active
+          audioElements.switchActiveAudio();
+
+          // Restore proper volume
+          const activeId = audioElements.getActiveAudioId();
+          const vol = normalization.getEffectiveVolume(activeId);
+          audioElements.setAudioVolume(activeId, vol);
+
+          // Cleanup old (now inactive)
+          audioElements.stopInactive();
+
+          isTransitioningRef.current = false;
+          playTracking.startPlaySession(nextTrack, queueContextRef.current);
+        } else {
+          // Fallback: normal transition (no preload available)
+          logger.debug('[Player] Playing next track in queue');
+          handlePlayNext(false);
+        }
       } else {
         // No more tracks in queue - try autoplay
         logger.debug('[Player] No more tracks - trying autoplay');
@@ -728,6 +778,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     currentTrack,
     radio.isRadioMode,
     crossfadeSettings.enabled,
+    normalization,
   ]);
 
   // Stable event listeners - only set up once when audio elements are created.
@@ -774,6 +825,97 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     queue.queue,
     autoplay,
   ]);
+
+  // ========== GAPLESS PRELOAD HANDLER ==========
+  // Ref-based handler for timeupdate events (same pattern as crossfade timing).
+  // Phase 1 (15s before end): pre-fetch stream URL + load on inactive element
+  // Phase 2 (0.5s before end): start playing inactive at volume 0 (keeps audio session alive)
+  const gaplessPreloadHandlerRef = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    gaplessPreloadHandlerRef.current = () => {
+      // Skip if crossfade handles transitions (it has its own preloading)
+      if (crossfadeSettings.enabled || radio.isRadioMode || !isPlaying) return;
+
+      const audio = audioElements.getActiveAudio();
+      if (!audio || isNaN(audio.duration) || audio.duration <= 0) return;
+
+      const timeRemaining = audio.duration - audio.currentTime;
+      if (timeRemaining <= 0) return;
+
+      // Phase 1: Preload 15 seconds before track end
+      if (timeRemaining <= 15 && !preloadedNextRef.current) {
+        if (queue.repeatMode === 'one') return;
+        const nextIndex = queue.getNextIndex();
+        if (nextIndex === -1) return;
+        const nextTrack = queue.getTrackAt(nextIndex);
+        if (!nextTrack) return;
+
+        getStreamUrl(nextTrack).then((url) => {
+          if (!url || preloadedNextRef.current) return;
+          preloadedNextRef.current = {
+            trackId: nextTrack.id,
+            nextIndex,
+            track: nextTrack,
+            prePlayed: false,
+          };
+          audioElements.loadOnInactive(url);
+          const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
+          normalization.applyGainToAudio(nextTrack, inactiveId);
+          logger.debug('[Player] Gapless: preloaded next track:', nextTrack.title);
+        });
+      }
+
+      // Phase 2: Silent pre-play 0.5s before end (keeps audio session alive on mobile)
+      const preloaded = preloadedNextRef.current;
+      if (timeRemaining <= 0.5 && preloaded && !preloaded.prePlayed) {
+        const inactiveAudio = audioElements.getInactiveAudio();
+        if (inactiveAudio && inactiveAudio.readyState >= 3) {
+          inactiveAudio.volume = 0;
+          inactiveAudio
+            .play()
+            .then(() => {
+              if (preloadedNextRef.current) {
+                preloadedNextRef.current.prePlayed = true;
+              }
+              logger.debug('[Player] Gapless: silent pre-play started');
+            })
+            .catch(() => {
+              logger.warn('[Player] Gapless: silent pre-play failed');
+            });
+        }
+      }
+    };
+  }, [
+    crossfadeSettings.enabled,
+    radio.isRadioMode,
+    isPlaying,
+    queue,
+    getStreamUrl,
+    audioElements,
+    normalization,
+  ]);
+
+  // Stable timeupdate listener for gapless preloading
+  useEffect(() => {
+    const audioA = audioElements.audioRefA.current;
+    const audioB = audioElements.audioRefB.current;
+    if (!audioA || !audioB) return;
+
+    const handleTimeUpdate = () => gaplessPreloadHandlerRef.current();
+
+    audioA.addEventListener('timeupdate', handleTimeUpdate);
+    audioB.addEventListener('timeupdate', handleTimeUpdate);
+    return () => {
+      audioA.removeEventListener('timeupdate', handleTimeUpdate);
+      audioB.removeEventListener('timeupdate', handleTimeUpdate);
+    };
+  }, [audioElements.audioRefA, audioElements.audioRefB]);
+
+  // Clear preload when track changes
+  useEffect(() => {
+    preloadedNextRef.current = null;
+  }, [currentTrack]);
 
   // ========== MEDIA SESSION API (for mobile background playback) ==========
   useMediaSession({
