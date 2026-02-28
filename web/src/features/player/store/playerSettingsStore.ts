@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { CrossfadeSettings, NormalizationSettings, AutoplaySettings } from '../types';
 
 // Incrementar al cambiar la estructura del estado persistido
-const STORE_VERSION = 3;
+const STORE_VERSION = 1;
 
 export type PlayerPreference = 'dynamic' | 'sidebar' | 'footer';
 
@@ -102,77 +102,12 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
       name: 'echo-player-settings',
       version: STORE_VERSION,
 
-      migrate: (persistedState, version) => {
-        if (version === 0 || !persistedState) {
+      migrate: (_persistedState, version) => {
+        // Sin usuarios existentes: si la versión no coincide, usar defaults
+        if (version !== STORE_VERSION || !_persistedState) {
           return initialState;
         }
-        // v1 → v2: agrega tempoMatch a crossfade
-        if (version < 2) {
-          const state = persistedState as Record<string, unknown>;
-          const crossfade = state.crossfade as CrossfadeSettings | undefined;
-          if (crossfade && crossfade.tempoMatch === undefined) {
-            crossfade.tempoMatch = false;
-          }
-        }
-        // v2 → v3: disable normalization (not applicable on web)
-        if (version < 3) {
-          const state = persistedState as Record<string, unknown>;
-          const normalization = state.normalization as NormalizationSettings | undefined;
-          if (normalization) {
-            normalization.enabled = false;
-          }
-        }
-        return persistedState as PlayerSettingsState;
-      },
-
-      // Migración desde claves antiguas de localStorage
-      onRehydrateStorage: () => (state, error) => {
-        if (error) {
-          console.error('[PlayerSettingsStore] Error loading persisted state:', error);
-          localStorage.removeItem('echo-player-settings');
-          return;
-        }
-
-        if (!state) return;
-
-        try {
-          const oldPreference = localStorage.getItem('player-preference');
-          if (oldPreference && state.playerPreference === 'dynamic') {
-            const validPreferences: PlayerPreference[] = ['dynamic', 'sidebar', 'footer'];
-            if (validPreferences.includes(oldPreference as PlayerPreference)) {
-              state.setPlayerPreference(oldPreference as PlayerPreference);
-            }
-            localStorage.removeItem('player-preference');
-          }
-
-          const oldCrossfade = localStorage.getItem('crossfade-settings');
-          if (oldCrossfade) {
-            const parsed = JSON.parse(oldCrossfade);
-            if (parsed.enabled !== undefined) state.setCrossfadeEnabled(parsed.enabled);
-            if (parsed.duration !== undefined) state.setCrossfadeDuration(parsed.duration);
-            localStorage.removeItem('crossfade-settings');
-          }
-
-          const oldNormalization = localStorage.getItem('normalization-settings');
-          if (oldNormalization) {
-            const parsed = JSON.parse(oldNormalization);
-            if (parsed.enabled !== undefined) state.setNormalizationEnabled(parsed.enabled);
-            if (parsed.targetLufs !== undefined)
-              state.setNormalizationTargetLufs(parsed.targetLufs);
-            if (parsed.preventClipping !== undefined)
-              state.setNormalizationPreventClipping(parsed.preventClipping);
-            localStorage.removeItem('normalization-settings');
-          }
-
-          const oldAutoplay = localStorage.getItem('autoplay-settings');
-          if (oldAutoplay) {
-            const parsed = JSON.parse(oldAutoplay);
-            if (parsed.enabled !== undefined) state.setAutoplayEnabled(parsed.enabled);
-            localStorage.removeItem('autoplay-settings');
-          }
-        } catch {
-          // Migration errors are non-critical; old settings will be ignored
-        }
+        return _persistedState as PlayerSettingsState;
       },
 
       merge: (persistedState, currentState) => ({
