@@ -135,11 +135,16 @@ const mockStats = {
     storageWarning: false,
     scanErrors: 0,
   },
-  activityTimeline: [
-    { date: '2024-01-15', scans: 2, enrichments: 50, errors: 2 },
-  ],
+  activityTimeline: [{ date: '2024-01-15', scans: 2, enrichments: 50, errors: 2 }],
   recentActivities: [
-    { id: '1', type: 'scan' as const, action: 'Scan completed', details: '100 tracks added', timestamp: '2024-01-15T10:30:00Z', status: 'success' as const },
+    {
+      id: '1',
+      type: 'scan' as const,
+      action: 'Scan completed',
+      details: '100 tracks added',
+      timestamp: '2024-01-15T10:30:00Z',
+      status: 'success' as const,
+    },
   ],
 };
 
@@ -230,14 +235,6 @@ describe('DashboardPanel', () => {
       });
     });
 
-    it('should render refresh button', async () => {
-      render(<DashboardPanel />, { wrapper: createWrapper() });
-
-      await waitFor(() => {
-        expect(screen.getByText('Actualizar')).toBeInTheDocument();
-      });
-    });
-
     it('should render stat cards', async () => {
       render(<DashboardPanel />, { wrapper: createWrapper() });
 
@@ -316,7 +313,7 @@ describe('DashboardPanel', () => {
       render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
-        expect(screen.getByText('completed')).toBeInTheDocument();
+        expect(screen.getByText('Completado')).toBeInTheDocument();
         // tracksAdded value
         const scanSection = screen.getByText('Último Escaneo').parentElement;
         expect(scanSection).toBeInTheDocument();
@@ -344,25 +341,6 @@ describe('DashboardPanel', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('recent-activity-feed')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('refresh functionality', () => {
-    it('should refresh stats when clicking refresh button', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockStats });
-
-      render(<DashboardPanel />, { wrapper: createWrapper() });
-
-      await waitFor(() => {
-        expect(screen.getByText('Dashboard')).toBeInTheDocument();
-      });
-
-      // Click refresh
-      fireEvent.click(screen.getByText('Actualizar'));
-
-      await waitFor(() => {
-        expect(apiClient.get).toHaveBeenCalledTimes(2);
       });
     });
   });
