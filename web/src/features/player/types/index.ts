@@ -86,9 +86,5 @@ export interface PlayerContextValue extends PlayerState {
   setCrossfadeSmartMode: (enabled: boolean) => void;
   setCrossfadeTempoMatch: (enabled: boolean) => void;
 
-  setNormalizationEnabled: (enabled: boolean) => void;
-  setNormalizationTargetLufs: (target: -14 | -16) => void;
-  setNormalizationPreventClipping: (prevent: boolean) => void;
-
   setAutoplayEnabled: (enabled: boolean) => void;
 }

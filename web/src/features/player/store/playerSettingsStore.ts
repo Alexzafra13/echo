@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { CrossfadeSettings, NormalizationSettings, AutoplaySettings } from '../types';
 
 // Incrementar al cambiar la estructura del estado persistido
-const STORE_VERSION = 2;
+const STORE_VERSION = 3;
 
 export type PlayerPreference = 'dynamic' | 'sidebar' | 'footer';
 
@@ -32,7 +32,7 @@ const DEFAULT_CROSSFADE: CrossfadeSettings = {
 };
 
 const DEFAULT_NORMALIZATION: NormalizationSettings = {
-  enabled: true,
+  enabled: false,
   targetLufs: -16,
   preventClipping: true,
 };
@@ -112,6 +112,14 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
           const crossfade = state.crossfade as CrossfadeSettings | undefined;
           if (crossfade && crossfade.tempoMatch === undefined) {
             crossfade.tempoMatch = false;
+          }
+        }
+        // v2 → v3: disable normalization (not applicable on web)
+        if (version < 3) {
+          const state = persistedState as Record<string, unknown>;
+          const normalization = state.normalization as NormalizationSettings | undefined;
+          if (normalization) {
+            normalization.enabled = false;
           }
         }
         return persistedState as PlayerSettingsState;

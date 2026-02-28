@@ -73,10 +73,7 @@ const mockPlayerState = {
   setCrossfadeEnabled: vi.fn(),
   setCrossfadeDuration: vi.fn(),
   setCrossfadeSmartMode: vi.fn(),
-  normalization: { enabled: false, targetLufs: -14 as -14 | -16, preventClipping: true },
-  setNormalizationEnabled: vi.fn(),
-  setNormalizationTargetLufs: vi.fn(),
-  setNormalizationPreventClipping: vi.fn(),
+  normalization: { enabled: false, targetLufs: -16 as -14 | -16, preventClipping: true },
   autoplay: { enabled: true },
   setAutoplayEnabled: vi.fn(),
 };
@@ -123,7 +120,7 @@ describe('SettingsPage', () => {
       expect(screen.getByText('Personalizar Inicio')).toBeInTheDocument();
       expect(screen.getByText('Apariencia')).toBeInTheDocument();
       expect(screen.getByText('Idioma')).toBeInTheDocument();
-      expect(screen.getByText('Normalización de Audio')).toBeInTheDocument();
+      expect(screen.getByText('Análisis de Librería')).toBeInTheDocument();
       expect(screen.getByText('Reproducción')).toBeInTheDocument();
     });
 
@@ -268,65 +265,6 @@ describe('SettingsPage', () => {
       render(<SettingsPage />);
 
       expect(screen.getByText(/Actualmente usando tema oscuro/)).toBeInTheDocument();
-    });
-  });
-
-  describe('audio normalization', () => {
-    it('should render normalization toggle', () => {
-      render(<SettingsPage />);
-
-      expect(screen.getByText('Normalizar volumen')).toBeInTheDocument();
-    });
-
-    it('should toggle normalization', () => {
-      render(<SettingsPage />);
-
-      const toggleLabel = screen.getByText('Normalizar volumen').closest('div')?.parentElement;
-      const toggle = toggleLabel?.querySelector('input[type="checkbox"]');
-
-      fireEvent.click(toggle!);
-
-      expect(mockPlayerState.setNormalizationEnabled).toHaveBeenCalledWith(true);
-    });
-
-    it('should show additional options when normalization enabled', () => {
-      mockPlayerState.normalization.enabled = true;
-      render(<SettingsPage />);
-
-      expect(screen.getByText('Nivel de referencia')).toBeInTheDocument();
-      expect(screen.getByText('Prevenir distorsión')).toBeInTheDocument();
-    });
-
-    it('should hide additional options when normalization disabled', () => {
-      mockPlayerState.normalization.enabled = false;
-      render(<SettingsPage />);
-
-      expect(screen.queryByText('Nivel de referencia')).not.toBeInTheDocument();
-      expect(screen.queryByText('Prevenir distorsión')).not.toBeInTheDocument();
-    });
-
-    it('should change target LUFS', () => {
-      mockPlayerState.normalization.enabled = true;
-      render(<SettingsPage />);
-
-      const select = screen.getByRole('combobox');
-      fireEvent.change(select, { target: { value: '-16' } });
-
-      expect(mockPlayerState.setNormalizationTargetLufs).toHaveBeenCalledWith(-16);
-    });
-
-    it('should toggle prevent clipping', () => {
-      mockPlayerState.normalization.enabled = true;
-      render(<SettingsPage />);
-
-      const preventClippingLabel = screen
-        .getByText('Prevenir distorsión')
-        .closest('div')?.parentElement;
-      const toggle = preventClippingLabel?.querySelector('input[type="checkbox"]');
-
-      fireEvent.click(toggle!);
-
-      expect(mockPlayerState.setNormalizationPreventClipping).toHaveBeenCalled();
     });
   });
 
