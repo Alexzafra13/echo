@@ -444,8 +444,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    */
   const stop = useCallback(() => {
     audioElements.stopBoth();
+    setCurrentTrack(null);
     setIsPlaying(false);
     setCurrentTime(0);
+    setDuration(0);
   }, [audioElements]);
 
   /**
@@ -782,12 +784,45 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       metadata: radio.metadata,
     },
     isPlaying,
+    currentTime,
+    duration,
     play,
     pause,
+    stop,
     playPrevious,
     playNext,
     seek,
   });
+
+  // ========== PWA VISIBILITY SYNC (background audio recovery) ==========
+  // When the PWA goes to background on mobile, the OS may suspend audio playback.
+  // When it returns to foreground, we need to sync our state with reality:
+  // - If isPlaying=true but audio is actually paused → resume or update state
+  // - If audio was suspended → attempt to resume playback
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) return; // Only act when becoming visible
+
+      const activeAudio = audioElements.getActiveAudio();
+      if (!activeAudio) return;
+
+      if (isPlaying && activeAudio.paused && !activeAudio.ended) {
+        // State says playing but audio is actually paused — OS suspended it.
+        // Try to resume; if it fails, sync state to reality.
+        logger.debug('[Player] App foregrounded: audio was suspended, attempting resume');
+        activeAudio.play().catch(() => {
+          logger.warn('[Player] Resume after foreground failed, syncing state');
+          setIsPlaying(false);
+        });
+      } else if (!isPlaying && !activeAudio.paused) {
+        // Audio is playing but state says paused — sync state
+        setIsPlaying(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [audioElements, isPlaying]);
 
   // ========== SOCIAL "LISTENING NOW" SYNC ==========
   useSocialSync({
