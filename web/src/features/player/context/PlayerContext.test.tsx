@@ -25,7 +25,12 @@ vi.mock('../hooks/useAudioElements', () => ({
     loadOnActive: mockLoadOnActive,
     getActiveAudioId: mockGetActiveAudioId,
     getActiveAudio: mockGetActiveAudio,
+    getInactiveAudio: vi.fn(),
     getCurrentTime: mockGetCurrentTime,
+    setAudioVolume: vi.fn(),
+    volumeControlSupported: true,
+    initWebAudio: vi.fn(),
+    resumeAudioContext: vi.fn(),
   }),
 }));
 
