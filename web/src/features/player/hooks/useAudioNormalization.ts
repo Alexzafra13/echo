@@ -11,35 +11,22 @@ interface GainCalculation {
   wasLimited: boolean; // Si se limitó por peak
 }
 
-interface UseAudioNormalizationOptions {
-  /** Volume setter that routes through Web Audio GainNode when available.
-   *  When provided, normalization uses this instead of direct audio.volume
-   *  manipulation, enabling volume control on iOS Safari where audio.volume
-   *  is read-only. Falls back to direct audio.volume if not provided. */
-  setAudioVolume?: (audioId: 'A' | 'B', volume: number) => void;
-}
-
 /**
  * Hook para normalización de audio usando ajuste de volumen directo
  *
  * Implementa normalización estilo Apple Music:
  * - Ajusta el volumen del elemento de audio directamente
  * - Respeta los peaks para evitar clipping (si preventClipping está activado)
- * - Uses Web Audio GainNode when setAudioVolume callback is provided
- *   (enables volume control on iOS Safari where audio.volume is read-only)
+ * - NO usa Web Audio API (compatible con reproducción en segundo plano móvil)
  *
  * Arquitectura:
- * GainNode.gain.value = userVolume * normalizationGain (when Web Audio available)
- * HTMLAudioElement.volume = userVolume * normalizationGain (fallback)
+ * HTMLAudioElement.volume = userVolume * normalizationGain
  *
  * Crossfade support:
  * - Separate gains for audioA and audioB to handle crossfade transitions
  * - During crossfade, each audio maintains its own track's gain
  */
-export function useAudioNormalization(
-  settings: NormalizationSettings,
-  options?: UseAudioNormalizationOptions
-) {
+export function useAudioNormalization(settings: NormalizationSettings) {
   // Store separate gains for each audio element (for crossfade support)
   const gainARef = useRef<number>(1);
   const gainBRef = useRef<number>(1);
@@ -49,11 +36,6 @@ export function useAudioNormalization(
   // Crossfade guard: when true, applyEffectiveVolume is skipped to prevent
   // resetting the per-element volumes that the crossfade animation controls.
   const isCrossfadingRef = useRef(false);
-
-  // Store setAudioVolume callback in ref to avoid stale closures.
-  // When provided, volume is set through Web Audio GainNode (works on iOS).
-  const setAudioVolumeRef = useRef(options?.setAudioVolume);
-  setAudioVolumeRef.current = options?.setAudioVolume;
 
   // Store reference to audio elements for volume adjustment
   const audioElementsRef = useRef<{
@@ -96,9 +78,8 @@ export function useAudioNormalization(
   }, []);
 
   /**
-   * Apply effective volume (userVolume * normalizationGain) to audio elements.
-   * Uses setAudioVolume callback (Web Audio GainNode) when available,
-   * falls back to direct audio.volume manipulation.
+   * Apply effective volume (userVolume * normalizationGain) to audio elements
+   * Each audio element uses its own gain to support crossfade between tracks with different loudness
    */
   const applyEffectiveVolume = useCallback(() => {
     // During crossfade, the animation loop (requestAnimationFrame) controls
@@ -107,19 +88,14 @@ export function useAudioNormalization(
     if (isCrossfadingRef.current) return;
 
     const { audioA, audioB, userVolume } = audioElementsRef.current;
-    const setVol = setAudioVolumeRef.current;
 
-    const effectiveVolumeA = Math.min(1, userVolume * gainARef.current);
-    const effectiveVolumeB = Math.min(1, userVolume * gainBRef.current);
-
-    if (setVol) {
-      // Use Web Audio GainNode (works on iOS Safari)
-      setVol('A', effectiveVolumeA);
-      setVol('B', effectiveVolumeB);
-    } else {
-      // Fallback: direct audio.volume (doesn't work on iOS Safari)
-      if (audioA) audioA.volume = effectiveVolumeA;
-      if (audioB) audioB.volume = effectiveVolumeB;
+    if (audioA) {
+      const effectiveVolumeA = Math.min(1, userVolume * gainARef.current);
+      audioA.volume = effectiveVolumeA;
+    }
+    if (audioB) {
+      const effectiveVolumeB = Math.min(1, userVolume * gainBRef.current);
+      audioB.volume = effectiveVolumeB;
     }
   }, []);
 
@@ -238,30 +214,23 @@ export function useAudioNormalization(
   );
 
   /**
-   * Apply gain only to a specific audio element (for crossfade).
-   * Does not affect the other audio element's gain.
-   * Uses setAudioVolume callback (Web Audio GainNode) when available.
+   * Apply gain only to a specific audio element (for crossfade)
+   * Does not affect the other audio element's gain
    */
   const applyGainToAudio = useCallback(
     (track: Track | null, audioId: 'A' | 'B') => {
       const { gainLinear } = calculateGain(track);
       const { audioA, audioB, userVolume } = audioElementsRef.current;
-      const setVol = setAudioVolumeRef.current;
-      const effectiveVolume = Math.min(1, userVolume * gainLinear);
 
       if (audioId === 'A') {
         gainARef.current = gainLinear;
-        if (setVol) {
-          setVol('A', effectiveVolume);
-        } else if (audioA) {
-          audioA.volume = effectiveVolume;
+        if (audioA) {
+          audioA.volume = Math.min(1, userVolume * gainLinear);
         }
       } else {
         gainBRef.current = gainLinear;
-        if (setVol) {
-          setVol('B', effectiveVolume);
-        } else if (audioB) {
-          audioB.volume = effectiveVolume;
+        if (audioB) {
+          audioB.volume = Math.min(1, userVolume * gainLinear);
         }
       }
     },

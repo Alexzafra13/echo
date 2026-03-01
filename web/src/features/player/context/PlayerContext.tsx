@@ -116,11 +116,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   });
 
   // ========== AUDIO NORMALIZATION ==========
-  // Pass setAudioVolume so normalization uses Web Audio GainNode on iOS
-  // (where HTMLAudioElement.volume is read-only)
-  const normalization = useAudioNormalization(normalizationSettings, {
-    setAudioVolume: audioElements.setAudioVolume,
-  });
+  const normalization = useAudioNormalization(normalizationSettings);
 
   // Register audio elements with normalization hook (for volume-based normalization)
   // Note: userVolume is accessed via ref to avoid re-running effect on volume changes
@@ -289,13 +285,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    */
   const playTrack = useCallback(
     async (track: Track, withCrossfade: boolean = false) => {
-      // Initialize Web Audio API BEFORE any await — must be in the synchronous
-      // part of the user gesture call stack. On iOS Safari, AudioContext created
-      // after an async gap starts in "suspended" state and can't be resumed,
-      // breaking GainNode-based crossfade. This is a safety net; the primary
-      // init happens on first touchstart/click via the document listener.
-      audioElements.initWebAudio();
-
       // Set transitioning guard early to suppress pause events during the
       // async getStreamUrl call. Without this, on mobile PWA: track ends →
       // both audios paused → handlePause fires → isPlaying=false →
@@ -839,7 +828,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   useEffect(() => {
     gaplessPreloadHandlerRef.current = () => {
       // Skip if crossfade handles transitions (it has its own preloading)
-      if (crossfadeSettings.enabled || radio.isRadioMode || !isPlaying) return;
+      // EXCEPT on iOS (volume not supported): enable preloading so the next
+      // track is buffered when the crossfade gapless-switch triggers. Without
+      // this, playInactive() waits for buffer (up to 3s) which can exceed the
+      // 2s iOS trigger window, causing the track to end before play starts.
+      const iosCrossfade = crossfadeSettings.enabled && !audioElements.volumeControlSupported;
+      if ((crossfadeSettings.enabled && !iosCrossfade) || radio.isRadioMode || !isPlaying) return;
 
       const audio = audioElements.getActiveAudio();
       if (!audio || isNaN(audio.duration) || audio.duration <= 0) return;
@@ -875,9 +869,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       if (timeRemaining <= 0.5 && preloaded && !preloaded.prePlayed) {
         const inactiveAudio = audioElements.getInactiveAudio();
         if (inactiveAudio && inactiveAudio.readyState >= 3) {
-          // Set volume to 0 via unified method (GainNode on iOS)
-          const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
-          audioElements.setAudioVolume(inactiveId, 0);
+          inactiveAudio.volume = 0;
           inactiveAudio
             .play()
             .then(() => {
@@ -956,10 +948,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
       if (isPlaying && activeAudio.paused && !activeAudio.ended) {
         // State says playing but audio is actually paused — OS suspended it.
-        // Resume AudioContext first (may have been interrupted by iOS),
-        // then try to resume audio playback.
+        // Try to resume; if it fails, sync state to reality.
         logger.debug('[Player] App foregrounded: audio was suspended, attempting resume');
-        audioElements.resumeAudioContext();
         activeAudio.play().catch(() => {
           logger.warn('[Player] Resume after foreground failed, syncing state');
           setIsPlaying(false);
