@@ -738,10 +738,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           queue.setCurrentIndex(nextIndex);
           setCurrentTrack(nextTrack);
 
-          // Switch: inactive (pre-playing at vol 0) becomes active
+          // Switch: inactive (pre-playing muted) becomes active
           audioElements.switchActiveAudio();
 
-          // Restore proper volume
+          // Unmute and restore proper volume
+          const newActive = audioElements.getActiveAudio();
+          if (newActive) newActive.muted = false;
           const activeId = audioElements.getActiveAudioId();
           const vol = normalization.getEffectiveVolume(activeId);
           audioElements.setAudioVolume(activeId, vol);
@@ -869,7 +871,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       if (timeRemaining <= 0.5 && preloaded && !preloaded.prePlayed) {
         const inactiveAudio = audioElements.getInactiveAudio();
         if (inactiveAudio && inactiveAudio.readyState >= 3) {
-          inactiveAudio.volume = 0;
+          // Use muted instead of volume=0: on iOS, audio.volume is read-only
+          // so volume=0 is ignored and the pre-play would be audible.
+          inactiveAudio.muted = true;
           inactiveAudio
             .play()
             .then(() => {
