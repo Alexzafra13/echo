@@ -142,7 +142,10 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       const audio = getInactiveAudio();
       if (audio) {
         audio.src = src;
-        audio.volume = 0; // Start at 0 for crossfade
+        // Mute instead of volume=0: on iOS, audio.volume is read-only
+        // (always 1.0), so volume=0 is silently ignored and the audio
+        // would play at full volume. audio.muted works on all platforms.
+        audio.muted = true;
         audio.load();
       }
     },

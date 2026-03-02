@@ -262,7 +262,7 @@ describe('useAudioElements', () => {
       expect(mockAudioInstances[0].load).toHaveBeenCalled();
     });
 
-    it('should load source on inactive audio element with volume 0', () => {
+    it('should load source on inactive audio element muted', () => {
       const { result } = renderHook(() => useAudioElements());
 
       act(() => {
@@ -270,7 +270,7 @@ describe('useAudioElements', () => {
       });
 
       expect(mockAudioInstances[1].src).toBe('http://example.com/next-track.mp3');
-      expect(mockAudioInstances[1].volume).toBe(0); // Set to 0 for crossfade
+      expect(mockAudioInstances[1].muted).toBe(true); // Muted for preload (works on iOS unlike volume=0)
       expect(mockAudioInstances[1].load).toHaveBeenCalled();
     });
   });
@@ -743,7 +743,7 @@ describe('useAudioElements', () => {
         result.current.loadOnInactive('http://example.com/track2.mp3');
       });
       expect(mockAudioInstances[1].src).toBe('http://example.com/track2.mp3');
-      expect(mockAudioInstances[1].volume).toBe(0); // Ready for fade in
+      expect(mockAudioInstances[1].muted).toBe(true); // Muted for preload (works on iOS unlike volume=0)
 
       // 4. Start crossfade - play inactive
       mockAudioInstances[1].readyState = 4;

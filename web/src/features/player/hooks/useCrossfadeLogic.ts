@@ -192,6 +192,69 @@ export function useCrossfadeLogic({
       callbacksRef.current.onCrossfadeStart?.();
 
       try {
+        // On iOS Safari, audio.volume is read-only (always 1.0, hardware-controlled).
+        // Volume-based crossfade is impossible. We also can't use Web Audio API
+        // GainNodes (createMediaElementSource breaks background playback on iOS).
+        //
+        // Strategy: "muted warmup + instant switch"
+        // The inactive audio was loaded with muted=true (in loadOnInactive).
+        // We start it playing MUTED so the audio pipeline warms up (buffer,
+        // decode, etc.) without producing sound. Then after a brief warmup,
+        // we unmute the new track and pause the old one in one synchronous
+        // block — zero gap, zero overlap blast.
+        //
+        // With smart mode + outroStart: this fires when the outgoing track is
+        // naturally quiet/fading, so the switch is barely perceptible.
+        if (!volumeControlSupportedRef.current) {
+          logger.debug('[Crossfade] iOS muted warmup crossfade starting');
+
+          crossfadeStartTimeRef.current = performance.now();
+
+          // Ensure inactive is muted before playing (loadOnInactive sets this,
+          // but be defensive in case something changed it)
+          inactiveAudio.muted = true;
+
+          // Start playing muted — warms up the audio pipeline
+          try {
+            await audioElements.playInactive();
+          } catch (playError) {
+            logger.warn('[Crossfade] playInactive failed, retrying:', (playError as Error).message);
+            await audioElements.playInactive(false);
+          }
+
+          // Brief warmup delay to let the audio pipeline stabilize,
+          // then do the instant switch
+          const WARMUP_MS = 150;
+          crossfadeTimeoutRef.current = window.setTimeout(() => {
+            if (crossfadeStartTimeRef.current === null) return; // Already cancelled
+
+            // Instant switch: unmute new, pause old — one synchronous block
+            inactiveAudio.muted = false;
+            activeAudio.playbackRate = 1;
+            activeAudio.pause();
+            activeAudio.currentTime = 0;
+
+            audioElements.switchActiveAudio();
+            callbacksRef.current.onCrossfadeSwapGains?.();
+
+            clearCrossfade();
+
+            logger.debug(
+              '[Crossfade] iOS crossfade complete, now playing:',
+              audioElements.getActiveAudioId()
+            );
+            callbacksRef.current.onCrossfadeComplete?.();
+          }, WARMUP_MS);
+
+          return true;
+        }
+
+        // Desktop path: unmute and set volume to 0 for the fade-in start.
+        // loadOnInactive sets muted=true, so we unmute here but at volume 0
+        // to prevent a brief audio flash before the first animateFade frame.
+        audioElements.setAudioVolume(inactiveId, 0);
+        inactiveAudio.muted = false;
+
         // Start playing the inactive audio (should already have src loaded)
         // On mobile, playInactive() can fail due to autoplay policy. Retry once.
         try {
@@ -199,52 +262,6 @@ export function useCrossfadeLogic({
         } catch (playError) {
           logger.warn('[Crossfade] playInactive failed, retrying:', (playError as Error).message);
           await audioElements.playInactive(false);
-        }
-
-        // On iOS Safari, audio.volume is read-only (always 1.0, hardware-controlled).
-        // Volume-based crossfade is impossible. We also can't use Web Audio API
-        // GainNodes (createMediaElementSource breaks background playback on iOS).
-        //
-        // Strategy: instant gapless switch, not an overlap.
-        // - The new track starts playing (playInactive already called above)
-        // - We immediately pause the old track — no period of both at full volume
-        // - With smart mode + outroStart: this fires when the outgoing track is
-        //   naturally quiet/silent, so the switch is barely perceptible
-        // - Without smart mode: fires ~2s before end; a clean cut is better than
-        //   500ms-2s of both tracks blasting at full volume
-        //
-        // The gapless preload handler in PlayerContext pre-buffers the next track
-        // on iOS even when crossfade is enabled, so playInactive() succeeds
-        // immediately without waiting for buffer.
-        //
-        // NOTE: For a future native mobile app, full volume-based crossfade
-        // with equal-power curves should be used (native audio APIs support
-        // programmatic volume control). The desktop web path below already
-        // implements the complete crossfade logic that the app can mirror.
-        if (!volumeControlSupportedRef.current) {
-          logger.debug('[Crossfade] Gapless switch (volume control not supported — iOS)');
-
-          crossfadeStartTimeRef.current = performance.now();
-
-          // Immediate switch: pause old track, keep new one playing
-          activeAudio.playbackRate = 1;
-          activeAudio.pause();
-          activeAudio.currentTime = 0;
-
-          // Switch active audio
-          audioElements.switchActiveAudio();
-          callbacksRef.current.onCrossfadeSwapGains?.();
-
-          // Clear crossfade state
-          clearCrossfade();
-
-          logger.debug(
-            '[Crossfade] Gapless switch complete, now playing:',
-            audioElements.getActiveAudioId()
-          );
-          callbacksRef.current.onCrossfadeComplete?.();
-
-          return true;
         }
 
         const configuredFadeDuration = currentSettings.duration * 1000; // Convert to ms
