@@ -73,9 +73,11 @@ const mockPlayerState = {
   setCrossfadeEnabled: vi.fn(),
   setCrossfadeDuration: vi.fn(),
   setCrossfadeSmartMode: vi.fn(),
+  setCrossfadeTempoMatch: vi.fn(),
   normalization: { enabled: false, targetLufs: -16 as -14 | -16, preventClipping: true },
   autoplay: { enabled: true },
   setAutoplayEnabled: vi.fn(),
+  volumeControlSupported: true,
 };
 
 vi.mock('@features/player', () => ({
@@ -102,6 +104,7 @@ describe('SettingsPage', () => {
     mockPlayerState.crossfade = { enabled: false, duration: 5, smartMode: false };
     mockPlayerState.normalization = { enabled: false, targetLufs: -14, preventClipping: true };
     mockPlayerState.autoplay = { enabled: true };
+    mockPlayerState.volumeControlSupported = true;
   });
 
   describe('layout', () => {

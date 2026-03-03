@@ -34,6 +34,7 @@ export interface PlayerState {
 
   crossfade: CrossfadeSettings;
   isCrossfading: boolean;
+  volumeControlSupported: boolean;
 
   normalization: NormalizationSettings;
 
