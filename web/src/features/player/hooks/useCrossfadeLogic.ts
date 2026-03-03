@@ -196,17 +196,24 @@ export function useCrossfadeLogic({
         // Volume-based crossfade is impossible. We also can't use Web Audio API
         // GainNodes (createMediaElementSource breaks background playback on iOS).
         //
-        // Strategy: "muted warmup + instant switch"
+        // Strategy: "muted warmup + overlap transition"
         // The inactive audio was loaded with muted=true (in loadOnInactive).
         // We start it playing MUTED so the audio pipeline warms up (buffer,
-        // decode, etc.) without producing sound. Then after a brief warmup,
-        // we unmute the new track and pause the old one in one synchronous
-        // block — zero gap, zero overlap blast.
+        // decode, etc.) without producing sound. After warmup, we unmute the
+        // new track so both tracks play simultaneously for ~2 seconds (overlap).
+        // Then we pause the old track and complete the switch.
         //
         // With smart mode + outroStart: this fires when the outgoing track is
-        // naturally quiet/fading, so the switch is barely perceptible.
+        // naturally quiet/fading, so the overlap sounds like a real crossfade
+        // because the old track's volume is already dropping naturally.
         if (!volumeControlSupportedRef.current) {
-          logger.debug('[Crossfade] iOS muted warmup crossfade starting');
+          const WARMUP_MS = 150;
+          const OVERLAP_MS = 2000;
+
+          logger.debug('[Crossfade] iOS overlap crossfade starting', {
+            warmup: WARMUP_MS,
+            overlap: OVERLAP_MS,
+          });
 
           crossfadeStartTimeRef.current = performance.now();
 
@@ -222,28 +229,34 @@ export function useCrossfadeLogic({
             await audioElements.playInactive(false);
           }
 
-          // Brief warmup delay to let the audio pipeline stabilize,
-          // then do the instant switch
-          const WARMUP_MS = 150;
+          // Phase 1: Brief warmup to let the audio pipeline stabilize
           crossfadeTimeoutRef.current = window.setTimeout(() => {
             if (crossfadeStartTimeRef.current === null) return; // Already cancelled
 
-            // Instant switch: unmute new, pause old — one synchronous block
+            // Unmute new track — both tracks now playing simultaneously (overlap)
             inactiveAudio.muted = false;
-            activeAudio.playbackRate = 1;
-            activeAudio.pause();
-            activeAudio.currentTime = 0;
 
-            audioElements.switchActiveAudio();
-            callbacksRef.current.onCrossfadeSwapGains?.();
+            logger.debug('[Crossfade] iOS overlap phase: both tracks playing');
 
-            clearCrossfade();
+            // Phase 2: After overlap period, pause old track and complete switch
+            crossfadeTimeoutRef.current = window.setTimeout(() => {
+              if (crossfadeStartTimeRef.current === null) return; // Already cancelled
 
-            logger.debug(
-              '[Crossfade] iOS crossfade complete, now playing:',
-              audioElements.getActiveAudioId()
-            );
-            callbacksRef.current.onCrossfadeComplete?.();
+              activeAudio.playbackRate = 1;
+              activeAudio.pause();
+              activeAudio.currentTime = 0;
+
+              audioElements.switchActiveAudio();
+              callbacksRef.current.onCrossfadeSwapGains?.();
+
+              clearCrossfade();
+
+              logger.debug(
+                '[Crossfade] iOS overlap crossfade complete, now playing:',
+                audioElements.getActiveAudioId()
+              );
+              callbacksRef.current.onCrossfadeComplete?.();
+            }, OVERLAP_MS);
           }, WARMUP_MS);
 
           return true;
@@ -472,22 +485,25 @@ export function useCrossfadeLogic({
     const currentTime = audioElements.getCurrentTime();
     const crossfadeDuration = currentSettings.duration;
 
-    // On platforms without volume control (iOS Safari), we do an instant gapless
-    // switch instead of a volume-based crossfade. For non-smart mode, cap the
-    // trigger window to 2s so the track plays nearly to completion.
+    // On platforms without volume control (iOS Safari), we use a ~2s overlap
+    // transition instead of volume-based crossfade. Trigger 4s before end to
+    // allow warmup (150ms) + overlap (2s) + buffer, so the overlap completes
+    // before the outgoing track naturally ends.
     // For smart mode on iOS, we STILL use the outroStart point (the song is
-    // naturally quiet there, so an instant switch sounds clean).
+    // naturally quiet there, so the overlap sounds like a real crossfade).
+    const IOS_TRIGGER_WINDOW = 4;
     const effectiveDuration = volumeControlSupportedRef.current
       ? crossfadeDuration
-      : Math.min(crossfadeDuration, 2);
+      : Math.min(crossfadeDuration, IOS_TRIGGER_WINDOW);
 
     // Smart mode: use track's detected outro start time if available
     // This triggers crossfade when the song naturally ends (silence/fade detected)
     // This is the "detect when the song drops below -X dB" feature — the backend
     // analyzes each track's audio and stores the point where the outro begins.
     //
-    // On iOS: the gapless switch happens at outroStart where the song is already
-    // fading/silent, so the transition is barely noticeable even without volume control.
+    // On iOS: the overlap transition happens at outroStart where the song is already
+    // fading/silent, so both tracks playing simultaneously sounds natural because
+    // the outgoing track's volume is already dropping in the mix.
     if (
       currentSettings.smartMode &&
       currentTrackOutroStart !== undefined &&
@@ -521,7 +537,7 @@ export function useCrossfadeLogic({
     const timeRemaining = duration - currentTime;
 
     // Start crossfade when time remaining equals the effective duration.
-    // On iOS, this fires ~2s before end (gapless-style).
+    // On iOS, this fires ~4s before end (enough for warmup + 2s overlap).
     // On desktop, this fires at the configured duration (full crossfade).
     if (
       timeRemaining <= effectiveDuration &&
