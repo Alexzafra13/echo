@@ -829,13 +829,15 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   useEffect(() => {
     gaplessPreloadHandlerRef.current = () => {
-      // Skip if crossfade handles transitions (it has its own preloading)
-      // EXCEPT on iOS (volume not supported): enable preloading so the next
-      // track is buffered when the crossfade gapless-switch triggers. Without
-      // this, playInactive() waits for buffer (up to 3s) which can exceed the
-      // 2s iOS trigger window, causing the track to end before play starts.
-      const iosCrossfade = crossfadeSettings.enabled && !audioElements.volumeControlSupported;
-      if ((crossfadeSettings.enabled && !iosCrossfade) || radio.isRadioMode || !isPlaying) return;
+      // Skip if crossfade handles transitions (it has its own preloading).
+      // On iOS (volume not supported), crossfade never triggers so gapless
+      // preloading is always active regardless of crossfade settings.
+      if (
+        (crossfadeSettings.enabled && audioElements.volumeControlSupported) ||
+        radio.isRadioMode ||
+        !isPlaying
+      )
+        return;
 
       const audio = audioElements.getActiveAudio();
       if (!audio || isNaN(audio.duration) || audio.duration <= 0) return;
