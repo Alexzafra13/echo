@@ -1070,6 +1070,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Crossfade state
       crossfade: crossfadeSettings,
       isCrossfading: crossfade.isCrossfading,
+      volumeControlSupported: audioElements.volumeControlSupported,
 
       // Normalization state
       normalization: normalizationSettings,
@@ -1135,6 +1136,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       duration,
       crossfadeSettings,
       crossfade.isCrossfading,
+      audioElements.volumeControlSupported,
       normalizationSettings,
       radio.currentStation,
       radio.isRadioMode,

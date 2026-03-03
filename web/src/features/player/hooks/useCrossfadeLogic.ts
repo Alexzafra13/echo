@@ -196,29 +196,26 @@ export function useCrossfadeLogic({
         // Volume-based crossfade is impossible. We also can't use Web Audio API
         // GainNodes (createMediaElementSource breaks background playback on iOS).
         //
-        // Strategy: "muted warmup + overlap transition"
-        // The inactive audio was loaded with muted=true (in loadOnInactive).
-        // We start it playing MUTED so the audio pipeline warms up (buffer,
-        // decode, etc.) without producing sound. After warmup, we unmute the
-        // new track so both tracks play simultaneously for ~2 seconds (overlap).
-        // Then we pause the old track and complete the switch.
+        // Strategy: "muted warmup + natural overlap"
+        // 1. Play next track MUTED to warm up the audio pipeline
+        // 2. After warmup, unmute next track and switch active immediately
+        // 3. Let the old track continue playing to its natural end (no forced pause)
         //
-        // With smart mode + outroStart: this fires when the outgoing track is
-        // naturally quiet/fading, so the overlap sounds like a real crossfade
-        // because the old track's volume is already dropping naturally.
+        // The old track becomes "inactive" after switchActiveAudio(), so its
+        // 'ended' event is ignored by PlayerContext (endedAudio !== activeAudio).
+        // The result is a natural overlap where both tracks play simultaneously
+        // until the outgoing track finishes on its own — no hard cut.
+        //
+        // With smart mode + outroStart: triggers when the song is naturally
+        // fading, so the overlap is barely perceptible.
         if (!volumeControlSupportedRef.current) {
           const WARMUP_MS = 150;
-          const OVERLAP_MS = 2000;
 
-          logger.debug('[Crossfade] iOS overlap crossfade starting', {
-            warmup: WARMUP_MS,
-            overlap: OVERLAP_MS,
-          });
+          logger.debug('[Crossfade] iOS natural overlap crossfade starting');
 
           crossfadeStartTimeRef.current = performance.now();
 
-          // Ensure inactive is muted before playing (loadOnInactive sets this,
-          // but be defensive in case something changed it)
+          // Ensure inactive is muted before playing
           inactiveAudio.muted = true;
 
           // Start playing muted — warms up the audio pipeline
@@ -229,34 +226,40 @@ export function useCrossfadeLogic({
             await audioElements.playInactive(false);
           }
 
-          // Phase 1: Brief warmup to let the audio pipeline stabilize
+          // After warmup: unmute new track and switch active audio immediately.
+          // The old track keeps playing (now as "inactive") until it ends naturally.
           crossfadeTimeoutRef.current = window.setTimeout(() => {
             if (crossfadeStartTimeRef.current === null) return; // Already cancelled
 
-            // Unmute new track — both tracks now playing simultaneously (overlap)
             inactiveAudio.muted = false;
 
-            logger.debug('[Crossfade] iOS overlap phase: both tracks playing');
+            // Switch immediately: new track becomes active, old becomes inactive.
+            // Old track continues playing but its 'ended' event will be ignored
+            // by PlayerContext since it's no longer the active element.
+            audioElements.switchActiveAudio();
+            callbacksRef.current.onCrossfadeSwapGains?.();
 
-            // Phase 2: After overlap period, pause old track and complete switch
+            logger.debug(
+              '[Crossfade] iOS overlap active, old track playing out naturally. Now active:',
+              audioElements.getActiveAudioId()
+            );
+
+            // Calculate how long the old track has left, then clean up after it ends
+            const oldTrackRemaining = activeAudio.duration - activeAudio.currentTime;
+            const cleanupDelay = Math.max(0, oldTrackRemaining * 1000) + 500; // +500ms buffer
+
             crossfadeTimeoutRef.current = window.setTimeout(() => {
-              if (crossfadeStartTimeRef.current === null) return; // Already cancelled
+              if (crossfadeStartTimeRef.current === null) return;
 
-              activeAudio.playbackRate = 1;
+              // Old track should have ended by now — clean up
               activeAudio.pause();
               activeAudio.currentTime = 0;
 
-              audioElements.switchActiveAudio();
-              callbacksRef.current.onCrossfadeSwapGains?.();
-
               clearCrossfade();
 
-              logger.debug(
-                '[Crossfade] iOS overlap crossfade complete, now playing:',
-                audioElements.getActiveAudioId()
-              );
+              logger.debug('[Crossfade] iOS overlap crossfade cleanup complete');
               callbacksRef.current.onCrossfadeComplete?.();
-            }, OVERLAP_MS);
+            }, cleanupDelay);
           }, WARMUP_MS);
 
           return true;
@@ -485,13 +488,13 @@ export function useCrossfadeLogic({
     const currentTime = audioElements.getCurrentTime();
     const crossfadeDuration = currentSettings.duration;
 
-    // On platforms without volume control (iOS Safari), we use a ~2s overlap
-    // transition instead of volume-based crossfade. Trigger 4s before end to
-    // allow warmup (150ms) + overlap (2s) + buffer, so the overlap completes
-    // before the outgoing track naturally ends.
+    // On platforms without volume control (iOS Safari), we use a natural
+    // overlap: the new track starts playing while the old finishes on its own.
+    // Trigger ~3s before end: 150ms warmup + ~2.85s of natural overlap.
+    // The old track is never force-paused — it plays to completion.
     // For smart mode on iOS, we STILL use the outroStart point (the song is
     // naturally quiet there, so the overlap sounds like a real crossfade).
-    const IOS_TRIGGER_WINDOW = 4;
+    const IOS_TRIGGER_WINDOW = 3;
     const effectiveDuration = volumeControlSupportedRef.current
       ? crossfadeDuration
       : Math.min(crossfadeDuration, IOS_TRIGGER_WINDOW);
@@ -537,7 +540,7 @@ export function useCrossfadeLogic({
     const timeRemaining = duration - currentTime;
 
     // Start crossfade when time remaining equals the effective duration.
-    // On iOS, this fires ~4s before end (enough for warmup + 2s overlap).
+    // On iOS, this fires ~3s before end (warmup + natural overlap to end).
     // On desktop, this fires at the configured duration (full crossfade).
     if (
       timeRemaining <= effectiveDuration &&
