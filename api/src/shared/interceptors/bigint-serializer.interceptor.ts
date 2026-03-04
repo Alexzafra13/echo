@@ -25,6 +25,11 @@ export class BigIntSerializerInterceptor implements NestInterceptor {
       return value.map((item) => this.serialize(item));
     }
 
+    // Preserve built-in types that JSON.stringify already handles correctly
+    if (value instanceof Date || value instanceof Buffer || ArrayBuffer.isView(value)) {
+      return value;
+    }
+
     if (typeof value === 'object') {
       const result: Record<string, unknown> = {};
       for (const [key, val] of Object.entries(value)) {
