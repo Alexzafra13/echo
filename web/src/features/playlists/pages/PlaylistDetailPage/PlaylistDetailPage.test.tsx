@@ -178,6 +178,24 @@ vi.mock('@shared/utils/logger', () => ({
   logger: { error: vi.fn(), debug: vi.fn() },
 }));
 
+// Mock playlists service (DJ shuffle endpoint)
+vi.mock('../../services/playlists.service', () => ({
+  playlistsService: {
+    getDjShuffledTracks: vi.fn().mockResolvedValue({
+      playlistId: 'playlist-123',
+      playlistName: 'My Test Playlist',
+      tracks: [
+        { id: 'track-1', title: 'Track One', artist: 'Artist A', albumId: 'album-1' },
+        { id: 'track-2', title: 'Track Two', artist: 'Artist B', albumId: 'album-2' },
+        { id: 'track-3', title: 'Track Three', artist: 'Artist C', albumId: 'album-1' },
+      ],
+      total: 3,
+      seed: 0.5,
+      djMode: true,
+    }),
+  },
+}));
+
 const resetMockState = () => {
   mockState.playlistLoading = false;
   mockState.playlistError = null;
@@ -288,13 +306,15 @@ describe('PlaylistDetailPage', () => {
       expect(mockPlayQueue).toHaveBeenCalled();
     });
 
-    it('should enable shuffle when shuffle button clicked', () => {
+    it('should enable shuffle when shuffle button clicked', async () => {
       render(<PlaylistDetailPage />);
 
       fireEvent.click(screen.getByRole('button', { name: /aleatorio/i }));
 
-      expect(mockSetShuffle).toHaveBeenCalledWith(true);
-      expect(mockPlayQueue).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(mockSetShuffle).toHaveBeenCalledWith(true);
+        expect(mockPlayQueue).toHaveBeenCalled();
+      });
     });
   });
 

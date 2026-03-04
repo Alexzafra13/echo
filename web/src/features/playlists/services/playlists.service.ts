@@ -69,7 +69,9 @@ export const playlistsService = {
   /**
    * Get all tracks in a playlist
    */
-  getPlaylistTracks: async (id: string): Promise<{
+  getPlaylistTracks: async (
+    id: string
+  ): Promise<{
     playlistId: string;
     playlistName: string;
     tracks: PlaylistTrack[];
@@ -91,10 +93,7 @@ export const playlistsService = {
     playlistId: string,
     dto: AddTrackToPlaylistDto
   ): Promise<PlaylistTrack> => {
-    const { data } = await apiClient.post<PlaylistTrack>(
-      `/playlists/${playlistId}/tracks`,
-      dto
-    );
+    const { data } = await apiClient.post<PlaylistTrack>(`/playlists/${playlistId}/tracks`, dto);
     return data;
   },
 
@@ -113,12 +112,43 @@ export const playlistsService = {
   },
 
   /**
+   * Get playlist tracks shuffled with DJ-aware harmonic ordering
+   * Falls back to random shuffle if not enough DJ analysis data
+   */
+  getDjShuffledTracks: async (
+    id: string,
+    params?: {
+      seed?: number;
+    }
+  ): Promise<{
+    playlistId: string;
+    playlistName: string;
+    tracks: PlaylistTrack[];
+    total: number;
+    seed: number;
+    djMode: boolean;
+  }> => {
+    const { data } = await apiClient.get<{
+      playlistId: string;
+      playlistName: string;
+      tracks: PlaylistTrack[];
+      total: number;
+      seed: number;
+      djMode: boolean;
+    }>(`/playlists/${id}/tracks/shuffle/dj`, { params });
+    return data;
+  },
+
+  /**
    * Get public playlists containing tracks from a specific artist
    */
-  getPlaylistsByArtist: async (artistId: string, params?: {
-    skip?: number;
-    take?: number;
-  }): Promise<{
+  getPlaylistsByArtist: async (
+    artistId: string,
+    params?: {
+      skip?: number;
+      take?: number;
+    }
+  ): Promise<{
     items: Playlist[];
     total: number;
     skip: number;

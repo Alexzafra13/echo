@@ -15,7 +15,7 @@ interface PlayerMenuProps {
 export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16, strokeWidth = 2 }: PlayerMenuProps) {
   const preference = usePlayerSettingsStore((s) => s.playerPreference);
   const setPreference = usePlayerSettingsStore((s) => s.setPlayerPreference);
-  const { crossfade, setCrossfadeEnabled } = usePlayer();
+  const { crossfade, setCrossfadeEnabled, volumeControlSupported } = usePlayer();
 
   const handleOptionClick = (value: PlayerPreference) => {
     setPreference(value);
@@ -57,15 +57,20 @@ export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16, stro
             Reproductor por defecto
           </button>
 
-          <div className={styles.menuSeparator} />
+          {/* Crossfade toggle — only on platforms with volume control (not iOS) */}
+          {volumeControlSupported && (
+            <>
+              <div className={styles.menuSeparator} />
 
-          <button
-            className={`${styles.menuOptionToggle} ${crossfade.enabled ? styles['menuOptionToggle--active'] : ''}`}
-            onClick={handleCrossfadeToggle}
-          >
-            <span>Fundido entre canciones</span>
-            <span className={`${styles.toggleIndicator} ${crossfade.enabled ? styles['toggleIndicator--active'] : ''}`} />
-          </button>
+              <button
+                className={`${styles.menuOptionToggle} ${crossfade.enabled ? styles['menuOptionToggle--active'] : ''}`}
+                onClick={handleCrossfadeToggle}
+              >
+                <span>Fundido entre canciones</span>
+                <span className={`${styles.toggleIndicator} ${crossfade.enabled ? styles['toggleIndicator--active'] : ''}`} />
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

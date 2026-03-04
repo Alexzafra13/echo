@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TracksModule } from '@features/tracks/tracks.module';
 import { AuthModule } from '@features/auth/auth.module';
+import { DjModule } from '@features/dj/dj.module';
 import { PLAYLIST_REPOSITORY } from './domain/ports';
 import { DrizzlePlaylistRepository } from './infrastructure/persistence/playlist.repository';
 import {
@@ -14,6 +15,7 @@ import {
   RemoveTrackFromPlaylistUseCase,
   GetPlaylistTracksUseCase,
   ReorderPlaylistTracksUseCase,
+  GetPlaylistDjShuffledTracksUseCase,
 } from './domain/use-cases';
 import { PlaylistsController } from './presentation/controller/playlists.controller';
 
@@ -22,7 +24,7 @@ import { PlaylistsController } from './presentation/controller/playlists.control
  * DrizzleService is provided globally via DrizzleModule
  */
 @Module({
-  imports: [TracksModule, AuthModule],
+  imports: [TracksModule, AuthModule, DjModule],
   controllers: [PlaylistsController],
   providers: [
     {
@@ -39,6 +41,7 @@ import { PlaylistsController } from './presentation/controller/playlists.control
     RemoveTrackFromPlaylistUseCase,
     GetPlaylistTracksUseCase,
     ReorderPlaylistTracksUseCase,
+    GetPlaylistDjShuffledTracksUseCase,
   ],
   exports: [PLAYLIST_REPOSITORY],
 })

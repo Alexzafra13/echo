@@ -27,6 +27,7 @@ import {
   RemoveTrackFromPlaylistUseCase,
   GetPlaylistTracksUseCase,
   ReorderPlaylistTracksUseCase,
+  GetPlaylistDjShuffledTracksUseCase,
 } from '../../domain/use-cases';
 import {
   CreatePlaylistDto,
@@ -37,6 +38,7 @@ import {
   PlaylistResponseDto,
   PlaylistsListResponseDto,
   PlaylistTracksResponseDto,
+  PlaylistDjShuffledTracksResponseDto,
 } from '../dto';
 import { validatePagination } from '@shared/utils';
 
@@ -55,7 +57,8 @@ export class PlaylistsController {
     private readonly addTrackToPlaylistUseCase: AddTrackToPlaylistUseCase,
     private readonly removeTrackFromPlaylistUseCase: RemoveTrackFromPlaylistUseCase,
     private readonly getPlaylistTracksUseCase: GetPlaylistTracksUseCase,
-    private readonly reorderPlaylistTracksUseCase: ReorderPlaylistTracksUseCase
+    private readonly reorderPlaylistTracksUseCase: ReorderPlaylistTracksUseCase,
+    private readonly getPlaylistDjShuffledTracksUseCase: GetPlaylistDjShuffledTracksUseCase
   ) {}
 
   @Post()
@@ -239,6 +242,34 @@ export class PlaylistsController {
   ): Promise<void> {
     const userId = req.user.id;
     await this.deletePlaylistUseCase.execute({ id, userId });
+  }
+
+  @Get(':id/tracks/shuffle/dj')
+  @ApiOperation({ summary: 'Obtener los tracks de una playlist ordenados por compatibilidad DJ' })
+  @ApiQuery({
+    name: 'seed',
+    required: false,
+    type: Number,
+    description: 'Seed para shuffle determinístico (0-1)',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Tracks de la playlist ordenados por compatibilidad armónica',
+    type: PlaylistDjShuffledTracksResponseDto,
+  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'No tienes acceso a esta playlist' })
+  async getPlaylistDjShuffledTracks(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('seed') seed?: string,
+    @Req() req?: RequestWithUser
+  ): Promise<PlaylistDjShuffledTracksResponseDto> {
+    const result = await this.getPlaylistDjShuffledTracksUseCase.execute({
+      playlistId: id,
+      requesterId: req?.user?.id ?? '',
+      seed: seed ? parseFloat(seed) : undefined,
+    });
+    return PlaylistDjShuffledTracksResponseDto.fromDomain(result);
   }
 
   @Get(':id/tracks')

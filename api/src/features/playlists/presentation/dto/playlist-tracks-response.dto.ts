@@ -1,5 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { GetPlaylistTracksOutput, TrackItem } from '../../domain/use-cases';
+import {
+  GetPlaylistTracksOutput,
+  TrackItem,
+  GetPlaylistDjShuffledTracksOutput,
+  PlaylistDjShuffledTrackItem,
+} from '../../domain/use-cases';
 
 export class PlaylistTrackResponseDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -59,7 +64,10 @@ export class PlaylistTrackResponseDto {
   @ApiPropertyOptional({ example: 0.98, description: 'ReplayGain album peak (0-1)' })
   rgAlbumPeak?: number;
 
-  @ApiPropertyOptional({ example: 234.5, description: 'Seconds where outro/silence begins (smart crossfade)' })
+  @ApiPropertyOptional({
+    example: 234.5,
+    description: 'Seconds where outro/silence begins (smart crossfade)',
+  })
   outroStart?: number;
 
   @ApiPropertyOptional({ example: 120, description: 'BPM (beats per minute)' })
@@ -120,6 +128,66 @@ export class PlaylistTracksResponseDto {
       playlistName: output.playlistName,
       tracks: output.tracks.map((track) => PlaylistTrackResponseDto.fromTrackItem(track)),
       total: output.total,
+    };
+  }
+}
+
+export class PlaylistDjShuffledTracksResponseDto {
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  playlistId!: string;
+
+  @ApiProperty({ example: 'Mi Playlist Favorita' })
+  playlistName!: string;
+
+  @ApiProperty({ type: [PlaylistTrackResponseDto] })
+  tracks!: PlaylistTrackResponseDto[];
+
+  @ApiProperty({ example: 10 })
+  total!: number;
+
+  @ApiProperty({ example: 0.7531, description: 'Seed used for deterministic shuffling' })
+  seed!: number;
+
+  @ApiProperty({ example: true, description: 'Whether DJ-aware ordering was used' })
+  djMode!: boolean;
+
+  static fromDomain(
+    output: GetPlaylistDjShuffledTracksOutput
+  ): PlaylistDjShuffledTracksResponseDto {
+    return {
+      playlistId: output.playlistId,
+      playlistName: output.playlistName,
+      tracks: output.tracks.map((track) => this.fromDjTrackItem(track)),
+      total: output.total,
+      seed: output.seed,
+      djMode: output.djMode,
+    };
+  }
+
+  private static fromDjTrackItem(item: PlaylistDjShuffledTrackItem): PlaylistTrackResponseDto {
+    return {
+      id: item.id,
+      title: item.title,
+      trackNumber: item.trackNumber,
+      discNumber: item.discNumber,
+      year: item.year,
+      duration: item.duration,
+      size: String(item.size || 0),
+      path: item.path,
+      albumId: item.albumId,
+      artistId: item.artistId,
+      bitRate: item.bitRate,
+      suffix: item.suffix,
+      artistName: item.artistName,
+      albumName: item.albumName,
+      rgTrackGain: item.rgTrackGain,
+      rgTrackPeak: item.rgTrackPeak,
+      rgAlbumGain: item.rgAlbumGain,
+      rgAlbumPeak: item.rgAlbumPeak,
+      outroStart: item.outroStart,
+      bpm: item.bpm,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
     };
   }
 }
