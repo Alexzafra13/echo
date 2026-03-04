@@ -12,11 +12,7 @@ import { usePrivacySettings, useUpdatePrivacySettings } from '@features/settings
 import { AvatarEditModal } from '../../components/AvatarEditModal';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { formatDate } from '@shared/utils/format';
-import {
-  validatePasswordStrength,
-  passwordRequirementLabels,
-  passwordRequirements,
-} from '@shared/utils/password.utils';
+import { validatePasswordStrength, passwordRequirementLabels } from '@shared/utils/password.utils';
 import styles from './ProfilePage.module.css';
 
 /**
