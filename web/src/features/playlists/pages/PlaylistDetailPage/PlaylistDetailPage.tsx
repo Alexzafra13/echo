@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link, useLocation } from 'wouter';
 import { Play, Shuffle, Music, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
@@ -11,6 +12,7 @@ import {
   useDeletePlaylist,
   useReorderPlaylistTracks,
 } from '../../hooks/usePlaylists';
+import { playlistsService } from '../../services/playlists.service';
 import { usePlayer } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { useModal, useDominantColors, useDocumentTitle } from '@shared/hooks';
@@ -90,19 +92,33 @@ export default function PlaylistDetailPage() {
     playQueue(playerTracks, 0, 'playlist');
   };
 
-  const handleShufflePlay = () => {
+  const [shuffleLoading, setShuffleLoading] = useState(false);
+
+  const handleShufflePlay = async () => {
+    if (!id || shuffleLoading) return;
     const tracks = playlistTracks?.tracks || [];
     if (tracks.length === 0) return;
-    const playerTracks = toPlayerTracks(tracks);
-    // Enable shuffle mode
-    setShuffle(true);
-    // Shuffle the tracks array using Fisher-Yates algorithm
-    const shuffledTracks = [...playerTracks];
-    for (let i = shuffledTracks.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
+
+    setShuffleLoading(true);
+    try {
+      // Try DJ-aware harmonic ordering from backend
+      const result = await playlistsService.getDjShuffledTracks(id);
+      const playerTracks = toPlayerTracks(result.tracks);
+      setShuffle(true);
+      playQueue(playerTracks, 0, 'playlist');
+    } catch {
+      // Fallback: client-side Fisher-Yates shuffle
+      const playerTracks = toPlayerTracks(tracks);
+      setShuffle(true);
+      const shuffledTracks = [...playerTracks];
+      for (let i = shuffledTracks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
+      }
+      playQueue(shuffledTracks, 0, 'playlist');
+    } finally {
+      setShuffleLoading(false);
     }
-    playQueue(shuffledTracks, 0, 'playlist');
   };
 
   const handleTrackPlay = (track: SharedTrack) => {
@@ -310,7 +326,10 @@ export default function PlaylistDetailPage() {
                   onClick={handleShufflePlay}
                   leftIcon={<Shuffle size={20} />}
                   disabled={
-                    !playlistTracks || !playlistTracks.tracks || playlistTracks.tracks.length === 0
+                    shuffleLoading ||
+                    !playlistTracks ||
+                    !playlistTracks.tracks ||
+                    playlistTracks.tracks.length === 0
                   }
                 >
                   Aleatorio

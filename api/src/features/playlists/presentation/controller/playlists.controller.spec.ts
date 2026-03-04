@@ -11,6 +11,7 @@ import {
   RemoveTrackFromPlaylistUseCase,
   GetPlaylistTracksUseCase,
   ReorderPlaylistTracksUseCase,
+  GetPlaylistDjShuffledTracksUseCase,
 } from '../../domain/use-cases';
 import { Playlist } from '../../domain/entities/playlist.entity';
 import { Track } from '@features/tracks/domain/entities/track.entity';
@@ -83,6 +84,7 @@ describe('PlaylistsController', () => {
         { provide: RemoveTrackFromPlaylistUseCase, useValue: { execute: jest.fn() } },
         { provide: GetPlaylistTracksUseCase, useValue: { execute: jest.fn() } },
         { provide: ReorderPlaylistTracksUseCase, useValue: { execute: jest.fn() } },
+        { provide: GetPlaylistDjShuffledTracksUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 

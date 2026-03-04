@@ -8,3 +8,4 @@ export * from './add-track-to-playlist';
 export * from './remove-track-from-playlist';
 export * from './get-playlist-tracks';
 export * from './reorder-playlist-tracks';
+export * from './get-playlist-dj-shuffled-tracks';
