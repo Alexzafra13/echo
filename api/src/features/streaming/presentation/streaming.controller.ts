@@ -12,25 +12,19 @@ import {
   OnModuleDestroy,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiParam,
-  ApiHeader,
-  ApiResponse,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiHeader, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
 import { StreamTrackUseCase } from '../domain/use-cases';
 import { StreamTokenGuard } from './guards';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
 import { ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
+import { appConfig } from '@config/app.config';
 import * as fs from 'fs';
 import { ReadStream } from 'fs';
 import { ServerResponse } from 'http';
 
-const STREAM_TIMEOUT_MS = parseInt(process.env.STREAM_TIMEOUT_MS || '600000', 10); // Default: 10 minutes
+const STREAM_TIMEOUT_MS = appConfig.stream_timeout_ms;
 
 @ApiTags('streaming')
 @Controller('tracks')
@@ -42,7 +36,7 @@ export class StreamingController implements OnModuleDestroy {
   constructor(
     @InjectPinoLogger(StreamingController.name)
     private readonly logger: PinoLogger,
-    private readonly streamTrackUseCase: StreamTrackUseCase,
+    private readonly streamTrackUseCase: StreamTrackUseCase
   ) {}
 
   onModuleDestroy(): void {
@@ -61,7 +55,7 @@ export class StreamingController implements OnModuleDestroy {
     filePath: string,
     trackId: string,
     res: ServerResponse,
-    options?: { start?: number; end?: number },
+    options?: { start?: number; end?: number }
   ): ReadStream {
     const stream = fs.createReadStream(filePath, options);
 
@@ -75,7 +69,7 @@ export class StreamingController implements OnModuleDestroy {
       res.setTimeout(STREAM_TIMEOUT_MS, () => {
         this.logger.warn(
           { trackId, ...(options && { start: options.start, end: options.end }) },
-          'Stream timeout - client not reading data, closing connection',
+          'Stream timeout - client not reading data, closing connection'
         );
         cleanup();
         if (!stream.destroyed) {
@@ -95,7 +89,7 @@ export class StreamingController implements OnModuleDestroy {
           trackId,
           ...(options && { start: options.start, end: options.end }),
         },
-        options ? 'Error reading file (range request)' : 'Error reading file (full stream)',
+        options ? 'Error reading file (range request)' : 'Error reading file (full stream)'
       );
       if (!res.destroyed) {
         res.destroy();
@@ -110,7 +104,7 @@ export class StreamingController implements OnModuleDestroy {
             error: error instanceof Error ? error.message : error,
             trackId,
           },
-          'Response stream error',
+          'Response stream error'
         );
       }
       if (!stream.destroyed) {
@@ -163,7 +157,7 @@ export class StreamingController implements OnModuleDestroy {
   })
   async getStreamMetadata(
     @Param('id', ParseUUIDPipe) trackId: string,
-    @Res() res: FastifyReply,
+    @Res() res: FastifyReply
   ): Promise<void> {
     const metadata = await this.streamTrackUseCase.execute({ trackId });
 
@@ -214,7 +208,7 @@ export class StreamingController implements OnModuleDestroy {
   async streamTrack(
     @Param('id', ParseUUIDPipe) trackId: string,
     @Headers('range') range: string | undefined,
-    @Res() res: FastifyReply,
+    @Res() res: FastifyReply
   ): Promise<void> {
     const metadata = await this.streamTrackUseCase.execute({ trackId, range });
     const { filePath, fileSize, mimeType } = metadata;
@@ -275,7 +269,7 @@ export class StreamingController implements OnModuleDestroy {
   })
   async downloadTrack(
     @Param('id', ParseUUIDPipe) trackId: string,
-    @Res() res: FastifyReply,
+    @Res() res: FastifyReply
   ): Promise<void> {
     const metadata = await this.streamTrackUseCase.execute({ trackId });
     const { filePath, fileName, fileSize, mimeType } = metadata;

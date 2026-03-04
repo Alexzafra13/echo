@@ -1,10 +1,4 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { BaseError, getHttpStatusForError } from '@shared/errors/base.error';
@@ -15,7 +9,7 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
 export class HttpExceptionFilter implements ExceptionFilter {
   constructor(
     @InjectPinoLogger(HttpExceptionFilter.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
@@ -46,7 +40,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
         error = exception.name;
       } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
         const responseObj = exceptionResponse as Record<string, unknown>;
-        message = (responseObj.message as string) || exception.message;
+        // ValidationPipe sends message as string[] — preserve the array for the response
+        const rawMessage = responseObj.message;
+        message = Array.isArray(rawMessage)
+          ? rawMessage.join('; ')
+          : (rawMessage as string) || exception.message;
         error = (responseObj.error as string) || exception.name;
       } else {
         message = exception.message;
@@ -84,7 +82,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
           },
           statusCode: status,
         },
-        `HTTP ${status}: ${message}`,
+        `HTTP ${status}: ${message}`
       );
     } else {
       this.logger.warn(
@@ -94,7 +92,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
           path: request.url,
           method: request.method,
         },
-        `HTTP ${status}: ${message}`,
+        `HTTP ${status}: ${message}`
       );
     }
 

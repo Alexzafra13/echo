@@ -1,26 +1,33 @@
 import { randomBytes } from 'crypto';
 
+const PASSWORD_LENGTH = 16;
+
 export class PasswordUtil {
-  // Genera contraseña temporal de 8 caracteres (ej: "X7h4Km2p")
+  // Generates a temporary password (e.g. "X7h$Km2p!nR4qW5z")
+  // Includes uppercase, lowercase, numbers and special characters for strength.
+  // Avoids visually ambiguous characters (I, O, l, 0, 1).
   static generateTemporaryPassword(): string {
     const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
     const lowercase = 'abcdefghjkmnpqrstuvwxyz';
     const numbers = '23456789';
+    const special = '!@#$%&*?';
 
-    const allChars = uppercase + lowercase + numbers;
-    const randomBytesBuffer = randomBytes(8);
+    const allChars = uppercase + lowercase + numbers + special;
+    const randomBytesBuffer = randomBytes(PASSWORD_LENGTH);
 
+    // Guarantee at least one char from each category
     let password = '';
     password += uppercase.charAt(randomBytesBuffer[0] % uppercase.length);
     password += lowercase.charAt(randomBytesBuffer[1] % lowercase.length);
     password += numbers.charAt(randomBytesBuffer[2] % numbers.length);
+    password += special.charAt(randomBytesBuffer[3] % special.length);
 
-    for (let i = 3; i < 8; i++) {
+    for (let i = 4; i < PASSWORD_LENGTH; i++) {
       password += allChars.charAt(randomBytesBuffer[i] % allChars.length);
     }
 
     // Fisher-Yates shuffle
-    const shuffleBytes = randomBytes(8);
+    const shuffleBytes = randomBytes(PASSWORD_LENGTH);
     const chars = password.split('');
     for (let i = chars.length - 1; i > 0; i--) {
       const j = shuffleBytes[i] % (i + 1);
