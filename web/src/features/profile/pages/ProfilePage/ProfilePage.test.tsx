@@ -6,8 +6,18 @@ import { ProfilePage } from './ProfilePage';
 const mockSetLocation = vi.fn();
 vi.mock('wouter', () => ({
   useLocation: () => ['/profile', mockSetLocation],
-  Link: ({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) => (
-    <a href={href} className={className}>{children}</a>
+  Link: ({
+    children,
+    href,
+    className,
+  }: {
+    children: React.ReactNode;
+    href: string;
+    className?: string;
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
   ),
 }));
 
@@ -104,14 +114,16 @@ vi.mock('@features/settings/hooks', () => ({
 
 // Mock avatar utils
 vi.mock('@shared/utils/avatar.utils', () => ({
-  getUserAvatarUrl: (id: string, _hasAvatar: boolean, timestamp: number) => `/api/users/${id}/avatar?t=${timestamp}`,
+  getUserAvatarUrl: (id: string, _hasAvatar: boolean, timestamp: number) =>
+    `/api/users/${id}/avatar?t=${timestamp}`,
   handleAvatarError: vi.fn(),
-  getUserInitials: (name: string | null, username: string) => (name || username || 'U').charAt(0).toUpperCase(),
+  getUserInitials: (name: string | null, username: string) =>
+    (name || username || 'U').charAt(0).toUpperCase(),
 }));
 
 // Mock format utils
 vi.mock('@shared/utils/format', () => ({
-  formatDate: (date: string | null) => date ? '15/01/2023' : 'Fecha desconocida',
+  formatDate: (date: string | null) => (date ? '15/01/2023' : 'Fecha desconocida'),
 }));
 
 // Mock color extractor
@@ -122,8 +134,18 @@ vi.mock('@shared/utils/colorExtractor', () => ({
 
 // Mock layout components
 vi.mock('@shared/components/layout/Header', () => ({
-  Header: ({ showBackButton, disableSearch }: { showBackButton?: boolean; disableSearch?: boolean }) => (
-    <header data-testid="header" data-back-button={showBackButton} data-disable-search={disableSearch}>
+  Header: ({
+    showBackButton,
+    disableSearch,
+  }: {
+    showBackButton?: boolean;
+    disableSearch?: boolean;
+  }) => (
+    <header
+      data-testid="header"
+      data-back-button={showBackButton}
+      data-disable-search={disableSearch}
+    >
       Header
     </header>
   ),
@@ -345,10 +367,7 @@ describe('ProfilePage', () => {
 
       fireEvent.click(screen.getByTitle('Guardar'));
 
-      expect(mockUpdateProfile).toHaveBeenCalledWith(
-        { name: 'New Name' },
-        expect.any(Object)
-      );
+      expect(mockUpdateProfile).toHaveBeenCalledWith({ name: 'New Name' }, expect.any(Object));
     });
 
     it('should update auth store and exit edit mode on success', () => {
@@ -396,7 +415,9 @@ describe('ProfilePage', () => {
       render(<ProfilePage />);
 
       expect(screen.getByText('Perfil público')).toBeInTheDocument();
-      expect(screen.getByText('Permite que otros usuarios vean tu perfil y estadísticas de escucha')).toBeInTheDocument();
+      expect(
+        screen.getByText('Permite que otros usuarios vean tu perfil y estadísticas de escucha')
+      ).toBeInTheDocument();
     });
 
     it('should not show additional settings when profile is private', () => {
@@ -536,22 +557,34 @@ describe('ProfilePage', () => {
     it('should show validation error when new password is too short', () => {
       render(<ProfilePage />);
 
-      fireEvent.change(screen.getByLabelText('Contraseña actual'), { target: { value: 'currentpass' } });
+      fireEvent.change(screen.getByLabelText('Contraseña actual'), {
+        target: { value: 'currentpass' },
+      });
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), { target: { value: 'short' } });
-      fireEvent.change(screen.getByLabelText('Confirmar contraseña'), { target: { value: 'short' } });
+      fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+        target: { value: 'short' },
+      });
 
       fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
 
-      expect(screen.getByText('La nueva contraseña debe tener al menos 8 caracteres')).toBeInTheDocument();
+      expect(
+        screen.getByText('La contraseña debe tener al menos 8 caracteres')
+      ).toBeInTheDocument();
       expect(mockChangePassword).not.toHaveBeenCalled();
     });
 
     it('should show validation error when passwords do not match', () => {
       render(<ProfilePage />);
 
-      fireEvent.change(screen.getByLabelText('Contraseña actual'), { target: { value: 'currentpass' } });
-      fireEvent.change(screen.getByLabelText('Nueva contraseña'), { target: { value: 'newpassword123' } });
-      fireEvent.change(screen.getByLabelText('Confirmar contraseña'), { target: { value: 'differentpass' } });
+      fireEvent.change(screen.getByLabelText('Contraseña actual'), {
+        target: { value: 'currentpass' },
+      });
+      fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
+        target: { value: 'NewPass123!' },
+      });
+      fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+        target: { value: 'differentpass' },
+      });
 
       fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
 
@@ -562,27 +595,41 @@ describe('ProfilePage', () => {
     it('should show validation error when new password is same as current', () => {
       render(<ProfilePage />);
 
-      fireEvent.change(screen.getByLabelText('Contraseña actual'), { target: { value: 'samepassword123' } });
-      fireEvent.change(screen.getByLabelText('Nueva contraseña'), { target: { value: 'samepassword123' } });
-      fireEvent.change(screen.getByLabelText('Confirmar contraseña'), { target: { value: 'samepassword123' } });
+      fireEvent.change(screen.getByLabelText('Contraseña actual'), {
+        target: { value: 'SamePass123!' },
+      });
+      fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
+        target: { value: 'SamePass123!' },
+      });
+      fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+        target: { value: 'SamePass123!' },
+      });
 
       fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
 
-      expect(screen.getByText('La nueva contraseña debe ser diferente a la actual')).toBeInTheDocument();
+      expect(
+        screen.getByText('La nueva contraseña debe ser diferente a la actual')
+      ).toBeInTheDocument();
       expect(mockChangePassword).not.toHaveBeenCalled();
     });
 
     it('should call changePassword with valid data', () => {
       render(<ProfilePage />);
 
-      fireEvent.change(screen.getByLabelText('Contraseña actual'), { target: { value: 'currentpass' } });
-      fireEvent.change(screen.getByLabelText('Nueva contraseña'), { target: { value: 'newpassword123' } });
-      fireEvent.change(screen.getByLabelText('Confirmar contraseña'), { target: { value: 'newpassword123' } });
+      fireEvent.change(screen.getByLabelText('Contraseña actual'), {
+        target: { value: 'currentpass' },
+      });
+      fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
+        target: { value: 'NewPass123!' },
+      });
+      fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+        target: { value: 'NewPass123!' },
+      });
 
       fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
 
       expect(mockChangePassword).toHaveBeenCalledWith(
-        { currentPassword: 'currentpass', newPassword: 'newpassword123' },
+        { currentPassword: 'currentpass', newPassword: 'NewPass123!' },
         expect.any(Object)
       );
     });
@@ -599,8 +646,8 @@ describe('ProfilePage', () => {
       const confirmInput = screen.getByLabelText('Confirmar contraseña');
 
       fireEvent.change(currentInput, { target: { value: 'currentpass' } });
-      fireEvent.change(newInput, { target: { value: 'newpassword123' } });
-      fireEvent.change(confirmInput, { target: { value: 'newpassword123' } });
+      fireEvent.change(newInput, { target: { value: 'NewPass123!' } });
+      fireEvent.change(confirmInput, { target: { value: 'NewPass123!' } });
 
       fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
 
@@ -641,7 +688,11 @@ describe('ProfilePage', () => {
 
       render(<ProfilePage />);
 
-      expect(screen.getByText('Error al cambiar la contraseña. Verifica que la contraseña actual sea correcta.')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Error al cambiar la contraseña. Verifica que la contraseña actual sea correcta.'
+        )
+      ).toBeInTheDocument();
     });
 
     it('should disable form fields while submitting', () => {

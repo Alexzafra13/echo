@@ -22,6 +22,14 @@ describe('Password Value Object', () => {
       expect(new Password('Test123?x').getValue()).toBe('Test123?x');
       expect(new Password('Test123&x').getValue()).toBe('Test123&x');
     });
+
+    it('should accept extended special characters', () => {
+      expect(new Password('Test123#x').getValue()).toBe('Test123#x');
+      expect(new Password('Test123^x').getValue()).toBe('Test123^x');
+      expect(new Password('Test123(x').getValue()).toBe('Test123(x');
+      expect(new Password('Test123_x').getValue()).toBe('Test123_x');
+      expect(new Password('Test123-x').getValue()).toBe('Test123-x');
+    });
   });
 
   describe('invalid passwords', () => {
@@ -51,7 +59,7 @@ describe('Password Value Object', () => {
 
     it('should throw correct error message', () => {
       expect(() => new Password('weak')).toThrow(
-        'Password must be at least 8 characters, with uppercase, lowercase, number and special character',
+        'Password must be at least 8 characters, with uppercase, lowercase, number and special character'
       );
     });
   });

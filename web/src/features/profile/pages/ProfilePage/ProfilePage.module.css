@@ -395,6 +395,31 @@
   font-weight: 500;
 }
 
+/* Password Requirements */
+.profilePage__requirements {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 0.8rem;
+}
+
+.profilePage__requirements li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.profilePage__requirementMet {
+  color: var(--color-success, #22c55e);
+}
+
+.profilePage__requirementUnmet {
+  color: var(--color-text-tertiary, #6b7280);
+}
+
 /* Submit Button */
 .profilePage__submitButton {
   padding: 12px 24px;
@@ -472,7 +497,7 @@
 
 .profilePage__toggleSlider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 20px;
   width: 20px;
   left: 2px;
