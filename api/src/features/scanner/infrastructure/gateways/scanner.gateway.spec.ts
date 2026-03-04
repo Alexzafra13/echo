@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getLoggerToken } from 'nestjs-pino';
 import { ScannerGateway } from './scanner.gateway';
+import { ScanProcessorService } from '../services/scan-processor.service';
 import { Server, Socket } from 'socket.io';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { WsJwtGuard } from '../../../../infrastructure/websocket/guards/ws-jwt.guard';
@@ -16,6 +17,12 @@ const mockLogger = {
   fatal: jest.fn(),
   setContext: jest.fn(),
   assign: jest.fn(),
+};
+
+const mockScanProcessor = {
+  pauseScan: jest.fn(),
+  cancelScan: jest.fn(),
+  resumeScan: jest.fn(),
 };
 
 describe('ScannerGateway', () => {
@@ -42,12 +49,17 @@ describe('ScannerGateway', () => {
       emit: jest.fn(),
     };
 
+    mockScanProcessor.pauseScan.mockReset();
+    mockScanProcessor.cancelScan.mockReset();
+    mockScanProcessor.resumeScan.mockReset();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ScannerGateway,
         WsLoggingInterceptor,
         { provide: getLoggerToken(ScannerGateway.name), useValue: mockLogger },
         { provide: getLoggerToken(WsLoggingInterceptor.name), useValue: mockLogger },
+        { provide: ScanProcessorService, useValue: mockScanProcessor },
       ],
     })
       .overrideGuard(WsJwtGuard)
@@ -170,42 +182,75 @@ describe('ScannerGateway', () => {
   });
 
   describe('handlePause', () => {
-    it('should emit paused confirmation', async () => {
+    it('should emit paused confirmation when scan is running', async () => {
+      mockScanProcessor.pauseScan.mockResolvedValue(true);
       const dto = { scanId: 'scan-123' };
 
       await gateway.handlePause(mockSocket as Socket, dto);
 
+      expect(mockScanProcessor.pauseScan).toHaveBeenCalledWith('scan-123');
       expect(mockSocket.emit).toHaveBeenCalledWith('scanner:paused', {
         scanId: 'scan-123',
         message: 'Scan paused successfully',
       });
     });
+
+    it('should throw when scan is not running', async () => {
+      mockScanProcessor.pauseScan.mockResolvedValue(false);
+      const dto = { scanId: 'scan-123' };
+
+      await expect(gateway.handlePause(mockSocket as Socket, dto)).rejects.toThrow(
+        'No se puede pausar'
+      );
+    });
   });
 
   describe('handleCancel', () => {
-    it('should emit cancelled confirmation', async () => {
+    it('should emit cancelled confirmation when scan is running', async () => {
+      mockScanProcessor.cancelScan.mockResolvedValue(true);
       const dto = { scanId: 'scan-123', reason: 'User requested' };
 
       await gateway.handleCancel(mockSocket as Socket, dto);
 
+      expect(mockScanProcessor.cancelScan).toHaveBeenCalledWith('scan-123', 'User requested');
       expect(mockSocket.emit).toHaveBeenCalledWith('scanner:cancelled', {
         scanId: 'scan-123',
         reason: 'User requested',
         message: 'Scan cancelled successfully',
       });
     });
+
+    it('should throw when scan is not running or paused', async () => {
+      mockScanProcessor.cancelScan.mockResolvedValue(false);
+      const dto = { scanId: 'scan-123', reason: 'Test' };
+
+      await expect(gateway.handleCancel(mockSocket as Socket, dto)).rejects.toThrow(
+        'No se puede cancelar'
+      );
+    });
   });
 
   describe('handleResume', () => {
-    it('should emit resumed confirmation', async () => {
+    it('should emit resumed confirmation when scan is paused', async () => {
+      mockScanProcessor.resumeScan.mockResolvedValue(true);
       const dto = { scanId: 'scan-123' };
 
       await gateway.handleResume(mockSocket as Socket, dto);
 
+      expect(mockScanProcessor.resumeScan).toHaveBeenCalledWith('scan-123');
       expect(mockSocket.emit).toHaveBeenCalledWith('scanner:resumed', {
         scanId: 'scan-123',
         message: 'Scan resumed successfully',
       });
+    });
+
+    it('should throw when scan is not paused', async () => {
+      mockScanProcessor.resumeScan.mockResolvedValue(false);
+      const dto = { scanId: 'scan-123' };
+
+      await expect(gateway.handleResume(mockSocket as Socket, dto)).rejects.toThrow(
+        'No se puede reanudar'
+      );
     });
   });
 });
