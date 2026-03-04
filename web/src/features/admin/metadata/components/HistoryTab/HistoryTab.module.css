@@ -61,7 +61,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .periodButton:hover {
@@ -89,7 +89,7 @@
   background: linear-gradient(135deg, var(--white-03) 0%, transparent 100%);
   border: 1px solid var(--white-08);
   border-radius: 16px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   position: relative;
   overflow: hidden;
 }
@@ -103,7 +103,7 @@
   height: 2px;
   background: linear-gradient(90deg, var(--color-primary, #ed6842), transparent);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity var(--transition-slow);
 }
 
 .statCard:hover {
@@ -190,7 +190,7 @@
   background: linear-gradient(135deg, var(--white-03) 0%, transparent 100%);
   border: 1px solid var(--white-08);
   border-radius: 12px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   position: relative;
   overflow: hidden;
 }
@@ -309,7 +309,7 @@
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .filterSelect:hover {
@@ -368,7 +368,7 @@
 
 .table tbody tr {
   border-bottom: 1px solid var(--white-05);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .table tbody tr:hover {
@@ -469,7 +469,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .paginationButton:hover:not(:disabled) {
@@ -614,7 +614,11 @@
 }
 
 .clickableRow:hover {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.03) 100%) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(59, 130, 246, 0.03) 100%
+  ) !important;
 }
 
 /* Image Preview Modal */
@@ -634,8 +638,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .imageModalContent {
@@ -677,7 +685,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   z-index: var(--z-fullscreen-overlay);
   box-shadow: 0 4px 12px var(--black-30);
 }

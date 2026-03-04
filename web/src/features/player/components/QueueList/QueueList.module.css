@@ -67,7 +67,7 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
   text-align: left;
 }
 

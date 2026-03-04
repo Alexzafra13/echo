@@ -59,7 +59,7 @@
   border: 2px solid var(--white-10);
   flex-shrink: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .profilePage__avatarContainer:hover {
@@ -97,7 +97,7 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-slow);
 }
 
 .profilePage__avatarContainer:hover .profilePage__avatarOverlay {
@@ -132,7 +132,7 @@
   overflow: hidden;
   margin-bottom: 24px;
   border: 1px solid var(--white-08);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .profilePage__card:hover {
@@ -229,7 +229,7 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .profilePage__btnIcon_save {
@@ -271,7 +271,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .profilePage__btnEdit:hover {
@@ -348,7 +348,7 @@
   border-radius: 8px;
   color: var(--text-primary);
   font-size: 15px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .profilePage__input:focus {
@@ -395,6 +395,31 @@
   font-weight: 500;
 }
 
+/* Password Requirements */
+.profilePage__requirements {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 0.8rem;
+}
+
+.profilePage__requirements li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.profilePage__requirementMet {
+  color: var(--color-success, #22c55e);
+}
+
+.profilePage__requirementUnmet {
+  color: var(--color-text-tertiary, #6b7280);
+}
+
 /* Submit Button */
 .profilePage__submitButton {
   padding: 12px 24px;
@@ -405,7 +430,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   align-self: flex-start;
   margin-top: 16px;
 }
@@ -472,7 +497,7 @@
 
 .profilePage__toggleSlider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 20px;
   width: 20px;
   left: 2px;
@@ -504,7 +529,7 @@
   font-size: 14px;
   font-family: inherit;
   resize: vertical;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   margin-top: 12px;
 }
 
@@ -537,7 +562,7 @@
   color: var(--text-secondary);
   font-size: 14px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   margin-top: 16px;
 }
 

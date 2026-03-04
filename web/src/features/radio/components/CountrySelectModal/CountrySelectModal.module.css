@@ -78,7 +78,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .modal__closeButton:hover {
@@ -120,7 +120,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .modal__searchClear:hover {
@@ -184,7 +184,7 @@
   border: 2px solid transparent;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   text-align: left;
   width: 100%;
   font-size: 15px;

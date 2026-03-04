@@ -46,7 +46,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   opacity: 0.7;
 }
 
@@ -99,7 +99,7 @@
   font-size: 12px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .menuOption:hover {
@@ -153,12 +153,7 @@
   padding: 0 var(--space-3);
   z-index: 2;
   /* Gradient desde transparente arriba hasta semi-transparente abajo */
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    var(--black-40) 50%,
-    var(--black-60) 100%
-  );
+  background: linear-gradient(to bottom, transparent 0%, var(--black-40) 50%, var(--black-60) 100%);
 }
 
 .bar {
@@ -318,7 +313,8 @@
 }
 
 @keyframes pulse-live {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -367,7 +363,7 @@
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-base);
 }
 
 /* Mantener visible cuando hay hover en el container o en el slider mismo */
@@ -458,7 +454,7 @@
   position: relative;
   overflow: hidden;
   margin-bottom: 4px;
-  transition: height 0.2s ease;
+  transition: height var(--transition-base);
 }
 
 .progressBar:hover {
@@ -540,7 +536,7 @@
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 1px 4px var(--black-40);
-  transition: transform 0.15s ease;
+  transition: transform var(--transition-fast);
 }
 
 .volumeBarInput::-webkit-slider-thumb:hover {

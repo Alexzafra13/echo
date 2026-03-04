@@ -32,7 +32,7 @@
   border: 1px solid var(--white-10);
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   outline: none;
 }
 
@@ -60,7 +60,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .searchBar__clearButton:hover {

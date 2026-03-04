@@ -16,7 +16,7 @@
   align-items: center;
   justify-content: center;
   color: white;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
   box-shadow: 0 0 0 0 currentColor;
   animation: pulse 2s infinite;
 }
@@ -172,7 +172,7 @@
   text-align: center;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .tooltipFooter:hover {

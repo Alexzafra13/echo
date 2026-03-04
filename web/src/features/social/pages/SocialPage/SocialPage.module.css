@@ -57,7 +57,7 @@
   color: var(--text-primary);
   font-size: var(--text-sm);
   backdrop-filter: blur(12px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .headerSearch__input::placeholder {
@@ -68,7 +68,9 @@
   outline: none;
   border-color: var(--color-primary);
   background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.1), 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 0 0 3px rgba(237, 104, 66, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .headerSearch__clear {
@@ -83,7 +85,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .headerSearch__clear:hover {
@@ -100,7 +102,9 @@
   border: 1px solid var(--white-10);
   border-radius: var(--radius-xl);
   padding: var(--space-2);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
   animation: searchDropIn 0.2s ease-out;
   z-index: 100;
   backdrop-filter: blur(20px);
@@ -109,8 +113,14 @@
 }
 
 @keyframes searchDropIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .headerSearch__empty {
@@ -134,8 +144,14 @@
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Search Result Item */
@@ -145,7 +161,7 @@
   gap: var(--space-3);
   padding: 10px 12px;
   border-radius: var(--radius-lg);
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
   cursor: default;
 }
 
@@ -300,8 +316,15 @@
 }
 
 @keyframes livePulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
 }
 
 /* ============================================
@@ -328,7 +351,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ============================================
@@ -341,8 +366,14 @@
 }
 
 @keyframes sectionFadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .listeningSection__header {
@@ -372,8 +403,13 @@
 }
 
 @keyframes iconPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
 }
 
 .listeningSection__title {
@@ -429,19 +465,33 @@
   animation: cardSlideIn 0.4s ease-out backwards;
 }
 
-.listeningCard:nth-child(1) { animation-delay: 0.05s; }
-.listeningCard:nth-child(2) { animation-delay: 0.1s; }
-.listeningCard:nth-child(3) { animation-delay: 0.15s; }
+.listeningCard:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.listeningCard:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.listeningCard:nth-child(3) {
+  animation-delay: 0.15s;
+}
 
 @keyframes cardSlideIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .listeningCard:hover {
   border-color: rgba(237, 104, 66, 0.3);
   transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(237, 104, 66, 0.08);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(237, 104, 66, 0.08);
 }
 
 .listeningCard__bg {
@@ -480,7 +530,7 @@
   object-fit: cover;
   border: 2px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .listeningCard:hover .listeningCard__avatar {
@@ -509,7 +559,7 @@
   border-radius: var(--radius-lg);
   object-fit: cover;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .listeningCard:hover .listeningCard__cover {
@@ -710,7 +760,7 @@
   gap: var(--space-3);
   padding: 12px 14px;
   border-radius: var(--radius-xl);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   border: 1px solid transparent;
   margin-bottom: 2px;
 }
@@ -740,7 +790,7 @@
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--white-08);
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-base);
 }
 
 .activityItem__avatarWrapper:hover .activityItem__avatar {
@@ -778,7 +828,7 @@
   color: var(--text-primary);
   font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color var(--transition-base);
 }
 
 .activityItem__userLink:hover {
@@ -789,7 +839,7 @@
   color: var(--text-primary);
   font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color var(--transition-base);
   font-size: var(--text-sm);
   display: block;
   white-space: nowrap;
@@ -824,7 +874,7 @@
   gap: 5px;
   vertical-align: middle;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color var(--transition-base);
 }
 
 .activityItem__friendLink:hover span {
@@ -834,7 +884,7 @@
 .activityItem__friendLink span {
   font-weight: var(--font-semibold);
   color: var(--text-primary);
-  transition: color 0.2s ease;
+  transition: color var(--transition-base);
 }
 
 .activityItem__inlineAvatar {
@@ -862,7 +912,7 @@
   border-radius: 10px;
   object-fit: cover;
   border: 1px solid var(--white-08);
-  transition: all 0.25s ease;
+  transition: all var(--transition-slow);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -873,11 +923,25 @@
   background: var(--white-05);
 }
 
-.activityItem__mosaic--single { grid-template-columns: 1fr; grid-template-rows: 1fr; }
-.activityItem__mosaic--2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
-.activityItem__mosaic--3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-.activityItem__mosaic--3 .activityItem__mosaicImg:first-child { grid-row: 1 / 3; }
-.activityItem__mosaic--4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.activityItem__mosaic--single {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+.activityItem__mosaic--2 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+.activityItem__mosaic--3 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.activityItem__mosaic--3 .activityItem__mosaicImg:first-child {
+  grid-row: 1 / 3;
+}
+.activityItem__mosaic--4 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
 
 .activityItem__mosaicImg {
   width: 100%;
@@ -895,7 +959,7 @@
   border-radius: var(--radius-xl);
   padding: 20px;
   border: 1px solid var(--white-06);
-  transition: border-color 0.3s ease;
+  transition: border-color var(--transition-slow);
   position: relative;
   overflow: hidden;
 }
@@ -1018,7 +1082,7 @@
   padding: 10px 12px;
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .friendItem:hover {
@@ -1044,7 +1108,7 @@
   border-radius: var(--radius-full);
   object-fit: cover;
   border: 2px solid var(--white-08);
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-base);
 }
 
 .friendItem--active .friendItem__avatar {
@@ -1116,7 +1180,7 @@
   gap: 10px;
   padding: 10px 12px;
   border-radius: var(--radius-lg);
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
 }
 
 .requestCard:hover {
@@ -1197,7 +1261,7 @@
   border: 1px solid var(--white-06);
   border-radius: var(--radius-xl);
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   text-align: left;
   position: relative;
   overflow: hidden;
@@ -1211,7 +1275,7 @@
   right: 0;
   height: 2px;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity var(--transition-slow);
 }
 
 .discoveryCard:hover {
@@ -1249,10 +1313,18 @@
   background: linear-gradient(90deg, var(--color-primary), transparent);
 }
 
-.discoveryCard:nth-child(1)::before { background: linear-gradient(90deg, var(--color-primary), transparent); }
-.discoveryCard:nth-child(2)::before { background: linear-gradient(90deg, #a855f7, transparent); }
-.discoveryCard:nth-child(3)::before { background: linear-gradient(90deg, var(--color-secondary), transparent); }
-.discoveryCard:nth-child(4)::before { background: linear-gradient(90deg, #22c55e, transparent); }
+.discoveryCard:nth-child(1)::before {
+  background: linear-gradient(90deg, var(--color-primary), transparent);
+}
+.discoveryCard:nth-child(2)::before {
+  background: linear-gradient(90deg, #a855f7, transparent);
+}
+.discoveryCard:nth-child(3)::before {
+  background: linear-gradient(90deg, var(--color-secondary), transparent);
+}
+.discoveryCard:nth-child(4)::before {
+  background: linear-gradient(90deg, #22c55e, transparent);
+}
 
 .discoveryCard__icon--playlist {
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%);
@@ -1406,7 +1478,7 @@
    Light Theme
    ============================================ */
 
-:root[data-theme="light"] .hero {
+:root[data-theme='light'] .hero {
   background: linear-gradient(
     135deg,
     rgba(237, 104, 66, 0.08) 0%,
@@ -1416,90 +1488,90 @@
   border-bottom-color: var(--black-06);
 }
 
-:root[data-theme="light"] .hero__badge {
+:root[data-theme='light'] .hero__badge {
   background: var(--black-04);
   border-color: var(--black-06);
   color: var(--text-secondary);
 }
 
-:root[data-theme="light"] .headerSearch__input {
+:root[data-theme='light'] .headerSearch__input {
   background: var(--black-03);
   border-color: var(--black-08);
 }
 
-:root[data-theme="light"] .headerSearch__input:focus {
+:root[data-theme='light'] .headerSearch__input:focus {
   background: white;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.1);
 }
 
-:root[data-theme="light"] .headerSearch__results {
+:root[data-theme='light'] .headerSearch__results {
   background: white;
   border-color: var(--black-08);
   box-shadow: 0 12px 48px var(--black-08);
 }
 
-:root[data-theme="light"] .listeningCard {
+:root[data-theme='light'] .listeningCard {
   background: white;
   border-color: var(--black-06);
 }
 
-:root[data-theme="light"] .listeningCard:hover {
+:root[data-theme='light'] .listeningCard:hover {
   box-shadow: 0 12px 40px var(--black-08);
 }
 
-:root[data-theme="light"] .feedSection {
+:root[data-theme='light'] .feedSection {
   background: white;
   border-color: var(--black-06);
 }
 
-:root[data-theme="light"] .sideSection {
+:root[data-theme='light'] .sideSection {
   background: white;
   border-color: var(--black-06);
 }
 
-:root[data-theme="light"] .sideSection:hover {
+:root[data-theme='light'] .sideSection:hover {
   border-color: var(--black-10);
 }
 
-:root[data-theme="light"] .sideSection--urgent {
+:root[data-theme='light'] .sideSection--urgent {
   border-color: rgba(237, 104, 66, 0.15);
 }
 
-:root[data-theme="light"] .friendItem:hover {
+:root[data-theme='light'] .friendItem:hover {
   background: var(--black-03);
 }
 
-:root[data-theme="light"] .friendItem--active {
+:root[data-theme='light'] .friendItem--active {
   background: rgba(34, 197, 94, 0.04);
 }
 
-:root[data-theme="light"] .requestCard:hover {
+:root[data-theme='light'] .requestCard:hover {
   background: var(--black-02);
 }
 
-:root[data-theme="light"] .searchResult:hover {
+:root[data-theme='light'] .searchResult:hover {
   background: var(--black-03);
 }
 
-:root[data-theme="light"] .activityItem:hover {
+:root[data-theme='light'] .activityItem:hover {
   background: var(--black-02);
   border-color: var(--black-06);
 }
 
-:root[data-theme="light"] .activityList__divider::after {
+:root[data-theme='light'] .activityList__divider::after {
   background: linear-gradient(90deg, var(--black-08) 0%, transparent 100%);
 }
 
-:root[data-theme="light"] .discoveryCard {
+:root[data-theme='light'] .discoveryCard {
   background: white;
   border-color: var(--black-06);
 }
 
-:root[data-theme="light"] .discoveryCard:hover {
+:root[data-theme='light'] .discoveryCard:hover {
   box-shadow: 0 8px 24px var(--black-06);
 }
 
-:root[data-theme="light"] .discovery {
+:root[data-theme='light'] .discovery {
   border-top-color: var(--black-06);
 }

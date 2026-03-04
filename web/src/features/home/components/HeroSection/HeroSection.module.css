@@ -266,7 +266,7 @@
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slowest);
 }
 
 .heroSection__playButton:hover .heroSection__playIcon {
@@ -278,7 +278,7 @@
   display: flex;
   align-items: center;
   line-height: var(--leading-none);
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slowest);
 }
 
 .heroSection__playButton:hover .heroSection__playText {

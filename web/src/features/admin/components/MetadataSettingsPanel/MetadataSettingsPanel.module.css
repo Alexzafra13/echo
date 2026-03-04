@@ -10,7 +10,7 @@
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   position: relative;
 }
 
@@ -21,7 +21,12 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--color-primary, #ed6842), #22d3ee, var(--color-primary, #ed6842));
+  background: linear-gradient(
+    90deg,
+    var(--color-primary, #ed6842),
+    #22d3ee,
+    var(--color-primary, #ed6842)
+  );
   background-size: 200% 100%;
   border-radius: 20px 20px 0 0;
   opacity: 0.8;
@@ -83,7 +88,9 @@
   left: 6px;
   background: linear-gradient(135deg, var(--color-primary, #ed6842) 0%, #d85a38 100%);
   border-radius: 10px;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 16px rgba(237, 104, 66, 0.35);
   z-index: 0;
 }
@@ -205,37 +212,37 @@
 }
 
 /* Light Theme */
-:root[data-theme="light"] .panel {
+:root[data-theme='light'] .panel {
   background: linear-gradient(135deg, var(--white-80) 0%, rgba(248, 250, 252, 0.6) 100%);
 }
 
-:root[data-theme="light"] .panel::before {
+:root[data-theme='light'] .panel::before {
   opacity: 0.6;
 }
 
-:root[data-theme="light"] .title {
+:root[data-theme='light'] .title {
   background: linear-gradient(135deg, #1f2937 0%, #4b5563 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-:root[data-theme="light"] .tabNav {
+:root[data-theme='light'] .tabNav {
   background: var(--black-04);
 }
 
-:root[data-theme="light"] .tabIndicator {
+:root[data-theme='light'] .tabIndicator {
   box-shadow: 0 4px 16px rgba(237, 104, 66, 0.25);
 }
 
-:root[data-theme="light"] .tabButton {
+:root[data-theme='light'] .tabButton {
   color: #4b5563;
 }
 
-:root[data-theme="light"] .tabButton:hover {
+:root[data-theme='light'] .tabButton:hover {
   color: #1f2937;
 }
 
-:root[data-theme="light"] .tabButtonActive {
+:root[data-theme='light'] .tabButtonActive {
   color: #ffffff;
 }

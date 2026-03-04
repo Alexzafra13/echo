@@ -202,7 +202,7 @@
   overflow: hidden;
   flex-shrink: 0;
   border: 2px solid var(--white-15);
-  transition: all 0.25s ease;
+  transition: all var(--transition-slow);
 }
 
 .table tbody tr:hover .userAvatar {
@@ -310,7 +310,7 @@
   font-size: var(--text-xs);
   font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -794,100 +794,100 @@
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .panel {
+:root[data-theme='light'] .panel {
   background: rgba(31, 41, 55, 0.04);
   border-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .panel:hover {
+:root[data-theme='light'] .panel:hover {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.15);
 }
 
-:root[data-theme="light"] .searchInput {
+:root[data-theme='light'] .searchInput {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.15);
   color: var(--text-primary);
 }
 
-:root[data-theme="light"] .searchInput:focus {
+:root[data-theme='light'] .searchInput:focus {
   background: rgba(31, 41, 55, 0.08);
 }
 
-:root[data-theme="light"] .filterSelect {
+:root[data-theme='light'] .filterSelect {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.15);
   color: var(--text-primary);
   background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%231f2937' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
-:root[data-theme="light"] .filterSelect:hover {
+:root[data-theme='light'] .filterSelect:hover {
   background-color: rgba(31, 41, 55, 0.08);
   border-color: rgba(31, 41, 55, 0.2);
 }
 
-:root[data-theme="light"] .filterSelect option {
+:root[data-theme='light'] .filterSelect option {
   background: var(--bg-elevated);
   color: var(--text-primary);
 }
 
-:root[data-theme="light"] .tableContainer {
+:root[data-theme='light'] .tableContainer {
   border-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .table {
+:root[data-theme='light'] .table {
   background: rgba(31, 41, 55, 0.02);
 }
 
-:root[data-theme="light"] .table thead {
+:root[data-theme='light'] .table thead {
   background: rgba(31, 41, 55, 0.05);
 }
 
-:root[data-theme="light"] .table th {
+:root[data-theme='light'] .table th {
   border-bottom-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .table td {
+:root[data-theme='light'] .table td {
   border-bottom-color: rgba(31, 41, 55, 0.06);
 }
 
-:root[data-theme="light"] .table tbody tr:hover {
+:root[data-theme='light'] .table tbody tr:hover {
   background: rgba(31, 41, 55, 0.04);
 }
 
-:root[data-theme="light"] .actionButton {
+:root[data-theme='light'] .actionButton {
   background: rgba(31, 41, 55, 0.05);
   border-color: rgba(31, 41, 55, 0.12);
 }
 
-:root[data-theme="light"] .actionButton:hover {
+:root[data-theme='light'] .actionButton:hover {
   background: rgba(31, 41, 55, 0.08);
   border-color: rgba(31, 41, 55, 0.2);
 }
 
-:root[data-theme="light"] .pagination {
+:root[data-theme='light'] .pagination {
   background: rgba(31, 41, 55, 0.03);
   border-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .paginationButton {
+:root[data-theme='light'] .paginationButton {
   background: rgba(31, 41, 55, 0.05);
   border-color: rgba(31, 41, 55, 0.12);
 }
 
-:root[data-theme="light"] .paginationButton:hover:not(:disabled) {
+:root[data-theme='light'] .paginationButton:hover:not(:disabled) {
   background: rgba(31, 41, 55, 0.08);
   border-color: rgba(31, 41, 55, 0.2);
 }
 
-:root[data-theme="light"] .paginationSelect {
+:root[data-theme='light'] .paginationSelect {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.15);
   color: var(--text-primary);
   background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%231f2937' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
-:root[data-theme="light"] .paginationSelect option {
+:root[data-theme='light'] .paginationSelect option {
   background: var(--bg-elevated);
   color: var(--text-primary);
 }

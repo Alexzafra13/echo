@@ -28,7 +28,7 @@
   padding: 48px 24px;
   text-align: center;
   background: var(--white-02);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .uploadBox:hover {
@@ -99,7 +99,7 @@
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .cancelButton:hover {
@@ -174,7 +174,7 @@
   border-radius: 8px;
   padding: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -277,7 +277,7 @@
   padding: 6px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   flex-shrink: 0;
 }
 

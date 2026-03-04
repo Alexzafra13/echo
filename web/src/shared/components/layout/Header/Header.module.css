@@ -29,7 +29,9 @@
   /* Transparent background by default - becomes glassmorphic on scroll or alwaysGlass */
   background: transparent;
   border-bottom: 1px solid transparent;
-  transition: border-color var(--transition-slow), box-shadow var(--transition-slow);
+  transition:
+    border-color var(--transition-slow),
+    box-shadow var(--transition-slow);
 }
 
 /* Glass effect layer - animated with opacity for smooth transition */
@@ -37,11 +39,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(10, 14, 39, 0.25),
-    rgba(15, 23, 42, 0.35)
-  );
+  background: linear-gradient(to bottom, rgba(10, 14, 39, 0.25), rgba(15, 23, 42, 0.35));
   backdrop-filter: blur(12px) saturate(150%);
   -webkit-backdrop-filter: blur(12px) saturate(150%);
   opacity: 0;
@@ -62,11 +60,7 @@
 
 /* Light theme glassmorphism override */
 [data-theme='light'] .header::before {
-  background: linear-gradient(
-    to bottom,
-    rgba(250, 250, 249, 0.30),
-    var(--white-40)
-  );
+  background: linear-gradient(to bottom, rgba(250, 250, 249, 0.3), var(--white-40));
 }
 
 /* Back button (admin mode) */
@@ -84,7 +78,7 @@
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   box-shadow: 0 2px 8px var(--black-10);
 }
 
@@ -101,7 +95,7 @@
 
 .header__backButton svg {
   flex-shrink: 0;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--transition-slow);
 }
 
 .header__backButton:hover svg {
@@ -250,7 +244,9 @@
   object-fit: cover;
   border: none;
   box-shadow: 0 2px 8px var(--black-30);
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  transition:
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
 }
 
 .header__userButton:hover .header__userAvatar {
@@ -283,7 +279,9 @@
 
   /* Animación de salida */
   opacity: 1;
-  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 1, 1);
+  transition:
+    opacity var(--transition-base),
+    transform 0.2s cubic-bezier(0.4, 0, 1, 1);
 }
 
 @keyframes userDropdownSlideIn {
@@ -327,7 +325,7 @@
   border-right: none;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s ease;
+  transition: background var(--transition-fast);
 }
 
 .header__userInfo:hover {
@@ -374,7 +372,7 @@
   color: var(--text-secondary);
   cursor: pointer;
   border-radius: 6px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -462,11 +460,7 @@
 
   /* Glass effect siempre activo en móvil - override pseudo-element */
   .header::before {
-    background: linear-gradient(
-      to bottom,
-      rgba(10, 14, 39, 0.40),
-      rgba(15, 23, 42, 0.50)
-    );
+    background: linear-gradient(to bottom, rgba(10, 14, 39, 0.4), rgba(15, 23, 42, 0.5));
     backdrop-filter: blur(16px) saturate(160%);
     -webkit-backdrop-filter: blur(16px) saturate(160%);
     opacity: 1; /* Always visible on mobile */
@@ -474,11 +468,7 @@
 
   /* Light theme en móvil */
   [data-theme='light'] .header::before {
-    background: linear-gradient(
-      to bottom,
-      rgba(250, 250, 249, 0.40),
-      rgba(255, 255, 255, 0.50)
-    );
+    background: linear-gradient(to bottom, rgba(250, 250, 249, 0.4), rgba(255, 255, 255, 0.5));
   }
 
   .header__leftSection {
@@ -665,7 +655,7 @@
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .header__userDropdown {
+:root[data-theme='light'] .header__userDropdown {
   background: rgba(240, 242, 245, 0.95);
   box-shadow:
     0 4px 6px -1px rgba(31, 41, 55, 0.1),
@@ -673,40 +663,40 @@
     0 0 0 1px rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .header__userInfo {
+:root[data-theme='light'] .header__userInfo {
   border-bottom-color: rgba(31, 41, 55, 0.12);
 }
 
-:root[data-theme="light"] .header__userDivider {
+:root[data-theme='light'] .header__userDivider {
   background: rgba(31, 41, 55, 0.15);
 }
 
-:root[data-theme="light"] .header__userMenuItem:hover {
+:root[data-theme='light'] .header__userMenuItem:hover {
   background: rgba(31, 41, 55, 0.08);
 }
 
-:root[data-theme="light"] .header__searchInput {
+:root[data-theme='light'] .header__searchInput {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.12);
 }
 
-:root[data-theme="light"] .header__searchInput:focus {
+:root[data-theme='light'] .header__searchInput:focus {
   background: rgba(31, 41, 55, 0.08);
 }
 
-:root[data-theme="light"] .header__themeToggle {
+:root[data-theme='light'] .header__themeToggle {
   background: rgba(31, 41, 55, 0.06);
 }
 
-:root[data-theme="light"] .header__themeToggle:hover {
+:root[data-theme='light'] .header__themeToggle:hover {
   background: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .header__userButton {
+:root[data-theme='light'] .header__userButton {
   background: rgba(31, 41, 55, 0.06);
 }
 
-:root[data-theme="light"] .header__userButton:hover {
+:root[data-theme='light'] .header__userButton:hover {
   background: rgba(31, 41, 55, 0.1);
 }
 

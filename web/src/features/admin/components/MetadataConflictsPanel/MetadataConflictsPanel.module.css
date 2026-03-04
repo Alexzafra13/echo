@@ -10,7 +10,7 @@
   border: 1px solid var(--white-08);
   border-radius: 20px;
   box-shadow: 0 8px 32px var(--black-15);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .panel:hover {
@@ -139,7 +139,9 @@
   height: fit-content;
   max-height: calc(100vh - 300px);
   overflow: hidden;
-  box-shadow: 0 4px 12px var(--black-12), 0 2px 4px var(--black-08);
+  box-shadow:
+    0 4px 12px var(--black-12),
+    0 2px 4px var(--black-08);
   position: sticky;
   top: 1.5rem;
 }
@@ -208,7 +210,7 @@
   border-bottom: 1px solid var(--border-subtle);
   border-radius: 0;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   text-align: left;
   position: relative;
 }
@@ -221,7 +223,7 @@
   bottom: 0;
   width: 3px;
   background: transparent;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .sidebarItem:hover {
@@ -334,14 +336,18 @@
   border: 1px solid var(--border-base);
   border-radius: 1rem;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   animation: fadeIn 0.4s ease-out;
-  box-shadow: 0 2px 8px var(--black-08), 0 1px 2px var(--black-06);
+  box-shadow:
+    0 2px 8px var(--black-08),
+    0 1px 2px var(--black-06);
 }
 
 .conflictCard:hover {
   border-color: var(--color-primary-500);
-  box-shadow: 0 8px 24px var(--black-15), 0 4px 8px var(--black-10);
+  box-shadow:
+    0 8px 24px var(--black-15),
+    0 4px 8px var(--black-10);
   transform: translateY(-2px);
 }
 
@@ -456,7 +462,7 @@
   overflow: hidden;
   background: var(--bg-base);
   border: 2px solid var(--border-base);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   box-shadow: 0 4px 12px var(--black-15);
 }
 
@@ -525,7 +531,9 @@
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.1em;
-  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.4), 0 2px 4px var(--black-20);
+  box-shadow:
+    0 4px 12px rgba(237, 104, 66, 0.4),
+    0 2px 4px var(--black-20);
   border: 2px solid var(--white-20);
 }
 
@@ -821,15 +829,15 @@
 }
 
 /* Light Theme */
-:root[data-theme="light"] .panel {
+:root[data-theme='light'] .panel {
   background: linear-gradient(135deg, var(--white-80) 0%, rgba(248, 250, 252, 0.6) 100%);
 }
 
-:root[data-theme="light"] .header {
+:root[data-theme='light'] .header {
   border-bottom-color: var(--black-08);
 }
 
-:root[data-theme="light"] .title {
+:root[data-theme='light'] .title {
   background: linear-gradient(135deg, #1f2937 0%, #4b5563 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

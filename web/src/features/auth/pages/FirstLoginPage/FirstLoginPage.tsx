@@ -9,36 +9,32 @@ import { getApiErrorMessage } from '@shared/utils/error.utils';
 import { useAuthStore } from '@shared/store';
 import { useLocation } from 'wouter';
 import apiClient from '@shared/services/api';
+import { passwordRequirements, passwordRequirementLabels } from '@shared/utils/password.utils';
 import styles from './FirstLoginPage.module.css';
 
-// Validación de contraseña robusta
-const passwordRequirements = {
-  minLength: (password: string) => password.length >= 8,
-  hasUpperCase: (password: string) => /[A-Z]/.test(password),
-  hasLowerCase: (password: string) => /[a-z]/.test(password),
-  hasNumber: (password: string) => /[0-9]/.test(password),
-  hasSpecialChar: (password: string) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
-};
-
 // Schema de validación
-const firstLoginSchema = z.object({
-  username: z.string()
-    .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
-    .max(20, 'El nombre de usuario no puede tener más de 20 caracteres')
-    .regex(/^[a-zA-Z0-9_-]+$/, 'Solo letras, números, guiones y guiones bajos')
-    .optional()
-    .or(z.literal('')),
-  newPassword: z.string()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .refine(passwordRequirements.hasUpperCase, 'Debe contener al menos una mayúscula')
-    .refine(passwordRequirements.hasLowerCase, 'Debe contener al menos una minúscula')
-    .refine(passwordRequirements.hasNumber, 'Debe contener al menos un número')
-    .refine(passwordRequirements.hasSpecialChar, 'Debe contener al menos un carácter especial'),
-  confirmPassword: z.string(),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: 'Las contraseñas no coinciden',
-  path: ['confirmPassword'],
-});
+const firstLoginSchema = z
+  .object({
+    username: z
+      .string()
+      .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
+      .max(20, 'El nombre de usuario no puede tener más de 20 caracteres')
+      .regex(/^[a-zA-Z0-9_-]+$/, 'Solo letras, números, guiones y guiones bajos')
+      .optional()
+      .or(z.literal('')),
+    newPassword: z
+      .string()
+      .min(8, 'La contraseña debe tener al menos 8 caracteres')
+      .refine(passwordRequirements.hasUpperCase, 'Debe contener al menos una mayúscula')
+      .refine(passwordRequirements.hasLowerCase, 'Debe contener al menos una minúscula')
+      .refine(passwordRequirements.hasNumber, 'Debe contener al menos un número')
+      .refine(passwordRequirements.hasSpecialChar, 'Debe contener al menos un carácter especial'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Las contraseñas no coinciden',
+    path: ['confirmPassword'],
+  });
 
 type FirstLoginFormData = z.infer<typeof firstLoginSchema>;
 
@@ -102,13 +98,10 @@ export default function FirstLoginPage() {
   };
 
   // Verificar requisitos de contraseña en tiempo real
-  const requirements = [
-    { label: 'Mínimo 8 caracteres', met: passwordRequirements.minLength(watchPassword) },
-    { label: 'Al menos una mayúscula', met: passwordRequirements.hasUpperCase(watchPassword) },
-    { label: 'Al menos una minúscula', met: passwordRequirements.hasLowerCase(watchPassword) },
-    { label: 'Al menos un número', met: passwordRequirements.hasNumber(watchPassword) },
-    { label: 'Al menos un carácter especial (!@#$%^&*)', met: passwordRequirements.hasSpecialChar(watchPassword) },
-  ];
+  const requirements = passwordRequirementLabels.map((req) => ({
+    label: req.label,
+    met: req.check(watchPassword),
+  }));
 
   return (
     <div className={styles.container}>
@@ -116,7 +109,7 @@ export default function FirstLoginPage() {
       <div
         className={styles.background}
         style={{
-          backgroundImage: 'url(/images/backgrounds/login-bg.jpg)'
+          backgroundImage: 'url(/images/backgrounds/login-bg.jpg)',
         }}
       />
 
@@ -124,11 +117,7 @@ export default function FirstLoginPage() {
       <div className={styles.content}>
         {/* Logo */}
         <div className={styles.logoContainer}>
-          <img
-            src="/images/empy_cover/empy_cover_default.png"
-            alt="Echo"
-            className={styles.logo}
-          />
+          <img src="/images/empy_cover/empy_cover_default.png" alt="Echo" className={styles.logo} />
         </div>
 
         {/* Card */}
@@ -141,8 +130,8 @@ export default function FirstLoginPage() {
           <div className={styles.info}>
             <AlertCircle size={20} className={styles.infoIcon} />
             <p>
-              Por seguridad, cambie su contraseña predeterminada antes de continuar.
-              Opcionalmente, puede cambiar su nombre de usuario.
+              Por seguridad, cambie su contraseña predeterminada antes de continuar. Opcionalmente,
+              puede cambiar su nombre de usuario.
             </p>
           </div>
 
@@ -154,7 +143,10 @@ export default function FirstLoginPage() {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-            <fieldset disabled={isSubmitting} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
+            <fieldset
+              disabled={isSubmitting}
+              style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}
+            >
               {/* Username (opcional) */}
               <div className={styles.formGroup}>
                 <Input

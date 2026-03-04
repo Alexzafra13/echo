@@ -45,6 +45,7 @@ export { useFocusTrap } from './useFocusTrap';
 export { useModal } from './useModal';
 export type { UseModalReturn } from './useModal';
 export { useNotification } from './useNotification';
+export { useApiMutation } from './useApiMutation';
 export { useTrackDjAnalysis } from './useTrackDjAnalysis';
 export { useDjProgressListener } from './useDjProgressListener';
 export { useDocumentTitle } from './useDocumentTitle';

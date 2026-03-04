@@ -25,7 +25,7 @@
   overflow: hidden;
   cursor: pointer;
   border: 3px solid var(--color-primary, #c6401d);
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .avatarUpload__avatarWrapper:hover {
@@ -49,9 +49,7 @@
   font-size: 3rem;
   font-weight: 600;
   color: var(--text-primary, #ffffff);
-  background: linear-gradient(135deg,
-    rgba(198, 64, 29, 0.25) 0%,
-    rgba(198, 64, 29, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(198, 64, 29, 0.25) 0%, rgba(198, 64, 29, 0.1) 100%);
   text-transform: uppercase;
 }
 
@@ -69,7 +67,7 @@
   justify-content: center;
   gap: 0.5rem;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-slow);
   color: white;
   font-size: 0.875rem;
   font-weight: 500;
@@ -97,7 +95,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   box-shadow: 0 4px 12px rgba(198, 64, 29, 0.3);
 }
 
@@ -123,7 +121,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .avatarUpload__actionCancel:hover:not(:disabled) {
@@ -152,7 +150,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   box-shadow: 0 4px 12px var(--error-30);
 }
 

@@ -104,7 +104,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   flex-shrink: 0;
 }
 
@@ -140,7 +140,7 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   margin-bottom: 16px;
 }
 
@@ -173,7 +173,7 @@
   border-radius: 8px;
   font-size: 15px;
   color: var(--text-primary, #ffffff);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .input:focus {
@@ -213,7 +213,7 @@
   border: 1px solid var(--white-08);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .playlistItem:hover:not(:disabled) {

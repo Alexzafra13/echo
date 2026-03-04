@@ -58,7 +58,7 @@
   background: var(--white-05);
   color: var(--text-primary);
   font-size: 0.875rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .playlistsPage__searchInput:focus {
@@ -83,7 +83,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .playlistsPage__searchClearButton:hover {
@@ -128,9 +128,13 @@
   left: 4px;
   height: calc(100% - 8px);
   width: calc(50% - 4px);
-  background: linear-gradient(135deg, var(--color-primary, #ed6842) 0%, var(--color-primary-dark, #d55a35) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary, #ed6842) 0%,
+    var(--color-primary-dark, #d55a35) 100%
+  );
   border-radius: 8px;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--transition-slow);
   box-shadow: 0 2px 8px rgba(237, 104, 66, 0.3);
   z-index: 0;
 }
@@ -151,7 +155,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color var(--transition-base);
   position: relative;
   z-index: 1;
   flex: 1;
@@ -222,7 +226,7 @@
   border-radius: 8px;
   font-size: 16px;
   color: var(--text-primary, #ffffff);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .playlistsPage__input:focus {
@@ -320,7 +324,7 @@
   border-radius: 8px;
   padding: 8px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
   border: none;
   position: relative;
 }
@@ -347,7 +351,7 @@
   background: var(--white-05);
   position: relative;
   box-shadow: 0 4px 12px var(--black-20);
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow var(--transition-slow);
 }
 
 .playlistCard:hover .playlistCard__cover {
@@ -377,7 +381,7 @@
   cursor: pointer;
   opacity: 0;
   transform: translateY(6px);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   box-shadow: 0 4px 12px rgba(237, 104, 66, 0.4);
   z-index: 2;
 }
@@ -452,7 +456,7 @@
   display: flex;
   gap: 4px;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-base);
   z-index: 3;
 }
 
@@ -468,7 +472,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .playlistCard__actionButton:hover {

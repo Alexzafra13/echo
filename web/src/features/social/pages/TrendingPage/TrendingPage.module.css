@@ -81,7 +81,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .trendingPage__periodButton:hover {
@@ -170,7 +170,7 @@
   padding: 12px 20px;
   background: transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .trendingPage__track:hover {
@@ -272,7 +272,7 @@
   justify-content: center;
   cursor: pointer;
   opacity: 0;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   flex-shrink: 0;
 }
 

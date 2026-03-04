@@ -67,7 +67,7 @@
   background: linear-gradient(135deg, var(--white-03) 0%, transparent 100%);
   border: 1px solid var(--white-08);
   border-radius: 14px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .settingRow:hover {
@@ -90,7 +90,7 @@
   cursor: pointer;
 }
 
-.settingLabel input[type="checkbox"] {
+.settingLabel input[type='checkbox'] {
   width: 20px;
   height: 20px;
   accent-color: var(--color-primary, #ed6842);
@@ -115,7 +115,7 @@
   border: 1px solid var(--white-08);
   border-radius: 14px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   position: relative;
   overflow: hidden;
 }
@@ -129,7 +129,7 @@
   width: 3px;
   background: linear-gradient(180deg, var(--color-primary, #ed6842), transparent);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity var(--transition-slow);
 }
 
 .toggleRow:hover {
@@ -161,7 +161,7 @@
   border: 1px solid var(--white-08);
   border-radius: 14px;
   padding: 22px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   position: relative;
   overflow: hidden;
 }
@@ -245,7 +245,7 @@
   color: var(--color-primary, #ed6842);
   text-decoration: none;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -341,7 +341,7 @@
   border-radius: 10px;
   background: var(--white-03);
   border: 1px solid var(--white-08);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .thresholdBox:hover {
@@ -359,7 +359,7 @@
   background: linear-gradient(135deg, var(--white-05) 0%, var(--white-02) 100%);
   border: 1px solid var(--white-08);
   border-radius: 16px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   position: relative;
   overflow: hidden;
 }
@@ -374,7 +374,7 @@
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--color-primary, #ed6842), transparent);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity var(--transition-slow);
 }
 
 .statCard:hover {

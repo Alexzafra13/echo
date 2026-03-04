@@ -104,7 +104,7 @@
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid var(--white-10);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .modal__avatarPreview:hover {
@@ -157,7 +157,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   width: 100%;
 }
 
@@ -184,7 +184,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   width: 100%;
 }
 
@@ -211,7 +211,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   width: 100%;
 }
 
@@ -239,7 +239,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   width: 100%;
 }
 

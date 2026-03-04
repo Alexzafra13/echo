@@ -18,7 +18,7 @@
   justify-content: center;
   cursor: pointer;
   color: var(--color-text-secondary, #b8bcc8);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .notifications__button:hover {
@@ -52,7 +52,8 @@
 }
 
 @keyframes badgePulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -87,7 +88,9 @@
 
   /* Animación de salida */
   opacity: 1;
-  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 1, 1);
+  transition:
+    opacity var(--transition-base),
+    transform 0.2s cubic-bezier(0.4, 0, 1, 1);
 }
 
 /* Estado al cerrarse (React lo remueve del DOM antes de completar, pero se ve el inicio) */
@@ -154,7 +157,7 @@
   justify-content: center;
   cursor: pointer;
   color: var(--color-text-secondary, #b8bcc8);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
 }
 
 .notifications__action:hover {
@@ -186,7 +189,7 @@
 .notifications__list::-webkit-scrollbar-thumb {
   background: var(--white-20);
   border-radius: 3px;
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
 }
 
 .notifications__list::-webkit-scrollbar-thumb:hover {
@@ -222,7 +225,7 @@
   gap: 12px;
   padding: 12px 16px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
   border-bottom: 1px solid var(--white-05);
 }
 

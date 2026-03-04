@@ -44,7 +44,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .periodButton:hover {
@@ -217,7 +217,7 @@
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .filterSelect:hover {
@@ -259,7 +259,7 @@
 
 .table tbody tr {
   border-bottom: 1px solid var(--white-05);
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
 }
 
 .table tbody tr:hover {
@@ -356,7 +356,7 @@
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .paginationButton:hover:not(:disabled) {
@@ -509,7 +509,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   z-index: var(--z-fullscreen-overlay);
 }
 

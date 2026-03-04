@@ -132,7 +132,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .changeButton:hover {
@@ -202,7 +202,7 @@
   border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .browserClose:hover {
@@ -256,7 +256,7 @@
   border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .navButton:hover:not(:disabled) {
@@ -337,7 +337,7 @@
   gap: 8px;
   padding: 4px 8px;
   border-radius: 10px;
-  transition: background 0.15s ease;
+  transition: background var(--transition-fast);
 }
 
 .directoryItem:hover {
@@ -399,7 +399,7 @@
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   flex-shrink: 0;
   opacity: 0;
 }
@@ -440,7 +440,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all var(--transition-slow);
 }
 
 .selectCurrentButton:hover:not(:disabled) {
@@ -483,71 +483,71 @@
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .panel {
+:root[data-theme='light'] .panel {
   background: rgba(31, 41, 55, 0.04);
   border-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .panel:hover {
+:root[data-theme='light'] .panel:hover {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.15);
 }
 
-:root[data-theme="light"] .pathCard {
+:root[data-theme='light'] .pathCard {
   background: rgba(31, 41, 55, 0.04);
   border-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .browser {
+:root[data-theme='light'] .browser {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .browserPath {
+:root[data-theme='light'] .browserPath {
   background: rgba(31, 41, 55, 0.04);
   border-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .browserPathValue {
+:root[data-theme='light'] .browserPathValue {
   background: rgba(31, 41, 55, 0.08);
   color: var(--color-secondary-600, #0891b2);
 }
 
-:root[data-theme="light"] .navButton {
+:root[data-theme='light'] .navButton {
   background: rgba(31, 41, 55, 0.05);
   border-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .navButton:hover:not(:disabled) {
+:root[data-theme='light'] .navButton:hover:not(:disabled) {
   background: rgba(31, 41, 55, 0.08);
   border-color: rgba(31, 41, 55, 0.15);
 }
 
-:root[data-theme="light"] .directoryList {
+:root[data-theme='light'] .directoryList {
   background: rgba(31, 41, 55, 0.04);
   border-color: rgba(31, 41, 55, 0.08);
 }
 
-:root[data-theme="light"] .directoryButton {
+:root[data-theme='light'] .directoryButton {
   background: rgba(31, 41, 55, 0.03);
   border-color: rgba(31, 41, 55, 0.06);
 }
 
-:root[data-theme="light"] .directoryButton:hover:not(:disabled) {
+:root[data-theme='light'] .directoryButton:hover:not(:disabled) {
   background: rgba(31, 41, 55, 0.08);
   border-color: rgba(31, 41, 55, 0.12);
 }
 
-:root[data-theme="light"] .browserClose {
+:root[data-theme='light'] .browserClose {
   background: rgba(31, 41, 55, 0.05);
   border-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .browserClose:hover {
+:root[data-theme='light'] .browserClose:hover {
   background: rgba(31, 41, 55, 0.1);
   border-color: rgba(31, 41, 55, 0.15);
 }
 
-:root[data-theme="light"] .browserActions {
+:root[data-theme='light'] .browserActions {
   border-top-color: rgba(31, 41, 55, 0.1);
 }

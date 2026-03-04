@@ -165,7 +165,7 @@
   justify-content: center;
   cursor: pointer;
   color: var(--color-text-secondary, #b8bcc8);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .albumPage__heroMoreButton:hover {

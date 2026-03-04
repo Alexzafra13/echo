@@ -28,7 +28,7 @@
   color: var(--text-primary, #ffffff);
   font-size: 15px;
   padding: 14px 16px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   outline: none;
   box-shadow: none;
   width: 100%;
@@ -72,7 +72,7 @@
   color: var(--text-primary, #ffffff);
   font-size: 15px;
   padding: 12px 40px 12px 42px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   outline: none;
   box-shadow: none;
   width: 100%;
@@ -107,7 +107,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .clearSearch:hover {
@@ -166,7 +166,7 @@
   border: 1px solid transparent;
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   text-align: left;
   width: 100%;
 }
@@ -245,7 +245,7 @@
 
 .plusIcon {
   color: var(--text-tertiary, #6b7280);
-  transition: color 0.2s ease;
+  transition: color var(--transition-base);
 }
 
 .trackItem:hover .plusIcon {
@@ -337,7 +337,7 @@
   justify-content: center;
   cursor: pointer;
   color: var(--text-secondary, #9ca3af);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   flex-shrink: 0;
 }
 
@@ -364,8 +364,12 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .emptyHint {
@@ -388,7 +392,7 @@
   border-radius: 4px;
   background: transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   position: relative;
   flex-shrink: 0;
 }
@@ -456,7 +460,7 @@
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 /* Cancel button styling */

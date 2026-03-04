@@ -62,7 +62,7 @@
   border-radius: 8px;
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .settingsButton:hover {
@@ -82,7 +82,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .refreshButton:hover:not(:disabled) {
@@ -184,7 +184,7 @@
   background: var(--white-03);
   border: 1px solid var(--white-08);
   border-radius: 10px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .trackItem:hover {
@@ -219,7 +219,7 @@
 }
 
 .trackArtist::before {
-  content: "- ";
+  content: '- ';
 }
 
 .trackMeta {
@@ -264,7 +264,7 @@
   border-radius: 8px;
   color: #ef4444;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .deleteButton:hover:not(:disabled) {
@@ -283,8 +283,12 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Modal */
@@ -365,7 +369,7 @@
   border: 1px solid var(--white-08);
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .radioOption:hover {
@@ -373,7 +377,7 @@
   border-color: var(--white-12);
 }
 
-.radioOption input[type="radio"] {
+.radioOption input[type='radio'] {
   flex-shrink: 0;
   width: 18px;
   height: 18px;

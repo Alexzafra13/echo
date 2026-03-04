@@ -67,7 +67,7 @@
   align-items: center;
   gap: 6px;
   opacity: 0.4;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-slow);
 }
 
 .progressStep.active {
@@ -86,7 +86,7 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-secondary);
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .progressStep.active .stepCircle {
@@ -284,7 +284,7 @@
   gap: 8px;
   padding: 4px;
   border-radius: 8px;
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
 }
 
 .directoryRow:hover {
@@ -303,7 +303,7 @@
   color: var(--color-text-primary);
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   text-align: left;
 }
 
@@ -330,7 +330,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
