@@ -33,4 +33,5 @@ export const appConfig = {
   port: parseInt(process.env.PORT ?? DEFAULT_PORT, 10),
   api_prefix: 'api',
   cors_origins: (process.env.CORS_ORIGINS || getDefaultCorsOrigins()).split(','),
+  stream_timeout_ms: parseInt(process.env.STREAM_TIMEOUT_MS || '600000', 10),
 };

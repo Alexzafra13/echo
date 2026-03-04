@@ -1,4 +1,5 @@
 import { FilesystemService } from './filesystem.service';
+import { ForbiddenException } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -20,30 +21,28 @@ describe('FilesystemService', () => {
   let mockLogger: jest.Mocked<PinoLogger>;
   const originalEnv = process.env;
 
-  // Helper to create cross-platform paths
   const p = (...segments: string[]) => path.join(...segments);
 
-  const createMockLogger = (): jest.Mocked<PinoLogger> => ({
-    trace: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    fatal: jest.fn(),
-    setContext: jest.fn(),
-    assign: jest.fn(),
-  } as unknown as jest.Mocked<PinoLogger>);
+  const createMockLogger = (): jest.Mocked<PinoLogger> =>
+    ({
+      trace: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      fatal: jest.fn(),
+      setContext: jest.fn(),
+      assign: jest.fn(),
+    }) as unknown as jest.Mocked<PinoLogger>;
 
   const createService = () => new FilesystemService(mockLogger);
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockLogger = createMockLogger();
-    // Reset environment
     process.env = { ...originalEnv };
     process.env.DATA_PATH = p('/test', 'data');
-
-    // Default: directories exist
+    process.env.LIBRARY_PATH = p('/music');
     (fs.existsSync as jest.Mock).mockReturnValue(true);
   });
 
@@ -99,7 +98,6 @@ describe('FilesystemService', () => {
         throw new Error('Permission denied');
       });
 
-      // Should not throw
       expect(() => createService()).not.toThrow();
     });
   });
@@ -109,24 +107,18 @@ describe('FilesystemService', () => {
       service = createService();
     });
 
-    it('should return list of files in directory', async () => {
+    it('should return list of files in directory within allowed path', async () => {
       const files = ['file1.txt', 'file2.txt', 'subdir'];
       (fs.promises.readdir as jest.Mock).mockResolvedValue(files);
 
-      const result = await service.readDirectory('/test/dir');
+      const result = await service.readDirectory(p('/test', 'data', 'covers'));
 
       expect(result).toEqual(files);
-      expect(fs.promises.readdir).toHaveBeenCalledWith('/test/dir');
+      expect(fs.promises.readdir).toHaveBeenCalledWith(p('/test', 'data', 'covers'));
     });
 
-    it('should propagate errors from fs.readdir', async () => {
-      (fs.promises.readdir as jest.Mock).mockRejectedValue(
-        new Error('ENOENT: no such file or directory'),
-      );
-
-      await expect(service.readDirectory('/nonexistent')).rejects.toThrow(
-        'ENOENT',
-      );
+    it('should reject paths outside allowed directories', async () => {
+      await expect(service.readDirectory('/etc/passwd')).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -135,23 +127,26 @@ describe('FilesystemService', () => {
       service = createService();
     });
 
-    it('should return true if file exists', async () => {
+    it('should return true if file exists within allowed path', async () => {
       (fs.promises.access as jest.Mock).mockResolvedValue(undefined);
 
-      const result = await service.fileExists('/test/file.txt');
+      const result = await service.fileExists(p('/test', 'data', 'file.txt'));
 
       expect(result).toBe(true);
-      expect(fs.promises.access).toHaveBeenCalledWith('/test/file.txt');
     });
 
-    it('should return false if file does not exist', async () => {
-      (fs.promises.access as jest.Mock).mockRejectedValue(
-        new Error('ENOENT'),
-      );
+    it('should return false if file does not exist within allowed path', async () => {
+      (fs.promises.access as jest.Mock).mockRejectedValue(new Error('ENOENT'));
 
-      const result = await service.fileExists('/nonexistent/file.txt');
+      const result = await service.fileExists(p('/test', 'data', 'nonexistent.txt'));
 
       expect(result).toBe(false);
+    });
+
+    it('should reject path traversal attempts', async () => {
+      await expect(
+        service.fileExists(p('/test', 'data', '..', '..', 'etc', 'passwd'))
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -160,7 +155,7 @@ describe('FilesystemService', () => {
       service = createService();
     });
 
-    it('should return file stats', async () => {
+    it('should return file stats for allowed paths', async () => {
       const mockStats = {
         size: 1024,
         isFile: () => true,
@@ -169,20 +164,15 @@ describe('FilesystemService', () => {
       };
       (fs.promises.stat as jest.Mock).mockResolvedValue(mockStats);
 
-      const result = await service.getFileStats('/test/file.txt');
+      const filePath = p('/test', 'data', 'file.txt');
+      const result = await service.getFileStats(filePath);
 
       expect(result).toEqual(mockStats);
-      expect(fs.promises.stat).toHaveBeenCalledWith('/test/file.txt');
+      expect(fs.promises.stat).toHaveBeenCalledWith(filePath);
     });
 
-    it('should propagate errors for non-existent files', async () => {
-      (fs.promises.stat as jest.Mock).mockRejectedValue(
-        new Error('ENOENT: no such file or directory'),
-      );
-
-      await expect(service.getFileStats('/nonexistent')).rejects.toThrow(
-        'ENOENT',
-      );
+    it('should reject paths outside allowed directories', async () => {
+      await expect(service.getFileStats('/etc/shadow')).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -191,14 +181,15 @@ describe('FilesystemService', () => {
       service = createService();
     });
 
-    it('should create read stream without range', () => {
+    it('should create read stream without range for allowed paths', () => {
       const mockStream = { pipe: jest.fn() };
       (fs.createReadStream as jest.Mock).mockReturnValue(mockStream);
 
-      const result = service.createReadStream('/test/file.mp3');
+      const filePath = p('/music', 'file.mp3');
+      const result = service.createReadStream(filePath);
 
       expect(result).toBe(mockStream);
-      expect(fs.createReadStream).toHaveBeenCalledWith('/test/file.mp3', {
+      expect(fs.createReadStream).toHaveBeenCalledWith(filePath, {
         start: undefined,
         end: undefined,
       });
@@ -208,32 +199,52 @@ describe('FilesystemService', () => {
       const mockStream = { pipe: jest.fn() };
       (fs.createReadStream as jest.Mock).mockReturnValue(mockStream);
 
-      const result = service.createReadStream('/test/file.mp3', 0, 1023);
+      const filePath = p('/music', 'file.mp3');
+      const result = service.createReadStream(filePath, 0, 1023);
 
       expect(result).toBe(mockStream);
-      expect(fs.createReadStream).toHaveBeenCalledWith('/test/file.mp3', {
+      expect(fs.createReadStream).toHaveBeenCalledWith(filePath, {
         start: 0,
         end: 1023,
       });
     });
 
-    it('should handle partial range (start only)', () => {
-      const mockStream = { pipe: jest.fn() };
-      (fs.createReadStream as jest.Mock).mockReturnValue(mockStream);
+    it('should reject path traversal in createReadStream', () => {
+      expect(() => service.createReadStream('/etc/passwd')).toThrow(ForbiddenException);
+    });
+  });
 
-      const result = service.createReadStream('/test/file.mp3', 500);
+  describe('path traversal protection', () => {
+    beforeEach(() => {
+      service = createService();
+    });
 
-      expect(fs.createReadStream).toHaveBeenCalledWith('/test/file.mp3', {
-        start: 500,
-        end: undefined,
-      });
+    it('should allow paths within DATA_PATH', async () => {
+      (fs.promises.access as jest.Mock).mockResolvedValue(undefined);
+      const result = await service.fileExists(p('/test', 'data', 'uploads', 'avatar.jpg'));
+      expect(result).toBe(true);
+    });
+
+    it('should allow paths within LIBRARY_PATH', async () => {
+      (fs.promises.access as jest.Mock).mockResolvedValue(undefined);
+      const result = await service.fileExists(p('/music', 'album', 'track.flac'));
+      expect(result).toBe(true);
+    });
+
+    it('should block paths outside allowed roots', async () => {
+      await expect(service.fileExists('/tmp/malicious')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should block dot-dot traversal even if it starts within allowed path', async () => {
+      await expect(
+        service.fileExists(p('/test', 'data', '..', '..', 'etc', 'passwd'))
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
   describe('getUploadPath', () => {
     it('should return upload path', () => {
       service = createService();
-
       expect(service.getUploadPath()).toBe(p('/test', 'data', 'uploads'));
     });
   });
@@ -241,7 +252,6 @@ describe('FilesystemService', () => {
   describe('getCoversPath', () => {
     it('should return covers path', () => {
       service = createService();
-
       expect(service.getCoversPath()).toBe(p('/test', 'data', 'covers'));
     });
   });

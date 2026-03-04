@@ -1,4 +1,4 @@
-// Cargar .env solo en desarrollo
+// Load .env only in development
 if (process.env.NODE_ENV !== 'production') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   require('dotenv/config');
@@ -9,14 +9,42 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
+import fastifyMultipart from '@fastify/multipart';
+import fastifyCompress from '@fastify/compress';
+import fastifyHelmet from '@fastify/helmet';
+import fastifyStatic from '@fastify/static';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { WebSocketAdapter } from '@infrastructure/websocket';
+import { BigIntSerializerInterceptor } from '@shared/interceptors/bigint-serializer.interceptor';
 import { MustChangePasswordInterceptor } from '@shared/interceptors/must-change-password.interceptor';
 import { getVersion } from '@shared/utils/version.util';
 import { join } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { networkInterfaces as osNetworkInterfaces } from 'os';
+
+/**
+ * Recursively collects all relative file paths from a directory
+ * to build a static file lookup Set at startup (avoids per-request existsSync).
+ */
+function collectStaticFiles(dir: string, base: string = ''): Set<string> {
+  const files = new Set<string>();
+  try {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const relativePath = base ? `${base}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        for (const f of collectStaticFiles(join(dir, entry.name), relativePath)) {
+          files.add(f);
+        }
+      } else {
+        files.add(`/${relativePath}`);
+      }
+    }
+  } catch {
+    // Directory not readable — return empty set
+  }
+  return files;
+}
 
 async function bootstrap() {
   const fastifyAdapter = new FastifyAdapter();
@@ -28,16 +56,16 @@ async function bootstrap() {
   const logger = app.get(Logger);
   app.useLogger(logger);
 
-  const maxFileSize = parseInt(process.env.MAX_UPLOAD_SIZE || '10485760', 10); // Default: 10MB
-  await app.register((await import('@fastify/multipart')).default, {
-    limits: {
-      fileSize: maxFileSize,
-    },
+  // --- Register Fastify plugins (static imports) ---
+
+  const maxFileSize = parseInt(process.env.MAX_UPLOAD_SIZE || '10485760', 10);
+  await app.register(fastifyMultipart, {
+    limits: { fileSize: maxFileSize },
   });
 
-  // Compresión solo en desarrollo; en producción la maneja el proxy reverso
+  // Compression only in development; reverse proxy handles it in production
   if (process.env.NODE_ENV !== 'production') {
-    await app.register((await import('@fastify/compress')).default, {
+    await app.register(fastifyCompress, {
       encodings: ['gzip', 'deflate'],
       threshold: 1024,
       customTypes: /^(?!audio\/|video\/|image\/).*$/,
@@ -47,7 +75,7 @@ async function bootstrap() {
     logger.log('Compression disabled - handled by reverse proxy');
   }
 
-  await app.register((await import('@fastify/helmet')).default, {
+  await app.register(fastifyHelmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -59,12 +87,14 @@ async function bootstrap() {
         objectSrc: ["'none'"],
         mediaSrc: ["'self'", 'blob:', 'http:', 'https:'],
         frameSrc: ["'none'"],
-        upgradeInsecureRequests: null, // Permitir HTTP en redes locales
+        upgradeInsecureRequests: null,
       },
     },
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
+
+  // --- App configuration ---
 
   app.useWebSocketAdapter(new WebSocketAdapter(app));
 
@@ -85,17 +115,14 @@ async function bootstrap() {
     })
   );
 
-  // Serialización de BigInt para respuestas JSON
-  // @ts-expect-error toJSON is not part of the BigInt interface but is needed for JSON serialization
-  BigInt.prototype.toJSON = function () {
-    return this.toString();
-  };
-
-  // Interceptor que bloquea acceso si el usuario debe cambiar contraseña
+  // Global interceptors
   const reflector = app.get(Reflector);
-  app.useGlobalInterceptors(new MustChangePasswordInterceptor(reflector));
+  app.useGlobalInterceptors(
+    new BigIntSerializerInterceptor(),
+    new MustChangePasswordInterceptor(reflector)
+  );
 
-  // Swagger solo en desarrollo
+  // Swagger only in development
   if (process.env.NODE_ENV !== 'production') {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('Echo Music Server API')
@@ -136,32 +163,38 @@ async function bootstrap() {
     logger.log('Swagger documentation enabled at /api/docs');
   }
 
-  // Servir archivos estáticos del frontend en producción
+  // --- Serve frontend static assets in production ---
+
   const frontendPath = join(__dirname, '..', '..', 'web', 'dist');
   const indexHtmlPath = join(frontendPath, 'index.html');
+  const hasFrontend = existsSync(frontendPath) && existsSync(indexHtmlPath);
 
-  if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
+  if (hasFrontend) {
     logger.log(`Serving frontend from: ${frontendPath}`);
 
     const fastify = app.getHttpAdapter().getInstance();
     const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
 
-    await fastify.register((await import('@fastify/static')).default, {
+    // Pre-compute static file set at startup to avoid per-request filesystem calls
+    const staticFiles = collectStaticFiles(frontendPath);
+    staticFiles.add('/');
+    logger.log(`Indexed ${staticFiles.size} static files for SPA fallback`);
+
+    await fastify.register(fastifyStatic, {
       root: frontendPath,
       prefix: '/',
       decorateReply: false,
     });
 
-    // Fallback SPA: rutas desconocidas devuelven index.html
+    // SPA fallback: unknown routes return index.html (no per-request fs access)
     fastify.addHook('preHandler', async (request, reply) => {
-      const url = request.url;
+      const url = request.url.split('?')[0];
 
       if (url.startsWith('/api/')) {
         return;
       }
 
-      const filePath = join(frontendPath, url === '/' ? 'index.html' : url);
-      if (existsSync(filePath)) {
+      if (staticFiles.has(url)) {
         return;
       }
 
@@ -180,54 +213,8 @@ async function bootstrap() {
     logger.warn(`Running in API-only mode (development)`);
   }
 
-  await app.listen(appConfig.port, '0.0.0.0');
+  // --- Graceful shutdown (registered BEFORE listen to avoid signal gap) ---
 
-  const netInterfaces = osNetworkInterfaces();
-  const networkIPs: string[] = [];
-
-  for (const interfaceName in netInterfaces) {
-    const interfaces = netInterfaces[interfaceName];
-    if (!interfaces) continue;
-    for (const iface of interfaces) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        networkIPs.push(iface.address);
-      }
-    }
-  }
-
-  const isProd = process.env.NODE_ENV === 'production';
-  const version = getVersion();
-
-  logger.log(`
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎵 Echo Music Server v${version}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Environment: ${isProd ? '🚀 PRODUCTION' : '🔧 DEVELOPMENT'}
-Node.js: ${process.version}
-
-📡 Access URLs:
-   Local:    http://localhost:${appConfig.port}${networkIPs.length > 0 ? `\n   Network:  ${networkIPs.map((ip) => `http://${ip}:${appConfig.port}`).join('\n             ')}` : ''}
-
-📚 API Documentation:
-   Swagger:  ${isProd ? '❌ Disabled in production' : `http://localhost:${appConfig.port}/api/docs`}
-   Health:   http://localhost:${appConfig.port}/api/health
-
-🔒 Security:
-   CORS:     ${appConfig.cors_origins.join(', ')}
-   Helmet:   ✅ Enabled (XSS, Clickjacking, etc.)
-   Rate Limit: 100 req/min (global)
-   Auth:     JWT + bcrypt (12 rounds)
-
-🎯 Features:
-   Frontend: ${existsSync(frontendPath) ? '✅ Served (single container)' : '❌ Not found (API-only mode)'}
-   WebSocket: ✅ Enabled
-   Cache:    ✅ Redis
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  `);
-
-  // Apagado ordenado
   const SHUTDOWN_TIMEOUT = 10000;
   let isShuttingDown = false;
 
@@ -268,10 +255,63 @@ Node.js: ${process.version}
     gracefulShutdown('uncaughtException');
   });
 
-  process.on('unhandledRejection', (reason, promise) => {
-    logger.error({ reason: String(reason) }, 'Unhandled Rejection - initiating shutdown');
+  process.on('unhandledRejection', (reason) => {
+    const error =
+      reason instanceof Error
+        ? { message: reason.message, stack: reason.stack }
+        : { message: String(reason) };
+    logger.error({ error }, 'Unhandled Rejection - initiating shutdown');
     gracefulShutdown('unhandledRejection');
   });
+
+  // --- Start listening ---
+
+  await app.listen(appConfig.port, '0.0.0.0');
+
+  const netInterfaces = osNetworkInterfaces();
+  const networkIPs: string[] = [];
+
+  for (const interfaceName in netInterfaces) {
+    const interfaces = netInterfaces[interfaceName];
+    if (!interfaces) continue;
+    for (const iface of interfaces) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        networkIPs.push(iface.address);
+      }
+    }
+  }
+
+  const isProd = process.env.NODE_ENV === 'production';
+  const version = getVersion();
+
+  logger.log(`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Echo Music Server v${version}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Environment: ${isProd ? 'PRODUCTION' : 'DEVELOPMENT'}
+Node.js: ${process.version}
+
+Access URLs:
+   Local:    http://localhost:${appConfig.port}${networkIPs.length > 0 ? `\n   Network:  ${networkIPs.map((ip) => `http://${ip}:${appConfig.port}`).join('\n             ')}` : ''}
+
+API Documentation:
+   Swagger:  ${isProd ? 'Disabled in production' : `http://localhost:${appConfig.port}/api/docs`}
+   Health:   http://localhost:${appConfig.port}/api/health
+
+Security:
+   CORS:     ${appConfig.cors_origins.join(', ')}
+   Helmet:   Enabled (XSS, Clickjacking, etc.)
+   Rate Limit: 300 req/min (global)
+   Auth:     JWT + bcrypt (12 rounds)
+
+Features:
+   Frontend: ${hasFrontend ? 'Served (single container)' : 'Not found (API-only mode)'}
+   WebSocket: Enabled
+   Cache:    Redis
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  `);
 }
 
 bootstrap();

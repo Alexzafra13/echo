@@ -55,53 +55,63 @@ export class WebSocketAdapter extends IoAdapter {
 
     const server: Server = super.createIOServer(port, serverOptions);
 
-    // Middleware de autenticación JWT para el namespace /scanner
-    const scannerNamespace = server.of('/scanner');
-    scannerNamespace.use((socket, next) => {
+    // JWT authentication middleware shared by all namespaces
+    const jwtMiddleware = (
+      socket: {
+        handshake: {
+          query?: { token?: string | string[] };
+          auth?: { token?: string };
+          headers?: { authorization?: string };
+        };
+        data: Record<string, unknown>;
+      },
+      next: (err?: Error) => void
+    ) => {
       try {
         const token = this.extractToken(socket);
 
         if (!token) {
-          this.logger.warn(`❌ WebSocket auth failed: No token provided`);
+          this.logger.warn('WebSocket auth failed: No token provided');
           return next(new Error('No token provided'));
         }
 
         const secret = this.getJwtSecret();
         if (!secret) {
-          this.logger.error('❌ JWT_SECRET not configured');
+          this.logger.error('JWT_SECRET not configured');
           return next(new Error('Server configuration error'));
         }
 
-        // Verificar token
         const payload = jwt.verify(token, secret) as jwt.JwtPayload;
 
-        // Adjuntar usuario al socket
         socket.data.user = payload;
         socket.data.userId = payload.sub;
 
-        this.logger.debug(`✅ WebSocket auth success: User ${payload.sub}`);
+        this.logger.debug(`WebSocket auth success: User ${payload.sub}`);
         next();
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(`❌ WebSocket auth failed: ${message}`);
+        this.logger.warn(`WebSocket auth failed: ${message}`);
         next(new Error('Unauthorized'));
       }
-    });
+    };
 
-    // Logging de conexiones
+    // Apply JWT auth to the default namespace and /scanner
+    server.use(jwtMiddleware);
+    server.of('/scanner').use(jwtMiddleware);
+
     server.on('connection', (socket) => {
-      this.logger.log(`🔌 WebSocket client connected: ${socket.id}`);
+      this.logger.log(`WebSocket client connected: ${socket.id}`);
 
       socket.on('disconnect', (reason: string) => {
-        this.logger.log(`🔌 WebSocket client disconnected: ${socket.id} - ${reason}`);
+        this.logger.log(`WebSocket client disconnected: ${socket.id} - ${reason}`);
       });
 
       socket.on('error', (error: Error) => {
-        this.logger.error(`❌ WebSocket error on ${socket.id}:`, error);
+        this.logger.error({ error: error.message, socketId: socket.id }, 'WebSocket error');
       });
     });
 
-    this.logger.log('✅ WebSocket server initialized with JWT middleware');
+    this.logger.log('WebSocket server initialized with JWT middleware');
     return server;
   }
 
