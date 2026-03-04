@@ -319,75 +319,70 @@ describe('WebSocket E2E', () => {
   });
 
   describe('Scanner Admin Controls', () => {
-    // TODO: These tests need a real running scan to control.
-    // Currently they emit events to non-existent scans, so no response is received.
-    // To fix: Create a scan first, then test pause/cancel/resume on it.
-    it.skip('admin debería poder pausar un scan', async () => {
+    it('admin debería recibir error al pausar un scan inexistente', async () => {
       const { accessToken } = await createAdminAndLogin(drizzle, app);
       const socket = createSocket(accessToken);
 
       try {
         await waitForConnect(socket);
 
-        const pausePromise = waitForEvent<{ scanId: string; message: string }>(
+        const errorPromise = waitForEvent<{ message: string }>(
           socket,
-          'scanner:paused',
+          'exception',
+          2000,
         );
 
         socket.emit('scanner:pause', { scanId: 'admin-scan-123' });
 
-        const response = await pausePromise;
-        expect(response.scanId).toBe('admin-scan-123');
-        expect(response.message).toContain('paused successfully');
+        const response = await errorPromise;
+        expect(response.message).toContain('no está en ejecución');
       } finally {
         socket.disconnect();
       }
     });
 
-    it.skip('admin debería poder cancelar un scan', async () => {
+    it('admin debería recibir error al cancelar un scan inexistente', async () => {
       const { accessToken } = await createAdminAndLogin(drizzle, app);
       const socket = createSocket(accessToken);
 
       try {
         await waitForConnect(socket);
 
-        const cancelPromise = waitForEvent<{
-          scanId: string;
-          reason: string;
-          message: string;
-        }>(socket, 'scanner:cancelled');
+        const errorPromise = waitForEvent<{ message: string }>(
+          socket,
+          'exception',
+          2000,
+        );
 
         socket.emit('scanner:cancel', {
           scanId: 'admin-scan-456',
           reason: 'Test cancellation',
         });
 
-        const response = await cancelPromise;
-        expect(response.scanId).toBe('admin-scan-456');
-        expect(response.reason).toBe('Test cancellation');
-        expect(response.message).toContain('cancelled successfully');
+        const response = await errorPromise;
+        expect(response.message).toContain('no está en ejecución');
       } finally {
         socket.disconnect();
       }
     });
 
-    it.skip('admin debería poder resumir un scan', async () => {
+    it('admin debería recibir error al resumir un scan que no está en pausa', async () => {
       const { accessToken } = await createAdminAndLogin(drizzle, app);
       const socket = createSocket(accessToken);
 
       try {
         await waitForConnect(socket);
 
-        const resumePromise = waitForEvent<{ scanId: string; message: string }>(
+        const errorPromise = waitForEvent<{ message: string }>(
           socket,
-          'scanner:resumed',
+          'exception',
+          2000,
         );
 
         socket.emit('scanner:resume', { scanId: 'admin-scan-789' });
 
-        const response = await resumePromise;
-        expect(response.scanId).toBe('admin-scan-789');
-        expect(response.message).toContain('resumed successfully');
+        const response = await errorPromise;
+        expect(response.message).toContain('no está en pausa');
       } finally {
         socket.disconnect();
       }

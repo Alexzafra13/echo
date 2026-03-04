@@ -104,6 +104,57 @@
   flex-shrink: 0;
 }
 
+.statusIconPaused {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+/* Scan Controls */
+.scanControls {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.controlButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--white-10);
+  background: var(--white-05);
+  color: var(--color-text-secondary, #b8bcc8);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.controlButton:hover {
+  background: var(--white-10);
+  color: var(--color-text-primary, #ffffff);
+}
+
+.controlButtonResume {
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.controlButtonResume:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.controlButtonCancel {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.controlButtonCancel:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);

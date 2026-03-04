@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
   Play,
+  Pause,
+  Square,
   RefreshCw,
   Clock,
   CheckCircle,
@@ -14,6 +16,7 @@ import {
   Music2,
   Library,
 } from 'lucide-react';
+import { ScanStatus } from '@shared/hooks/useScannerWebSocket';
 import { CollapsibleInfo } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
 import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
@@ -39,10 +42,22 @@ export function ScannerPanel() {
   const accessToken = useAuthStore((s) => s.accessToken);
 
   // WebSocket para progreso en tiempo real (scan + LUFS + DJ)
-  const { progress, isCompleted, isConnected, lufsProgress, djProgress } = useScannerWebSocket(
-    currentScanId,
-    accessToken
-  );
+  const {
+    progress,
+    isCompleted,
+    isConnected,
+    lufsProgress,
+    djProgress,
+    pauseScan,
+    cancelScan,
+    resumeScan,
+  } = useScannerWebSocket(currentScanId, accessToken);
+
+  const isPaused = progress?.status === ScanStatus.PAUSED;
+  const isRunning =
+    progress?.status === ScanStatus.SCANNING ||
+    progress?.status === ScanStatus.AGGREGATING ||
+    progress?.status === ScanStatus.EXTRACTING_COVERS;
 
   // Cuando se inicia un scan, guardar el ID para WebSocket
   useEffect(() => {
@@ -83,6 +98,10 @@ export function ScannerPanel() {
         return <XCircle size={20} className={styles.statusIconError} />;
       case 'running':
         return <RefreshCw size={20} className={styles.statusIconRunning} />;
+      case 'paused':
+        return <Pause size={20} className={styles.statusIconPaused} />;
+      case 'cancelled':
+        return <Square size={20} className={styles.statusIconError} />;
       default:
         return <Clock size={20} className={styles.statusIconPending} />;
     }
@@ -98,6 +117,10 @@ export function ScannerPanel() {
         return 'En progreso';
       case 'pending':
         return 'Pendiente';
+      case 'paused':
+        return 'En pausa';
+      case 'cancelled':
+        return 'Cancelado';
       default:
         return status;
     }
@@ -135,12 +158,43 @@ export function ScannerPanel() {
       {progress && currentScanId && (
         <div className={styles.statusCard}>
           <div className={styles.statusHeader}>
-            <RefreshCw size={20} className={styles.statusIconRunning} />
+            {isPaused ? (
+              <Pause size={20} className={styles.statusIconPaused} />
+            ) : (
+              <RefreshCw size={20} className={styles.statusIconRunning} />
+            )}
             <div className={styles.statusInfo}>
-              <h3 className={styles.statusTitle}>{progress.message || 'Escaneando...'}</h3>
+              <h3 className={styles.statusTitle}>
+                {isPaused ? 'Scan en pausa' : progress.message || 'Escaneando...'}
+              </h3>
               <p className={styles.statusDate}>
                 {isConnected ? '🔌 Conectado' : '⚠️ Desconectado'}
               </p>
+            </div>
+            <div className={styles.scanControls}>
+              {isRunning && (
+                <button className={styles.controlButton} onClick={pauseScan} title="Pausar scan">
+                  <Pause size={16} />
+                </button>
+              )}
+              {isPaused && (
+                <button
+                  className={`${styles.controlButton} ${styles.controlButtonResume}`}
+                  onClick={resumeScan}
+                  title="Reanudar scan"
+                >
+                  <Play size={16} />
+                </button>
+              )}
+              {(isRunning || isPaused) && (
+                <button
+                  className={`${styles.controlButton} ${styles.controlButtonCancel}`}
+                  onClick={() => cancelScan()}
+                  title="Cancelar scan"
+                >
+                  <Square size={16} />
+                </button>
+              )}
             </div>
           </div>
 

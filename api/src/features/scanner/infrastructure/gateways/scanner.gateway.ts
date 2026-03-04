@@ -10,9 +10,17 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  UseGuards,
+  UseInterceptors,
+  UsePipes,
+  ValidationPipe,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { WsJwtGuard, WsThrottlerGuard, WsLoggingInterceptor } from '@infrastructure/websocket';
+import { ScanProcessorService } from '../services/scan-processor.service';
 import {
   SubscribeScanDto,
   ScanProgressDto,
@@ -41,6 +49,8 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   constructor(
     @InjectPinoLogger(ScannerGateway.name)
     private readonly logger: PinoLogger,
+    @Inject(forwardRef(() => ScanProcessorService))
+    private readonly scanProcessor: ScanProcessorService
   ) {}
 
   @WebSocketServer()
@@ -73,7 +83,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   @UseGuards(WsThrottlerGuard)
   async handleSubscribe(
     @ConnectedSocket() client: Socket,
-    @MessageBody() dto: SubscribeScanDto,
+    @MessageBody() dto: SubscribeScanDto
   ): Promise<void> {
     const room = `scan:${dto.scanId}`;
 
@@ -97,7 +107,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   @UseGuards(WsThrottlerGuard)
   async handleUnsubscribe(
     @ConnectedSocket() client: Socket,
-    @MessageBody() dto: SubscribeScanDto,
+    @MessageBody() dto: SubscribeScanDto
   ): Promise<void> {
     const room = `scan:${dto.scanId}`;
 
@@ -115,15 +125,18 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   @UseGuards(WsThrottlerGuard)
   async handlePause(
     @ConnectedSocket() client: Socket,
-    @MessageBody() dto: PauseScanDto,
+    @MessageBody() dto: PauseScanDto
   ): Promise<void> {
     if (!client.data.user?.isAdmin) {
       throw new WsException('Unauthorized: Admin access required');
     }
 
-    // TODO: Implementar lógica de pausa en ScanProcessorService
+    const success = await this.scanProcessor.pauseScan(dto.scanId);
+    if (!success) {
+      throw new WsException('No se puede pausar: el scan no está en ejecución');
+    }
 
-    this.logger.info(`Admin ${client.data.userId} requested to pause scan ${dto.scanId}`);
+    this.logger.info(`Admin ${client.data.userId} paused scan ${dto.scanId}`);
 
     client.emit('scanner:paused', {
       scanId: dto.scanId,
@@ -135,15 +148,18 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   @UseGuards(WsThrottlerGuard)
   async handleCancel(
     @ConnectedSocket() client: Socket,
-    @MessageBody() dto: CancelScanDto,
+    @MessageBody() dto: CancelScanDto
   ): Promise<void> {
     if (!client.data.user?.isAdmin) {
       throw new WsException('Unauthorized: Admin access required');
     }
 
-    // TODO: Implementar lógica de cancelación en ScanProcessorService
+    const success = await this.scanProcessor.cancelScan(dto.scanId, dto.reason);
+    if (!success) {
+      throw new WsException('No se puede cancelar: el scan no está en ejecución ni en pausa');
+    }
 
-    this.logger.info(`Admin ${client.data.userId} requested to cancel scan ${dto.scanId}`);
+    this.logger.info(`Admin ${client.data.userId} cancelled scan ${dto.scanId}`);
 
     client.emit('scanner:cancelled', {
       scanId: dto.scanId,
@@ -156,15 +172,18 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   @UseGuards(WsThrottlerGuard)
   async handleResume(
     @ConnectedSocket() client: Socket,
-    @MessageBody() dto: ResumeScanDto,
+    @MessageBody() dto: ResumeScanDto
   ): Promise<void> {
     if (!client.data.user?.isAdmin) {
       throw new WsException('Unauthorized: Admin access required');
     }
 
-    // TODO: Implementar lógica de resumir en ScanProcessorService
+    const success = await this.scanProcessor.resumeScan(dto.scanId);
+    if (!success) {
+      throw new WsException('No se puede reanudar: el scan no está en pausa');
+    }
 
-    this.logger.info(`Admin ${client.data.userId} requested to resume scan ${dto.scanId}`);
+    this.logger.info(`Admin ${client.data.userId} resumed scan ${dto.scanId}`);
 
     client.emit('scanner:resumed', {
       scanId: dto.scanId,
@@ -237,6 +256,8 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
   emitLibraryChange(data: LibraryChangeDto): void {
     this.server.emit('library:change', data);
-    this.logger.info(`📢 Library change: ${data.type} - ${data.trackTitle || data.trackId || 'unknown'}`);
+    this.logger.info(
+      `📢 Library change: ${data.type} - ${data.trackTitle || data.trackId || 'unknown'}`
+    );
   }
 }
