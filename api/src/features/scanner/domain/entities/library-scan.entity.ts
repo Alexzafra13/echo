@@ -1,4 +1,4 @@
-export type ScanStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type ScanStatus = 'pending' | 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
 
 export interface LibraryScanProps {
   id: string;
@@ -71,6 +71,14 @@ export class LibraryScan {
 
   isPending(): boolean {
     return this.status === 'pending';
+  }
+
+  isPaused(): boolean {
+    return this.status === 'paused';
+  }
+
+  isCancelled(): boolean {
+    return this.status === 'cancelled';
   }
 
   getTotalChanges(): number {

@@ -12,6 +12,8 @@ export enum ScanStatus {
   EXTRACTING_COVERS = 'extracting_covers',
   COMPLETED = 'completed',
   FAILED = 'failed',
+  PAUSED = 'paused',
+  CANCELLED = 'cancelled',
 }
 
 /**
@@ -118,20 +120,21 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
 
   const handleCompleted = useCallback((data: ScanCompleted) => {
     setCompleted(data);
-    setProgress((prev) =>
-      prev ? { ...prev, progress: 100, status: ScanStatus.COMPLETED } : null
-    );
+    setProgress((prev) => (prev ? { ...prev, progress: 100, status: ScanStatus.COMPLETED } : null));
   }, []);
 
   const handleLufsProgress = useCallback((data: LufsProgress) => {
     setLufsProgress(data);
   }, []);
 
-  const handleDjProgress = useCallback((data: DjProgress) => {
-    setDjProgress(data);
-    // Also update global store for header indicator
-    updateDjProgressStore(data);
-  }, [updateDjProgressStore]);
+  const handleDjProgress = useCallback(
+    (data: DjProgress) => {
+      setDjProgress(data);
+      // Also update global store for header indicator
+      updateDjProgressStore(data);
+    },
+    [updateDjProgressStore]
+  );
 
   // Eventos a registrar
   const events = useMemo(

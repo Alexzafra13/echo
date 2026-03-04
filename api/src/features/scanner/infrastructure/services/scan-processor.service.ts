@@ -56,9 +56,16 @@ interface IncrementalScanJobData {
  * - TrackProcessingService: File processing and entity creation
  * - LibraryCleanupService: Cleanup of deleted files
  */
+/** Signal to control a running scan */
+type ScanSignal = 'pause' | 'cancel';
+
 @Injectable()
 export class ScanProcessorService implements OnModuleInit {
   private readonly QUEUE_NAME = 'library-scan';
+  /** Active scan control signals - checked each iteration of the file loop */
+  private readonly scanSignals = new Map<string, ScanSignal>();
+  /** Resolve function to wake up a paused scan */
+  private readonly pauseResolvers = new Map<string, () => void>();
 
   constructor(
     @Inject(SCANNER_REPOSITORY)
@@ -103,6 +110,102 @@ export class ScanProcessorService implements OnModuleInit {
       LIBRARY_PATH_KEY,
       process.env.MUSIC_LIBRARY_PATH || '/music'
     );
+  }
+
+  /**
+   * Pause a running scan. The file loop will stop at the next iteration.
+   */
+  async pauseScan(scanId: string): Promise<boolean> {
+    const scan = await this.scannerRepository.findById(scanId);
+    if (!scan || scan.status !== 'running') return false;
+
+    this.scanSignals.set(scanId, 'pause');
+    this.logger.info(`⏸️ Señal de pausa enviada al scan ${scanId}`);
+    return true;
+  }
+
+  /**
+   * Cancel a running or paused scan.
+   */
+  async cancelScan(scanId: string, reason?: string): Promise<boolean> {
+    const scan = await this.scannerRepository.findById(scanId);
+    if (!scan || (scan.status !== 'running' && scan.status !== 'paused')) return false;
+
+    this.scanSignals.set(scanId, 'cancel');
+
+    // If paused, wake up the loop so it can exit
+    const resolver = this.pauseResolvers.get(scanId);
+    if (resolver) {
+      resolver();
+      this.pauseResolvers.delete(scanId);
+    }
+
+    this.logger.info(
+      `🛑 Señal de cancelación enviada al scan ${scanId}${reason ? `: ${reason}` : ''}`
+    );
+    return true;
+  }
+
+  /**
+   * Resume a paused scan.
+   */
+  async resumeScan(scanId: string): Promise<boolean> {
+    const scan = await this.scannerRepository.findById(scanId);
+    if (!scan || scan.status !== 'paused') return false;
+
+    this.scanSignals.delete(scanId);
+
+    // Wake up the paused loop
+    const resolver = this.pauseResolvers.get(scanId);
+    if (resolver) {
+      resolver();
+      this.pauseResolvers.delete(scanId);
+    }
+
+    await this.scannerRepository.update(scanId, { status: 'running' });
+    this.logger.info(`▶️ Scan ${scanId} reanudado`);
+    return true;
+  }
+
+  /**
+   * Check signal and handle pause/cancel. Returns true if scan should stop.
+   */
+  private async checkSignal(scanId: string, tracker: ScanProgressTracker): Promise<boolean> {
+    const signal = this.scanSignals.get(scanId);
+    if (!signal) return false;
+
+    if (signal === 'cancel') {
+      this.scanSignals.delete(scanId);
+      return true; // Caller will handle cancelled state
+    }
+
+    if (signal === 'pause') {
+      // Update DB status to paused
+      await this.scannerRepository.update(scanId, { status: 'paused' });
+      this.emitProgress(scanId, tracker, ScanStatus.PAUSED, 'Scan en pausa');
+
+      this.logger.info(
+        `⏸️ Scan ${scanId} pausado en archivo ${tracker.filesScanned}/${tracker.totalFiles}`
+      );
+
+      // Wait until resumed or cancelled
+      await new Promise<void>((resolve) => {
+        this.pauseResolvers.set(scanId, resolve);
+      });
+
+      // After waking up, check if we were cancelled while paused
+      const newSignal = this.scanSignals.get(scanId);
+      if (newSignal === 'cancel') {
+        this.scanSignals.delete(scanId);
+        return true;
+      }
+
+      // Resumed
+      this.emitProgress(scanId, tracker, ScanStatus.SCANNING, 'Scan reanudado');
+      return false;
+    }
+
+    return false;
   }
 
   /**
@@ -178,8 +281,16 @@ export class ScanProcessorService implements OnModuleInit {
       let tracksAdded = 0;
       let tracksUpdated = 0;
       let tracksDeleted = 0;
+      let wasCancelled = false;
 
       for (const filePath of files) {
+        // Check for pause/cancel signals
+        const shouldStop = await this.checkSignal(scanId, tracker);
+        if (shouldStop) {
+          wasCancelled = true;
+          break;
+        }
+
         try {
           const result = await this.trackProcessing.processFile(filePath, tracker, lastScanTime);
           if (result === 'added') {
@@ -210,6 +321,52 @@ export class ScanProcessorService implements OnModuleInit {
             timestamp: new Date().toISOString(),
           });
         }
+      }
+
+      // Handle cancellation
+      if (wasCancelled) {
+        await this.scannerRepository.update(scanId, {
+          status: 'cancelled',
+          finishedAt: new Date(),
+          tracksAdded,
+          tracksUpdated,
+          tracksDeleted: 0,
+          errorMessage: `Scan cancelado por el usuario en archivo ${tracker.filesScanned}/${tracker.totalFiles}`,
+        });
+
+        this.scannerGateway.emitProgress({
+          scanId,
+          status: ScanStatus.CANCELLED,
+          progress: tracker.progress,
+          filesScanned: tracker.filesScanned,
+          totalFiles: tracker.totalFiles,
+          tracksCreated: tracker.tracksCreated,
+          albumsCreated: tracker.albumsCreated,
+          artistsCreated: tracker.artistsCreated,
+          coversExtracted: tracker.coversExtracted,
+          errors: tracker.errors,
+          message: 'Scan cancelado',
+        });
+
+        // Clean up signals
+        this.scanSignals.delete(scanId);
+        this.pauseResolvers.delete(scanId);
+
+        await this.logService.info(LogCategory.SCANNER, `Scan cancelado: ${scanId}`, {
+          entityId: scanId,
+          entityType: 'scan',
+          details: JSON.stringify({
+            filesProcessed: tracker.filesScanned,
+            totalFiles: tracker.totalFiles,
+            tracksAdded,
+            tracksUpdated,
+          }),
+        });
+
+        this.logger.info(
+          `🛑 Scan ${scanId} cancelado: ${tracker.filesScanned}/${tracker.totalFiles} archivos procesados`
+        );
+        return;
       }
 
       // Prune deleted tracks
