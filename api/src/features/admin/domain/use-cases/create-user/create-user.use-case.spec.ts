@@ -69,7 +69,7 @@ describe('CreateUserUseCase', () => {
       mockUserRepository,
       mockPasswordService,
       mockSocialRepository,
-      mockLogService as unknown as LogService,
+      mockLogService as unknown as LogService
     );
   });
 
@@ -82,14 +82,16 @@ describe('CreateUserUseCase', () => {
         isAdmin: false,
       };
 
-      const mockCreatedUser = User.reconstruct(createMockUserProps({
-        id: 'user-123',
-        username: 'juanperez',
-        passwordHash: '$2b$12$hashed_temp_password',
-        name: 'Juan Pérez',
-        isAdmin: false,
-        mustChangePassword: true,
-      }));
+      const mockCreatedUser = User.reconstruct(
+        createMockUserProps({
+          id: 'user-123',
+          username: 'juanperez',
+          passwordHash: '$2b$12$hashed_temp_password',
+          name: 'Juan Pérez',
+          isAdmin: false,
+          mustChangePassword: true,
+        })
+      );
 
       mockUserRepository.findByUsername.mockResolvedValue(null);
       mockPasswordService.hash.mockResolvedValue('$2b$12$hashed_temp_password');
@@ -104,7 +106,7 @@ describe('CreateUserUseCase', () => {
       expect(result.user.name).toBe('Juan Pérez');
       expect(result.user.isAdmin).toBe(false);
       expect(result.temporaryPassword).toBeDefined();
-      expect(result.temporaryPassword).toMatch(/^[A-Za-z0-9]{8}$/);
+      expect(result.temporaryPassword).toHaveLength(16);
     });
 
     it('debería crear un usuario admin', async () => {
@@ -115,14 +117,16 @@ describe('CreateUserUseCase', () => {
         isAdmin: true,
       };
 
-      const mockCreatedUser = User.reconstruct(createMockUserProps({
-        id: 'admin-123',
-        username: 'admin',
-        passwordHash: '$2b$12$hashed_temp_password',
-        name: 'Admin User',
-        isAdmin: true,
-        mustChangePassword: true,
-      }));
+      const mockCreatedUser = User.reconstruct(
+        createMockUserProps({
+          id: 'admin-123',
+          username: 'admin',
+          passwordHash: '$2b$12$hashed_temp_password',
+          name: 'Admin User',
+          isAdmin: true,
+          mustChangePassword: true,
+        })
+      );
 
       mockUserRepository.findByUsername.mockResolvedValue(null);
       mockPasswordService.hash.mockResolvedValue('$2b$12$hashed_temp_password');
@@ -142,13 +146,15 @@ describe('CreateUserUseCase', () => {
         username: 'maria',
       };
 
-      const mockCreatedUser = User.reconstruct(createMockUserProps({
-        id: 'user-456',
-        username: 'maria',
-        passwordHash: '$2b$12$hashed_temp_password',
-        name: undefined,
-        mustChangePassword: true,
-      }));
+      const mockCreatedUser = User.reconstruct(
+        createMockUserProps({
+          id: 'user-456',
+          username: 'maria',
+          passwordHash: '$2b$12$hashed_temp_password',
+          name: undefined,
+          mustChangePassword: true,
+        })
+      );
 
       mockUserRepository.findByUsername.mockResolvedValue(null);
       mockPasswordService.hash.mockResolvedValue('$2b$12$hashed_temp_password');
@@ -180,10 +186,12 @@ describe('CreateUserUseCase', () => {
         username: 'existente',
       };
 
-      const existingUser = User.reconstruct(createMockUserProps({
-        id: 'existing-123',
-        username: 'existente',
-      }));
+      const existingUser = User.reconstruct(
+        createMockUserProps({
+          id: 'existing-123',
+          username: 'existente',
+        })
+      );
 
       mockUserRepository.findByUsername.mockResolvedValue(existingUser);
 
@@ -198,12 +206,14 @@ describe('CreateUserUseCase', () => {
         username: 'test',
       };
 
-      const mockCreatedUser = User.reconstruct(createMockUserProps({
-        id: 'user-999',
-        username: 'test',
-        passwordHash: '$2b$12$hashed_temp_password',
-        mustChangePassword: true,
-      }));
+      const mockCreatedUser = User.reconstruct(
+        createMockUserProps({
+          id: 'user-999',
+          username: 'test',
+          passwordHash: '$2b$12$hashed_temp_password',
+          mustChangePassword: true,
+        })
+      );
 
       mockUserRepository.findByUsername.mockResolvedValue(null);
       mockPasswordService.hash.mockResolvedValue('$2b$12$hashed_temp_password');
@@ -213,8 +223,11 @@ describe('CreateUserUseCase', () => {
       const result = await useCase.execute(input);
 
       // Assert
-      expect(result.temporaryPassword).toMatch(/^[A-Za-z0-9]{8}$/);
-      expect(result.temporaryPassword.length).toBe(8);
+      expect(result.temporaryPassword).toHaveLength(16);
+      expect(/[A-Z]/.test(result.temporaryPassword)).toBe(true);
+      expect(/[a-z]/.test(result.temporaryPassword)).toBe(true);
+      expect(/[0-9]/.test(result.temporaryPassword)).toBe(true);
+      expect(/[!@#$%&*?]/.test(result.temporaryPassword)).toBe(true);
     });
   });
 });
