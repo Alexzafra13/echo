@@ -25,7 +25,7 @@ interface PlayerSettingsState {
 }
 
 const DEFAULT_CROSSFADE: CrossfadeSettings = {
-  enabled: false,
+  enabled: true,
   duration: 5,
   smartMode: true,
   tempoMatch: false,
@@ -103,7 +103,6 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
       version: STORE_VERSION,
 
       migrate: (_persistedState, version) => {
-        // Sin usuarios existentes: si la versión no coincide, usar defaults
         if (version !== STORE_VERSION || !_persistedState) {
           return initialState;
         }
