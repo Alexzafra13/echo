@@ -31,7 +31,7 @@ describe('ResetUserPasswordUseCase', () => {
     useCase = new ResetUserPasswordUseCase(
       mockUserRepository,
       mockPasswordService,
-      mockLogService as unknown as LogService,
+      mockLogService as unknown as LogService
     );
   });
 
@@ -92,8 +92,11 @@ describe('ResetUserPasswordUseCase', () => {
       const result = await useCase.execute(input);
 
       // Assert
-      expect(result.temporaryPassword).toMatch(/^[A-Za-z0-9]{8}$/);
-      expect(result.temporaryPassword.length).toBe(8);
+      expect(result.temporaryPassword).toHaveLength(16);
+      expect(/[A-Z]/.test(result.temporaryPassword)).toBe(true);
+      expect(/[a-z]/.test(result.temporaryPassword)).toBe(true);
+      expect(/[0-9]/.test(result.temporaryPassword)).toBe(true);
+      expect(/[!@#$%&*?]/.test(result.temporaryPassword)).toBe(true);
     });
 
     it('debería marcar mustChangePassword como true', async () => {
