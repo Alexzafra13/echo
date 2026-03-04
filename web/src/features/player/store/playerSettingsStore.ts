@@ -3,7 +3,8 @@ import { persist } from 'zustand/middleware';
 import type { CrossfadeSettings, NormalizationSettings, AutoplaySettings } from '../types';
 
 // Incrementar al cambiar la estructura del estado persistido
-const STORE_VERSION = 1;
+// v2: crossfade enabled by default (was false in v1)
+const STORE_VERSION = 2;
 
 export type PlayerPreference = 'dynamic' | 'sidebar' | 'footer';
 
@@ -25,7 +26,7 @@ interface PlayerSettingsState {
 }
 
 const DEFAULT_CROSSFADE: CrossfadeSettings = {
-  enabled: false,
+  enabled: true,
   duration: 5,
   smartMode: true,
   tempoMatch: false,
@@ -103,8 +104,24 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
       version: STORE_VERSION,
 
       migrate: (_persistedState, version) => {
-        // Sin usuarios existentes: si la versión no coincide, usar defaults
-        if (version !== STORE_VERSION || !_persistedState) {
+        if (!_persistedState) return initialState;
+
+        const state = _persistedState as Record<string, unknown>;
+
+        // v1 → v2: enable crossfade by default (skipped on iOS where volume is read-only)
+        if (version === 1) {
+          const crossfade = state.crossfade as CrossfadeSettings | undefined;
+          return {
+            ...initialState,
+            ...state,
+            crossfade: {
+              ...(crossfade || DEFAULT_CROSSFADE),
+              enabled: true,
+            },
+          };
+        }
+
+        if (version !== STORE_VERSION) {
           return initialState;
         }
         return _persistedState as PlayerSettingsState;
