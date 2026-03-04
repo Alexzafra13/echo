@@ -24,17 +24,17 @@ overrides:
   valibot@>=0.31.0 <1.2.0: '>=1.2.0'
   # glob command injection (via @nestjs/cli)
   glob@>=11.0.0 <11.1.0: '>=11.1.0'
-  # minimatch ReDoS
-  minimatch@>=5.0.0 <5.1.8: '>=5.1.8'
-  minimatch@>=3.0.0 <3.1.3: '>=3.1.3'
+  # minimatch ReDoS (pin within same major to avoid API breaks)
+  minimatch@>=5.0.0 <5.1.8: '>=5.1.8 <6.0.0'
+  minimatch@>=3.0.0 <3.1.3: '>=3.1.3 <4.0.0'
   # rollup path traversal (via vite, only v4+)
   rollup@>=4.0.0 <4.59.0: '>=4.59.0'
   rollup@>=2.80.0 <3.0.0: '>=2.80.0'
   # webpack SSRF (via @nestjs/cli)
   webpack@>=5.49.0 <5.104.0: '>=5.104.0'
   # minimatch ReDoS (v9/v10 ranges)
-  minimatch@>=9.0.0 <9.0.7: '>=9.0.7'
-  minimatch@>=10.0.0 <10.2.3: '>=10.2.3'
+  minimatch@>=9.0.0 <9.0.7: '>=9.0.7 <10.0.0'
+  minimatch@>=10.0.0 <10.2.3: '>=10.2.3 <11.0.0'
   # multer DoS (via @nestjs/platform-express transitive)
   multer@<2.1.0: '>=2.1.0'
   # serialize-javascript XSS (via workbox-build>terser-webpack-plugin)
