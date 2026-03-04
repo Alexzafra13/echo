@@ -5,7 +5,7 @@
   border: 1px solid var(--info-30);
   border-radius: var(--radius-md);
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .infoBox:hover {
@@ -22,7 +22,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .infoBox__header:hover {
@@ -55,7 +55,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: transform 0.2s ease;
+  transition: transform var(--transition-base);
 }
 
 .infoBox__content {

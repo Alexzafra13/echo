@@ -65,7 +65,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .refreshButton:hover:not(:disabled) {
@@ -106,7 +106,7 @@
   background: var(--white-03);
   border: 1px solid var(--white-08);
   border-radius: 12px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .statCard:hover {
@@ -167,7 +167,7 @@
   background: var(--white-03);
   border: 1px solid var(--white-08);
   border-radius: 12px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .actionCard:hover {
@@ -275,7 +275,7 @@
   padding: 12px;
   background: var(--white-02);
   border-radius: 8px;
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
 }
 
 .pathItem:hover {

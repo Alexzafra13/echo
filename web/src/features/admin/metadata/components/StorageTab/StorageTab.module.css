@@ -53,7 +53,7 @@
   border: 1px solid var(--white-08);
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .radioOption:hover {
@@ -66,7 +66,7 @@
   border-color: var(--primary-30);
 }
 
-.radioOption input[type="radio"] {
+.radioOption input[type='radio'] {
   width: 18px;
   height: 18px;
   margin-top: 2px;
@@ -238,7 +238,7 @@
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .closeButton:hover {
@@ -313,7 +313,7 @@
   align-items: center;
   padding: 4px;
   border-radius: 10px;
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
 }
 
 .directoryRow:hover {
@@ -332,7 +332,7 @@
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   text-align: left;
 }
 

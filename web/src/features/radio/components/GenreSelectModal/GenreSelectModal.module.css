@@ -96,7 +96,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .modal__closeButton:hover {
@@ -116,7 +116,7 @@
   background: var(--black-25);
   border: 1px solid var(--white-08);
   color: var(--color-text-secondary);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .modal__search:focus-within {
@@ -152,7 +152,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .modal__searchClear:hover {
@@ -191,7 +191,7 @@
   border: 1px solid var(--white-06);
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   text-align: left;
   width: 100%;
   font-size: 14px;
@@ -232,7 +232,7 @@
   flex-shrink: 0;
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .genreOption--selected .genreOption__check {

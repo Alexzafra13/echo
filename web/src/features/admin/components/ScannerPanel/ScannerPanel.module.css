@@ -173,7 +173,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .scanButton:hover:not(:disabled) {
@@ -213,7 +213,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   width: 100%;
   justify-content: center;
 }
@@ -250,7 +250,7 @@
   background: transparent;
   border: none;
   border-radius: 8px;
-  transition: background 0.15s ease;
+  transition: background var(--transition-fast);
   border-bottom: 1px solid var(--white-04);
 }
 
@@ -338,7 +338,11 @@
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-primary, #7c3aed), var(--color-primary-hover, #6d28d9));
+  background: linear-gradient(
+    90deg,
+    var(--color-primary, #7c3aed),
+    var(--color-primary-hover, #6d28d9)
+  );
   border-radius: 4px;
   transition: width 0.3s ease-in-out;
   box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
@@ -432,8 +436,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .lufsText {

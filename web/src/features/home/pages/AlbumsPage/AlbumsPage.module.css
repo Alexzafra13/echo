@@ -86,7 +86,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .albumsPage__retryButton:hover {
@@ -235,7 +235,7 @@
   border: 1px solid var(--white-10);
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .albumsPage__searchInput::placeholder {
@@ -262,7 +262,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .albumsPage__searchClearButton:hover {
@@ -312,9 +312,13 @@
   left: 4px;
   height: calc(100% - 8px);
   width: calc(50% - 4px);
-  background: linear-gradient(135deg, var(--color-primary, #ed6842) 0%, var(--color-primary-dark, #d55a35) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary, #ed6842) 0%,
+    var(--color-primary-dark, #d55a35) 100%
+  );
   border-radius: 8px;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--transition-slow);
   box-shadow: 0 2px 8px rgba(237, 104, 66, 0.3);
   z-index: 0;
 }
@@ -335,7 +339,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color var(--transition-base);
   position: relative;
   z-index: 1;
   flex: 1;

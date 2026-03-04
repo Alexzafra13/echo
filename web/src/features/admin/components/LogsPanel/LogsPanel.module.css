@@ -72,7 +72,7 @@
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   min-width: 150px;
   font-weight: 500;
 }
@@ -211,7 +211,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border: 1px solid;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .levelBadge span {
@@ -232,7 +232,7 @@
   color: var(--color-text-secondary, #b8bcc8);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .categoryBadge span {
@@ -259,7 +259,7 @@
   border-radius: 8px;
   background: var(--white-05);
   color: var(--color-text-tertiary, #6b7280);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .logCard:hover .expandIndicator {
@@ -454,28 +454,28 @@
 }
 
 /* Light Theme Overrides */
-:root[data-theme="light"] .logCard {
+:root[data-theme='light'] .logCard {
   background: linear-gradient(135deg, var(--white-60) 0%, var(--white-40) 100%);
   border-color: var(--black-08);
 }
 
-:root[data-theme="light"] .logCard:hover {
+:root[data-theme='light'] .logCard:hover {
   background: linear-gradient(135deg, var(--white-80) 0%, var(--white-60) 100%);
   box-shadow: 0 8px 24px var(--black-10);
 }
 
-:root[data-theme="light"] .filters {
+:root[data-theme='light'] .filters {
   background: linear-gradient(135deg, var(--white-60) 0%, var(--white-40) 100%);
 }
 
-:root[data-theme="light"] .select {
+:root[data-theme='light'] .select {
   background: var(--white-80);
   border-color: var(--black-12);
   color: var(--text-primary);
 }
 
-:root[data-theme="light"] .detailsJson,
-:root[data-theme="light"] .stackTrace {
+:root[data-theme='light'] .detailsJson,
+:root[data-theme='light'] .stackTrace {
   background: var(--black-04);
   border-color: var(--black-08);
 }

@@ -152,7 +152,7 @@
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--transition-fast);
 }
 
 .playlistDetailPage__heroOwner:hover {

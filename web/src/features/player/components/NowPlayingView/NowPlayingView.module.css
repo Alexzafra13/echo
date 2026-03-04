@@ -81,7 +81,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-full);
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
 }
 
 .nowPlaying__closeBtn:hover {
@@ -117,7 +117,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-full);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   position: relative;
 }
 
@@ -206,7 +206,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 0.2s ease;
+  transition: color var(--transition-base);
 }
 
 .nowPlaying__artist--clickable {
@@ -259,7 +259,7 @@
   border-radius: 50%;
   box-shadow: 0 2px 8px var(--black-40);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-base);
 }
 
 .nowPlaying__progressBar:hover .nowPlaying__progressHandle {
@@ -294,7 +294,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-full);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .nowPlaying__controlBtn:hover:not(:disabled) {
@@ -352,7 +352,7 @@
   justify-content: center;
   gap: 6px;
   border-radius: var(--radius-md);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .nowPlaying__actionBtn:hover {
@@ -623,7 +623,7 @@
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-full);
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
     flex-shrink: 0;
   }
 
@@ -649,7 +649,7 @@
     justify-content: center;
     gap: 6px;
     border-radius: var(--radius-md);
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
     flex-shrink: 0;
   }
 
@@ -689,7 +689,7 @@
     cursor: pointer;
     box-shadow: 0 2px 8px var(--black-40);
     margin-top: -6px;
-    transition: transform 0.15s ease;
+    transition: transform var(--transition-fast);
   }
 
   .nowPlaying__volumeSlider::-webkit-slider-thumb:hover {
@@ -786,7 +786,7 @@
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-full);
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
   }
 
   .nowPlaying__queueClose:hover {

@@ -33,7 +33,7 @@
   border-radius: 12px;
   font-size: 15px;
   color: var(--color-text-primary, #ffffff);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .input:hover {
@@ -79,7 +79,7 @@
   background: var(--white-03);
   border: 1px solid var(--white-08);
   border-radius: 12px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .checkboxWrapper:hover {
@@ -107,7 +107,7 @@
   border: 2px solid var(--white-20);
   background: var(--white-05);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   position: relative;
   flex-shrink: 0;
 }
@@ -224,45 +224,45 @@
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .input {
+:root[data-theme='light'] .input {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.15);
   color: var(--color-text-primary, #1f2937);
 }
 
-:root[data-theme="light"] .input:hover {
+:root[data-theme='light'] .input:hover {
   background: rgba(31, 41, 55, 0.08);
   border-color: rgba(31, 41, 55, 0.2);
 }
 
-:root[data-theme="light"] .input:focus {
+:root[data-theme='light'] .input:focus {
   background: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .input::placeholder {
+:root[data-theme='light'] .input::placeholder {
   color: rgba(31, 41, 55, 0.5);
 }
 
-:root[data-theme="light"] .checkboxWrapper {
+:root[data-theme='light'] .checkboxWrapper {
   background: rgba(31, 41, 55, 0.04);
   border-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .checkboxWrapper:hover {
+:root[data-theme='light'] .checkboxWrapper:hover {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.15);
 }
 
-:root[data-theme="light"] .checkbox {
+:root[data-theme='light'] .checkbox {
   border-color: rgba(31, 41, 55, 0.25);
   background: rgba(31, 41, 55, 0.05);
 }
 
-:root[data-theme="light"] .checkbox:hover {
+:root[data-theme='light'] .checkbox:hover {
   border-color: rgba(31, 41, 55, 0.35);
   background: rgba(31, 41, 55, 0.08);
 }
 
-:root[data-theme="light"] .actions {
+:root[data-theme='light'] .actions {
   border-top-color: rgba(31, 41, 55, 0.1);
 }

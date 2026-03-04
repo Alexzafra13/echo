@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   border-radius: 4px;
   opacity: 0;
 }
@@ -120,7 +120,7 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
   text-align: left;
   color: var(--text-primary, #ffffff);
   font-size: 14px;
@@ -300,7 +300,7 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .trackOptionsMenu__sheetClose:active {

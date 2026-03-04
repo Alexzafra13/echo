@@ -12,7 +12,7 @@
   max-width: 200px;
   overflow: hidden;
   cursor: default;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -72,8 +72,12 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .content {

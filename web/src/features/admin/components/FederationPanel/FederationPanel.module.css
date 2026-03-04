@@ -95,7 +95,7 @@
   border-radius: 6px;
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .serverNameEditBtn:hover {
@@ -120,7 +120,7 @@
   font-size: 16px;
   font-weight: 500;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .serverNameInput:focus {
@@ -142,7 +142,7 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .serverNameSaveBtn {
@@ -190,7 +190,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .tab:hover {
@@ -257,11 +257,16 @@
 }
 
 .serverCard {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.12) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.15) 0%,
+    rgba(139, 92, 246, 0.08) 50%,
+    rgba(236, 72, 153, 0.12) 100%
+  );
   border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: 16px;
   padding: 24px;
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-base);
 }
 
 .serverCard:hover {
@@ -273,83 +278,128 @@
 /* 1. Purple/Violet (default - already set above) */
 
 /* 2. Emerald/Teal */
-.serverCard:nth-child(10n+2) {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(20, 184, 166, 0.08) 50%, rgba(6, 182, 212, 0.12) 100%);
+.serverCard:nth-child(10n + 2) {
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.15) 0%,
+    rgba(20, 184, 166, 0.08) 50%,
+    rgba(6, 182, 212, 0.12) 100%
+  );
   border-color: rgba(16, 185, 129, 0.25);
 }
-.serverCard:nth-child(10n+2):hover {
+.serverCard:nth-child(10n + 2):hover {
   border-color: rgba(16, 185, 129, 0.45);
 }
 
 /* 3. Orange/Amber */
-.serverCard:nth-child(10n+3) {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(245, 158, 11, 0.08) 50%, rgba(234, 179, 8, 0.12) 100%);
+.serverCard:nth-child(10n + 3) {
+  background: linear-gradient(
+    135deg,
+    rgba(249, 115, 22, 0.15) 0%,
+    rgba(245, 158, 11, 0.08) 50%,
+    rgba(234, 179, 8, 0.12) 100%
+  );
   border-color: rgba(249, 115, 22, 0.25);
 }
-.serverCard:nth-child(10n+3):hover {
+.serverCard:nth-child(10n + 3):hover {
   border-color: rgba(249, 115, 22, 0.45);
 }
 
 /* 4. Rose/Pink */
-.serverCard:nth-child(10n+4) {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.15) 0%, rgba(236, 72, 153, 0.08) 50%, rgba(217, 70, 239, 0.12) 100%);
+.serverCard:nth-child(10n + 4) {
+  background: linear-gradient(
+    135deg,
+    rgba(244, 63, 94, 0.15) 0%,
+    rgba(236, 72, 153, 0.08) 50%,
+    rgba(217, 70, 239, 0.12) 100%
+  );
   border-color: rgba(244, 63, 94, 0.25);
 }
-.serverCard:nth-child(10n+4):hover {
+.serverCard:nth-child(10n + 4):hover {
   border-color: rgba(244, 63, 94, 0.45);
 }
 
 /* 5. Cyan/Sky */
-.serverCard:nth-child(10n+5) {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(14, 165, 233, 0.08) 50%, rgba(59, 130, 246, 0.12) 100%);
+.serverCard:nth-child(10n + 5) {
+  background: linear-gradient(
+    135deg,
+    rgba(6, 182, 212, 0.15) 0%,
+    rgba(14, 165, 233, 0.08) 50%,
+    rgba(59, 130, 246, 0.12) 100%
+  );
   border-color: rgba(6, 182, 212, 0.25);
 }
-.serverCard:nth-child(10n+5):hover {
+.serverCard:nth-child(10n + 5):hover {
   border-color: rgba(6, 182, 212, 0.45);
 }
 
 /* 6. Lime/Green */
-.serverCard:nth-child(10n+6) {
-  background: linear-gradient(135deg, rgba(132, 204, 22, 0.15) 0%, rgba(34, 197, 94, 0.08) 50%, rgba(16, 185, 129, 0.12) 100%);
+.serverCard:nth-child(10n + 6) {
+  background: linear-gradient(
+    135deg,
+    rgba(132, 204, 22, 0.15) 0%,
+    rgba(34, 197, 94, 0.08) 50%,
+    rgba(16, 185, 129, 0.12) 100%
+  );
   border-color: rgba(132, 204, 22, 0.25);
 }
-.serverCard:nth-child(10n+6):hover {
+.serverCard:nth-child(10n + 6):hover {
   border-color: rgba(132, 204, 22, 0.45);
 }
 
 /* 7. Fuchsia/Purple */
-.serverCard:nth-child(10n+7) {
-  background: linear-gradient(135deg, rgba(217, 70, 239, 0.15) 0%, rgba(168, 85, 247, 0.08) 50%, rgba(139, 92, 246, 0.12) 100%);
+.serverCard:nth-child(10n + 7) {
+  background: linear-gradient(
+    135deg,
+    rgba(217, 70, 239, 0.15) 0%,
+    rgba(168, 85, 247, 0.08) 50%,
+    rgba(139, 92, 246, 0.12) 100%
+  );
   border-color: rgba(217, 70, 239, 0.25);
 }
-.serverCard:nth-child(10n+7):hover {
+.serverCard:nth-child(10n + 7):hover {
   border-color: rgba(217, 70, 239, 0.45);
 }
 
 /* 8. Red/Orange */
-.serverCard:nth-child(10n+8) {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(249, 115, 22, 0.08) 50%, rgba(245, 158, 11, 0.12) 100%);
+.serverCard:nth-child(10n + 8) {
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.15) 0%,
+    rgba(249, 115, 22, 0.08) 50%,
+    rgba(245, 158, 11, 0.12) 100%
+  );
   border-color: rgba(239, 68, 68, 0.25);
 }
-.serverCard:nth-child(10n+8):hover {
+.serverCard:nth-child(10n + 8):hover {
   border-color: rgba(239, 68, 68, 0.45);
 }
 
 /* 9. Blue/Indigo */
-.serverCard:nth-child(10n+9) {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.08) 50%, rgba(139, 92, 246, 0.12) 100%);
+.serverCard:nth-child(10n + 9) {
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.15) 0%,
+    rgba(99, 102, 241, 0.08) 50%,
+    rgba(139, 92, 246, 0.12) 100%
+  );
   border-color: rgba(59, 130, 246, 0.25);
 }
-.serverCard:nth-child(10n+9):hover {
+.serverCard:nth-child(10n + 9):hover {
   border-color: rgba(59, 130, 246, 0.45);
 }
 
 /* 10. Yellow/Lime */
-.serverCard:nth-child(10n+10) {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(163, 230, 53, 0.08) 50%, rgba(132, 204, 22, 0.12) 100%);
+.serverCard:nth-child(10n + 10) {
+  background: linear-gradient(
+    135deg,
+    rgba(234, 179, 8, 0.15) 0%,
+    rgba(163, 230, 53, 0.08) 50%,
+    rgba(132, 204, 22, 0.12) 100%
+  );
   border-color: rgba(234, 179, 8, 0.25);
 }
-.serverCard:nth-child(10n+10):hover {
+.serverCard:nth-child(10n + 10):hover {
   border-color: rgba(234, 179, 8, 0.45);
 }
 
@@ -371,51 +421,51 @@
   justify-content: center;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 /* Icon color variants matching card colors */
-.serverCard:nth-child(10n+2) .serverIcon {
+.serverCard:nth-child(10n + 2) .serverIcon {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(20, 184, 166, 0.15) 100%);
   color: #10b981;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
-.serverCard:nth-child(10n+3) .serverIcon {
+.serverCard:nth-child(10n + 3) .serverIcon {
   background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%);
   color: #f59e0b;
   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
 }
-.serverCard:nth-child(10n+4) .serverIcon {
+.serverCard:nth-child(10n + 4) .serverIcon {
   background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(236, 72, 153, 0.15) 100%);
   color: #ec4899;
   box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2);
 }
-.serverCard:nth-child(10n+5) .serverIcon {
+.serverCard:nth-child(10n + 5) .serverIcon {
   background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(14, 165, 233, 0.15) 100%);
   color: #0ea5e9;
   box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
 }
-.serverCard:nth-child(10n+6) .serverIcon {
+.serverCard:nth-child(10n + 6) .serverIcon {
   background: linear-gradient(135deg, rgba(132, 204, 22, 0.2) 0%, rgba(34, 197, 94, 0.15) 100%);
   color: #22c55e;
   box-shadow: 0 4px 12px rgba(132, 204, 22, 0.2);
 }
-.serverCard:nth-child(10n+7) .serverIcon {
+.serverCard:nth-child(10n + 7) .serverIcon {
   background: linear-gradient(135deg, rgba(217, 70, 239, 0.2) 0%, rgba(168, 85, 247, 0.15) 100%);
   color: #a855f7;
   box-shadow: 0 4px 12px rgba(217, 70, 239, 0.2);
 }
-.serverCard:nth-child(10n+8) .serverIcon {
+.serverCard:nth-child(10n + 8) .serverIcon {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(249, 115, 22, 0.15) 100%);
   color: #f97316;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
-.serverCard:nth-child(10n+9) .serverIcon {
+.serverCard:nth-child(10n + 9) .serverIcon {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%);
   color: #6366f1;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
-.serverCard:nth-child(10n+10) .serverIcon {
+.serverCard:nth-child(10n + 10) .serverIcon {
   background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(163, 230, 53, 0.15) 100%);
   color: #a3e635;
   box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
@@ -489,7 +539,8 @@
 }
 
 @keyframes pulse-online {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
@@ -536,7 +587,7 @@
   padding: 8px 14px;
   border-radius: 10px;
   border: 1px solid var(--white-10);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .stat:hover {
@@ -601,7 +652,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .iconButton:hover {
@@ -628,8 +679,12 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Invitation List */
@@ -681,7 +736,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .copyButton:hover {
@@ -778,7 +833,7 @@
 .permissionToggle {
   cursor: pointer;
   border: 1px solid transparent;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .permissionToggle:hover {
@@ -843,7 +898,7 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -890,7 +945,12 @@
   justify-content: center;
   padding: 80px 32px;
   text-align: center;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.02) 50%, transparent 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.04) 0%,
+    rgba(139, 92, 246, 0.02) 50%,
+    transparent 100%
+  );
   border-radius: 20px;
   border: 1px dashed var(--white-15);
 }
@@ -991,7 +1051,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .modalClose:hover {
@@ -1079,7 +1139,7 @@
   background: var(--white-08);
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .input::placeholder {
@@ -1187,7 +1247,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .copyButtonLarge:hover {

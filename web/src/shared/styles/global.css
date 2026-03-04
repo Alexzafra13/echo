@@ -277,7 +277,7 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   color: white;
   opacity: 0;
   transform: translateY(8px);
@@ -304,7 +304,9 @@ textarea:focus-visible {
 
 /* Interactive card hover effect - use on clickable cards */
 .interactive-card {
-  transition: transform var(--transition-slow), box-shadow var(--transition-slow);
+  transition:
+    transform var(--transition-slow),
+    box-shadow var(--transition-slow);
 }
 
 .interactive-card:hover {

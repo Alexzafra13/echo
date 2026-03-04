@@ -55,7 +55,7 @@
   background: transparent;
   border: none;
   border-radius: 6px;
-  transition: background 0.15s ease;
+  transition: background var(--transition-fast);
   border-bottom: 1px solid var(--white-04);
 }
 
@@ -78,22 +78,22 @@
 }
 
 /* Icon color variants by activity type */
-.activityItem[data-type="scan"] .activityIcon {
+.activityItem[data-type='scan'] .activityIcon {
   background: rgba(16, 185, 129, 0.1);
   color: #34d399;
 }
 
-.activityItem[data-type="enrichment"] .activityIcon {
+.activityItem[data-type='enrichment'] .activityIcon {
   background: rgba(99, 102, 241, 0.1);
   color: #818cf8;
 }
 
-.activityItem[data-type="user"] .activityIcon {
+.activityItem[data-type='user'] .activityIcon {
   background: rgba(59, 130, 246, 0.1);
   color: #60a5fa;
 }
 
-.activityItem[data-type="system"] .activityIcon {
+.activityItem[data-type='system'] .activityIcon {
   background: rgba(100, 116, 139, 0.1);
   color: #94a3b8;
 }

@@ -41,7 +41,7 @@
   background: var(--white-02);
   border: 1px solid var(--white-04);
   border-radius: 8px;
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-base);
 }
 
 .healthItem::before {
@@ -124,11 +124,11 @@
 
 /* Service Brand Colors - icon only, minimal card tint */
 .servicePostgres .healthHeader svg {
-  color: #5B9BD5;
+  color: #5b9bd5;
 }
 
 .serviceRedis .healthHeader svg {
-  color: #DC382D;
+  color: #dc382d;
 }
 
 .serviceScanner .healthHeader svg {
@@ -140,7 +140,7 @@
 }
 
 .serviceLastfm .healthHeader svg {
-  color: #D51007;
+  color: #d51007;
 }
 
 .serviceFanart .healthHeader svg {
@@ -148,7 +148,7 @@
 }
 
 .serviceMusicbrainz .healthHeader svg {
-  color: #BA478F;
+  color: #ba478f;
 }
 
 /* Alerts Section */
@@ -209,7 +209,7 @@
   font-weight: 500;
   color: var(--color-warning);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
   text-align: left;
   font-family: inherit;
 }
@@ -236,7 +236,7 @@
 .alertChevron {
   flex-shrink: 0;
   opacity: 0.4;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-base);
 }
 
 .alertButton:hover .alertChevron {
@@ -266,17 +266,17 @@
 }
 
 /* Light Theme */
-:root[data-theme="light"] .container {
+:root[data-theme='light'] .container {
   background: rgba(255, 255, 255, 0.5);
   border-color: rgba(31, 41, 55, 0.08);
 }
 
-:root[data-theme="light"] .healthItem {
+:root[data-theme='light'] .healthItem {
   background: rgba(255, 255, 255, 0.4);
   border-color: rgba(31, 41, 55, 0.06);
 }
 
-:root[data-theme="light"] .healthItem:hover {
+:root[data-theme='light'] .healthItem:hover {
   border-color: rgba(31, 41, 55, 0.12);
 }
 

@@ -4,7 +4,7 @@
   padding: 20px;
   margin-bottom: 16px;
   border: 1px solid #2a2a3c;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .providerCard:hover {

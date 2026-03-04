@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .menuButton:hover {
@@ -68,7 +68,7 @@
   font-size: 13px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .menuOption:hover {
@@ -104,7 +104,7 @@
   font-size: 13px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .menuOptionToggle:hover {
@@ -122,7 +122,7 @@
   border-radius: 9px;
   background: var(--white-15);
   position: relative;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .toggleIndicator::after {
@@ -134,7 +134,7 @@
   background: var(--text-tertiary);
   top: 2px;
   left: 2px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .toggleIndicator--active {

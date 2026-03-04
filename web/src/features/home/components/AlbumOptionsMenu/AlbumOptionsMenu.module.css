@@ -15,7 +15,7 @@
   justify-content: center;
   cursor: pointer;
   color: var(--color-text-secondary, #b8bcc8);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .albumOptionsMenu__trigger:hover {
@@ -145,7 +145,7 @@
   color: var(--color-text-primary, #ffffff);
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--transition-fast);
 }
 
 .albumOptionsMenu__option:hover:not(:disabled) {
@@ -317,7 +317,7 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .albumOptionsMenu__sheetClose:active {
@@ -346,7 +346,7 @@
   color: var(--color-text-primary, #ffffff);
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--transition-fast);
 }
 
 .albumOptionsMenu__sheetOption:active {

@@ -49,7 +49,7 @@
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .refreshButton:hover {
@@ -89,7 +89,7 @@
   border: 1px solid var(--white-06);
   border-radius: 10px;
   padding: var(--space-5);
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-base);
 }
 
 .card:hover {
@@ -278,7 +278,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -317,7 +318,7 @@
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .retryButton:hover {

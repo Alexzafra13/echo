@@ -178,7 +178,7 @@
   gap: 8px;
   font-size: 13px;
   color: var(--color-text-tertiary, #6b7280);
-  transition: color 0.2s ease;
+  transition: color var(--transition-base);
 }
 
 .requirementMet {

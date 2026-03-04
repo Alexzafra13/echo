@@ -27,7 +27,8 @@ export const queryKeys = {
     byId: (id: string) => [...queryKeys.albums.all, id] as const,
     tracks: (albumId: string) => [...queryKeys.albums.byId(albumId), 'tracks'] as const,
     search: (query: string) => [...queryKeys.albums.all, 'search', query] as const,
-    alphabetical: (params?: Record<string, unknown>) => [...queryKeys.albums.all, 'alphabetical', params] as const,
+    alphabetical: (params?: Record<string, unknown>) =>
+      [...queryKeys.albums.all, 'alphabetical', params] as const,
     coverMetadata: (id: string) => ['album-cover-metadata', id] as const,
   },
 
@@ -43,7 +44,8 @@ export const queryKeys = {
   // Tracks
   tracks: {
     all: ['tracks'] as const,
-    search: (query: string, params?: Record<string, unknown>) => [...queryKeys.tracks.all, 'search', query, params] as const,
+    search: (query: string, params?: Record<string, unknown>) =>
+      [...queryKeys.tracks.all, 'search', query, params] as const,
     byAlbum: (albumId: string) => [...queryKeys.tracks.all, 'album', albumId] as const,
   },
 
@@ -75,15 +77,18 @@ export const queryKeys = {
   scanner: {
     all: ['scanner'] as const,
     status: (scanId?: string) => [...queryKeys.scanner.all, 'status', scanId] as const,
-    history: (page?: number, limit?: number) => [...queryKeys.scanner.all, 'history', page, limit] as const,
+    history: (page?: number, limit?: number) =>
+      [...queryKeys.scanner.all, 'history', page, limit] as const,
   },
 
   // Metadata
   metadata: {
     all: ['metadata'] as const,
     settings: () => [...queryKeys.metadata.all, 'settings'] as const,
-    conflicts: (params?: Record<string, unknown>) => [...queryKeys.metadata.all, 'conflicts', params] as const,
-    entity: (entityType: string, entityId: string) => [...queryKeys.metadata.all, 'entity', entityType, entityId] as const,
+    conflicts: (params?: Record<string, unknown>) =>
+      [...queryKeys.metadata.all, 'conflicts', params] as const,
+    entity: (entityType: string, entityId: string) =>
+      [...queryKeys.metadata.all, 'entity', entityType, entityId] as const,
   },
 
   // Recommendations
@@ -91,13 +96,113 @@ export const queryKeys = {
     all: ['recommendations'] as const,
     waveMix: (id?: string) => [...queryKeys.recommendations.all, 'wave-mix', id] as const,
     dailyMix: () => [...queryKeys.recommendations.all, 'daily-mix'] as const,
-    artistPlaylists: (artistId?: string) => [...queryKeys.recommendations.all, 'artist', artistId] as const,
+    artistPlaylists: (artistId?: string) =>
+      [...queryKeys.recommendations.all, 'artist', artistId] as const,
+    autoPlaylists: () => [...queryKeys.recommendations.all, 'auto-playlists'] as const,
   },
 
   // Radio
   radio: {
     all: ['radio'] as const,
-    stations: (params?: Record<string, unknown>) => [...queryKeys.radio.all, 'stations', params] as const,
+    stations: (params?: Record<string, unknown>) =>
+      [...queryKeys.radio.all, 'stations', params] as const,
     favorites: () => [...queryKeys.radio.all, 'favorites'] as const,
+    isFavorite: (stationUuid: string) =>
+      [...queryKeys.radio.all, 'is-favorite', stationUuid] as const,
+    search: (params?: Record<string, unknown>) =>
+      [...queryKeys.radio.all, 'search', params] as const,
+    topVoted: (limit?: number) => [...queryKeys.radio.all, 'top-voted', limit] as const,
+    popular: (limit?: number) => [...queryKeys.radio.all, 'popular', limit] as const,
+    byCountry: (countryCode: string, limit?: number) =>
+      [...queryKeys.radio.all, 'by-country', countryCode, limit] as const,
+    byTag: (tag: string, limit?: number) => [...queryKeys.radio.all, 'by-tag', tag, limit] as const,
+    tags: (limit?: number) => [...queryKeys.radio.all, 'tags', limit] as const,
+    countries: () => [...queryKeys.radio.all, 'countries'] as const,
   },
+
+  // Social
+  social: {
+    all: ['social'] as const,
+    overview: () => [...queryKeys.social.all, 'overview'] as const,
+    friends: () => [...queryKeys.social.all, 'friends'] as const,
+    pending: () => [...queryKeys.social.all, 'pending'] as const,
+    listening: () => [...queryKeys.social.all, 'listening'] as const,
+    activity: (limit?: number) => [...queryKeys.social.all, 'activity', limit] as const,
+    search: (query: string) => [...queryKeys.social.all, 'search', query] as const,
+  },
+
+  // Federation
+  federation: {
+    all: ['federation'] as const,
+    invitations: () => [...queryKeys.federation.all, 'invitations'] as const,
+    servers: () => [...queryKeys.federation.all, 'servers'] as const,
+    serverById: (id: string) => [...queryKeys.federation.all, 'servers', id] as const,
+    library: (serverId: string, page: number, limit: number) =>
+      [...queryKeys.federation.all, 'library', serverId, page, limit] as const,
+    albums: (serverId: string, page: number, limit: number, search?: string) =>
+      [...queryKeys.federation.all, 'albums', serverId, page, limit, search] as const,
+    album: (serverId: string, albumId: string) =>
+      [...queryKeys.federation.all, 'album', serverId, albumId] as const,
+    accessTokens: () => [...queryKeys.federation.all, 'access-tokens'] as const,
+    pendingMutual: () => [...queryKeys.federation.all, 'pending-mutual'] as const,
+    sharedAlbums: (params?: Record<string, unknown>) =>
+      [...queryKeys.federation.all, 'shared-albums', params] as const,
+    sharedAlbumsHome: (limit?: number) =>
+      [...queryKeys.federation.all, 'shared-albums', 'home', limit] as const,
+    imports: () => [...queryKeys.federation.all, 'imports'] as const,
+    remoteAlbum: (serverId: string, albumId: string) =>
+      [...queryKeys.federation.all, 'remote-album', serverId, albumId] as const,
+  },
+
+  // Explore
+  explore: {
+    all: ['explore'] as const,
+    unplayed: (limit: number, offset: number) =>
+      [...queryKeys.explore.all, 'unplayed', limit, offset] as const,
+    forgotten: (limit: number, offset: number, monthsAgo?: number) =>
+      [...queryKeys.explore.all, 'forgotten', limit, offset, monthsAgo] as const,
+    hiddenGems: (limit: number) => [...queryKeys.explore.all, 'hidden-gems', limit] as const,
+    randomAlbums: (count: number) => [...queryKeys.explore.all, 'random-albums', count] as const,
+  },
+
+  // Settings
+  settings: {
+    privacy: () => ['privacy-settings'] as const,
+    homePreferences: () => ['home-preferences'] as const,
+    libraryAnalysis: () => ['library-analysis-settings'] as const,
+  },
+
+  // Media (covers, avatars, custom images)
+  media: {
+    albumCovers: (albumId: string) => ['albumCovers', albumId] as const,
+    customAlbumCovers: (albumId: string) => ['customAlbumCovers', albumId] as const,
+    artistAvatars: (artistId: string) => ['artistAvatars', artistId] as const,
+    customArtistImages: (artistId: string) => ['customArtistImages', artistId] as const,
+  },
+
+  // Enrichment
+  enrichment: {
+    logs: (filters?: Record<string, unknown>) => ['enrichmentLogs', filters] as const,
+    stats: (period?: string) => ['enrichmentStats', period] as const,
+    autoSearchConfig: () => ['autoSearchConfig'] as const,
+    autoSearchStats: () => ['autoSearchStats'] as const,
+  },
+
+  // Public profiles
+  publicProfile: {
+    byId: (userId: string) => ['public-profile', userId] as const,
+  },
+
+  // Trending
+  trending: {
+    byRange: (timeRange: string) => ['trending', timeRange] as const,
+  },
+
+  // Player
+  player: {
+    streamToken: () => ['stream-token'] as const,
+  },
+
+  // User country (for radio)
+  userCountry: () => ['user-country'] as const,
 } as const;

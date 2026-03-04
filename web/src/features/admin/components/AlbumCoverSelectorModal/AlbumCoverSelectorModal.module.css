@@ -55,7 +55,7 @@
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,7 +86,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   position: relative;
   margin-bottom: -1px; /* Overlap with bottom border */
 }
@@ -174,7 +174,7 @@
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   min-width: 200px;
 }
 
@@ -203,7 +203,7 @@
   border-radius: 12px;
   padding: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -343,46 +343,46 @@
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .modal {
+:root[data-theme='light'] .modal {
   background: rgba(107, 114, 128, 0.85);
 }
 
-:root[data-theme="light"] .modalContent {
+:root[data-theme='light'] .modalContent {
   background: var(--bg-elevated, #d1d5db);
   border-color: rgba(31, 41, 55, 0.15);
 }
 
-:root[data-theme="light"] .header {
+:root[data-theme='light'] .header {
   border-bottom-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .tabs {
+:root[data-theme='light'] .tabs {
   border-bottom-color: rgba(31, 41, 55, 0.1);
 }
 
-:root[data-theme="light"] .filterSelect {
+:root[data-theme='light'] .filterSelect {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.15);
   color: var(--color-text-primary, #1f2937);
 }
 
-:root[data-theme="light"] .filterSelect:hover {
+:root[data-theme='light'] .filterSelect:hover {
   border-color: rgba(31, 41, 55, 0.25);
 }
 
-:root[data-theme="light"] .coverCard {
+:root[data-theme='light'] .coverCard {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.12);
 }
 
-:root[data-theme="light"] .coverCard:hover {
+:root[data-theme='light'] .coverCard:hover {
   border-color: rgba(31, 41, 55, 0.2);
 }
 
-:root[data-theme="light"] .coverImageWrapper {
+:root[data-theme='light'] .coverImageWrapper {
   background: rgba(31, 41, 55, 0.08);
 }
 
-:root[data-theme="light"] .footer {
+:root[data-theme='light'] .footer {
   border-top-color: rgba(31, 41, 55, 0.1);
 }

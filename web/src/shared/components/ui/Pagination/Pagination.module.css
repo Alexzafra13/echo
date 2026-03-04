@@ -36,7 +36,7 @@
   opacity: 0;
   pointer-events: none;
   z-index: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .pagination__list:hover::before {
@@ -58,12 +58,12 @@
   opacity: 1;
   pointer-events: none;
   z-index: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   box-shadow: 0 2px 8px rgba(237, 104, 66, 0.2);
 }
 
 /* Position indicator on current page */
-.pagination[data-ready="true"] .pagination__list::after {
+.pagination[data-ready='true'] .pagination__list::after {
   left: calc(var(--current-page-offset, 0) * 1px + var(--pagination-inset));
 }
 
@@ -174,7 +174,7 @@
 @media (prefers-reduced-motion: no-preference) {
   .pagination__list::before,
   .pagination__list::after {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--transition-slow);
   }
 
   .pagination__link {

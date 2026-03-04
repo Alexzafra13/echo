@@ -55,7 +55,7 @@
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -72,7 +72,7 @@
   height: 24px;
   background: var(--color-primary, #ed6842);
   border-radius: 0 3px 3px 0;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--transition-slow);
 }
 
 .sidebar__navItem:hover {
@@ -107,7 +107,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
+  transition: transform var(--transition-base);
 }
 
 .sidebar__navItem:hover .sidebar__navIcon {
@@ -223,7 +223,7 @@
   }
 
   /* Also hide Admin in mobile bottom nav */
-  .sidebar__navItem:nth-child(n+8) {
+  .sidebar__navItem:nth-child(n + 8) {
     display: none;
   }
 
@@ -274,7 +274,7 @@
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .sidebar {
+:root[data-theme='light'] .sidebar {
   background: rgba(156, 163, 175, 0.65); /* Sidebar grisáceo más oscuro */
   background-image: var(--gradient-sidebar);
   backdrop-filter: blur(12px) saturate(150%);
@@ -282,27 +282,27 @@
   border-right: 1px solid rgba(75, 85, 99, 0.15);
 }
 
-:root[data-theme="light"] .sidebar__navItem {
+:root[data-theme='light'] .sidebar__navItem {
   color: #1f2937;
 }
 
-:root[data-theme="light"] .sidebar__navItem:hover {
+:root[data-theme='light'] .sidebar__navItem:hover {
   background: rgba(31, 41, 55, 0.1);
   color: #111827;
 }
 
-:root[data-theme="light"] .sidebar__navItem--active {
+:root[data-theme='light'] .sidebar__navItem--active {
   color: var(--color-primary-600, #e04d28);
 }
 
-:root[data-theme="light"] .sidebar__navItem--active .sidebar__navIcon {
+:root[data-theme='light'] .sidebar__navItem--active .sidebar__navIcon {
   filter: drop-shadow(0 0 4px rgba(237, 104, 66, 0.3));
 }
 
-:root[data-theme="light"] .sidebar__nav::-webkit-scrollbar-thumb {
+:root[data-theme='light'] .sidebar__nav::-webkit-scrollbar-thumb {
   background: rgba(31, 41, 55, 0.2);
 }
 
-:root[data-theme="light"] .sidebar__nav::-webkit-scrollbar-thumb:hover {
+:root[data-theme='light'] .sidebar__nav::-webkit-scrollbar-thumb:hover {
   background: rgba(31, 41, 55, 0.3);
 }

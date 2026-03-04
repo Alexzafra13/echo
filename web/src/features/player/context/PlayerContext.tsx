@@ -34,6 +34,8 @@ import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
 import { useMediaSession } from '../hooks/useMediaSession';
 import { useSocialSync } from '../hooks/useSocialSync';
+import { useRadioSignalSync } from '../hooks/useRadioSignalSync';
+import { useVisibilitySync } from '../hooks/useVisibilitySync';
 import type { RadioBrowserStation } from '@shared/types/radio.types';
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
@@ -203,47 +205,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, [radioMetadata]);
 
   // Update radio signal status based on audio events
-  useEffect(() => {
-    const audioA = audioElements.audioRefA.current;
-    const audioB = audioElements.audioRefB.current;
-    if (!audioA || !audioB) return;
-
-    const handlePlaying = () => {
-      if (radio.isRadioMode) radio.setSignalStatus('good');
-    };
-    const handleWaiting = () => {
-      if (radio.isRadioMode) radio.setSignalStatus('weak');
-    };
-    const handleStalled = () => {
-      if (radio.isRadioMode) radio.setSignalStatus('weak');
-    };
-    const handleError = () => {
-      if (radio.isRadioMode) radio.setSignalStatus('error');
-    };
-
-    audioA.addEventListener('playing', handlePlaying);
-    audioA.addEventListener('waiting', handleWaiting);
-    audioA.addEventListener('stalled', handleStalled);
-    audioA.addEventListener('error', handleError);
-    audioB.addEventListener('playing', handlePlaying);
-    audioB.addEventListener('waiting', handleWaiting);
-    audioB.addEventListener('stalled', handleStalled);
-    audioB.addEventListener('error', handleError);
-
-    return () => {
-      audioA.removeEventListener('playing', handlePlaying);
-      audioA.removeEventListener('waiting', handleWaiting);
-      audioA.removeEventListener('stalled', handleStalled);
-      audioA.removeEventListener('error', handleError);
-      audioB.removeEventListener('playing', handlePlaying);
-      audioB.removeEventListener('waiting', handleWaiting);
-      audioB.removeEventListener('stalled', handleStalled);
-      audioB.removeEventListener('error', handleError);
-    };
-    // Note: Only depend on audioElements refs, not the entire radio object
-    // radio.isRadioMode and radio.setSignalStatus are accessed inside handlers
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioElements.audioRefA, audioElements.audioRefB]);
+  useRadioSignalSync({
+    audioRefA: audioElements.audioRefA,
+    audioRefB: audioElements.audioRefB,
+    isRadioMode: radio.isRadioMode,
+    setSignalStatus: radio.setSignalStatus,
+  });
 
   // ========== TRACK PLAYBACK ==========
 
@@ -941,34 +908,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   });
 
   // ========== PWA VISIBILITY SYNC (background audio recovery) ==========
-  // When the PWA goes to background on mobile, the OS may suspend audio playback.
-  // When it returns to foreground, we need to sync our state with reality:
-  // - If isPlaying=true but audio is actually paused → resume or update state
-  // - If audio was suspended → attempt to resume playback
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) return; // Only act when becoming visible
-
-      const activeAudio = audioElements.getActiveAudio();
-      if (!activeAudio) return;
-
-      if (isPlaying && activeAudio.paused && !activeAudio.ended) {
-        // State says playing but audio is actually paused — OS suspended it.
-        // Try to resume; if it fails, sync state to reality.
-        logger.debug('[Player] App foregrounded: audio was suspended, attempting resume');
-        activeAudio.play().catch(() => {
-          logger.warn('[Player] Resume after foreground failed, syncing state');
-          setIsPlaying(false);
-        });
-      } else if (!isPlaying && !activeAudio.paused) {
-        // Audio is playing but state says paused — sync state
-        setIsPlaying(true);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [audioElements, isPlaying]);
+  useVisibilitySync({
+    isPlaying,
+    getActiveAudio: audioElements.getActiveAudio,
+    setIsPlaying,
+  });
 
   // ========== SOCIAL "LISTENING NOW" SYNC ==========
   useSocialSync({

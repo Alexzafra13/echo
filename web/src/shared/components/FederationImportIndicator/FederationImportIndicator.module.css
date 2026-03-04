@@ -12,7 +12,7 @@
   max-width: 240px;
   overflow: hidden;
   cursor: default;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   animation: slideIn 0.3s ease-out;
 }
@@ -124,8 +124,15 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(0.95); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
 }
 
 .content {
@@ -187,7 +194,7 @@
   color: #f87171;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   padding: 0;
 }
 

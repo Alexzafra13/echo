@@ -29,7 +29,7 @@
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   white-space: nowrap;
   position: relative;
 }
@@ -92,11 +92,7 @@
     top: 0;
     bottom: 2px;
     width: 40px;
-    background: linear-gradient(
-      to right,
-      transparent,
-      var(--color-bg-primary, #0a0e27)
-    );
+    background: linear-gradient(to right, transparent, var(--color-bg-primary, #0a0e27));
     pointer-events: none;
   }
 
