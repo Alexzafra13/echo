@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getLoggerToken } from 'nestjs-pino';
 import { ScannerGateway } from './scanner.gateway';
-import { ScanProcessorService } from '../services/scan-processor.service';
+import { SCAN_CONTROL } from '../../domain/ports/scan-control.port';
 import { Server, Socket } from 'socket.io';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { WsJwtGuard } from '../../../../infrastructure/websocket/guards/ws-jwt.guard';
@@ -59,7 +59,7 @@ describe('ScannerGateway', () => {
         WsLoggingInterceptor,
         { provide: getLoggerToken(ScannerGateway.name), useValue: mockLogger },
         { provide: getLoggerToken(WsLoggingInterceptor.name), useValue: mockLogger },
-        { provide: ScanProcessorService, useValue: mockScanProcessor },
+        { provide: SCAN_CONTROL, useValue: mockScanProcessor },
       ],
     })
       .overrideGuard(WsJwtGuard)

@@ -10,17 +10,10 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import {
-  UseGuards,
-  UseInterceptors,
-  UsePipes,
-  ValidationPipe,
-  Inject,
-  forwardRef,
-} from '@nestjs/common';
+import { UseGuards, UseInterceptors, UsePipes, ValidationPipe, Inject } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { WsJwtGuard, WsThrottlerGuard, WsLoggingInterceptor } from '@infrastructure/websocket';
-import { ScanProcessorService } from '../services/scan-processor.service';
+import { IScanControl, SCAN_CONTROL } from '../../domain/ports/scan-control.port';
 import {
   SubscribeScanDto,
   ScanProgressDto,
@@ -49,8 +42,8 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   constructor(
     @InjectPinoLogger(ScannerGateway.name)
     private readonly logger: PinoLogger,
-    @Inject(forwardRef(() => ScanProcessorService))
-    private readonly scanProcessor: ScanProcessorService
+    @Inject(SCAN_CONTROL)
+    private readonly scanProcessor: IScanControl
   ) {}
 
   @WebSocketServer()
