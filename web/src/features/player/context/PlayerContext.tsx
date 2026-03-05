@@ -53,9 +53,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const normalizationSettings = usePlayerSettingsStore((s) => s.normalization);
   const autoplaySettings = usePlayerSettingsStore((s) => s.autoplay);
   const setCrossfadeEnabledStore = usePlayerSettingsStore((s) => s.setCrossfadeEnabled);
-  const setCrossfadeDurationStore = usePlayerSettingsStore((s) => s.setCrossfadeDuration);
-  const setCrossfadeSmartModeStore = usePlayerSettingsStore((s) => s.setCrossfadeSmartMode);
-  const setCrossfadeTempoMatchStore = usePlayerSettingsStore((s) => s.setCrossfadeTempoMatch);
   const setAutoplayEnabledStore = usePlayerSettingsStore((s) => s.setAutoplayEnabled);
 
   const autoplay = useAutoplay();
@@ -968,27 +965,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     [setCrossfadeEnabledStore]
   );
 
-  const setCrossfadeDuration = useCallback(
-    (dur: number) => {
-      setCrossfadeDurationStore(dur);
-    },
-    [setCrossfadeDurationStore]
-  );
-
-  const setCrossfadeSmartMode = useCallback(
-    (enabled: boolean) => {
-      setCrossfadeSmartModeStore(enabled);
-    },
-    [setCrossfadeSmartModeStore]
-  );
-
-  const setCrossfadeTempoMatch = useCallback(
-    (enabled: boolean) => {
-      setCrossfadeTempoMatchStore(enabled);
-    },
-    [setCrossfadeTempoMatchStore]
-  );
-
   // ========== AUTOPLAY SETTINGS ==========
 
   const setAutoplayEnabled = useCallback(
@@ -1059,9 +1035,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
       // Crossfade controls
       setCrossfadeEnabled,
-      setCrossfadeDuration,
-      setCrossfadeSmartMode,
-      setCrossfadeTempoMatch,
 
       // Autoplay controls
       setAutoplayEnabled,
@@ -1101,9 +1074,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       seek,
       setVolume,
       setCrossfadeEnabled,
-      setCrossfadeDuration,
-      setCrossfadeSmartMode,
-      setCrossfadeTempoMatch,
       autoplaySettings,
       isAutoplayActive,
       autoplaySourceArtist,

@@ -53,9 +53,6 @@ export function SettingsPage() {
   const {
     crossfade,
     setCrossfadeEnabled,
-    setCrossfadeDuration,
-    setCrossfadeSmartMode,
-    setCrossfadeTempoMatch,
     autoplay,
     setAutoplayEnabled,
     volumeControlSupported,
@@ -422,71 +419,15 @@ export function SettingsPage() {
                           />
                         </div>
 
-                        {/* Crossfade options (only when enabled) */}
+                        {/* Crossfade description when enabled */}
                         {crossfade.enabled && (
-                          <>
-                            {/* Duration slider */}
-                            <div className={styles.settingsPage__toggleItem}>
-                              <div className={styles.settingsPage__toggleInfo}>
-                                <span className={styles.settingsPage__toggleLabel}>
-                                  Duración del fundido
-                                </span>
-                                <p className={styles.settingsPage__toggleDescription}>
-                                  Tiempo en segundos para la transición entre canciones
-                                </p>
-                              </div>
-                              <div className={styles.settingsPage__sliderContainer}>
-                                <input
-                                  type="range"
-                                  className={styles.settingsPage__slider}
-                                  min="1"
-                                  max="12"
-                                  step="1"
-                                  value={crossfade.duration}
-                                  onChange={(e) => setCrossfadeDuration(Number(e.target.value))}
-                                />
-                                <span className={styles.settingsPage__sliderValue}>
-                                  {crossfade.duration}s
-                                </span>
-                              </div>
+                          <div className={styles.settingsPage__toggleItem}>
+                            <div className={styles.settingsPage__toggleInfo}>
+                              <p className={styles.settingsPage__toggleDescription}>
+                                Transición automática de 2 segundos entre canciones
+                              </p>
                             </div>
-
-                            {/* Smart Crossfade Toggle */}
-                            <div className={styles.settingsPage__toggleItem}>
-                              <div className={styles.settingsPage__toggleInfo}>
-                                <span className={styles.settingsPage__toggleLabel}>
-                                  Fundido inteligente
-                                </span>
-                                <p className={styles.settingsPage__toggleDescription}>
-                                  Detecta automáticamente el final natural de las canciones para
-                                  iniciar la transición
-                                </p>
-                              </div>
-                              <Switch
-                                checked={crossfade.smartMode}
-                                onChange={setCrossfadeSmartMode}
-                                aria-label="Fundido inteligente"
-                              />
-                            </div>
-
-                            {/* Tempo Match Toggle */}
-                            <div className={styles.settingsPage__toggleItem}>
-                              <div className={styles.settingsPage__toggleInfo}>
-                                <span className={styles.settingsPage__toggleLabel}>
-                                  Sincronización de tempo
-                                </span>
-                                <p className={styles.settingsPage__toggleDescription}>
-                                  Durante el fundido, ajusta progresivamente el tempo de la canción
-                                  saliente para coincidir con la entrante (estilo DJ)
-                                </p>
-                              </div>
-                              <Switch
-                                checked={crossfade.tempoMatch}
-                                onChange={setCrossfadeTempoMatch}
-                                aria-label="Sincronización de tempo"
-                              />
-                            </div>
-                          </>
+                          </div>
                         )}
                       </>
                     ) : (

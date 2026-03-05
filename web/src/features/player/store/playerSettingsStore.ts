@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { CrossfadeSettings, NormalizationSettings, AutoplaySettings } from '../types';
 
 // Incrementar al cambiar la estructura del estado persistido
-const STORE_VERSION = 1;
+const STORE_VERSION = 2;
 
 export type PlayerPreference = 'dynamic' | 'sidebar' | 'footer';
 
@@ -26,8 +26,8 @@ interface PlayerSettingsState {
 
 const DEFAULT_CROSSFADE: CrossfadeSettings = {
   enabled: true,
-  duration: 5,
-  smartMode: true,
+  duration: 2,
+  smartMode: false,
   tempoMatch: false,
 };
 
