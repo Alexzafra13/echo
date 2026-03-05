@@ -16,6 +16,7 @@ import {
 } from './domain/use-cases';
 
 import { SCANNER_REPOSITORY } from './domain/ports/scanner-repository.port';
+import { SCAN_CONTROL } from './domain/ports/scan-control.port';
 
 import { DrizzleScannerRepository } from './infrastructure/persistence/scanner.repository';
 
@@ -68,6 +69,10 @@ import { CoverArtService } from '@shared/services';
     {
       provide: SCAN_PROCESSOR,
       useClass: ScanProcessorService,
+    },
+    {
+      provide: SCAN_CONTROL,
+      useExisting: ScanProcessorService,
     },
   ],
   exports: [SCANNER_REPOSITORY, ScannerGateway],
