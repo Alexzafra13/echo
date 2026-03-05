@@ -78,7 +78,7 @@ describe('useCrossfadeLogic', () => {
     mockAudioElements = createMockAudioElements();
     defaultSettings = {
       enabled: true,
-      duration: 5, // 5 seconds crossfade
+      duration: 2, // Hardcoded 2 seconds for web
     };
     rafCallbacks = [];
     rafId = 0;
@@ -140,13 +140,12 @@ describe('useCrossfadeLogic', () => {
       );
 
       expect(result.current.isEnabled).toBe(true);
-      expect(result.current.duration).toBe(5);
     });
   });
 
   describe('checkCrossfadeTiming', () => {
     it('should return false when crossfade is disabled', () => {
-      const disabledSettings: CrossfadeSettings = { enabled: false, duration: 5 };
+      const disabledSettings: CrossfadeSettings = { enabled: false, duration: 2 };
 
       const { result } = renderHook(() =>
         useCrossfadeLogic({
@@ -204,8 +203,8 @@ describe('useCrossfadeLogic', () => {
     });
 
     it('should return false when track is not near end', () => {
-      // Track at 30 seconds, duration 180, crossfade 5 seconds
-      // Time remaining = 150, > 5 seconds
+      // Track at 30 seconds, duration 180, hardcoded 2 second crossfade
+      // Time remaining = 150, > 2 seconds
       vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(30);
       vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
 
@@ -223,9 +222,9 @@ describe('useCrossfadeLogic', () => {
     });
 
     it('should return true when track is near end and conditions are met', () => {
-      // Track at 176 seconds, duration 180, crossfade 5 seconds
-      // Time remaining = 4, <= 5 seconds
-      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(176);
+      // Track at 178.5 seconds, duration 180, hardcoded 2 second crossfade
+      // Time remaining = 1.5, <= 2 seconds
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(178.5);
       vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
 
       const { result } = renderHook(() =>
@@ -242,7 +241,7 @@ describe('useCrossfadeLogic', () => {
     });
 
     it('should return false on second call (already triggered)', () => {
-      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(176);
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(178.5);
       vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
 
       const { result } = renderHook(() =>
@@ -262,9 +261,9 @@ describe('useCrossfadeLogic', () => {
     });
 
     it('should return false if track is too short for crossfade', () => {
-      // Track duration 4 seconds, crossfade 5 seconds
-      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(3);
-      vi.mocked(mockAudioElements.getDuration).mockReturnValue(4);
+      // Track duration 1 second, hardcoded 2 second crossfade
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(0.5);
+      vi.mocked(mockAudioElements.getDuration).mockReturnValue(1);
 
       const { result } = renderHook(() =>
         useCrossfadeLogic({
@@ -470,7 +469,7 @@ describe('useCrossfadeLogic', () => {
 
   describe('resetCrossfadeFlag', () => {
     it('should allow crossfade timing check to trigger again', () => {
-      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(176);
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(178.5);
       vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
 
       const { result } = renderHook(() =>
@@ -523,7 +522,7 @@ describe('useCrossfadeLogic', () => {
     it('should call onCrossfadeTrigger when timing check returns true', () => {
       const onCrossfadeTrigger = vi.fn();
 
-      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(176);
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(178.5);
       vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
 
       renderHook(() =>
@@ -708,78 +707,6 @@ describe('useCrossfadeLogic', () => {
     });
   });
 
-  describe('smart mode trigger timing', () => {
-    const smartSettings: CrossfadeSettings = {
-      enabled: true,
-      duration: 5,
-      smartMode: true,
-      tempoMatch: false,
-    };
-
-    it('should trigger earlier when outroStart is too close to track end', () => {
-      // Track: 180s, outroStart at 178s (only 2s of outro), crossfade duration 5s
-      // Without fix: would trigger at 178s, leaving only 2s for a 5s fade
-      // With fix: triggers at 175s (duration - crossfadeDuration), allowing full fade
-      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(175);
-      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
-
-      const { result } = renderHook(() =>
-        useCrossfadeLogic({
-          audioElements: mockAudioElements,
-          settings: smartSettings,
-          isRadioMode: false,
-          repeatMode: 'off',
-          hasNextTrack: true,
-          currentTrackOutroStart: 178, // Very close to end
-        })
-      );
-
-      // Should trigger at 175 (= 180 - 5), not wait until 178
-      expect(result.current.checkCrossfadeTiming()).toBe(true);
-    });
-
-    it('should use outroStart when it gives enough time for fade', () => {
-      // Track: 180s, outroStart at 150s (30s outro), crossfade 5s
-      // outroStart (150) < normalTrigger (175), so trigger at outroStart
-      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(150);
-      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
-
-      const { result } = renderHook(() =>
-        useCrossfadeLogic({
-          audioElements: mockAudioElements,
-          settings: smartSettings,
-          isRadioMode: false,
-          repeatMode: 'off',
-          hasNextTrack: true,
-          currentTrackOutroStart: 150,
-        })
-      );
-
-      expect(result.current.checkCrossfadeTiming()).toBe(true);
-    });
-
-    it('should not trigger before the smart trigger point', () => {
-      // Track: 180s, outroStart at 178s, crossfade 5s
-      // smartTriggerPoint = min(178, 175) = 175
-      // At 174s, should NOT trigger yet
-      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(174);
-      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
-
-      const { result } = renderHook(() =>
-        useCrossfadeLogic({
-          audioElements: mockAudioElements,
-          settings: smartSettings,
-          isRadioMode: false,
-          repeatMode: 'off',
-          hasNextTrack: true,
-          currentTrackOutroStart: 178,
-        })
-      );
-
-      expect(result.current.checkCrossfadeTiming()).toBe(false);
-    });
-  });
-
   describe('edge cases', () => {
     it('should handle null audio refs gracefully', () => {
       const audioElementsWithNullRefs = {
@@ -820,7 +747,7 @@ describe('useCrossfadeLogic', () => {
     });
 
     it('should work with repeatMode all', () => {
-      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(176);
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(178.5);
       vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
 
       const { result } = renderHook(() =>

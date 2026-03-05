@@ -69,11 +69,8 @@ vi.mock('../../hooks/useLibraryAnalysisSettings', () => ({
 }));
 
 const mockPlayerState = {
-  crossfade: { enabled: false, duration: 5, smartMode: false },
+  crossfade: { enabled: false, duration: 2, smartMode: false },
   setCrossfadeEnabled: vi.fn(),
-  setCrossfadeDuration: vi.fn(),
-  setCrossfadeSmartMode: vi.fn(),
-  setCrossfadeTempoMatch: vi.fn(),
   normalization: { enabled: false, targetLufs: -16 as -14 | -16, preventClipping: true },
   autoplay: { enabled: true },
   setAutoplayEnabled: vi.fn(),
@@ -291,50 +288,22 @@ describe('SettingsPage', () => {
       expect(mockPlayerState.setCrossfadeEnabled).toHaveBeenCalledWith(true);
     });
 
-    it('should show crossfade options when enabled', () => {
+    it('should show crossfade description when enabled', () => {
       mockPlayerState.crossfade.enabled = true;
       render(<SettingsPage />);
 
-      expect(screen.getByText('Duración del fundido')).toBeInTheDocument();
-      expect(screen.getByText('Fundido inteligente')).toBeInTheDocument();
+      expect(
+        screen.getByText('Transición automática de 2 segundos entre canciones')
+      ).toBeInTheDocument();
     });
 
-    it('should hide crossfade options when disabled', () => {
+    it('should hide crossfade description when disabled', () => {
       mockPlayerState.crossfade.enabled = false;
       render(<SettingsPage />);
 
-      expect(screen.queryByText('Duración del fundido')).not.toBeInTheDocument();
-      expect(screen.queryByText('Fundido inteligente')).not.toBeInTheDocument();
-    });
-
-    it('should change crossfade duration', () => {
-      mockPlayerState.crossfade.enabled = true;
-      render(<SettingsPage />);
-
-      const slider = screen.getByRole('slider');
-      fireEvent.change(slider, { target: { value: '8' } });
-
-      expect(mockPlayerState.setCrossfadeDuration).toHaveBeenCalledWith(8);
-    });
-
-    it('should display current crossfade duration', () => {
-      mockPlayerState.crossfade.enabled = true;
-      mockPlayerState.crossfade.duration = 7;
-      render(<SettingsPage />);
-
-      expect(screen.getByText('7s')).toBeInTheDocument();
-    });
-
-    it('should toggle smart crossfade', () => {
-      mockPlayerState.crossfade.enabled = true;
-      render(<SettingsPage />);
-
-      const smartLabel = screen.getByText('Fundido inteligente').closest('div')?.parentElement;
-      const toggle = smartLabel?.querySelector('input[type="checkbox"]');
-
-      fireEvent.click(toggle!);
-
-      expect(mockPlayerState.setCrossfadeSmartMode).toHaveBeenCalledWith(true);
+      expect(
+        screen.queryByText('Transición automática de 2 segundos entre canciones')
+      ).not.toBeInTheDocument();
     });
 
     it('should render autoplay toggle', () => {

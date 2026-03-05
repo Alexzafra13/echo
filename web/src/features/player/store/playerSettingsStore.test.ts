@@ -6,8 +6,8 @@ describe('playerSettingsStore', () => {
     const store = usePlayerSettingsStore.getState();
     store.setPlayerPreference('dynamic');
     store.setCrossfadeEnabled(false);
-    store.setCrossfadeDuration(5);
-    store.setCrossfadeSmartMode(true);
+    store.setCrossfadeDuration(2);
+    store.setCrossfadeSmartMode(false);
     store.setNormalizationEnabled(true);
     store.setNormalizationTargetLufs(-16);
     store.setNormalizationPreventClipping(true);
@@ -24,8 +24,8 @@ describe('playerSettingsStore', () => {
       const state = usePlayerSettingsStore.getState();
       expect(state.crossfade).toEqual({
         enabled: false,
-        duration: 5,
-        smartMode: true,
+        duration: 2,
+        smartMode: false,
         tempoMatch: false,
       });
     });

@@ -207,7 +207,10 @@ export function useCrossfadeLogic({
           await audioElements.playInactive(false);
         }
 
-        const configuredFadeDuration = currentSettings.duration * 1000; // Convert to ms
+        // Hardcoded 2s crossfade for web — simple, reliable transitions.
+      // Advanced crossfade options (variable duration, smart mode, tempo match)
+      // are reserved for native apps where audio control is more reliable.
+      const configuredFadeDuration = 2000; // 2 seconds in ms
 
         // Cap fade duration to the actual time remaining in the outgoing track.
         // Critical for smart crossfade: when outroStart is close to track end
@@ -229,28 +232,6 @@ export function useCrossfadeLogic({
             effective: fadeDuration,
             trackRemaining: trackRemainingMs,
           });
-        }
-
-        // Tempo matching: calculate target playbackRate for the outgoing track
-        // Uses browser-native WSOLA (preservesPitch = true by default) for
-        // high-quality pitch-preserving time-stretching at zero CPU cost.
-        // Clamped to ±15% to avoid artifacts on large BPM differences.
-        const MAX_RATE_CHANGE = 0.15;
-        let tempoMatchRate: number | null = null;
-        if (currentSettings.tempoMatch && currentBpm && nextBpm && currentBpm > 0 && nextBpm > 0) {
-          const rawRate = nextBpm / currentBpm;
-          tempoMatchRate = Math.max(1 - MAX_RATE_CHANGE, Math.min(1 + MAX_RATE_CHANGE, rawRate));
-          if (Math.abs(tempoMatchRate - 1) < 0.01) {
-            tempoMatchRate = null; // Skip if BPMs are essentially the same
-          } else {
-            logger.debug('[Crossfade] Tempo match enabled', {
-              currentBpm,
-              nextBpm,
-              targetRate: tempoMatchRate,
-            });
-            // Ensure preservesPitch is enabled (it's true by default but be explicit)
-            activeAudio.preservesPitch = true;
-          }
         }
 
         // Use requestAnimationFrame for smoother volume transitions
@@ -335,12 +316,6 @@ export function useCrossfadeLogic({
           audioElements.setAudioVolume(activeId, fadeOut * activeVol);
           audioElements.setAudioVolume(inactiveId, fadeIn * inactiveVol);
 
-          // Tempo match: gradually adjust outgoing track's playbackRate toward target
-          // Linear interpolation from 1.0 → tempoMatchRate over the crossfade duration
-          if (tempoMatchRate !== null) {
-            activeAudio.playbackRate = 1 + (tempoMatchRate - 1) * progress;
-          }
-
           if (progress < 1) {
             // Continue animation
             animationFrameRef.current = requestAnimationFrame(animateFade);
@@ -417,41 +392,10 @@ export function useCrossfadeLogic({
 
     const duration = audioElements.getDuration();
     const currentTime = audioElements.getCurrentTime();
-    const crossfadeDuration = currentSettings.duration;
+    // Hardcoded 2s crossfade for web — no user-configurable duration
+    const crossfadeDuration = 2;
 
-    // Smart mode: use track's detected outro start time if available
-    // This triggers crossfade when the song naturally ends (silence/fade detected)
-    // This is the "detect when the song drops below -X dB" feature — the backend
-    // analyzes each track's audio and stores the point where the outro begins.
-    if (
-      currentSettings.smartMode &&
-      currentTrackOutroStart !== undefined &&
-      currentTrackOutroStart > 0
-    ) {
-      // Use the earlier of outroStart or (duration - crossfadeDuration) as trigger point.
-      // This ensures there's enough time for a meaningful transition even when outroStart
-      // is very close to the track end (e.g., only 2s of silence detected).
-      const normalTriggerPoint = duration - crossfadeDuration;
-      const smartTriggerPoint = Math.min(currentTrackOutroStart, normalTriggerPoint);
-
-      if (
-        currentTime >= smartTriggerPoint &&
-        !crossfadeStartedRef.current &&
-        duration > crossfadeDuration
-      ) {
-        logger.debug('[Crossfade] Smart mode: triggering crossfade', {
-          currentTime,
-          outroStart: currentTrackOutroStart,
-          triggerPoint: smartTriggerPoint,
-          duration,
-        });
-        crossfadeStartedRef.current = true;
-        return true;
-      }
-      return false;
-    }
-
-    // Normal mode: use fixed duration before track end
+    // Fixed 2-second crossfade before track end
     const timeRemaining = duration - currentTime;
 
     if (
@@ -465,7 +409,7 @@ export function useCrossfadeLogic({
     }
 
     return false;
-  }, [isRadioMode, repeatMode, hasNextTrack, audioElements, currentTrackOutroStart]);
+  }, [isRadioMode, repeatMode, hasNextTrack, audioElements]);
 
   /**
    * Ref-based handler for timeupdate events.
@@ -534,7 +478,6 @@ export function useCrossfadeLogic({
 
     // Settings passthrough for convenience
     isEnabled: settings.enabled,
-    duration: settings.duration,
   };
 }
 

@@ -85,12 +85,10 @@ vi.mock('../hooks/useStreamToken', () => ({
 vi.mock('../store', () => ({
   usePlayerSettingsStore: (selector: (state: unknown) => unknown) => {
     const state = {
-      crossfade: { enabled: false, duration: 5, smartMode: false },
+      crossfade: { enabled: false, duration: 2, smartMode: false },
       normalization: { enabled: false, targetLufs: -16, preventClipping: true },
       autoplay: { enabled: false },
       setCrossfadeEnabled: vi.fn(),
-      setCrossfadeDuration: vi.fn(),
-      setCrossfadeSmartMode: vi.fn(),
       setNormalizationEnabled: vi.fn(),
       setNormalizationTargetLufs: vi.fn(),
       setNormalizationPreventClipping: vi.fn(),
@@ -417,8 +415,6 @@ describe('PlayerContext', () => {
 
       // Settings controls
       expect(playerContext).toHaveProperty('setCrossfadeEnabled');
-      expect(playerContext).toHaveProperty('setCrossfadeDuration');
-      expect(playerContext).toHaveProperty('setCrossfadeSmartMode');
       expect(playerContext).toHaveProperty('setAutoplayEnabled');
     });
 
