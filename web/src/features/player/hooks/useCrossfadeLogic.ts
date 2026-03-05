@@ -18,7 +18,7 @@ interface UseCrossfadeLogicParams {
   isRadioMode: boolean;
   repeatMode: 'off' | 'all' | 'one';
   hasNextTrack: boolean;
-  currentTrackOutroStart?: number; // Smart crossfade: track's detected outro start time
+
   onCrossfadeStart?: () => void;
   onCrossfadeComplete?: () => void;
   onCrossfadeTrigger?: () => void; // Called when it's time to start crossfade to next track
@@ -51,7 +51,6 @@ export function useCrossfadeLogic({
   isRadioMode,
   repeatMode,
   hasNextTrack,
-  currentTrackOutroStart,
   onCrossfadeStart,
   onCrossfadeComplete,
   onCrossfadeTrigger,
@@ -138,13 +137,10 @@ export function useCrossfadeLogic({
   /**
    * Perform crossfade transition using requestAnimationFrame
    * Uses equal-power curve for smooth audio transitions without crackling
-   * Supports LUFS normalization and optional tempo matching (DJ-style BPM sync)
-   *
-   * @param currentBpm - BPM of the currently playing (outgoing) track
-   * @param nextBpm - BPM of the incoming track
+   * Fixed 2-second duration for reliable web playback.
    */
   const performCrossfade = useCallback(
-    async (currentBpm?: number, nextBpm?: number) => {
+    async () => {
       // If a crossfade animation is already running, cancel it first to prevent
       // two animation loops fighting over the same audio volumes.
       // Check crossfadeStartTimeRef (set when animation actually starts) instead of
@@ -163,10 +159,6 @@ export function useCrossfadeLogic({
         logger.error('[Crossfade] Audio elements not available');
         return false;
       }
-
-      // Read settings from ref to always use the latest values without
-      // needing settings in the useCallback dependency array.
-      const currentSettings = settingsRef.current;
 
       // Get effective volumes for each audio (includes their respective LUFS gains)
       // If getEffectiveVolume is provided, use separate volumes; otherwise fallback to single volume

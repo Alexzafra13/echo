@@ -69,10 +69,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // Ref for playNext callback to avoid circular dependencies
   const playNextRef = useRef<(useCrossfade: boolean) => void>(() => {});
 
-  // Ref to track current track's BPM for tempo-matched crossfade.
-  // Used inside playTrack without adding currentTrack to its dependency array.
-  const currentTrackBpmRef = useRef<number | undefined>(undefined);
-
   // Ref to store the play context of the current queue (album, playlist, artist, etc.)
   // This is passed to startPlaySession so all tracks in a queue inherit the originating context.
   const queueContextRef = useRef<PlayContext | undefined>(undefined);
@@ -123,7 +119,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   userVolumeRef.current = userVolume;
 
   // Keep BPM ref in sync with current track
-  currentTrackBpmRef.current = currentTrack?.bpm;
+
 
   useEffect(() => {
     const audioA = audioElements.audioRefA.current;
@@ -157,7 +153,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     isRadioMode: radio.isRadioMode,
     repeatMode: queue.repeatMode,
     hasNextTrack: queue.repeatMode === 'all' || queue.currentIndex < queue.queue.length - 1,
-    currentTrackOutroStart: currentTrack?.outroStart, // Smart crossfade: use detected outro start
     onCrossfadeStart: () => {
       // Tell normalization to stop overriding per-element volumes.
       // From this point, only the crossfade animation controls audio.volume.
@@ -299,11 +294,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
         // Start crossfade transition. On mobile, playInactive() can fail due to
         // autoplay policy. If crossfade fails, fall back to normal (non-crossfade) playback.
-        // Pass BPM values for tempo matching (outgoing track BPM from ref, incoming from track param)
-        const crossfadeStarted = await crossfade.performCrossfade(
-          currentTrackBpmRef.current,
-          track.bpm
-        );
+        const crossfadeStarted = await crossfade.performCrossfade();
 
         if (!crossfadeStarted) {
           // Crossfade failed - fall back to normal playback so the music doesn't stop
