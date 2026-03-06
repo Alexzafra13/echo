@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Music2, CheckCircle, Loader2, RotateCcw, Square, AlertTriangle } from 'lucide-react';
 import { useDjProgressStore } from '@shared/store';
-import { useAuthStore } from '@shared/store';
 import { useClickOutside } from '@shared/hooks';
 import { apiClient } from '@shared/services/api';
 import styles from './DjProgressIndicator.module.css';
@@ -9,7 +8,6 @@ import styles from './DjProgressIndicator.module.css';
 export function DjProgressIndicator() {
   const progress = useDjProgressStore((state) => state.progress);
   const clear = useDjProgressStore((state) => state.clear);
-  const accessToken = useAuthStore((state) => state.accessToken);
   const [showTooltip, setShowTooltip] = useState(false);
   const [actionPending, setActionPending] = useState(false);
 
@@ -19,33 +17,29 @@ export function DjProgressIndicator() {
   );
 
   const handleRetry = useCallback(async () => {
-    if (!accessToken || actionPending) return;
+    if (actionPending) return;
     setActionPending(true);
     try {
-      await apiClient.post('/scanner/dj-retry', {}, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      await apiClient.post('/scanner/dj-retry');
     } catch {
       // Silently fail - the UI will update from WebSocket
     } finally {
       setActionPending(false);
     }
-  }, [accessToken, actionPending]);
+  }, [actionPending]);
 
   const handleStop = useCallback(async () => {
-    if (!accessToken || actionPending) return;
+    if (actionPending) return;
     setActionPending(true);
     try {
-      await apiClient.post('/scanner/dj-stop', {}, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      await apiClient.post('/scanner/dj-stop');
       clear();
     } catch {
       // Silently fail
     } finally {
       setActionPending(false);
     }
-  }, [accessToken, actionPending, clear]);
+  }, [actionPending, clear]);
 
   if (!progress || (!progress.isRunning && progress.pendingTracks === 0)) {
     return null;
