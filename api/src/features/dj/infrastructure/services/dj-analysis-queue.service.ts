@@ -408,6 +408,16 @@ export class DjAnalysisQueueService implements OnModuleInit {
     concurrency: number;
     analyzerBackend: string;
   }> {
+    // Auto-recover stale 'analyzing' records (stuck from crashed workers).
+    // If a track has been 'analyzing' for > 5 minutes, reset it to 'pending'.
+    const STALE_THRESHOLD_MINUTES = 5;
+    await this.drizzle.db
+      .update(djAnalysis)
+      .set({ status: 'pending', analysisError: null, updatedAt: new Date() })
+      .where(
+        sql`${djAnalysis.status} = 'analyzing' AND ${djAnalysis.updatedAt} < NOW() - INTERVAL '${sql.raw(String(STALE_THRESHOLD_MINUTES))} minutes'`
+      );
+
     // Single query with GROUP BY instead of two round trips
     const statusCounts = await this.drizzle.db
       .select({ status: djAnalysis.status, value: count() })
@@ -420,6 +430,18 @@ export class DjAnalysisQueueService implements OnModuleInit {
 
     // Use DB state (survives restarts) — if tracks are pending or analyzing, work is happening
     const hasWork = pendingCount > 0 || analyzingCount > 0;
+
+    // If there's pending work in DB but the in-memory queue is not running,
+    // auto-restart the queue to process the orphaned tracks
+    if (hasWork && !this.isRunning) {
+      this.logger.info(
+        { pendingCount, analyzingCount },
+        'Found orphaned DJ analysis work, auto-restarting queue'
+      );
+      this.startAnalysisQueue().catch((err) => {
+        this.logger.error({ err }, 'Failed to auto-restart DJ analysis queue');
+      });
+    }
 
     return {
       isRunning: this.isRunning || hasWork,

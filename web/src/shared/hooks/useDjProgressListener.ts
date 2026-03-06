@@ -15,10 +15,16 @@ interface DjProgressEvent {
 export function useDjProgressListener() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const updateProgress = useDjProgressStore((state) => state.updateProgress);
+  const clearProgress = useDjProgressStore((state) => state.clear);
 
   const handleDjProgress = useCallback((data: DjProgressEvent) => {
-    updateProgress(data);
-  }, [updateProgress]);
+    // If the backend reports not running and no pending tracks, clear the indicator
+    if (!data.isRunning && data.pendingTracks === 0) {
+      clearProgress();
+    } else {
+      updateProgress(data);
+    }
+  }, [updateProgress, clearProgress]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -29,20 +35,23 @@ export function useDjProgressListener() {
       headers: { Authorization: `Bearer ${accessToken}` },
       signal: abortController.signal,
     }).then((res) => {
-      if (res.data?.isRunning) {
+      if (res.data?.isRunning || res.data?.pendingTracks > 0) {
         updateProgress({
           isRunning: res.data.isRunning,
           pendingTracks: res.data.pendingTracks,
-          processedInSession: res.data.processedInSession,
+          processedInSession: res.data.processedInSession ?? 0,
           estimatedTimeRemaining: null,
         });
+      } else {
+        // Server says nothing is running - clear any stale UI state
+        clearProgress();
       }
     }).catch(() => {});
 
     return () => {
       abortController.abort();
     };
-  }, [accessToken, updateProgress]);
+  }, [accessToken, updateProgress, clearProgress]);
 
   useEffect(() => {
     if (!accessToken) return;

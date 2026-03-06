@@ -8,9 +8,13 @@ vi.mock('../../hooks/useScanner', () => ({
   useStartScan: vi.fn(),
 }));
 
-vi.mock('@shared/hooks/useScannerWebSocket', () => ({
-  useScannerWebSocket: vi.fn(),
-}));
+vi.mock('@shared/hooks/useScannerWebSocket', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@shared/hooks/useScannerWebSocket')>();
+  return {
+    ...actual,
+    useScannerWebSocket: vi.fn(),
+  };
+});
 
 vi.mock('@shared/store', () => ({
   useAuthStore: vi.fn(() => ({ accessToken: 'mock-token' })),
