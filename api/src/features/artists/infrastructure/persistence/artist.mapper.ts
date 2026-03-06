@@ -12,6 +12,9 @@ export class ArtistMapper {
    * Se usa cuando traes datos de BD
    */
   static toDomain(raw: ArtistDb): Artist {
+    // Pass profile image path so the DTO knows whether a profile image exists
+    const profileImageMarker = raw.profileImagePath || raw.externalProfilePath || undefined;
+
     return Artist.reconstruct({
       id: raw.id,
       name: raw.name,
@@ -19,6 +22,7 @@ export class ArtistMapper {
       songCount: raw.songCount || 0,
       mbzArtistId: raw.mbzArtistId || undefined,
       biography: raw.biography || undefined,
+      smallImageUrl: profileImageMarker,
       externalUrl: raw.externalUrl || undefined,
       externalInfoUpdatedAt: raw.externalProfileUpdatedAt || undefined,
       orderArtistName: raw.orderArtistName || undefined,

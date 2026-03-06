@@ -13,7 +13,18 @@ import styles from './ArtistsPage.module.css';
 /** A flat row: either a letter header or an artist card */
 type VirtualRow =
   | { type: 'letter'; letter: string }
-  | { type: 'artist'; artist: { id: string; name: string; orderArtistName?: string; albumCount: number; songCount: number; updatedAt?: string } };
+  | {
+      type: 'artist';
+      artist: {
+        id: string;
+        name: string;
+        orderArtistName?: string;
+        albumCount: number;
+        songCount: number;
+        profileImageUrl?: string;
+        updatedAt?: string;
+      };
+    };
 
 /**
  * ArtistsPage Component
@@ -35,18 +46,21 @@ export default function ArtistsPage() {
   // Build a flat list of rows: [letter, artist, artist, letter, artist, ...]
   // for efficient virtualization instead of nested DOM groups
   const { rows, totalArtists } = useMemo(() => {
-    const artists = (data?.data || []).filter(artist =>
+    const artists = (data?.data || []).filter((artist) =>
       artist.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const grouped = artists.reduce((acc, artist) => {
-      const firstLetter = (artist.orderArtistName || artist.name)[0].toUpperCase();
-      if (!acc[firstLetter]) {
-        acc[firstLetter] = [];
-      }
-      acc[firstLetter].push(artist);
-      return acc;
-    }, {} as Record<string, typeof artists>);
+    const grouped = artists.reduce(
+      (acc, artist) => {
+        const firstLetter = (artist.orderArtistName || artist.name)[0].toUpperCase();
+        if (!acc[firstLetter]) {
+          acc[firstLetter] = [];
+        }
+        acc[firstLetter].push(artist);
+        return acc;
+      },
+      {} as Record<string, typeof artists>
+    );
 
     const flatRows: VirtualRow[] = [];
     for (const letter of Object.keys(grouped).sort()) {
@@ -66,9 +80,12 @@ export default function ArtistsPage() {
     overscan: 15,
   });
 
-  const handleArtistClick = useCallback((artistId: string) => {
-    setLocation(`/artists/${artistId}`);
-  }, [setLocation]);
+  const handleArtistClick = useCallback(
+    (artistId: string) => {
+      setLocation(`/artists/${artistId}`);
+    },
+    [setLocation]
+  );
 
   return (
     <div className={styles.artistsPage}>
@@ -97,16 +114,10 @@ export default function ArtistsPage() {
           </div>
 
           {/* Loading State */}
-          {isLoading && (
-            <div className={styles.artistsPage__loading}>
-              Cargando artistas...
-            </div>
-          )}
+          {isLoading && <div className={styles.artistsPage__loading}>Cargando artistas...</div>}
 
           {/* Error State */}
-          {error && (
-            <ErrorState message="Error al cargar artistas" />
-          )}
+          {error && <ErrorState message="Error al cargar artistas" />}
 
           {/* Artists List - Virtualized */}
           {!isLoading && !error && (
@@ -114,7 +125,9 @@ export default function ArtistsPage() {
               {totalArtists === 0 ? (
                 <EmptyState
                   icon={<Users size={48} />}
-                  title={searchQuery ? 'No se encontraron artistas' : 'No hay artistas en tu biblioteca'}
+                  title={
+                    searchQuery ? 'No se encontraron artistas' : 'No hay artistas en tu biblioteca'
+                  }
                   description={searchQuery ? 'Prueba con otro término de búsqueda' : undefined}
                 />
               ) : (
