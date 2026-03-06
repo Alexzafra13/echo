@@ -86,6 +86,14 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
     return await queue.add(jobName, data, opts);
   }
 
+  async drainQueue(queueName: string): Promise<void> {
+    const queue = this.queues.get(queueName);
+    if (queue) {
+      await queue.drain();
+      this.logger.info({ queueName }, 'Queue drained');
+    }
+  }
+
   registerProcessor(
     queueName: string,
     processor: (job: Job) => Promise<unknown>,
