@@ -97,6 +97,23 @@ export class ScannerController {
     return this.djAnalysisQueue.getQueueStats();
   }
 
+  @Post('dj-retry')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Retry failed DJ analyses' })
+  @ApiResponse({ status: 200, description: 'Retry result' })
+  async retryDjAnalyses() {
+    return this.djAnalysisQueue.retryFailedAnalyses();
+  }
+
+  @Post('dj-stop')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Stop DJ analysis queue' })
+  @ApiResponse({ status: 200, description: 'Queue stopped' })
+  async stopDjAnalysis() {
+    await this.djAnalysisQueue.stopQueue();
+    return { success: true, message: 'DJ analysis queue stopped' };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtiene el estado de un escaneo específico' })
   @ApiResponse({

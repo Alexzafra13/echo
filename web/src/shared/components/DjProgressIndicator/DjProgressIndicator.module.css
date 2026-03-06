@@ -34,6 +34,23 @@
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
 
+.indicator--stalled {
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  animation: pulse-stalled 2s infinite;
+}
+
+@keyframes pulse-stalled {
+  0% {
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
 .iconSpinner {
   animation: spin 1s linear infinite;
 }
@@ -146,6 +163,11 @@
   color: #22c55e;
 }
 
+.statusBadge--stalled {
+  background: rgba(234, 179, 8, 0.2);
+  color: #eab308;
+}
+
 /* Content */
 .tooltipContent {
   padding: 14px 16px;
@@ -208,6 +230,76 @@
   font-size: 16px;
   font-weight: 600;
   color: #ffffff;
+}
+
+/* Stalled progress bar */
+.progressFill--stalled {
+  background: linear-gradient(90deg, #eab308 0%, #ca8a04 100%);
+  animation: stalledStripes 1.5s linear infinite;
+  background-size: 20px 20px;
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.1) 75%,
+    transparent 75%,
+    transparent
+  );
+}
+
+@keyframes stalledStripes {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 40px 0;
+  }
+}
+
+/* Control buttons */
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.controlBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s);
+}
+
+.controlBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.controlBtn--retry {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+}
+
+.controlBtn--retry:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.25);
+}
+
+.controlBtn--stop {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.controlBtn--stop:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
 }
 
 /* Info text */
