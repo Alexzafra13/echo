@@ -15,7 +15,8 @@ export interface Artist {
   albumCount: number;
   songCount: number;
   orderArtistName?: string;
-  updatedAt?: string; // Used for cache-busting image URLs
+  profileImageUrl?: string; // API-generated URL when artist has a profile image
+  updatedAt?: string;
 }
 
 /**

@@ -51,8 +51,9 @@ export function getCoverUrl(coverUrl?: string | null): string {
 export function handleImageError(e: React.SyntheticEvent<HTMLImageElement>) {
   const img = e.currentTarget;
 
-  // Evitar loop infinito si el placeholder también falla
-  if (img.src !== DEFAULT_COVER_PLACEHOLDER) {
+  // Evitar loop infinito si ya es el placeholder
+  // img.src devuelve URL absoluta, así que comparamos con endsWith
+  if (!img.src.endsWith(DEFAULT_COVER_PLACEHOLDER)) {
     img.src = DEFAULT_COVER_PLACEHOLDER;
   }
 }

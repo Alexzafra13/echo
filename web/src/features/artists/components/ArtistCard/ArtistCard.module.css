@@ -33,7 +33,7 @@
 }
 
 .artistCard__fallback {
-  display: none; /* Hidden by default, shown when image fails */
+  display: flex;
   position: absolute;
   top: 0;
   left: 0;

@@ -23,6 +23,8 @@ export default defineConfig({
         runtimeCaching: [
           {
             // Cache album covers and artist images
+            // Only cache status 200 — status 0 (opaque responses) must NOT be cached
+            // because they contain no usable data and CacheFirst would serve them forever
             urlPattern: /^.*\/api\/(images|albums\/.*\/cover)/,
             handler: 'CacheFirst',
             options: {
@@ -32,7 +34,7 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
               },
               cacheableResponse: {
-                statuses: [0, 200],
+                statuses: [200],
               },
             },
           },
@@ -49,7 +51,7 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 5, // 5 minutes
               },
               cacheableResponse: {
-                statuses: [0, 200],
+                statuses: [200],
               },
             },
           },
