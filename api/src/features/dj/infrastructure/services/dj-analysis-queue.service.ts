@@ -21,6 +21,7 @@ const DJ_ANALYSIS_JOB = 'analyze-track';
 export class DjAnalysisQueueService implements OnModuleInit {
   private readonly concurrency: number;
   private isRunning = false;
+  private manuallyStopped = false;
   private processedInSession = 0;
   private sessionStartedAt: Date | null = null;
   private totalToProcess = 0;
@@ -59,6 +60,8 @@ export class DjAnalysisQueueService implements OnModuleInit {
    * This handles container restarts and Redis flushes gracefully.
    */
   private async resumePendingAnalyses(): Promise<void> {
+    if (this.manuallyStopped) return;
+
     try {
       // Reset stale "analyzing" back to pending
       await this.drizzle.db
@@ -142,6 +145,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
     }
 
     this.isRunning = true;
+    this.manuallyStopped = false;
     this.processedInSession = 0;
     this.sessionStartedAt = new Date();
     this.totalToProcess = pendingTracks.length;
@@ -178,6 +182,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
     }
 
     this.isRunning = true;
+    this.manuallyStopped = false;
     this.processedInSession = 0;
     this.sessionStartedAt = new Date();
     this.totalToProcess = trackList.length;
@@ -253,8 +258,15 @@ export class DjAnalysisQueueService implements OnModuleInit {
         return id;
       });
 
-      // Skip if already completed
+      // Skip if already completed or in progress — still count it as processed
       if (analysisId === null) {
+        this.processedInSession++;
+        this.emitProgress();
+
+        if (this.processedInSession >= this.totalToProcess) {
+          this.isRunning = false;
+          this.emitProgress();
+        }
         return;
       }
 
@@ -432,8 +444,9 @@ export class DjAnalysisQueueService implements OnModuleInit {
     const hasWork = pendingCount > 0 || analyzingCount > 0;
 
     // If there's pending work in DB but the in-memory queue is not running,
-    // auto-restart the queue to process the orphaned tracks
-    if (hasWork && !this.isRunning) {
+    // auto-restart the queue to process the orphaned tracks.
+    // Skip auto-restart if the user manually stopped the queue.
+    if (hasWork && !this.isRunning && !this.manuallyStopped) {
       this.logger.info(
         { pendingCount, analyzingCount },
         'Found orphaned DJ analysis work, auto-restarting queue'
@@ -455,8 +468,19 @@ export class DjAnalysisQueueService implements OnModuleInit {
 
   async stopQueue(): Promise<void> {
     this.isRunning = false;
+    this.manuallyStopped = true;
+
+    // Drain pending jobs from BullMQ so they don't get processed
+    await this.bullmq.drainQueue(DJ_ANALYSIS_QUEUE);
+
+    // Reset any pending/analyzing records in DB to avoid auto-restart loop
+    await this.drizzle.db
+      .update(djAnalysis)
+      .set({ status: 'failed', analysisError: 'Stopped by user', updatedAt: new Date() })
+      .where(inArray(djAnalysis.status, ['pending', 'analyzing']));
+
     this.emitProgress(); // Emit final stopped state
-    this.logger.info('DJ analysis queue stopped');
+    this.logger.info('DJ analysis queue stopped and pending jobs cleared');
   }
 
   /**
@@ -548,6 +572,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
     // Update session counters if not already running
     if (!this.isRunning) {
       this.isRunning = true;
+      this.manuallyStopped = false;
       this.processedInSession = 0;
       this.sessionStartedAt = new Date();
       this.totalToProcess = failedAnalyses.length;
