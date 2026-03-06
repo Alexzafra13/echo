@@ -60,6 +60,8 @@ export class DjAnalysisQueueService implements OnModuleInit {
    * This handles container restarts and Redis flushes gracefully.
    */
   private async resumePendingAnalyses(): Promise<void> {
+    if (this.manuallyStopped) return;
+
     try {
       // Reset stale "analyzing" back to pending
       await this.drizzle.db
@@ -256,8 +258,15 @@ export class DjAnalysisQueueService implements OnModuleInit {
         return id;
       });
 
-      // Skip if already completed
+      // Skip if already completed or in progress — still count it as processed
       if (analysisId === null) {
+        this.processedInSession++;
+        this.emitProgress();
+
+        if (this.processedInSession >= this.totalToProcess) {
+          this.isRunning = false;
+          this.emitProgress();
+        }
         return;
       }
 
