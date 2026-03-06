@@ -10,6 +10,7 @@ const mockLogger = {
 const mockBullmq = {
   registerProcessor: jest.fn(),
   addJob: jest.fn().mockResolvedValue(undefined),
+  drainQueue: jest.fn().mockResolvedValue(undefined),
 };
 
 /** Chainable mock for Drizzle query builder */
@@ -237,7 +238,9 @@ describe('DjAnalysisQueueService', () => {
 
     it('should log stop message', async () => {
       await service.stopQueue();
-      expect(mockLogger.info).toHaveBeenCalledWith('DJ analysis queue stopped');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'DJ analysis queue stopped and pending jobs cleared'
+      );
     });
   });
 
