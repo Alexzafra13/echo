@@ -190,11 +190,12 @@ describe('DjAnalysisQueueService', () => {
       await service.startAnalysisQueueForTracks(tracks);
 
       expect(mockBullmq.addJob).toHaveBeenCalledTimes(2);
-      expect(mockBullmq.addJob).toHaveBeenCalledWith('dj-analysis-queue', 'analyze-track', {
-        trackId: 't1',
-        trackTitle: 'Track 1',
-        filePath: '/music/t1.mp3',
-      });
+      expect(mockBullmq.addJob).toHaveBeenCalledWith(
+        'dj-analysis-queue',
+        'analyze-track',
+        { trackId: 't1', trackTitle: 'Track 1', filePath: '/music/t1.mp3' },
+        { attempts: 1, removeOnComplete: true, removeOnFail: true }
+      );
     });
 
     it('should set isRunning and emit progress', async () => {
@@ -214,11 +215,12 @@ describe('DjAnalysisQueueService', () => {
     it('should add a single job to the queue', async () => {
       await service.enqueueTrack({ id: 't1', title: 'Track 1', path: '/music/t1.mp3' });
 
-      expect(mockBullmq.addJob).toHaveBeenCalledWith('dj-analysis-queue', 'analyze-track', {
-        trackId: 't1',
-        trackTitle: 'Track 1',
-        filePath: '/music/t1.mp3',
-      });
+      expect(mockBullmq.addJob).toHaveBeenCalledWith(
+        'dj-analysis-queue',
+        'analyze-track',
+        { trackId: 't1', trackTitle: 'Track 1', filePath: '/music/t1.mp3' },
+        { attempts: 1, removeOnComplete: true, removeOnFail: true }
+      );
     });
   });
 

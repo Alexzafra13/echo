@@ -16,6 +16,8 @@ interface DjAnalysisJob {
 
 const DJ_ANALYSIS_QUEUE = 'dj-analysis-queue';
 const DJ_ANALYSIS_JOB = 'analyze-track';
+const ANALYSIS_TIMEOUT_MS = 120_000; // 2 minutes max per track
+const DJ_JOB_OPTS = { attempts: 1, removeOnComplete: true, removeOnFail: true };
 
 @Injectable()
 export class DjAnalysisQueueService implements OnModuleInit {
@@ -93,11 +95,12 @@ export class DjAnalysisQueueService implements OnModuleInit {
       this.totalToProcess = pendingTracks.length;
 
       for (const track of pendingTracks) {
-        await this.bullmq.addJob(DJ_ANALYSIS_QUEUE, DJ_ANALYSIS_JOB, {
-          trackId: track.trackId,
-          trackTitle: track.title,
-          filePath: track.path,
-        });
+        await this.bullmq.addJob(
+          DJ_ANALYSIS_QUEUE,
+          DJ_ANALYSIS_JOB,
+          { trackId: track.trackId, trackTitle: track.title, filePath: track.path },
+          DJ_JOB_OPTS
+        );
       }
     } catch (error) {
       this.logger.error(
@@ -157,11 +160,12 @@ export class DjAnalysisQueueService implements OnModuleInit {
 
     // Enqueue all tracks
     for (const track of pendingTracks) {
-      await this.bullmq.addJob(DJ_ANALYSIS_QUEUE, DJ_ANALYSIS_JOB, {
-        trackId: track.id,
-        trackTitle: track.title,
-        filePath: track.path,
-      });
+      await this.bullmq.addJob(
+        DJ_ANALYSIS_QUEUE,
+        DJ_ANALYSIS_JOB,
+        { trackId: track.id, trackTitle: track.title, filePath: track.path },
+        DJ_JOB_OPTS
+      );
     }
 
     return {
@@ -197,20 +201,22 @@ export class DjAnalysisQueueService implements OnModuleInit {
 
     // Enqueue all tracks
     for (const track of trackList) {
-      await this.bullmq.addJob(DJ_ANALYSIS_QUEUE, DJ_ANALYSIS_JOB, {
-        trackId: track.id,
-        trackTitle: track.title,
-        filePath: track.path,
-      });
+      await this.bullmq.addJob(
+        DJ_ANALYSIS_QUEUE,
+        DJ_ANALYSIS_JOB,
+        { trackId: track.id, trackTitle: track.title, filePath: track.path },
+        DJ_JOB_OPTS
+      );
     }
   }
 
   async enqueueTrack(track: { id: string; title: string; path: string }): Promise<void> {
-    await this.bullmq.addJob(DJ_ANALYSIS_QUEUE, DJ_ANALYSIS_JOB, {
-      trackId: track.id,
-      trackTitle: track.title,
-      filePath: track.path,
-    });
+    await this.bullmq.addJob(
+      DJ_ANALYSIS_QUEUE,
+      DJ_ANALYSIS_JOB,
+      { trackId: track.id, trackTitle: track.title, filePath: track.path },
+      DJ_JOB_OPTS
+    );
   }
 
   private async processAnalysisJob(job: DjAnalysisJob): Promise<void> {
@@ -289,10 +295,17 @@ export class DjAnalysisQueueService implements OnModuleInit {
       let danceability: number | null = null;
 
       try {
-        const result = await this.analyzer.analyze(job.filePath, {
+        const analysisPromise = this.analyzer.analyze(job.filePath, {
           bpm: trackBpm,
           key: trackKey,
         });
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Analysis timed out after 2 minutes')),
+            ANALYSIS_TIMEOUT_MS
+          )
+        );
+        const result = await Promise.race([analysisPromise, timeoutPromise]);
         analyzedBpm = result.bpm;
         analyzedKey = result.key;
         energy = result.energy;
@@ -399,16 +412,31 @@ export class DjAnalysisQueueService implements OnModuleInit {
       );
 
       // Update status to failed
-      await this.drizzle.db
-        .update(djAnalysis)
-        .set({
-          status: 'failed',
-          analysisError: error instanceof Error ? error.message : 'Unknown error',
-          updatedAt: new Date(),
-        })
-        .where(eq(djAnalysis.trackId, job.trackId));
+      try {
+        await this.drizzle.db
+          .update(djAnalysis)
+          .set({
+            status: 'failed',
+            analysisError: error instanceof Error ? error.message : 'Unknown error',
+            updatedAt: new Date(),
+          })
+          .where(eq(djAnalysis.trackId, job.trackId));
+      } catch (dbError) {
+        this.logger.error(
+          { trackId: job.trackId, error: dbError instanceof Error ? dbError.message : 'Unknown' },
+          'Failed to update analysis status to failed'
+        );
+      }
 
-      throw error;
+      // Always advance progress so the queue doesn't get stuck
+      this.processedInSession++;
+      this.updateAverageProcessingTime(Date.now() - startTime);
+      this.emitProgress();
+
+      if (this.processedInSession >= this.totalToProcess) {
+        this.isRunning = false;
+        this.emitProgress();
+      }
     }
   }
 
@@ -454,6 +482,12 @@ export class DjAnalysisQueueService implements OnModuleInit {
       this.startAnalysisQueue().catch((err) => {
         this.logger.error({ err }, 'Failed to auto-restart DJ analysis queue');
       });
+    }
+
+    // Auto-recover stale in-memory state: if isRunning but DB has no work, reset
+    if (this.isRunning && !hasWork) {
+      this.logger.info('Resetting stale isRunning flag — no pending work in DB');
+      this.isRunning = false;
     }
 
     return {
@@ -562,11 +596,12 @@ export class DjAnalysisQueueService implements OnModuleInit {
 
     // Re-enqueue all failed tracks
     for (const analysis of failedAnalyses) {
-      await this.bullmq.addJob(DJ_ANALYSIS_QUEUE, DJ_ANALYSIS_JOB, {
-        trackId: analysis.trackId,
-        trackTitle: analysis.title,
-        filePath: analysis.path,
-      });
+      await this.bullmq.addJob(
+        DJ_ANALYSIS_QUEUE,
+        DJ_ANALYSIS_JOB,
+        { trackId: analysis.trackId, trackTitle: analysis.title, filePath: analysis.path },
+        DJ_JOB_OPTS
+      );
     }
 
     // Update session counters if not already running
