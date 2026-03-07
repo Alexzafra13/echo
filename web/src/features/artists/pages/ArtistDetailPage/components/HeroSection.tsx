@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ArtistOptionsMenu } from '../../../components';
 import { useImagePreload } from '../../../hooks';
 import styles from '../ArtistDetailPage.module.css';
@@ -55,6 +56,8 @@ export function HeroSection({
   onAdjustPosition,
   onChangeLogo,
 }: HeroSectionProps) {
+  const [profileFailed, setProfileFailed] = useState(false);
+
   // Preload images to force browser cache refresh
   const { renderKey: imageRenderKey } = useImagePreload({
     url: backgroundUrl,
@@ -80,8 +83,8 @@ export function HeroSection({
           className={`${styles.artistDetailPage__background} ${styles.artistDetailPage__backgroundDesktop}`}
           style={{
             backgroundImage: `url(${backgroundUrl})`,
-            backgroundPosition: artist?.backgroundPosition ||
-              (hasBackground ? 'center top' : 'center center'),
+            backgroundPosition:
+              artist?.backgroundPosition || (hasBackground ? 'center top' : 'center center'),
           }}
         />
       )}
@@ -113,18 +116,17 @@ export function HeroSection({
       <div className={styles.artistDetailPage__heroContent}>
         {/* Artist Avatar/Profile */}
         <div className={styles.artistDetailPage__avatarContainer}>
-          {profileUrl ? (
+          {profileUrl && !profileFailed ? (
             <img
               key={`${profileUrl}-${profileRenderKey}`}
               src={profileUrl}
               alt={artist.name}
               className={styles.artistDetailPage__avatar}
               onClick={onAvatarClick}
+              onError={() => setProfileFailed(true)}
             />
           ) : (
-            <div className={styles.artistDetailPage__avatarFallback}>
-              {initials}
-            </div>
+            <div className={styles.artistDetailPage__avatarFallback}>{initials}</div>
           )}
           {/* Desktop: Admin Options Menu near avatar */}
           {isAdmin && (
@@ -154,15 +156,22 @@ export function HeroSection({
 
           {/* Stats */}
           <div className={styles.artistDetailPage__stats}>
-            <span>{artist.albumCount} {artist.albumCount === 1 ? 'álbum' : 'álbumes'}</span>
+            <span>
+              {artist.albumCount} {artist.albumCount === 1 ? 'álbum' : 'álbumes'}
+            </span>
             <span>•</span>
-            <span>{artist.songCount} {artist.songCount === 1 ? 'canción' : 'canciones'}</span>
+            <span>
+              {artist.songCount} {artist.songCount === 1 ? 'canción' : 'canciones'}
+            </span>
             {artistStats && artistStats.totalPlays > 0 && (
               <>
                 <span>•</span>
                 <span>{formatPlayCount(artistStats.totalPlays)} reproducciones</span>
                 <span>•</span>
-                <span>{artistStats.uniqueListeners} {artistStats.uniqueListeners === 1 ? 'oyente' : 'oyentes'}</span>
+                <span>
+                  {artistStats.uniqueListeners}{' '}
+                  {artistStats.uniqueListeners === 1 ? 'oyente' : 'oyentes'}
+                </span>
               </>
             )}
           </div>
