@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
@@ -40,22 +40,21 @@ export class StorageService {
 
       // Priority: ENV > DB > default
       const envStorageMode = this.config.get<string>('METADATA_STORAGE_MODE');
-      const storageLocation = envStorageMode || await this.settings.getString(
-        'metadata.storage.location',
-        'centralized'
-      );
+      const storageLocation =
+        envStorageMode ||
+        (await this.settings.getString('metadata.storage.location', 'centralized'));
 
       if (storageLocation === 'centralized') {
         // Priority: ENV > DB > default
         const envStoragePath = this.config.get<string>('METADATA_STORAGE_PATH');
         const dataPath = tempBase || this.config.get<string>('DATA_PATH', '/app/data');
         const defaultPath = path.join(dataPath, 'metadata');
-        const storagePath = envStoragePath || await this.settings.getString(
-          'metadata.storage.path',
-          defaultPath
-        );
+        const storagePath =
+          envStoragePath || (await this.settings.getString('metadata.storage.path', defaultPath));
         // Use absolute path if it starts with /, otherwise resolve relative to cwd
-        this.basePath = storagePath.startsWith('/') ? storagePath : path.resolve(process.cwd(), storagePath);
+        this.basePath = storagePath.startsWith('/')
+          ? storagePath
+          : path.resolve(process.cwd(), storagePath);
         // In test env, override to use temp
         if (isTestEnv && !envStoragePath) {
           this.basePath = path.join(tempBase!, 'metadata');
@@ -63,7 +62,9 @@ export class StorageService {
       } else {
         // Portable: use music library path
         const musicPath = this.config.get<string>('MUSIC_LIBRARY_PATH', '/music');
-        this.basePath = isTestEnv ? path.join(tempBase!, 'metadata') : path.join(musicPath, '.echo-metadata');
+        this.basePath = isTestEnv
+          ? path.join(tempBase!, 'metadata')
+          : path.join(musicPath, '.echo-metadata');
       }
 
       // Ensure base directories exist
@@ -81,9 +82,14 @@ export class StorageService {
       await this.initializeDefaultImages();
 
       this.initialized = true;
-      this.logger.info(`Storage initialized at: ${this.basePath} (mode: ${storageLocation}${isTestEnv ? ', test' : ''})`);
+      this.logger.info(
+        `Storage initialized at: ${this.basePath} (mode: ${storageLocation}${isTestEnv ? ', test' : ''})`
+      );
     } catch (error) {
-      this.logger.error(`Failed to initialize storage: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Failed to initialize storage: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -189,7 +195,9 @@ export class StorageService {
           }
         } catch (readError) {
           // File might be locked, continue with write attempt
-          this.logger.debug(`Could not read existing file for comparison: ${(readError as Error).message}`);
+          this.logger.debug(
+            `Could not read existing file for comparison: ${(readError as Error).message}`
+          );
         }
       }
 
@@ -215,8 +223,10 @@ export class StorageService {
             if (isEperm && attempt < maxRetries) {
               // Windows file lock - wait and retry
               const waitMs = attempt * 100; // 100ms, 200ms, 300ms
-              this.logger.debug(`Rename failed (EPERM), retrying in ${waitMs}ms (attempt ${attempt}/${maxRetries})`);
-              await new Promise(resolve => setTimeout(resolve, waitMs));
+              this.logger.debug(
+                `Rename failed (EPERM), retrying in ${waitMs}ms (attempt ${attempt}/${maxRetries})`
+              );
+              await new Promise((resolve) => setTimeout(resolve, waitMs));
             } else if (isEperm && attempt === maxRetries) {
               // Last attempt: try Windows fallback (delete + rename)
               this.logger.debug('Trying Windows fallback: delete + rename');
@@ -224,10 +234,12 @@ export class StorageService {
                 if (destExists) {
                   await fs.unlink(filePath);
                   // Small delay after delete
-                  await new Promise(resolve => setTimeout(resolve, 50));
+                  await new Promise((resolve) => setTimeout(resolve, 50));
                 }
                 await fs.rename(tempPath, filePath);
-                this.logger.debug(`Saved image using fallback: ${filePath} (${buffer.length} bytes)`);
+                this.logger.debug(
+                  `Saved image using fallback: ${filePath} (${buffer.length} bytes)`
+                );
                 return; // Success with fallback!
               } catch (fallbackError) {
                 lastError = fallbackError as Error;
@@ -243,7 +255,6 @@ export class StorageService {
 
         // All retries failed
         throw lastError || new Error('Failed to save image after retries');
-
       } catch (writeError) {
         // Clean up temp file if operation failed
         try {
@@ -254,7 +265,10 @@ export class StorageService {
         throw writeError;
       }
     } catch (error) {
-      this.logger.error(`Error saving image ${filePath}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error saving image ${filePath}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -273,7 +287,10 @@ export class StorageService {
 
       return await fs.readFile(filePath);
     } catch (error) {
-      this.logger.error(`Error reading image ${filePath}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error reading image ${filePath}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       return null;
     }
   }
@@ -290,7 +307,10 @@ export class StorageService {
         this.logger.debug(`Deleted image: ${filePath}`);
       }
     } catch (error) {
-      this.logger.error(`Error deleting image ${filePath}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error deleting image ${filePath}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -323,7 +343,10 @@ export class StorageService {
 
       return totalSize;
     } catch (error) {
-      this.logger.error(`Error calculating storage size for ${dirPath}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error calculating storage size for ${dirPath}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       return 0;
     }
   }
@@ -342,7 +365,10 @@ export class StorageService {
 
       return currentSize > maxSizeBytes;
     } catch (error) {
-      this.logger.error(`Error checking storage limit: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error checking storage limit: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       return false;
     }
   }
@@ -401,7 +427,10 @@ export class StorageService {
         this.logger.debug(`Deleted directory: ${dirPath}`);
       }
     } catch (error) {
-      this.logger.error(`Error deleting directory ${dirPath}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error deleting directory ${dirPath}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       throw error;
     }
   }
@@ -425,7 +454,10 @@ export class StorageService {
         return stats.isFile();
       });
     } catch (error) {
-      this.logger.error(`Error listing files in ${dirPath}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error listing files in ${dirPath}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
       return [];
     }
   }
@@ -459,18 +491,53 @@ export class StorageService {
         return;
       }
 
-      // Source path: web public images
-      const defaultCoverSrc = path.resolve(
-        process.cwd(),
-        '../web/public/images/empy_cover/empy_cover_default.png'
-      );
+      // Try multiple source paths (dev vs Docker production)
+      const candidatePaths = [
+        // Development: web/public/ is next to api/
+        path.resolve(
+          process.cwd(),
+          '..',
+          'web',
+          'public',
+          'images',
+          'empy_cover',
+          'empy_cover_default.png'
+        ),
+        // Docker production: web/dist/ contains built assets
+        path.resolve(
+          process.cwd(),
+          '..',
+          'web',
+          'dist',
+          'images',
+          'empy_cover',
+          'empy_cover_default.png'
+        ),
+        // Docker production (flat structure): web/dist/ is at /app/web/dist/
+        path.resolve(
+          process.cwd(),
+          'web',
+          'dist',
+          'images',
+          'empy_cover',
+          'empy_cover_default.png'
+        ),
+      ];
 
-      // Check if source exists
-      const srcExists = await this.fileExists(defaultCoverSrc);
-      if (!srcExists) {
+      let defaultCoverSrc: string | null = null;
+      for (const candidate of candidatePaths) {
+        if (await this.fileExists(candidate)) {
+          defaultCoverSrc = candidate;
+          break;
+        }
+      }
+
+      if (!defaultCoverSrc) {
+        // Generate a minimal placeholder PNG programmatically
         this.logger.warn(
-          `Default cover source not found at ${defaultCoverSrc}. Default images will not be available.`
+          `Default cover source not found in any candidate path. Generating placeholder.`
         );
+        await this.generatePlaceholderCover(defaultCoverDest);
         return;
       }
 
@@ -483,5 +550,86 @@ export class StorageService {
       );
       // Don't throw - this is not critical for app startup
     }
+  }
+
+  /**
+   * Generate a minimal 1x1 transparent PNG as placeholder
+   * Used when the default cover source image can't be found (e.g., Docker production)
+   */
+  private async generatePlaceholderCover(destPath: string): Promise<void> {
+    // Minimal valid PNG: 1x1 pixel, gray (#808080)
+    const pngHeader = Buffer.from([
+      0x89,
+      0x50,
+      0x4e,
+      0x47,
+      0x0d,
+      0x0a,
+      0x1a,
+      0x0a, // PNG signature
+      0x00,
+      0x00,
+      0x00,
+      0x0d,
+      0x49,
+      0x48,
+      0x44,
+      0x52, // IHDR chunk
+      0x00,
+      0x00,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x00,
+      0x01, // 1x1
+      0x08,
+      0x02,
+      0x00,
+      0x00,
+      0x00,
+      0x90,
+      0x77,
+      0x53, // 8-bit RGB
+      0xde,
+      0x00,
+      0x00,
+      0x00,
+      0x0c,
+      0x49,
+      0x44,
+      0x41, // IDAT chunk
+      0x54,
+      0x08,
+      0xd7,
+      0x63,
+      0xd8,
+      0xd0,
+      0xd0,
+      0x00, // compressed data
+      0x00,
+      0x00,
+      0x04,
+      0x00,
+      0x01,
+      0xa3,
+      0x1c,
+      0xac, // ...
+      0x34,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x49,
+      0x45,
+      0x4e, // IEND chunk
+      0x44,
+      0xae,
+      0x42,
+      0x60,
+      0x82,
+    ]);
+    await fs.writeFile(destPath, pngHeader);
+    this.logger.info('Generated placeholder cover image');
   }
 }

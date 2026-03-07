@@ -229,8 +229,7 @@ export class ArtistImageService {
         tag: this.cache.generateTag(localPath, stats.mtime),
       };
     } catch {
-      this.logger.warn(`Local ${imageType} image not found, cleaning DB: ${localPath}`);
-      await this.clearLocalImage(artistId, imageType);
+      this.logger.warn(`Local ${imageType} image not accessible: ${localPath}`);
       return null;
     }
   }
@@ -272,8 +271,7 @@ export class ArtistImageService {
         tag: this.cache.generateTag(fullPath, stats.mtime),
       };
     } catch {
-      this.logger.warn(`External ${imageType} image not found, cleaning DB: ${fullPath}`);
-      await this.clearExternalImage(artistId, imageType);
+      this.logger.warn(`External ${imageType} image not accessible: ${fullPath}`);
       return null;
     }
   }

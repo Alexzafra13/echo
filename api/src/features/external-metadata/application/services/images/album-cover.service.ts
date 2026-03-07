@@ -25,7 +25,7 @@ export class AlbumCoverService {
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
     private readonly cache: ImageCacheService,
-    private readonly config: ConfigService,
+    private readonly config: ConfigService
   ) {
     // Same path resolution logic as CoverArtService
     const coversPath = this.config.get<string>('COVERS_PATH');
@@ -97,12 +97,7 @@ export class AlbumCoverService {
     const coverResult = await this.drizzle.db
       .select()
       .from(customAlbumCovers)
-      .where(
-        and(
-          eq(customAlbumCovers.id, customCoverId),
-          eq(customAlbumCovers.albumId, albumId),
-        ),
-      )
+      .where(and(eq(customAlbumCovers.id, customCoverId), eq(customAlbumCovers.albumId, albumId)))
       .limit(1);
 
     const customCover = coverResult[0];
@@ -159,12 +154,7 @@ export class AlbumCoverService {
     const coverResult = await this.drizzle.db
       .select()
       .from(customAlbumCovers)
-      .where(
-        and(
-          eq(customAlbumCovers.albumId, albumId),
-          eq(customAlbumCovers.isActive, true),
-        ),
-      )
+      .where(and(eq(customAlbumCovers.albumId, albumId), eq(customAlbumCovers.isActive, true)))
       .orderBy(desc(customAlbumCovers.updatedAt))
       .limit(1);
 
@@ -206,7 +196,9 @@ export class AlbumCoverService {
   /**
    * Get album from database
    */
-  private async getAlbum(albumId: string): Promise<{ externalCoverPath: string | null; coverArtPath: string | null } | null> {
+  private async getAlbum(
+    albumId: string
+  ): Promise<{ externalCoverPath: string | null; coverArtPath: string | null } | null> {
     const result = await this.drizzle.db
       .select({
         id: albums.id,
@@ -223,7 +215,10 @@ export class AlbumCoverService {
   /**
    * Resolve cover path to absolute path and get file info
    */
-  private async resolveCoverPath(coverPath: string, source: 'local' | 'external'): Promise<CachedImageResult> {
+  private async resolveCoverPath(
+    coverPath: string,
+    source: 'local' | 'external'
+  ): Promise<CachedImageResult> {
     let fullPath: string;
 
     if (path.isAbsolute(coverPath)) {
@@ -245,14 +240,34 @@ export class AlbumCoverService {
    * Get default album cover
    */
   private async getDefaultCover(): Promise<CachedImageResult> {
-    const defaultCoverPath = 'defaults/album-cover-default.png';
-    return this.getImageFileInfo(defaultCoverPath, 'local');
+    // Try centralized metadata storage first (Docker production path)
+    const storagePath = await this.storage.getStoragePath();
+    const centralizedDefault = path.join(storagePath, 'defaults', 'album-cover-default.png');
+
+    try {
+      return await this.getImageFileInfo(centralizedDefault, 'local');
+    } catch {
+      // Fallback to web public directory (development)
+      const webDefault = path.resolve(
+        process.cwd(),
+        '..',
+        'web',
+        'public',
+        'images',
+        'empy_cover',
+        'empy_cover_default.png'
+      );
+      return this.getImageFileInfo(webDefault, 'local');
+    }
   }
 
   /**
    * Get file info for an image
    */
-  private async getImageFileInfo(filePath: string, source: 'local' | 'external'): Promise<CachedImageResult> {
+  private async getImageFileInfo(
+    filePath: string,
+    source: 'local' | 'external'
+  ): Promise<CachedImageResult> {
     try {
       const stats = await fs.stat(filePath);
 

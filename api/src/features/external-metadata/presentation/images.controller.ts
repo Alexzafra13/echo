@@ -33,9 +33,11 @@ import { ArtistImagesDto, ImageMetadataDto } from './dtos/artist-images.dto';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ImagesController {
-  constructor(@InjectPinoLogger(ImagesController.name)
+  constructor(
+    @InjectPinoLogger(ImagesController.name)
     private readonly logger: PinoLogger,
-    private readonly imageService: ImageService) {}
+    private readonly imageService: ImageService
+  ) {}
 
   // Endpoints públicos para servir imágenes (necesario para <img src>)
   @Public()
@@ -72,27 +74,20 @@ export class ImagesController {
     @Param('imageType') imageType: string,
     @Query('tag') tag: string | undefined,
     @Headers('if-none-match') ifNoneMatch: string | undefined,
-    @Res({ passthrough: true }) res: FastifyReply,
+    @Res({ passthrough: true }) res: FastifyReply
   ): Promise<StreamableFile | void> {
     // Validar tipo de imagen
-    const validImageTypes: ArtistImageType[] = [
-      'profile',
-      'background',
-      'banner',
-      'logo',
-    ];
+    const validImageTypes: ArtistImageType[] = ['profile', 'background', 'banner', 'logo'];
 
     if (!validImageTypes.includes(imageType as ArtistImageType)) {
-      throw new NotFoundException(
-        `Invalid image type. Valid types: ${validImageTypes.join(', ')}`,
-      );
+      throw new NotFoundException(`Invalid image type. Valid types: ${validImageTypes.join(', ')}`);
     }
 
     try {
       // Obtener información de la imagen
       const imageResult = await this.imageService.getArtistImage(
         artistId,
-        imageType as ArtistImageType,
+        imageType as ArtistImageType
       );
 
       // HTTP Cache validation: Check If-None-Match header (ETag)
@@ -101,7 +96,7 @@ export class ImagesController {
       if (ifNoneMatch && ifNoneMatch === currentETag) {
         res.status(304);
         this.logger.debug(
-          `304 Not Modified: ${artistId}/${imageType} (ETag match: ${currentETag})`,
+          `304 Not Modified: ${artistId}/${imageType} (ETag match: ${currentETag})`
         );
         return;
       }
@@ -113,7 +108,7 @@ export class ImagesController {
       const fileStream = createReadStream(imageResult.filePath);
 
       this.logger.debug(
-        `Serving ${imageResult.source.toUpperCase()} artist image: ${artistId} - ${imageType} (${imageResult.size} bytes, tag=${imageResult.tag})`,
+        `Serving ${imageResult.source.toUpperCase()} artist image: ${artistId} - ${imageType} (${imageResult.size} bytes, tag=${imageResult.tag})`
       );
 
       return new StreamableFile(fileStream);
@@ -124,11 +119,9 @@ export class ImagesController {
 
       this.logger.error(
         `Error serving artist image ${artistId}/${imageType}: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
-      throw new NotFoundException(
-        `Unable to serve image for artist ${artistId}`,
-      );
+      throw new NotFoundException(`Unable to serve image for artist ${artistId}`);
     }
   }
 
@@ -165,7 +158,7 @@ export class ImagesController {
     @Param('albumId', ParseUUIDPipe) albumId: string,
     @Query('tag') tag: string | undefined,
     @Headers('if-none-match') ifNoneMatch: string | undefined,
-    @Res({ passthrough: true }) res: FastifyReply,
+    @Res({ passthrough: true }) res: FastifyReply
   ): Promise<StreamableFile | void> {
     try {
       // Obtener información de la portada
@@ -175,9 +168,7 @@ export class ImagesController {
       const currentETag = `"${imageResult.tag}"`;
       if (ifNoneMatch && ifNoneMatch === currentETag) {
         res.status(304);
-        this.logger.debug(
-          `304 Not Modified: album ${albumId} cover (ETag match: ${currentETag})`,
-        );
+        this.logger.debug(`304 Not Modified: album ${albumId} cover (ETag match: ${currentETag})`);
         return;
       }
 
@@ -188,7 +179,7 @@ export class ImagesController {
       const fileStream = createReadStream(imageResult.filePath);
 
       this.logger.debug(
-        `Serving album cover: ${albumId} (${imageResult.size} bytes, tag: ${imageResult.tag})`,
+        `Serving album cover: ${albumId} (${imageResult.size} bytes, tag: ${imageResult.tag})`
       );
 
       return new StreamableFile(fileStream);
@@ -199,7 +190,7 @@ export class ImagesController {
 
       this.logger.error(
         `Error serving album cover ${albumId}: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
       throw new NotFoundException(`Unable to serve cover for album ${albumId}`);
     }
@@ -234,14 +225,11 @@ export class ImagesController {
   async getCustomAlbumCover(
     @Param('albumId', ParseUUIDPipe) albumId: string,
     @Param('customCoverId', ParseUUIDPipe) customCoverId: string,
-    @Res({ passthrough: true }) res: FastifyReply,
+    @Res({ passthrough: true }) res: FastifyReply
   ): Promise<StreamableFile> {
     try {
       // Obtener información de la portada personalizada
-      const customCover = await this.imageService.getCustomAlbumCover(
-        albumId,
-        customCoverId,
-      );
+      const customCover = await this.imageService.getCustomAlbumCover(albumId, customCoverId);
 
       // Configurar headers de caché
       this.setCacheHeaders(res, customCover);
@@ -249,9 +237,7 @@ export class ImagesController {
       // Crear stream del archivo
       const fileStream = createReadStream(customCover.filePath);
 
-      this.logger.debug(
-        `Serving custom album cover: ${customCoverId} (${customCover.size} bytes)`,
-      );
+      this.logger.debug(`Serving custom album cover: ${customCoverId} (${customCover.size} bytes)`);
 
       return new StreamableFile(fileStream);
     } catch (error) {
@@ -261,11 +247,9 @@ export class ImagesController {
 
       this.logger.error(
         `Error serving custom album cover ${customCoverId}: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
-      throw new NotFoundException(
-        `Unable to serve custom cover ${customCoverId}`,
-      );
+      throw new NotFoundException(`Unable to serve custom cover ${customCoverId}`);
     }
   }
 
@@ -298,14 +282,11 @@ export class ImagesController {
   async getCustomArtistImage(
     @Param('artistId', ParseUUIDPipe) artistId: string,
     @Param('customImageId', ParseUUIDPipe) customImageId: string,
-    @Res({ passthrough: true }) res: FastifyReply,
+    @Res({ passthrough: true }) res: FastifyReply
   ): Promise<StreamableFile> {
     try {
       // Obtener información de la imagen personalizada
-      const customImage = await this.imageService.getCustomArtistImage(
-        artistId,
-        customImageId,
-      );
+      const customImage = await this.imageService.getCustomArtistImage(artistId, customImageId);
 
       // Configurar headers de caché
       this.setCacheHeaders(res, customImage);
@@ -314,7 +295,7 @@ export class ImagesController {
       const fileStream = createReadStream(customImage.filePath);
 
       this.logger.debug(
-        `Serving custom artist image: ${customImageId} (${customImage.size} bytes)`,
+        `Serving custom artist image: ${customImageId} (${customImage.size} bytes)`
       );
 
       return new StreamableFile(fileStream);
@@ -325,14 +306,13 @@ export class ImagesController {
 
       this.logger.error(
         `Error serving custom artist image ${customImageId}: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
-      throw new NotFoundException(
-        `Unable to serve custom image ${customImageId}`,
-      );
+      throw new NotFoundException(`Unable to serve custom image ${customImageId}`);
     }
   }
 
+  @Public()
   @Get('artists/:artistId/:imageType/exists')
   @ApiOperation({
     summary: 'Check if artist image exists',
@@ -352,15 +332,10 @@ export class ImagesController {
   })
   async checkArtistImage(
     @Param('artistId', ParseUUIDPipe) artistId: string,
-    @Param('imageType') imageType: string,
+    @Param('imageType') imageType: string
   ) {
     // Validar tipo de imagen
-    const validImageTypes: ArtistImageType[] = [
-      'profile',
-      'background',
-      'banner',
-      'logo',
-    ];
+    const validImageTypes: ArtistImageType[] = ['profile', 'background', 'banner', 'logo'];
 
     if (!validImageTypes.includes(imageType as ArtistImageType)) {
       return {
@@ -371,10 +346,7 @@ export class ImagesController {
       };
     }
 
-    const exists = await this.imageService.hasArtistImage(
-      artistId,
-      imageType as ArtistImageType,
-    );
+    const exists = await this.imageService.hasArtistImage(artistId, imageType as ArtistImageType);
 
     return {
       exists,
@@ -411,8 +383,7 @@ export class ImagesController {
   @Get('albums/:albumId/cover/metadata')
   @ApiOperation({
     summary: 'Get album cover metadata',
-    description:
-      'Returns metadata for album cover including tag for cache busting',
+    description: 'Returns metadata for album cover including tag for cache busting',
   })
   @ApiResponse({
     status: 200,
@@ -468,8 +439,7 @@ export class ImagesController {
   @Get('users/:userId/avatar')
   @ApiOperation({
     summary: 'Serve user avatar',
-    description:
-      'Returns a user avatar image file with appropriate cache headers.',
+    description: 'Returns a user avatar image file with appropriate cache headers.',
   })
   @ApiParam({
     name: 'userId',
@@ -489,7 +459,7 @@ export class ImagesController {
   @ApiResponse({ status: 304, description: 'Not Modified (cached)' })
   async getUserAvatar(
     @Param('userId', ParseUUIDPipe) userId: string,
-    @Res({ passthrough: true }) res: FastifyReply,
+    @Res({ passthrough: true }) res: FastifyReply
   ): Promise<StreamableFile> {
     try {
       // Obtener información del avatar
@@ -502,9 +472,7 @@ export class ImagesController {
       // Crear stream del archivo
       const fileStream = createReadStream(imageResult.filePath);
 
-      this.logger.debug(
-        `Serving user avatar: ${userId} (${imageResult.size} bytes)`,
-      );
+      this.logger.debug(`Serving user avatar: ${userId} (${imageResult.size} bytes)`);
 
       return new StreamableFile(fileStream);
     } catch (error) {
@@ -514,17 +482,17 @@ export class ImagesController {
 
       this.logger.error(
         `Error serving user avatar ${userId}: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
       throw new NotFoundException(`Unable to serve avatar for user ${userId}`);
     }
   }
 
+  @Public()
   @Get('artists/:artistId/all')
   @ApiOperation({
     summary: 'Get all available artist images',
-    description:
-      'Returns metadata for all available images of an artist (without downloading)',
+    description: 'Returns metadata for all available images of an artist (without downloading)',
   })
   @ApiResponse({
     status: 200,
@@ -619,7 +587,7 @@ export class ImagesController {
    */
   private setRevalidateCacheHeaders(
     res: FastifyReply,
-    imageResult: { mimeType: string; lastModified: Date; tag: string },
+    imageResult: { mimeType: string; lastModified: Date; tag: string }
   ): void {
     res.header('Content-Type', imageResult.mimeType);
     res.header('Last-Modified', imageResult.lastModified.toUTCString());
@@ -631,7 +599,7 @@ export class ImagesController {
 
   private setCacheHeaders(
     res: FastifyReply,
-    imageResult: { mimeType: string; lastModified: Date; tag: string },
+    imageResult: { mimeType: string; lastModified: Date; tag: string }
   ): void {
     // Content-Type
     res.header('Content-Type', imageResult.mimeType);
