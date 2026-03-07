@@ -57,6 +57,7 @@ export function HeroSection({
   onChangeLogo,
 }: HeroSectionProps) {
   const [profileFailed, setProfileFailed] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   // Preload images to force browser cache refresh
   const { renderKey: imageRenderKey } = useImagePreload({
@@ -143,12 +144,13 @@ export function HeroSection({
         {/* Artist Info */}
         <div className={styles.artistDetailPage__info}>
           {/* Logo or Name */}
-          {logoUrl ? (
+          {logoUrl && !logoFailed ? (
             <img
               key={`${logoUrl}-${logoRenderKey}`}
               src={logoUrl}
               alt={artist.name}
               className={styles.artistDetailPage__logo}
+              onError={() => setLogoFailed(true)}
             />
           ) : (
             <h1 className={styles.artistDetailPage__name}>{artist.name}</h1>
