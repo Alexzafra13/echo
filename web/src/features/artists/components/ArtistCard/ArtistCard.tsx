@@ -5,16 +5,18 @@ import styles from './ArtistCard.module.css';
 
 export const ArtistCard = memo(function ArtistCard({ artist, onClick }: ArtistCardProps) {
   const initials = getArtistInitials(artist.name);
-  const hasImage = !!artist.profileImageUrl;
-  const avatarUrl = hasImage ? getArtistAvatarUrl(artist.id, artist.updatedAt) : null;
+  // Always try to load the image — the endpoint checks custom > local > external
+  // and returns 404 only if no image exists at all
+  const avatarUrl = getArtistAvatarUrl(artist.id, artist.updatedAt);
   const [imgFailed, setImgFailed] = useState(false);
-
-  const showFallback = !hasImage || imgFailed;
 
   return (
     <article className={styles.artistCard} onClick={onClick}>
       <div className={styles.artistCard__avatarContainer}>
-        {avatarUrl && !imgFailed && (
+        {/* Fallback initials always rendered as base layer */}
+        <div className={styles.artistCard__fallback}>{initials}</div>
+        {/* Image overlays the fallback; on error it unmounts revealing fallback */}
+        {!imgFailed && (
           <img
             src={avatarUrl}
             alt={artist.name}
@@ -23,7 +25,6 @@ export const ArtistCard = memo(function ArtistCard({ artist, onClick }: ArtistCa
             onError={() => setImgFailed(true)}
           />
         )}
-        {showFallback && <div className={styles.artistCard__fallback}>{initials}</div>}
       </div>
 
       <div className={styles.artistCard__info}>
