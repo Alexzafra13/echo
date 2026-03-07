@@ -43,7 +43,10 @@ export class AlbumResponseDto {
   name!: string;
 
   @Expose()
-  @ApiPropertyOptional({ description: 'Alias del nombre (compatibilidad frontend)', example: 'Abbey Road' })
+  @ApiPropertyOptional({
+    description: 'Alias del nombre (compatibilidad frontend)',
+    example: 'Abbey Road',
+  })
   title?: string;
 
   @Expose()
@@ -124,8 +127,8 @@ export class AlbumResponseDto {
     dto.albumArtistId = data.albumArtistId;
 
     // Generate cover URL with version parameter for cache busting
-    // Use externalInfoUpdatedAt if available (more accurate), fallback to updatedAt
-    let coverUrl = data.id ? `/api/images/albums/${data.id}/cover` : data.coverArtPath;
+    // Use the albums controller endpoint (not images controller) which handles all cover sources
+    let coverUrl = data.id ? `/api/albums/${data.id}/cover` : data.coverArtPath;
 
     if (data.id) {
       // Prefer externalInfoUpdatedAt (updates when cover changes) over updatedAt (updates on any change)
@@ -133,7 +136,7 @@ export class AlbumResponseDto {
       const timestamp = dataWithExternal.externalInfoUpdatedAt || data.updatedAt;
       if (timestamp) {
         const version = new Date(timestamp).getTime();
-        coverUrl = `/api/images/albums/${data.id}/cover?v=${version}`;
+        coverUrl = `/api/albums/${data.id}/cover?v=${version}`;
       }
     }
 
