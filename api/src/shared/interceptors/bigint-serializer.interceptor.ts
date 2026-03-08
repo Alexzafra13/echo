@@ -1,4 +1,4 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, StreamableFile } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -27,6 +27,11 @@ export class BigIntSerializerInterceptor implements NestInterceptor {
 
     // Preserve built-in types that JSON.stringify already handles correctly
     if (value instanceof Date || value instanceof Buffer || ArrayBuffer.isView(value)) {
+      return value;
+    }
+
+    // StreamableFile must pass through untouched so NestJS can stream the response
+    if (value instanceof StreamableFile) {
       return value;
     }
 
