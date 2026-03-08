@@ -127,8 +127,8 @@ export class AlbumResponseDto {
     dto.albumArtistId = data.albumArtistId;
 
     // Generate cover URL with version parameter for cache busting
-    // Use the albums controller endpoint (not images controller) which handles all cover sources
-    let coverUrl = data.id ? `/api/albums/${data.id}/cover` : data.coverArtPath;
+    // Use the images controller endpoint which handles full fallback chain: Custom > External > Local > Default
+    let coverUrl = data.id ? `/api/images/albums/${data.id}/cover` : data.coverArtPath;
 
     if (data.id) {
       // Prefer externalInfoUpdatedAt (updates when cover changes) over updatedAt (updates on any change)
@@ -136,7 +136,7 @@ export class AlbumResponseDto {
       const timestamp = dataWithExternal.externalInfoUpdatedAt || data.updatedAt;
       if (timestamp) {
         const version = new Date(timestamp).getTime();
-        coverUrl = `/api/albums/${data.id}/cover?v=${version}`;
+        coverUrl = `/api/images/albums/${data.id}/cover?v=${version}`;
       }
     }
 
