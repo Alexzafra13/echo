@@ -3,12 +3,6 @@
  *
  * Manages external metadata providers configuration.
  * Uses React Query for server state and presentational components for UI.
- *
- * Reduced from 416 lines to <150 lines through:
- * - Separation of concerns (API, hooks, services, components)
- * - React Query for state management
- * - Presentational components
- * - Service layer for business logic
  */
 
 import { useState, useEffect } from 'react';
@@ -22,22 +16,17 @@ import {
 } from '../../hooks';
 import { ProviderCard } from './ProviderCard';
 import { AutoEnrichToggle } from './AutoEnrichToggle';
+import { PROVIDER_BRANDING } from '../../constants/providerBranding';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './ProvidersTab.module.css';
 
-/**
- * ProvidersTab Component
- *
- * Clean container component that orchestrates data fetching,
- * user interactions, and rendering of presentational components.
- */
 export function ProvidersTab() {
-  // React Query hooks (replaces all useState for server state)
+  // React Query hooks
   const { data: settings, isLoading, error } = useMetadataSettings();
   const updateSettings = useUpdateMetadataSettings();
   const validateApiKey = useValidateApiKey();
 
-  // Local form state (only for API keys being edited)
+  // Local form state
   const [lastfmKey, setLastfmKey] = useState('');
   const [fanartKey, setFanartKey] = useState('');
 
@@ -106,10 +95,10 @@ export function ProvidersTab() {
       },
       {
         onSuccess: () => {
-          showSuccess('Configuración guardada correctamente');
+          showSuccess('Configuracion guardada correctamente');
         },
         onError: (err) => {
-          showError(getApiErrorMessage(err, 'Error al guardar configuración'));
+          showError(getApiErrorMessage(err, 'Error al guardar configuracion'));
         },
       }
     );
@@ -124,31 +113,33 @@ export function ProvidersTab() {
           showSuccess(`Auto-enrichment ${enabled ? 'activado' : 'desactivado'}`);
         },
         onError: (err) => {
-          showError(getApiErrorMessage(err, 'Error al actualizar configuración'));
+          showError(getApiErrorMessage(err, 'Error al actualizar configuracion'));
         },
       }
     );
   };
 
-  // Loading state
   if (isLoading) {
-    return <div className={styles.loading}>Cargando configuración...</div>;
+    return <div className={styles.loading}>Cargando configuracion...</div>;
   }
 
-  // Error state
   if (error) {
     return (
       <div className={styles.error}>
         <AlertCircle size={24} />
-        <p>Error al cargar la configuración</p>
+        <p>Error al cargar la configuracion</p>
       </div>
     );
   }
 
-  // No settings (shouldn't happen)
   if (!settings) {
     return null;
   }
+
+  const mb = PROVIDER_BRANDING.musicbrainz;
+  const caa = PROVIDER_BRANDING.coverartarchive;
+  const lfm = PROVIDER_BRANDING.lastfm;
+  const fa = PROVIDER_BRANDING.fanart;
 
   return (
     <div className={styles.container}>
@@ -163,56 +154,69 @@ export function ProvidersTab() {
       <div className={styles.providersSection}>
         <h3 className={styles.sectionTitle}>Proveedores de Metadata</h3>
         <p className={styles.sectionDescription}>
-          Configura los proveedores externos para obtener metadata de artistas y álbumes
+          Configura los proveedores externos para obtener metadata de artistas y albumes
         </p>
 
-        {/* Cover Art Archive - Always enabled */}
-        <ProviderCard
-          name="Cover Art Archive"
-          description="Portadas de álbumes de alta calidad (no requiere API key)"
-          enabled={true}
-          requiresApiKey={false}
-        />
+        <div className={styles.providersGrid}>
+          {/* MusicBrainz - Always enabled */}
+          <ProviderCard
+            name={mb.name}
+            description={mb.description}
+            enabled={true}
+            requiresApiKey={false}
+            logoPath={mb.logoPath}
+            brandColor={mb.brandColor}
+            brandColorRgb={mb.brandColorRgb}
+          />
 
-        {/* Last.fm */}
-        <ProviderCard
-          name="Last.fm"
-          description="Biografías de artistas y álbumes"
-          enabled={settings.providers.lastfm.enabled}
-          requiresApiKey={true}
-          apiKey={lastfmKey}
-          onApiKeyChange={setLastfmKey}
-          onValidate={handleValidateLastfm}
-          validationResult={validationResults.lastfm}
-          isValidating={validateApiKey.isPending}
-          apiKeyUrl="https://www.last.fm/api/account/create"
-        />
+          {/* Cover Art Archive - Always enabled */}
+          <ProviderCard
+            name={caa.name}
+            description={caa.description}
+            enabled={true}
+            requiresApiKey={false}
+            logoPath={caa.logoPath}
+            brandColor={caa.brandColor}
+            brandColorRgb={caa.brandColorRgb}
+          />
 
-        {/* Fanart.tv */}
-        <ProviderCard
-          name="Fanart.tv"
-          description="Imágenes de artistas y portadas de álbumes"
-          enabled={settings.providers.fanart.enabled}
-          requiresApiKey={true}
-          apiKey={fanartKey}
-          onApiKeyChange={setFanartKey}
-          onValidate={handleValidateFanart}
-          validationResult={validationResults.fanart}
-          isValidating={validateApiKey.isPending}
-          apiKeyUrl="https://fanart.tv/get-an-api-key/"
-        />
+          {/* Last.fm */}
+          <ProviderCard
+            name={lfm.name}
+            description={lfm.description}
+            enabled={settings.providers.lastfm.enabled}
+            requiresApiKey={true}
+            apiKey={lastfmKey}
+            onApiKeyChange={setLastfmKey}
+            onValidate={handleValidateLastfm}
+            validationResult={validationResults.lastfm}
+            isValidating={validateApiKey.isPending}
+            apiKeyUrl={lfm.apiKeyUrl}
+            logoPath={lfm.logoPath}
+            brandColor={lfm.brandColor}
+            brandColorRgb={lfm.brandColorRgb}
+          />
+
+          {/* Fanart.tv */}
+          <ProviderCard
+            name={fa.name}
+            description={fa.description}
+            enabled={settings.providers.fanart.enabled}
+            requiresApiKey={true}
+            apiKey={fanartKey}
+            onApiKeyChange={setFanartKey}
+            onValidate={handleValidateFanart}
+            validationResult={validationResults.fanart}
+            isValidating={validateApiKey.isPending}
+            apiKeyUrl={fa.apiKeyUrl}
+            logoPath={fa.logoPath}
+            brandColor={fa.brandColor}
+            brandColorRgb={fa.brandColorRgb}
+          />
+        </div>
       </div>
 
       {/* Info Box */}
-      <div className={styles.infoBox}>
-        <AlertCircle size={16} />
-        <p>
-          <strong>Nota:</strong> Cover Art Archive está siempre activado y no requiere
-          configuración. Last.fm y Fanart.tv requieren API keys gratuitas que puedes
-          obtener creando una cuenta.
-        </p>
-      </div>
-
       {/* Notification */}
       {notification && (
         <InlineNotification
@@ -223,8 +227,16 @@ export function ProvidersTab() {
         />
       )}
 
-      {/* Save Button */}
-      <div className={styles.actions}>
+      {/* Footer: Info + Save */}
+      <div className={styles.footer}>
+        <div className={styles.infoBox}>
+          <AlertCircle size={16} />
+          <p>
+            <strong>Nota:</strong> MusicBrainz y Cover Art Archive estan siempre activos y no
+            requieren configuracion. Last.fm y Fanart.tv requieren API keys gratuitas que puedes
+            obtener creando una cuenta.
+          </p>
+        </div>
         <Button
           variant="primary"
           size="lg"
@@ -232,7 +244,7 @@ export function ProvidersTab() {
           loading={updateSettings.isPending}
           disabled={updateSettings.isPending}
         >
-          {updateSettings.isPending ? 'Guardando...' : 'Guardar Configuración'}
+          {updateSettings.isPending ? 'Guardando...' : 'Guardar Configuracion'}
         </Button>
       </div>
     </div>

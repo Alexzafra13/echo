@@ -1,11 +1,11 @@
 /**
  * Provider Card Component
  *
- * Presentational component for displaying a single metadata provider
- * with API key input and validation.
+ * Displays a single metadata provider with its brand logo,
+ * API key input, and validation controls.
  */
 
-import { Key, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { ValidationMessage } from '../shared/ValidationMessage';
 import styles from './ProviderCard.module.css';
@@ -31,26 +31,14 @@ export interface ProviderCardProps {
   isValidating?: boolean;
   /** URL to get API key (optional) */
   apiKeyUrl?: string;
+  /** Path to provider logo SVG */
+  logoPath?: string;
+  /** Brand color hex (e.g., "#D51007") */
+  brandColor?: string;
+  /** Brand color RGB values (e.g., "213, 16, 7") */
+  brandColorRgb?: string;
 }
 
-/**
- * ProviderCard - Displays provider configuration
- *
- * @example
- * ```tsx
- * <ProviderCard
- *   name="Last.fm"
- *   description="Biografías de artistas y álbumes"
- *   enabled={true}
- *   requiresApiKey={true}
- *   apiKey={key}
- *   onApiKeyChange={setKey}
- *   onValidate={handleValidate}
- *   validationResult={result}
- *   apiKeyUrl="https://last.fm/api"
- * />
- * ```
- */
 export function ProviderCard({
   name,
   description,
@@ -62,19 +50,55 @@ export function ProviderCard({
   validationResult,
   isValidating = false,
   apiKeyUrl,
+  logoPath,
+  brandColor = '#8b5cf6',
+  brandColorRgb = '139, 92, 246',
 }: ProviderCardProps) {
   return (
-    <div className={styles.providerCard}>
+    <div
+      className={styles.providerCard}
+      style={
+        {
+          '--provider-color': brandColor,
+          '--provider-color-rgb': brandColorRgb,
+        } as React.CSSProperties
+      }
+    >
       {/* Header */}
       <div className={styles.providerHeader}>
-        <Key size={24} className={styles.providerIcon} />
+        {logoPath && (
+          <div className={styles.logoContainer}>
+            <img
+              src={logoPath}
+              alt={`${name} logo`}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const nameEl = e.currentTarget
+                  .closest(`.${styles.providerHeader}`)
+                  ?.querySelector(`.${styles.providerName}`) as HTMLElement;
+                if (nameEl) nameEl.style.display = '';
+              }}
+            />
+          </div>
+        )}
         <div className={styles.providerInfo}>
-          <h4 className={styles.providerName}>{name}</h4>
+          <h4
+            className={styles.providerName}
+            style={logoPath ? { display: 'none' } : undefined}
+          >
+            {name}
+          </h4>
           <p className={styles.providerDescription}>{description}</p>
         </div>
-        {enabled && validationResult?.valid && (
+        {!requiresApiKey && (
+          <span className={styles.alwaysOnBadge}>
+            <Check size={14} />
+            Activo
+          </span>
+        )}
+        {requiresApiKey && enabled && validationResult?.valid && (
           <span className={styles.statusBadge}>
-            <Check size={16} />
+            <Check size={14} />
             Configurado
           </span>
         )}

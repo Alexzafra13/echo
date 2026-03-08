@@ -165,23 +165,6 @@ export function MaintenanceTab() {
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h3 className={styles.sectionTitle}>Almacenamiento</h3>
-          <button
-            className={styles.refreshButton}
-            onClick={loadStats}
-            disabled={isLoadingStats}
-          >
-            {isLoadingStats ? (
-              <>
-                <RefreshCw size={16} className={styles.refreshButton__spinner} />
-                Actualizando...
-              </>
-            ) : (
-              <>
-                <RefreshCw size={16} />
-                Actualizar
-              </>
-            )}
-          </button>
         </div>
 
         {isLoadingStats ? (

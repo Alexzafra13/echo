@@ -31,20 +31,17 @@
   background: var(--color-primary-500);
   color: var(--text-on-primary);
   border: 1px solid var(--color-primary-400);
-  box-shadow: 0 2px 12px var(--primary-30);
 }
 
 .primary:hover:not(:disabled) {
   background: var(--color-primary-600);
   border-color: var(--color-primary-500);
-  box-shadow: 0 4px 20px var(--primary-40);
   transform: translateY(-2px);
 }
 
 .primary:active:not(:disabled) {
   transform: translateY(0);
   background: var(--color-primary-700);
-  box-shadow: 0 2px 12px var(--primary-30);
 }
 
 .secondary {

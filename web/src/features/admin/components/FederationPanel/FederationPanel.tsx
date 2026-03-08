@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useModal, useNotification } from '@shared/hooks';
-import { Server, Link2, Plus, Shield, Activity, Edit3, Check, X } from 'lucide-react';
+import { Server, Link2, Plus, Shield, Activity, Edit3, Check, X, Palette } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
+import { SERVER_COLORS, getServerColor } from './serverColors';
 import {
   useConnectedServers,
   useInvitationTokens,
@@ -10,6 +11,7 @@ import {
   useDeleteInvitation,
   useDisconnectFromServer,
   useSyncServer,
+  useUpdateServer,
   useRevokeAccessToken,
   useDeleteAccessToken,
   useReactivateAccessToken,
@@ -43,20 +45,30 @@ export function FederationPanel() {
   const [isLoadingName, setIsLoadingName] = useState(true);
   const [isSavingName, setIsSavingName] = useState(false);
 
-  // Load server name on mount (auto-generates if not set)
+  // Server color state
+  const [serverColor, setServerColor] = useState('purple');
+  const [showIdentityColorPicker, setShowIdentityColorPicker] = useState(false);
+  const [isSavingColor, setIsSavingColor] = useState(false);
+
+  // Load server name and color on mount
   useEffect(() => {
-    const loadServerName = async () => {
+    const loadServerIdentity = async () => {
       try {
-        const response = await apiClient.get('/admin/settings/federation/server-name');
-        const data = response.data as { name: string; isDefault: boolean };
-        setServerName(data.name);
+        const [nameRes, colorRes] = await Promise.all([
+          apiClient.get('/admin/settings/federation/server-name'),
+          apiClient.get('/admin/settings/federation/server-color'),
+        ]);
+        const nameData = nameRes.data as { name: string; isDefault: boolean };
+        const colorData = colorRes.data as { color: string };
+        setServerName(nameData.name);
+        setServerColor(colorData.color || 'purple');
       } catch {
-        // Error loading server name
+        // Error loading server identity
       } finally {
         setIsLoadingName(false);
       }
     };
-    loadServerName();
+    loadServerIdentity();
   }, []);
 
   // Modal states using useModal hook
@@ -90,6 +102,7 @@ export function FederationPanel() {
   const updatePermissionsMutation = useUpdatePermissions();
   const deleteAccessMutation = useDeleteAccessToken();
   const reactivateAccessMutation = useReactivateAccessToken();
+  const updateServerMutation = useUpdateServer();
 
   // Server name handlers
   const handleStartEditName = () => {
@@ -115,6 +128,20 @@ export function FederationPanel() {
       showError('Error al guardar el nombre');
     } finally {
       setIsSavingName(false);
+    }
+  };
+
+  const handleSaveServerColor = async (color: string) => {
+    setIsSavingColor(true);
+    try {
+      await apiClient.put('/admin/settings/server.color', { value: color });
+      setServerColor(color);
+      setShowIdentityColorPicker(false);
+      showSuccess('Color del servidor actualizado');
+    } catch {
+      showError('Error al guardar el color');
+    } finally {
+      setIsSavingColor(false);
     }
   };
 
@@ -221,6 +248,14 @@ export function FederationPanel() {
     }
   };
 
+  const handleColorChange = async (serverId: string, color: string) => {
+    try {
+      await updateServerMutation.mutateAsync({ id: serverId, data: { color } });
+    } catch {
+      showError('Error al cambiar el color');
+    }
+  };
+
   const handleTogglePermission = async (
     token: AccessToken,
     permission: 'canBrowse' | 'canStream' | 'canDownload'
@@ -251,7 +286,13 @@ export function FederationPanel() {
       </div>
 
       {/* Server Identity Card */}
-      <div className={styles.serverIdentityCard}>
+      <div
+        className={`${styles.serverIdentityCard} ${showIdentityColorPicker ? styles.serverIdentityCardExpanded : ''}`}
+        style={{
+          '--server-color': getServerColor(serverColor).hex,
+          '--server-color-rgb': getServerColor(serverColor).rgb,
+        } as React.CSSProperties}
+      >
         <div className={styles.serverIdentityIcon}>
           <Server size={24} />
         </div>
@@ -305,7 +346,38 @@ export function FederationPanel() {
             </div>
           )}
         </div>
+        <button
+          className={styles.identityColorBtn}
+          onClick={() => setShowIdentityColorPicker(!showIdentityColorPicker)}
+          title="Cambiar color del servidor"
+          disabled={isSavingColor}
+        >
+          <Palette size={18} />
+        </button>
       </div>
+
+      {/* Server Color Picker */}
+      {showIdentityColorPicker && (
+        <div className={styles.identityColorPicker}>
+          <span className={styles.identityColorLabel}>
+            Este color identifica tu servidor cuando otros se conectan:
+          </span>
+          <div className={styles.colorPicker}>
+            {SERVER_COLORS.map((color) => (
+              <button
+                key={color.name}
+                type="button"
+                className={`${styles.colorSwatch} ${serverColor === color.name ? styles.colorSwatchActive : ''}`}
+                style={{ '--swatch-color': color.hex, '--swatch-rgb': color.rgb } as React.CSSProperties}
+                onClick={() => handleSaveServerColor(color.name)}
+                disabled={isSavingColor}
+                title={color.label}
+                aria-label={color.label}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Notification */}
       {notification && (
@@ -401,6 +473,7 @@ export function FederationPanel() {
                     server={server}
                     onSync={handleSync}
                     onDisconnect={(s) => disconnectModal.openWith(s)}
+                    onColorChange={handleColorChange}
                     isSyncing={syncingServerId === server.id}
                   />
                 ))}

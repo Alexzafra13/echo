@@ -52,45 +52,6 @@
   margin: 0;
 }
 
-/* Refresh Button */
-.refreshButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: var(--primary-10);
-  border: 1px solid var(--primary-30);
-  border-radius: 8px;
-  color: var(--color-primary);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.refreshButton:hover:not(:disabled) {
-  background: var(--primary-15);
-  border-color: var(--primary-50);
-}
-
-.refreshButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.refreshButton__spinner {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* Stats Grid */
 .statsGrid {
   display: grid;

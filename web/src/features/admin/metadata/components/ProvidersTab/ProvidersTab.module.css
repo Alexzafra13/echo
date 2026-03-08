@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   padding: 60px;
-  color: #a0a0b0;
+  color: var(--white-50);
   font-size: 16px;
 }
 
@@ -28,48 +28,73 @@
 }
 
 .sectionTitle {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  color: #f8f9fa;
-  margin: 0 0 8px 0;
+  color: var(--white-95);
+  margin: 0 0 6px 0;
 }
 
 .sectionDescription {
   font-size: 14px;
-  color: #a0a0b0;
+  color: var(--white-50);
   margin: 0 0 20px 0;
   line-height: 1.5;
 }
 
+.providersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 14px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.footer > button {
+  flex-shrink: 0;
+}
+
 .infoBox {
+  flex: 1;
   display: flex;
   gap: 12px;
-  padding: 16px;
-  background-color: var(--info-10);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 8px;
-  margin-bottom: 24px;
+  padding: 14px 16px;
+  background-color: var(--white-04);
+  border: 1px solid var(--white-08);
+  border-radius: 10px;
 }
 
 .infoBox svg {
-  color: #3b82f6;
+  color: var(--white-40);
   flex-shrink: 0;
   margin-top: 2px;
 }
 
 .infoBox p {
   margin: 0;
-  font-size: 14px;
-  color: #d0d0e0;
+  font-size: 13px;
+  color: var(--white-60);
   line-height: 1.5;
 }
 
 .infoBox strong {
-  color: #f8f9fa;
+  color: var(--white-80);
 }
 
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 8px;
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .providersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

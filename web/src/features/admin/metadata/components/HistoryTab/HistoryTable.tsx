@@ -5,7 +5,26 @@
  */
 
 import { formatDate, getStatusBadge, getEntityIcon, buildImageUrl } from './historyUtils';
+import { getProviderBranding } from '../../constants/providerBranding';
 import styles from './HistoryTab.module.css';
+
+/** Map display names to branding keys */
+const PROVIDER_KEY_MAP: Record<string, string> = {
+  'last.fm': 'lastfm',
+  'lastfm': 'lastfm',
+  'fanart.tv': 'fanart',
+  'fanart': 'fanart',
+  'musicbrainz': 'musicbrainz',
+  'cover art archive': 'coverartarchive',
+  'coverartarchive': 'coverartarchive',
+  'coverart': 'coverartarchive',
+  'wikipedia': 'wikipedia',
+};
+
+function getProviderLogo(name: string) {
+  const key = PROVIDER_KEY_MAP[name.toLowerCase()] || name.toLowerCase();
+  return getProviderBranding(key);
+}
 
 export interface EnrichmentLog {
   id: string;
@@ -62,7 +81,31 @@ export function HistoryTable({ logs, onRowClick }: HistoryTableProps) {
                   </div>
                 </td>
                 <td>
-                  <span className={styles.providerBadge}>{log.provider}</span>
+                  {(() => {
+                    const branding = getProviderLogo(log.provider);
+                    if (branding) {
+                      return (
+                        <img
+                          src={branding.logoPath}
+                          alt={branding.name}
+                          className={styles.providerTableLogo}
+                          style={branding.statsLogoHeight ? { height: branding.statsLogoHeight } : undefined}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = '';
+                          }}
+                        />
+                      );
+                    }
+                    return null;
+                  })()}
+                  <span
+                    className={styles.providerBadge}
+                    style={getProviderLogo(log.provider) ? { display: 'none' } : undefined}
+                  >
+                    {log.provider}
+                  </span>
                 </td>
                 <td>{log.metadataType}</td>
                 <td>{getStatusBadge(log.status)}</td>

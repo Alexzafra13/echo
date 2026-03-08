@@ -80,7 +80,8 @@ export const UserRow = memo(function UserRow({
           <button
             className={styles.actionButton}
             onClick={() => onEdit(user)}
-            title="Editar usuario"
+            title={user.isSystemAdmin ? "No se puede editar al administrador principal" : "Editar usuario"}
+            disabled={user.isSystemAdmin}
           >
             <Edit2 size={14} />
             Editar
@@ -88,8 +89,8 @@ export const UserRow = memo(function UserRow({
           <button
             className={styles.actionButton}
             onClick={() => onResetPassword(user)}
-            title="Resetear contraseña"
-            disabled={!user.isActive}
+            title={user.isSystemAdmin ? "No se puede resetear la contraseña del administrador principal" : "Resetear contraseña"}
+            disabled={!user.isActive || user.isSystemAdmin}
           >
             <Key size={14} />
             Reset

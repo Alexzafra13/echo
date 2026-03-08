@@ -28,6 +28,7 @@ export const connectedServers = pgTable(
     name: varchar('name', { length: 100 }).notNull(), // Nombre del amigo/servidor
     baseUrl: varchar('base_url', { length: 512 }).notNull(), // URL del servidor
     authToken: varchar('auth_token', { length: 512 }).notNull(), // Token de autenticación
+    color: varchar('color', { length: 20 }), // Color temático del servidor (purple, emerald, orange, rose, cyan, blue, amber, red)
     isActive: boolean('is_active').default(true).notNull(),
     // Online status
     isOnline: boolean('is_online').default(false).notNull(),

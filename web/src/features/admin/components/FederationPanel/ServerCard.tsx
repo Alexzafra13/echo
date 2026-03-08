@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import {
   Server,
   RefreshCw,
@@ -9,22 +9,33 @@ import {
   Music,
   Wifi,
   WifiOff,
+  Palette,
 } from 'lucide-react';
 import { ConnectedServer } from '../../api/federation.api';
 import { formatDistanceToNow } from '@shared/utils/format';
 import { formatSize } from './utils';
+import { getServerColorStyle, SERVER_COLORS } from './serverColors';
 import styles from './FederationPanel.module.css';
 
 interface ServerCardProps {
   server: ConnectedServer;
   onSync: (server: ConnectedServer) => void;
   onDisconnect: (server: ConnectedServer) => void;
+  onColorChange?: (serverId: string, color: string) => void;
   isSyncing: boolean;
 }
 
-export const ServerCard = memo(function ServerCard({ server, onSync, onDisconnect, isSyncing }: ServerCardProps) {
+export const ServerCard = memo(function ServerCard({
+  server,
+  onSync,
+  onDisconnect,
+  onColorChange,
+  isSyncing,
+}: ServerCardProps) {
+  const [showColorPicker, setShowColorPicker] = useState(false);
+
   return (
-    <div className={styles.serverCard}>
+    <div className={styles.serverCard} style={getServerColorStyle(server.color)}>
       <div className={styles.serverHeader}>
         <div className={styles.serverIcon}>
           <Server size={24} />
@@ -70,6 +81,25 @@ export const ServerCard = memo(function ServerCard({ server, onSync, onDisconnec
         </div>
       )}
 
+      {showColorPicker && (
+        <div className={styles.colorPickerInline}>
+          {SERVER_COLORS.map((color) => (
+            <button
+              key={color.name}
+              type="button"
+              className={`${styles.colorSwatch} ${styles.colorSwatchSmall} ${server.color === color.name ? styles.colorSwatchActive : ''}`}
+              style={{ '--swatch-color': color.hex, '--swatch-rgb': color.rgb } as React.CSSProperties}
+              onClick={() => {
+                onColorChange?.(server.id, color.name);
+                setShowColorPicker(false);
+              }}
+              title={color.label}
+              aria-label={color.label}
+            />
+          ))}
+        </div>
+      )}
+
       <div className={styles.serverFooter}>
         <div className={styles.serverMeta}>
           {!server.isOnline && server.lastOnlineAt && (
@@ -84,6 +114,13 @@ export const ServerCard = memo(function ServerCard({ server, onSync, onDisconnec
           )}
         </div>
         <div className={styles.serverActions}>
+          <button
+            className={styles.iconButton}
+            onClick={() => setShowColorPicker(!showColorPicker)}
+            title="Cambiar color"
+          >
+            <Palette size={16} />
+          </button>
           <button
             className={styles.iconButton}
             onClick={() => onSync(server)}

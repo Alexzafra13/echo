@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80">
+  <!-- Circular border -->
+  <circle cx="40" cy="40" r="34" fill="none" stroke="#29B6F6" stroke-width="3.5"/>
+  <!-- Inner mark: overlapping angular shapes like the real logo -->
+  <polygon points="30,60 40,14 50,60 40,38" fill="#29B6F6" opacity="0.45"/>
+  <polygon points="20,56 40,18 42,30 26,56" fill="#1E88E5"/>
+  <polygon points="60,56 40,18 38,30 54,56" fill="#29B6F6" opacity="0.7"/>
+  <line x1="18" y1="56" x2="62" y2="56" stroke="#29B6F6" stroke-width="2.5" opacity="0.5"/>
+  <!-- Text: FANART.TV -->
+  <text x="88" y="53" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="42" letter-spacing="2">
+    <tspan fill="#ffffff">FAN</tspan><tspan fill="#7B8D9E">ART.TV</tspan>
+  </text>
+</svg>

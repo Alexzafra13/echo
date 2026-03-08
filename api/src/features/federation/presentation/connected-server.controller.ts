@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   Body,
@@ -29,6 +30,7 @@ import { RemoteServerService } from '../infrastructure/services';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
 import {
   ConnectToServerDto,
+  UpdateServerDto,
   ConnectedServerResponseDto,
 } from './dto';
 
@@ -218,11 +220,37 @@ export class ConnectedServerController {
     return this.mapServerToResponse(updated!);
   }
 
+  @Patch(':id')
+  @ApiOperation({
+    summary: 'Actualizar servidor conectado',
+    description: 'Actualiza propiedades del servidor como el color temático',
+  })
+  @ApiParam({ name: 'id', description: 'ID del servidor' })
+  @ApiResponse({
+    status: 200,
+    description: 'Servidor actualizado',
+    type: ConnectedServerResponseDto,
+  })
+  async updateServer(
+    @CurrentUser() user: User,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateServerDto,
+  ): Promise<ConnectedServerResponseDto> {
+    await this.getServerWithOwnershipCheck(id, user.id);
+    const updateData: Partial<ConnectedServer> = {};
+    if (dto.color !== undefined) updateData.color = dto.color;
+
+    await this.repository.updateConnectedServer(id, updateData);
+    const updated = await this.repository.findConnectedServerById(id);
+    return this.mapServerToResponse(updated!);
+  }
+
   private mapServerToResponse(server: ConnectedServer): ConnectedServerResponseDto {
     return {
       id: server.id,
       name: server.name,
       baseUrl: server.baseUrl,
+      color: server.color ?? undefined,
       isActive: server.isActive,
       isOnline: server.isOnline,
       lastOnlineAt: server.lastOnlineAt ?? undefined,

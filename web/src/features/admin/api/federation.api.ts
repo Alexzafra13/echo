@@ -52,6 +52,10 @@ export interface ConnectToServerRequest {
   requestMutual?: boolean;
 }
 
+export interface UpdateServerRequest {
+  color?: string;
+}
+
 export interface UpdatePermissionsRequest {
   canBrowse?: boolean;
   canStream?: boolean;
@@ -104,6 +108,11 @@ export const federationApi = {
 
   async checkServerHealth(id: string): Promise<ConnectedServer> {
     const response = await apiClient.post<ConnectedServer>(`/federation/servers/${id}/health`);
+    return response.data;
+  },
+
+  async updateServer(id: string, data: UpdateServerRequest): Promise<ConnectedServer> {
+    const response = await apiClient.patch<ConnectedServer>(`/federation/servers/${id}`, data);
     return response.data;
   },
 

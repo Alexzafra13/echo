@@ -35,21 +35,28 @@
   gap: 10px;
 }
 
-.statsTitle::before {
-  content: '';
-  width: 4px;
-  height: 20px;
-  background: linear-gradient(180deg, var(--color-primary, #ed6842), #22d3ee);
-  border-radius: 2px;
-}
 
 .periodSelector {
   display: flex;
   gap: 4px;
   background: var(--white-03);
   padding: 5px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid var(--white-08);
+  position: relative;
+}
+
+.periodIndicator {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 0;
+  background: linear-gradient(135deg, var(--color-primary, #ed6842) 0%, #d85a38 100%);
+  border-radius: 8px;
+  transition:
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
 }
 
 .periodButton {
@@ -61,18 +68,17 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-slow);
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
 }
 
 .periodButton:hover {
-  background: var(--white-05);
   color: var(--color-text-primary, #ffffff);
 }
 
 .periodButtonActive {
-  background: linear-gradient(135deg, var(--color-primary, #ed6842) 0%, #d85a38 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(237, 104, 66, 0.3);
+  color: #ffffff;
 }
 
 .statsGrid {
@@ -94,26 +100,9 @@
   overflow: hidden;
 }
 
-.statCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--color-primary, #ed6842), transparent);
-  opacity: 0;
-  transition: opacity var(--transition-slow);
-}
-
 .statCard:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px var(--black-15);
+  transform: translateY(-2px);
   border-color: var(--white-15);
-}
-
-.statCard:hover::before {
-  opacity: 1;
 }
 
 .statIcon {
@@ -126,21 +115,11 @@
   background: linear-gradient(135deg, rgba(237, 104, 66, 0.15) 0%, rgba(237, 104, 66, 0.05) 100%);
   color: var(--color-primary, #ed6842);
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.15);
-}
-
-.statIcon svg {
-  filter: drop-shadow(0 0 6px rgba(237, 104, 66, 0.4));
 }
 
 .statIconSuccess {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
   color: var(--color-success);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
-}
-
-.statIconSuccess svg {
-  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.4));
 }
 
 .statContent {
@@ -187,7 +166,11 @@
 
 .providerStatCard {
   padding: 16px 18px;
-  background: linear-gradient(135deg, var(--white-03) 0%, transparent 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--stat-provider-color-rgb, 255, 255, 255), 0.04) 0%,
+    transparent 100%
+  );
   border: 1px solid var(--white-08);
   border-radius: 12px;
   transition: all var(--transition-slow);
@@ -195,19 +178,9 @@
   overflow: hidden;
 }
 
-.providerStatCard::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, var(--color-success), #22d3ee);
-  opacity: 0.7;
-}
 
 .providerStatCard:hover {
-  border-color: var(--white-15);
+  border-color: rgba(var(--stat-provider-color-rgb, 255, 255, 255), 0.2);
   transform: translateX(4px);
 }
 
@@ -216,6 +189,19 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+}
+
+.providerNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.providerStatLogo {
+  height: 26px;
+  width: auto;
+  max-width: 200px;
+  display: block;
 }
 
 .providerName {
@@ -279,13 +265,6 @@
   gap: 10px;
 }
 
-.historyTitle::before {
-  content: '';
-  width: 4px;
-  height: 20px;
-  background: linear-gradient(180deg, #a855f7, #22d3ee);
-  border-radius: 2px;
-}
 
 .historyDescription {
   font-size: 14px;
@@ -398,6 +377,13 @@
   color: var(--color-info);
   text-transform: capitalize;
   font-weight: 500;
+}
+
+.providerTableLogo {
+  height: 18px;
+  width: auto;
+  max-width: 140px;
+  display: block;
 }
 
 /* Badges */
@@ -553,6 +539,11 @@
     gap: 4px;
   }
 
+  /* Hide animated indicator on mobile */
+  .periodIndicator {
+    display: none;
+  }
+
   .periodButton {
     width: 100%;
     justify-content: center;
@@ -560,6 +551,11 @@
     font-size: 14px;
     border-radius: 10px;
     text-align: center;
+  }
+
+  .periodButtonActive {
+    background: linear-gradient(135deg, var(--color-primary, #ed6842) 0%, #d85a38 100%);
+    box-shadow: 0 4px 12px rgba(237, 104, 66, 0.3);
   }
 
   .statsTitle {

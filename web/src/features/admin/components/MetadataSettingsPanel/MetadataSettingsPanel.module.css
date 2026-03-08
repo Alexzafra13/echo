@@ -15,21 +15,7 @@
 }
 
 .panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    var(--color-primary, #ed6842),
-    #22d3ee,
-    var(--color-primary, #ed6842)
-  );
-  background-size: 200% 100%;
-  border-radius: 20px 20px 0 0;
-  opacity: 0.8;
+  display: none;
 }
 
 .panel:hover {
@@ -91,7 +77,6 @@
   transition:
     transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
     width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.35);
   z-index: 0;
 }
 

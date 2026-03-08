@@ -30,6 +30,18 @@ export class ResetUserPasswordUseCase {
       throw new ForbiddenError('No puedes resetear tu propia contraseña desde el panel de admin. Usa la opción de cambio de contraseña en tu perfil.');
     }
 
+    // Prevent resetting the system admin's password
+    const allUsers = await this.userRepository.findAll(0, 1000);
+    const adminUsers = allUsers.filter(u => u.isAdmin);
+    if (adminUsers.length > 0) {
+      const systemAdmin = adminUsers.reduce((oldest, current) =>
+        current.createdAt < oldest.createdAt ? current : oldest
+      );
+      if (user.id === systemAdmin.id) {
+        throw new ForbiddenError('No se puede resetear la contraseña del administrador principal.');
+      }
+    }
+
     const temporaryPassword = PasswordUtil.generateTemporaryPassword();
     const passwordHash = await this.passwordService.hash(temporaryPassword);
 

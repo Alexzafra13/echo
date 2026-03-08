@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Search, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
 import { useNotification } from '@shared/hooks';
 import { useAutoSearchConfig } from '../../hooks/queries/useAutoSearchConfig';
@@ -14,6 +14,7 @@ import { useAutoSearchStats } from '../../hooks/queries/useAutoSearchStats';
 import { AutoSearchToggle } from './AutoSearchToggle';
 import { ConfidenceSlider } from './ConfidenceSlider';
 import { AutoSearchStatsDisplay } from './AutoSearchStatsDisplay';
+import { PROVIDER_BRANDING } from '../../constants/providerBranding';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './AutoSearchTab.module.css';
 
@@ -70,7 +71,16 @@ export function AutoSearchTab() {
       {/* Header */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
-          <Search size={20} />
+          <div className={styles.mbLogoContainer}>
+            <img
+              src={PROVIDER_BRANDING.musicbrainz.logoPath}
+              alt="MusicBrainz"
+              className={styles.mbLogo}
+              onError={(e) => {
+                (e.currentTarget.parentElement as HTMLElement).style.display = 'none';
+              }}
+            />
+          </div>
           <h3 className={styles.sectionTitle}>Auto-búsqueda de MusicBrainz IDs</h3>
         </div>
         <p className={styles.sectionDescription}>

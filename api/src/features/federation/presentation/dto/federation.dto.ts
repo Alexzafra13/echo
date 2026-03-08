@@ -80,6 +80,17 @@ export class ConnectToServerDto {
   @IsOptional()
   @IsBoolean()
   requestMutual?: boolean;
+
+}
+
+export class UpdateServerDto {
+  @ApiPropertyOptional({
+    description: 'Color temático para identificar el servidor',
+    example: 'emerald',
+  })
+  @IsOptional()
+  @IsString()
+  color?: string;
 }
 
 export class AcceptConnectionDto {
@@ -221,6 +232,9 @@ export class ConnectedServerResponseDto {
   @ApiProperty({ description: 'URL base del servidor' })
   baseUrl!: string;
 
+  @ApiPropertyOptional({ description: 'Color temático del servidor' })
+  color?: string;
+
   @ApiProperty({ description: 'Si está activo' })
   isActive!: boolean;
 
@@ -294,6 +308,9 @@ export class ServerInfoResponseDto {
 
   @ApiProperty({ description: 'Versión del servidor' })
   version!: string;
+
+  @ApiPropertyOptional({ description: 'Color temático del servidor' })
+  color?: string;
 
   @ApiProperty({ description: 'Número de álbums' })
   albumCount!: number;

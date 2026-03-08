@@ -67,6 +67,7 @@ export interface ConnectedServer {
   id: string;
   name: string;
   baseUrl: string;
+  color?: string;
   isActive: boolean;
   isOnline: boolean;
   lastOnlineAt?: string;

@@ -23,6 +23,28 @@
 
 .sectionHeader {
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mbLogoContainer {
+  min-width: 46px;
+  height: 46px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(235, 116, 59, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mbLogo {
+  height: 26px;
+  width: auto;
+  max-width: 120px;
+  display: block;
 }
 
 .sectionTitle {
@@ -35,13 +57,6 @@
   gap: 10px;
 }
 
-.sectionTitle::before {
-  content: '';
-  width: 4px;
-  height: 20px;
-  background: linear-gradient(180deg, var(--color-primary, #ed6842), #22d3ee);
-  border-radius: 2px;
-}
 
 .sectionDescription {
   font-size: 14px;
@@ -120,26 +135,10 @@
   overflow: hidden;
 }
 
-.toggleRow::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, var(--color-primary, #ed6842), transparent);
-  opacity: 0;
-  transition: opacity var(--transition-slow);
-}
 
 .toggleRow:hover {
   background: linear-gradient(135deg, var(--white-05) 0%, var(--white-03) 100%);
   border-color: var(--white-15);
-  transform: translateX(4px);
-}
-
-.toggleRow:hover::before {
-  opacity: 1;
 }
 
 .checkbox {
@@ -166,21 +165,9 @@
   overflow: hidden;
 }
 
-.providerCard::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, var(--color-primary, #ed6842), #a855f7);
-  border-radius: 3px 0 0 3px;
-}
-
 .providerCard:hover {
   border-color: var(--white-15);
-  box-shadow: 0 4px 20px var(--black-15);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .providerHeader {
@@ -193,7 +180,6 @@
 .providerIcon {
   color: var(--color-primary, #ed6842);
   flex-shrink: 0;
-  filter: drop-shadow(0 0 8px rgba(237, 104, 66, 0.3));
 }
 
 .providerInfo {
@@ -292,21 +278,10 @@
   overflow: hidden;
 }
 
-.infoBox::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, #3b82f6, #22d3ee);
-}
-
 .infoIcon {
   color: var(--color-info);
   flex-shrink: 0;
   margin-top: 2px;
-  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.4));
 }
 
 .infoContent {
@@ -345,7 +320,6 @@
 }
 
 .thresholdBox:hover {
-  transform: translateX(6px);
   border-color: var(--white-15);
 }
 
@@ -364,26 +338,9 @@
   overflow: hidden;
 }
 
-.statCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--color-primary, #ed6842), transparent);
-  opacity: 0;
-  transition: opacity var(--transition-slow);
-}
-
 .statCard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px var(--black-20);
-}
-
-.statCard:hover::before {
-  opacity: 1;
+  transform: translateY(-2px);
+  border-color: var(--white-15);
 }
 
 .statCardSuccess {
@@ -391,12 +348,7 @@
   border-color: rgba(16, 185, 129, 0.2);
 }
 
-.statCardSuccess::before {
-  background: linear-gradient(90deg, transparent, #10b981, transparent);
-}
-
 .statCardSuccess:hover {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.04) 100%);
   border-color: var(--success-30);
 }
 
@@ -405,12 +357,7 @@
   border-color: rgba(251, 191, 36, 0.2);
 }
 
-.statCardWarning::before {
-  background: linear-gradient(90deg, transparent, #fbbf24, transparent);
-}
-
 .statCardWarning:hover {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.04) 100%);
   border-color: rgba(251, 191, 36, 0.35);
 }
 
@@ -419,12 +366,7 @@
   border-color: rgba(59, 130, 246, 0.2);
 }
 
-.statCardInfo::before {
-  background: linear-gradient(90deg, transparent, #3b82f6, transparent);
-}
-
 .statCardInfo:hover {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.04) 100%);
   border-color: var(--info-30);
 }
 

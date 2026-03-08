@@ -41,6 +41,84 @@
   font-weight: var(--font-medium);
 }
 
+/* User Stats Row */
+.statsRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.statPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  border: 1px solid transparent;
+  transition: all var(--transition-base);
+}
+
+.statPill svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.statPillValue {
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.statPillLabel {
+  font-weight: 500;
+  opacity: 0.75;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.statPillTotal {
+  background: var(--white-05);
+  border-color: var(--white-10);
+  color: var(--text-primary);
+}
+
+.statPillTotal svg {
+  color: var(--color-primary);
+}
+
+.statPillActive {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.15);
+  color: var(--color-success);
+}
+
+.statPillAdmin {
+  background: rgba(237, 104, 66, 0.08);
+  border-color: rgba(237, 104, 66, 0.15);
+  color: var(--color-primary);
+}
+
+.statPillInactive {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.15);
+  color: var(--color-error);
+}
+
+.filterIndicator {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  padding: 6px 12px;
+  background: var(--white-03);
+  border-radius: 8px;
+  border: 1px solid var(--white-08);
+}
+
 /* Search and Filters */
 .searchFilters {
   display: flex;
@@ -555,6 +633,31 @@
     font-size: var(--text-xl);
   }
 
+  .statsRow {
+    gap: 8px;
+    margin-bottom: var(--space-4);
+  }
+
+  .statPill {
+    padding: 6px 10px;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .statPillValue {
+    font-size: 14px;
+  }
+
+  .statPillLabel {
+    font-size: 11px;
+  }
+
+  .filterIndicator {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+
   .searchFilters {
     flex-direction: column;
     gap: var(--space-3);
@@ -802,6 +905,16 @@
 :root[data-theme='light'] .panel:hover {
   background: rgba(31, 41, 55, 0.06);
   border-color: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme='light'] .statPillTotal {
+  background: rgba(31, 41, 55, 0.05);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme='light'] .filterIndicator {
+  background: rgba(31, 41, 55, 0.04);
+  border-color: rgba(31, 41, 55, 0.08);
 }
 
 :root[data-theme='light'] .searchInput {

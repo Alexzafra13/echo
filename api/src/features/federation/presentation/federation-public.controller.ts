@@ -794,9 +794,13 @@ export class FederationPublicController {
       await this.settingsService.set('server.name', serverName);
     }
 
+    // Get server color from settings
+    const serverColor = await this.settingsService.getString('server.color', '');
+
     return {
       name: serverName,
       version: '1.0.0',
+      color: serverColor || undefined,
       albumCount: Number(albumCount?.count ?? 0),
       trackCount: Number(trackCount?.count ?? 0),
       artistCount: Number(artistCount?.count ?? 0),

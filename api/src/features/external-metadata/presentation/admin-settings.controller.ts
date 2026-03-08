@@ -569,6 +569,31 @@ export class AdminSettingsController {
     }
   }
 
+  @Get('federation/server-color')
+  @ApiOperation({
+    summary: 'Get federation server color',
+    description: 'Returns the server color for federation identification.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Server color retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        color: { type: 'string', example: 'purple' },
+      },
+    },
+  })
+  async getFederationServerColor() {
+    try {
+      const serverColor = await this.settingsService.getString('server.color', '');
+      return { color: serverColor || 'purple' };
+    } catch (error) {
+      this.logger.error(`Error getting federation server color: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
   @Post('cache/clear')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

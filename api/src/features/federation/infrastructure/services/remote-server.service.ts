@@ -10,6 +10,7 @@ import { FederationTokenService } from '../../domain/services/federation-token.s
 export interface RemoteServerInfo {
   name: string;
   version: string;
+  color?: string;
   albumCount: number;
   trackCount: number;
   artistCount: number;
@@ -76,7 +77,7 @@ export class RemoteServerService {
     invitationToken: string,
     serverName?: string,
     localServerUrl?: string,
-    requestMutual = false
+    requestMutual = false,
   ): Promise<ConnectedServer> {
     const normalizedUrl = this.normalizeUrl(serverUrl);
 
@@ -124,6 +125,7 @@ export class RemoteServerService {
         name: response.serverInfo.name || serverName || 'Remote Server',
         baseUrl: normalizedUrl,
         authToken: response.accessToken,
+        color: response.serverInfo.color || null,
         remoteAlbumCount: response.serverInfo.albumCount,
         remoteTrackCount: response.serverInfo.trackCount,
         remoteArtistCount: response.serverInfo.artistCount,

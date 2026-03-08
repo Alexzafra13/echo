@@ -1,9 +1,9 @@
 .section {
-  background-color: #1e1e2e;
-  border-radius: 12px;
+  background-color: var(--white-04);
+  border-radius: 14px;
   padding: 20px;
   margin-bottom: 24px;
-  border: 1px solid #2a2a3c;
+  border: 1px solid var(--white-08);
 }
 
 .sectionHeader {
@@ -14,27 +14,27 @@
 }
 
 .headerIcon {
-  color: #f59e0b;
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
-  background-color: var(--warning-10);
-  border-radius: 8px;
+  background-color: rgba(237, 104, 66, 0.12);
+  border-radius: 10px;
   flex-shrink: 0;
 }
 
 .sectionTitle {
   font-size: 16px;
   font-weight: 600;
-  color: #f8f9fa;
+  color: var(--white-95);
   margin: 0 0 4px 0;
 }
 
 .sectionDescription {
   font-size: 14px;
-  color: #a0a0b0;
+  color: var(--white-50);
   margin: 0;
   line-height: 1.5;
 }
@@ -60,7 +60,7 @@
   display: inline-block;
   width: 48px;
   height: 26px;
-  background-color: #3a3a4c;
+  background-color: var(--white-12);
   border-radius: 34px;
   transition: background-color 0.2s;
 }
@@ -78,7 +78,7 @@
 }
 
 .toggleInput:checked + .toggleSlider {
-  background-color: #8b5cf6;
+  background-color: var(--color-primary);
 }
 
 .toggleInput:checked + .toggleSlider::before {
@@ -93,9 +93,9 @@
 .toggleLabel {
   font-size: 14px;
   font-weight: 500;
-  color: #d0d0e0;
+  color: var(--white-60);
 }
 
 .toggleInput:checked ~ .toggleLabel {
-  color: #8b5cf6;
+  color: var(--color-primary);
 }

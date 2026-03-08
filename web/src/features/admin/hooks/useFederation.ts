@@ -4,6 +4,7 @@ import {
   CreateInvitationRequest,
   ConnectToServerRequest,
   UpdatePermissionsRequest,
+  UpdateServerRequest,
 } from '../api/federation.api';
 
 // ============================================
@@ -123,6 +124,21 @@ export function useCheckAllServersHealth() {
 
   return useMutation({
     mutationFn: () => federationApi.checkAllServersHealth(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['federation', 'servers'] });
+    },
+  });
+}
+
+/**
+ * Hook para actualizar propiedades de un servidor conectado (color, etc.)
+ */
+export function useUpdateServer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateServerRequest }) =>
+      federationApi.updateServer(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['federation', 'servers'] });
     },

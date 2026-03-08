@@ -14,6 +14,7 @@ export interface ConnectedServer {
   name: string;
   baseUrl: string;
   authToken: string;
+  color: string | null;
   isActive: boolean;
   isOnline: boolean;
   lastOnlineAt: Date | null;
@@ -33,6 +34,7 @@ export interface NewConnectedServer {
   name: string;
   baseUrl: string;
   authToken: string;
+  color?: string | null;
   isActive?: boolean;
   isOnline?: boolean;
   lastOnlineAt?: Date | null;

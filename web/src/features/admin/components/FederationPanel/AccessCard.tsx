@@ -26,7 +26,9 @@ export function AccessCard({
     <div className={styles.accessCard}>
       <div className={styles.accessHeader}>
         <div className={styles.accessInfo}>
-          <Server size={20} />
+          <div className={styles.accessIcon}>
+            <Server size={20} />
+          </div>
           <div>
             <h4>{token.serverName}</h4>
             {token.serverUrl && <span className={styles.accessUrl}>{token.serverUrl}</span>}

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Users as UsersIcon, UserPlus } from 'lucide-react';
+import { Users as UsersIcon, UserPlus, Shield, UserCheck, UserX } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import { useModal, useNotification } from '@shared/hooks';
 import { useUsers, useDeleteUser, useResetPassword, usePermanentlyDeleteUser, useUpdateUser } from '../../hooks/useUsers';
@@ -121,6 +121,15 @@ export function UsersPanel() {
 
   const allUsers = data?.users || [];
 
+  // Compute user stats
+  const userStats = useMemo(() => {
+    const total = allUsers.length;
+    const active = allUsers.filter(u => u.isActive).length;
+    const admins = allUsers.filter(u => u.isAdmin).length;
+    const inactive = allUsers.filter(u => !u.isActive).length;
+    return { total, active, admins, inactive };
+  }, [allUsers]);
+
   // Apply search and filters
   const filteredUsers = useMemo(() => {
     let filtered = allUsers;
@@ -217,9 +226,6 @@ export function UsersPanel() {
           <h2 className={styles.title}>Gestión de Usuarios</h2>
           <p className={styles.description}>
             Crea, edita y administra los usuarios del sistema.
-            {filteredUsers.length !== allUsers.length
-              ? ` Mostrando ${filteredUsers.length} de ${allUsers.length} usuarios`
-              : ` Total: ${allUsers.length} usuarios`}
           </p>
         </div>
         <Button
@@ -229,6 +235,37 @@ export function UsersPanel() {
         >
           Crear Usuario
         </Button>
+      </div>
+
+      {/* User Stats */}
+      <div className={styles.statsRow}>
+        <div className={`${styles.statPill} ${styles.statPillTotal}`}>
+          <UsersIcon size={15} />
+          <span className={styles.statPillValue}>{userStats.total}</span>
+          <span className={styles.statPillLabel}>Total</span>
+        </div>
+        <div className={`${styles.statPill} ${styles.statPillActive}`}>
+          <UserCheck size={15} />
+          <span className={styles.statPillValue}>{userStats.active}</span>
+          <span className={styles.statPillLabel}>Activos</span>
+        </div>
+        <div className={`${styles.statPill} ${styles.statPillAdmin}`}>
+          <Shield size={15} />
+          <span className={styles.statPillValue}>{userStats.admins}</span>
+          <span className={styles.statPillLabel}>Admins</span>
+        </div>
+        {userStats.inactive > 0 && (
+          <div className={`${styles.statPill} ${styles.statPillInactive}`}>
+            <UserX size={15} />
+            <span className={styles.statPillValue}>{userStats.inactive}</span>
+            <span className={styles.statPillLabel}>Inactivos</span>
+          </div>
+        )}
+        {filteredUsers.length !== allUsers.length && (
+          <div className={styles.filterIndicator}>
+            Mostrando {filteredUsers.length} de {allUsers.length}
+          </div>
+        )}
       </div>
 
       {/* Notification */}
