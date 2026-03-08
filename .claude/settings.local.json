@@ -8,7 +8,21 @@
       "Bash(where pnpm)",
       "Bash(npx --version)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api)",
+      "Bash(docker compose -f docker-compose.dev.yml ps)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -v http://localhost:5173)",
+      "Bash(timeout 10 bash -c 'while ! curl -s http://localhost:5173 > /dev/null 2>&1; do sleep 1; done; echo \"\"Server is up\"\"')",
+      "Bash(timeout 15 bash -c 'while true; do result=$\\(curl -s -o /dev/null -w \"\"%{http_code}\"\" http://localhost:3000/api/health 2>/dev/null\\); if [ \"\"$result\"\" = \"\"200\"\" ]; then echo \"\"API ready\"\"; break; fi; sleep 1; done')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3000/api/images/albums/c5f96f6d-4142-4e47-8bcd-2bb0a3f122d2/cover\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/health)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}, size: %{size_download}\" \"http://localhost:3000/api/images/albums/c5f96f6d-4142-4e47-8bcd-2bb0a3f122d2/cover\")",
+      "Bash(curl -s -o /dev/null -w \"Direct 3000: HTTP %{http_code}, size: %{size_download}\\\\n\" \"http://localhost:3000/api/images/albums/c5f96f6d-4142-4e47-8bcd-2bb0a3f122d2/cover\")",
+      "Bash(curl -s -o /dev/null -w \"Proxy 5173: HTTP %{http_code}, size: %{size_download}\\\\n\" \"http://localhost:5173/api/images/albums/c5f96f6d-4142-4e47-8bcd-2bb0a3f122d2/cover\")",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\" \"http://localhost:3000/api/scanner/dj-status\")",
+      "Bash(npx jest --testPathPattern=\"bigint-serializer|images.controller\" --no-coverage)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}, size: %{size_download}, type: %{content_type}\" \"http://localhost:3000/api/images/albums/c5f96f6d-4142-4e47-8bcd-2bb0a3f122d2/cover\")"
     ]
   }
 }
