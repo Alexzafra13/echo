@@ -477,10 +477,20 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
 
     return new Promise<AudioAnalysisResult>((resolve, reject) => {
       const timeout = setTimeout(() => {
-        // Reject caller but do NOT release worker — WASM is still processing.
-        // Worker will be released when the late result arrives in handleWorkerResult.
         this.pendingRequests.delete(requestId);
         reject(new Error('Analysis timeout'));
+
+        // Give the worker a 30s grace period to finish naturally.
+        // If it doesn't respond, kill and replace it to prevent pool exhaustion.
+        setTimeout(() => {
+          if (worker.busy && this.workers.has(worker.id)) {
+            this.logger.warn(
+              { workerId: worker.id },
+              'Worker still busy after timeout grace period, killing and replacing',
+            );
+            this.killWorkerProcess(worker);
+          }
+        }, 30_000);
       }, DJ_CONFIG.analysis.timeout);
 
       this.pendingRequests.set(requestId, {

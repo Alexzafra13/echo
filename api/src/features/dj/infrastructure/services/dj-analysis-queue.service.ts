@@ -449,8 +449,8 @@ export class DjAnalysisQueueService implements OnModuleInit {
     analyzerBackend: string;
   }> {
     // Auto-recover stale 'analyzing' records (stuck from crashed workers).
-    // If a track has been 'analyzing' for > 5 minutes, reset it to 'pending'.
-    const STALE_THRESHOLD_MINUTES = 5;
+    // Threshold: slightly above the worker timeout (2min) + grace period (30s).
+    const STALE_THRESHOLD_MINUTES = 3;
     await this.drizzle.db
       .update(djAnalysis)
       .set({ status: 'pending', analysisError: null, updatedAt: new Date() })

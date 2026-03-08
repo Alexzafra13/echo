@@ -74,13 +74,13 @@ export class AlbumCoverService {
     let result: CachedImageResult;
 
     if (!coverPath) {
-      // Use default image
-      this.logger.debug(`Album ${albumId} has no cover, using default image`);
-      result = await this.getDefaultCover();
-    } else {
-      result = await this.resolveCoverPath(coverPath, source);
+      // Use default image — do NOT cache so the real cover is served
+      // once the scanner extracts it or metadata enrichment downloads it
+      this.logger.debug(`Album ${albumId} has no cover, using default image (not cached)`);
+      return this.getDefaultCover();
     }
 
+    result = await this.resolveCoverPath(coverPath, source);
     this.cache.set(cacheKey, result);
     return result;
   }
