@@ -37,6 +37,7 @@ describe('HealthController', () => {
         services: {
           database: 'ok',
           cache: 'ok',
+          storage: 'ok',
         },
         system: {
           memory: {
@@ -75,6 +76,7 @@ describe('HealthController', () => {
         services: {
           database: 'error',
           cache: 'ok',
+          storage: 'ok',
         },
         error: 'Database: Connection timeout',
       };
@@ -107,6 +109,7 @@ describe('HealthController', () => {
         services: {
           database: 'ok',
           cache: 'error',
+          storage: 'ok',
         },
         error: 'Cache: Connection refused',
       };
@@ -129,6 +132,7 @@ describe('HealthController', () => {
         services: {
           database: 'error',
           cache: 'error',
+          storage: 'ok',
         },
         error: 'Database: Connection failed; Cache: Connection refused',
       };
@@ -159,6 +163,7 @@ describe('HealthController', () => {
         services: {
           database: 'ok',
           cache: 'ok',
+          storage: 'ok',
         },
         system: {
           memory: {
@@ -195,6 +200,7 @@ describe('HealthController', () => {
         services: {
           database: 'ok',
           cache: 'ok',
+          storage: 'ok',
         },
       };
 
@@ -218,6 +224,7 @@ describe('HealthController', () => {
         services: {
           database: 'ok',
           cache: 'ok',
+          storage: 'ok',
         },
       };
 

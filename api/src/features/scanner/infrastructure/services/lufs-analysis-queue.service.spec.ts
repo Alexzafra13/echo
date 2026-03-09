@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { Job } from 'bullmq';
 import { LufsAnalysisQueueService, LufsQueueStats } from './lufs-analysis-queue.service';
 import { LufsAnalyzerService, LufsAnalysisResult } from './lufs-analyzer.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
@@ -20,13 +21,19 @@ interface LufsJobData {
   filePath: string;
 }
 
+interface MockDb {
+  select: jest.Mock;
+  update: jest.Mock;
+}
+
 describe('LufsAnalysisQueueService', () => {
   let service: LufsAnalysisQueueService;
-  let mockDrizzle: Partial<DrizzleService>;
-  let mockBullmq: Partial<jest.Mocked<BullmqService>>;
-  let mockLufsAnalyzer: Partial<jest.Mocked<LufsAnalyzerService>>;
-  let mockScannerGateway: Partial<jest.Mocked<ScannerGateway>>;
-  let mockConfigService: Partial<jest.Mocked<ConfigService>>;
+  let mockDb: MockDb;
+  let mockDrizzle: { db: MockDb };
+  let mockBullmq: jest.Mocked<Pick<BullmqService, 'registerProcessor' | 'addJob'>>;
+  let mockLufsAnalyzer: jest.Mocked<Pick<LufsAnalyzerService, 'isFFmpegAvailable' | 'analyzeFile'>>;
+  let mockScannerGateway: jest.Mocked<Pick<ScannerGateway, 'emitLufsProgress'>>;
+  let mockConfigService: jest.Mocked<Pick<ConfigService, 'get'>>;
   let mockLogger: MockLogger;
 
   // Track mocks for database queries
@@ -57,11 +64,12 @@ describe('LufsAnalysisQueueService', () => {
       where: jest.fn().mockResolvedValue(undefined),
     };
 
+    mockDb = {
+      select: jest.fn().mockReturnValue(mockSelectResult),
+      update: jest.fn().mockReturnValue(mockUpdateResult),
+    };
     mockDrizzle = {
-      db: {
-        select: jest.fn().mockReturnValue(mockSelectResult),
-        update: jest.fn().mockReturnValue(mockUpdateResult),
-      },
+      db: mockDb,
     };
 
     // Mock BullMQ service
@@ -186,7 +194,7 @@ describe('LufsAnalysisQueueService', () => {
         from: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue([]), // No pending tracks
       };
-      mockDrizzle.db.select.mockReturnValue(mockSelectResult);
+      mockDb.select.mockReturnValue(mockSelectResult);
 
       // Act
       const result = await service.startLufsAnalysisQueue();
@@ -203,7 +211,7 @@ describe('LufsAnalysisQueueService', () => {
         from: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue(mockTracks),
       };
-      mockDrizzle.db.select.mockReturnValue(mockSelectResult);
+      mockDb.select.mockReturnValue(mockSelectResult);
 
       // Act
       const result = await service.startLufsAnalysisQueue();
@@ -220,7 +228,7 @@ describe('LufsAnalysisQueueService', () => {
         from: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue(mockTracks),
       };
-      mockDrizzle.db.select.mockReturnValue(mockSelectResult);
+      mockDb.select.mockReturnValue(mockSelectResult);
 
       // Act
       await service.startLufsAnalysisQueue();
@@ -241,7 +249,7 @@ describe('LufsAnalysisQueueService', () => {
         from: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue([mockTracks[0]]),
       };
-      mockDrizzle.db.select.mockReturnValue(mockSelectResult);
+      mockDb.select.mockReturnValue(mockSelectResult);
 
       // Act
       await service.startLufsAnalysisQueue();
@@ -292,7 +300,7 @@ describe('LufsAnalysisQueueService', () => {
         from: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue([{ count: 5 }]),
       };
-      mockDrizzle.db.select.mockReturnValue(mockSelectResult);
+      mockDb.select.mockReturnValue(mockSelectResult);
 
       // Act
       const stats = await service.getQueueStats();
@@ -316,7 +324,7 @@ describe('LufsAnalysisQueueService', () => {
           .mockResolvedValueOnce(mockTracks) // For startLufsAnalysisQueue
           .mockResolvedValue([{ count: 10 }]), // For getQueueStats
       };
-      mockDrizzle.db.select.mockReturnValue(mockSelectResult);
+      mockDb.select.mockReturnValue(mockSelectResult);
 
       await service.onModuleInit();
       await service.startLufsAnalysisQueue();
@@ -331,7 +339,7 @@ describe('LufsAnalysisQueueService', () => {
   });
 
   describe('processLufsJob (via processor)', () => {
-    let jobProcessor: (job: { data: LufsJobData }) => Promise<void>;
+    let jobProcessor: (job: Job) => Promise<unknown>;
 
     beforeEach(async () => {
       await service.onModuleInit();
@@ -354,14 +362,14 @@ describe('LufsAnalysisQueueService', () => {
         set: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue(undefined),
       };
-      mockDrizzle.db.update.mockReturnValue(mockUpdateResult);
+      mockDb.update.mockReturnValue(mockUpdateResult);
 
       // Act
-      await jobProcessor(mockJob);
+      await jobProcessor(mockJob as unknown as Job);
 
       // Assert
       expect(mockLufsAnalyzer.analyzeFile).toHaveBeenCalledWith('/music/test.mp3');
-      expect(mockDrizzle.db.update).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
       expect(mockUpdateResult.set).toHaveBeenCalledWith(
         expect.objectContaining({
           rgTrackGain: expect.any(Number),
@@ -387,13 +395,13 @@ describe('LufsAnalysisQueueService', () => {
         set: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue(undefined),
       };
-      mockDrizzle.db.update.mockReturnValue(mockUpdateResult);
+      mockDb.update.mockReturnValue(mockUpdateResult);
 
       // Act
-      await jobProcessor(mockJob);
+      await jobProcessor(mockJob as unknown as Job);
 
       // Assert
-      expect(mockDrizzle.db.update).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
       expect(mockUpdateResult.set).toHaveBeenCalledWith(
         expect.objectContaining({
           lufsAnalyzedAt: expect.any(Date),
@@ -423,14 +431,14 @@ describe('LufsAnalysisQueueService', () => {
         set: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue(undefined),
       };
-      mockDrizzle.db.update.mockReturnValue(mockUpdateResult);
+      mockDb.update.mockReturnValue(mockUpdateResult);
 
       // Act
-      await jobProcessor(mockJob);
+      await jobProcessor(mockJob as unknown as Job);
 
       // Assert
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error analyzing'));
-      expect(mockDrizzle.db.update).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
     });
 
     it('should emit WebSocket progress periodically', async () => {
@@ -439,7 +447,7 @@ describe('LufsAnalysisQueueService', () => {
         set: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue(undefined),
       };
-      mockDrizzle.db.update.mockReturnValue(mockUpdateResult);
+      mockDb.update.mockReturnValue(mockUpdateResult);
 
       const mockJob = {
         data: {
@@ -450,7 +458,7 @@ describe('LufsAnalysisQueueService', () => {
       };
 
       // Act - Process first job
-      await jobProcessor(mockJob);
+      await jobProcessor(mockJob as unknown as Job);
 
       // Assert - First job should emit progress
       expect(mockScannerGateway.emitLufsProgress).toHaveBeenCalled();
@@ -469,7 +477,7 @@ describe('LufsAnalysisQueueService', () => {
           .mockResolvedValueOnce(mockTracks)
           .mockResolvedValue([{ count: 2 }]),
       };
-      mockDrizzle.db.select.mockReturnValue(mockSelectResult);
+      mockDb.select.mockReturnValue(mockSelectResult);
 
       await service.onModuleInit();
       await service.startLufsAnalysisQueue();
@@ -493,13 +501,13 @@ describe('LufsAnalysisQueueService', () => {
           .fn()
           .mockResolvedValue([{ albumId: 'album-1', avgGain: -2.5, maxPeak: 0.95, trackCount: 1 }]),
       };
-      mockDrizzle.db.select.mockReturnValue(mockSelectResult);
+      mockDb.select.mockReturnValue(mockSelectResult);
 
       const mockUpdateResult = {
         set: jest.fn().mockReturnThis(),
         where: jest.fn().mockResolvedValue(undefined),
       };
-      mockDrizzle.db.update.mockReturnValue(mockUpdateResult);
+      mockDb.update.mockReturnValue(mockUpdateResult);
 
       await service.onModuleInit();
       await service.startLufsAnalysisQueue();
@@ -512,7 +520,7 @@ describe('LufsAnalysisQueueService', () => {
           trackTitle: 'Song 1',
           filePath: '/music/song1.mp3',
         },
-      });
+      } as unknown as Job);
 
       // Assert - Album gains calculation should have been attempted
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('album gains'));

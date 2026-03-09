@@ -112,8 +112,8 @@ describe('GetFeaturedAlbumUseCase', () => {
       // Assert
       expect(albumRepository.findMostPlayed).toHaveBeenCalledWith(1);
       expect(albumRepository.findRecent).toHaveBeenCalledWith(1);
-      expect(result.id).toBe('album-2');
-      expect(result.name).toBe('Let It Be');
+      expect(result!.id).toBe('album-2');
+      expect(result!.name).toBe('Let It Be');
     });
 
     it('debería lanzar NotFoundError si no hay álbumes en la librería', async () => {
@@ -136,7 +136,7 @@ describe('GetFeaturedAlbumUseCase', () => {
       const result = await useCase.execute();
 
       // Assert
-      expect(result.id).toBe('album-1');
+      expect(result!.id).toBe('album-1');
       expect(albumRepository.findRecent).not.toHaveBeenCalled();
     });
 

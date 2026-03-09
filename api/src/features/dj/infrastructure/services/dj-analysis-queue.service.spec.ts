@@ -45,7 +45,7 @@ function createChainMock(returnValue: unknown[] = []): DrizzleChainMock {
     'update',
   ];
   for (const method of methods) {
-    (chain as Record<string, jest.Mock>)[method] = jest.fn().mockReturnValue(chain);
+    (chain as unknown as Record<string, jest.Mock>)[method] = jest.fn().mockReturnValue(chain);
   }
   // Terminal: make select return a thenable that resolves to returnValue
   chain.then = (resolve: (value: unknown) => unknown) => resolve(returnValue);

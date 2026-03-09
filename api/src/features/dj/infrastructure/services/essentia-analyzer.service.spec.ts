@@ -51,7 +51,10 @@ function createMockWorker(): MockWorker {
   const emitter = new EventEmitter() as MockWorker;
   emitter.send = jest.fn();
   emitter.kill = jest.fn();
-  emitter.pid = Math.floor(Math.random() * 10000);
+  Object.defineProperty(emitter, 'pid', {
+    value: Math.floor(Math.random() * 10000),
+    writable: true,
+  });
   emitter.stderr = new EventEmitter() as ChildProcess['stderr'];
   return emitter;
 }

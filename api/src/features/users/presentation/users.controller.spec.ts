@@ -12,6 +12,7 @@ import { UploadAvatarUseCase } from '../domain/use-cases/upload-avatar/upload-av
 import { DeleteAvatarUseCase } from '../domain/use-cases/delete-avatar/delete-avatar.use-case';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';
+import { JwtUser } from '@shared/types/request.types';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -24,10 +25,22 @@ describe('UsersController', () => {
   let mockUpdatePrivacySettingsUseCase: MockUseCase;
   let mockUpdateHomePreferencesUseCase: MockUseCase;
 
-  const mockUser = {
+  const mockUser: JwtUser = {
     id: 'user-123',
     username: 'testuser',
+    passwordHash: 'hashed',
+    isActive: true,
     isAdmin: false,
+    theme: 'light',
+    language: 'en',
+    mustChangePassword: false,
+    isPublicProfile: false,
+    showTopTracks: false,
+    showTopArtists: false,
+    showTopAlbums: false,
+    showPlaylists: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   beforeEach(async () => {
@@ -112,10 +125,22 @@ describe('UsersController', () => {
         newPassword: 'new',
       };
 
-      const differentUser = {
+      const differentUser: JwtUser = {
         id: 'user-999',
         username: 'otheruser',
+        passwordHash: 'hashed',
+        isActive: true,
         isAdmin: false,
+        theme: 'light',
+        language: 'en',
+        mustChangePassword: false,
+        isPublicProfile: false,
+        showTopTracks: false,
+        showTopArtists: false,
+        showTopAlbums: false,
+        showPlaylists: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       mockChangePasswordUseCase.execute.mockResolvedValue(undefined);
@@ -248,14 +273,10 @@ describe('UsersController', () => {
         theme: 'invalid',
       };
 
-      mockChangeThemeUseCase.execute.mockRejectedValue(
-        new Error('Invalid theme')
-      );
+      mockChangeThemeUseCase.execute.mockRejectedValue(new Error('Invalid theme'));
 
       // Act & Assert
-      await expect(controller.changeTheme(mockUser, dto)).rejects.toThrow(
-        'Invalid theme'
-      );
+      await expect(controller.changeTheme(mockUser, dto)).rejects.toThrow('Invalid theme');
     });
   });
 
@@ -302,14 +323,10 @@ describe('UsersController', () => {
         language: 'fr',
       };
 
-      mockChangeLanguageUseCase.execute.mockRejectedValue(
-        new Error('Invalid language')
-      );
+      mockChangeLanguageUseCase.execute.mockRejectedValue(new Error('Invalid language'));
 
       // Act & Assert
-      await expect(controller.changeLanguage(mockUser, dto)).rejects.toThrow(
-        'Invalid language'
-      );
+      await expect(controller.changeLanguage(mockUser, dto)).rejects.toThrow('Invalid language');
     });
   });
 });

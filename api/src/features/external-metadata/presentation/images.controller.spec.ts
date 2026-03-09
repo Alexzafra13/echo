@@ -204,8 +204,8 @@ describe('ImagesController', () => {
       imageService.getArtistImages.mockResolvedValue({
         profile: mockImageResult,
         background: { ...mockImageResult, tag: 'bg123' },
-        banner: null,
-        logo: null,
+        banner: undefined,
+        logo: undefined,
       });
 
       const result = await controller.getArtistImages('artist-1');
@@ -220,10 +220,10 @@ describe('ImagesController', () => {
 
     it('should return empty images when no images exist', async () => {
       imageService.getArtistImages.mockResolvedValue({
-        profile: null,
-        background: null,
-        banner: null,
-        logo: null,
+        profile: undefined,
+        background: undefined,
+        banner: undefined,
+        logo: undefined,
       });
 
       const result = await controller.getArtistImages('artist-1');

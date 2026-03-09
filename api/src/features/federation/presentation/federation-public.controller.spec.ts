@@ -7,7 +7,8 @@ import { CoverArtService } from '@shared/services';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { getLoggerToken } from 'nestjs-pino';
 import { FederationAccessToken } from '../domain/types';
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyReply } from 'fastify';
+import { RequestWithFederationToken } from '@shared/types/request.types';
 import * as fs from 'fs';
 
 // Mock fs module
@@ -48,11 +49,11 @@ describe('FederationPublicController', () => {
     updatedAt: new Date(),
   };
 
-  const createMockRequest = (accessToken?: FederationAccessToken): FastifyRequest =>
+  const createMockRequest = (accessToken?: FederationAccessToken): RequestWithFederationToken =>
     ({
       ip: '192.168.1.1',
       federationAccessToken: accessToken,
-    }) as unknown as FastifyRequest;
+    }) as unknown as RequestWithFederationToken;
 
   const createMockReply = (): FastifyReply => {
     const reply = {
@@ -239,7 +240,7 @@ describe('FederationPublicController', () => {
 
   describe('disconnect', () => {
     it('should revoke access token and return ok', async () => {
-      tokenService.revokeAccessToken.mockResolvedValue(undefined);
+      tokenService.revokeAccessToken.mockResolvedValue(true);
 
       const request = createMockRequest(mockAccessToken);
 
