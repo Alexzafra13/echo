@@ -84,7 +84,7 @@ describe('RadioController', () => {
 
   describe('searchStations', () => {
     it('should search stations with query params', async () => {
-      const mockStations = [{ name: 'Rock FM', url: 'http://rock.fm/stream', tags: 'rock' }];
+      const mockStations = [{ name: 'Rock FM', url: 'http://rock.fm/stream', tags: 'rock' }] as any;
       searchStationsUseCase.execute.mockResolvedValue(mockStations);
 
       const query = { name: 'Rock', limit: 10 } as SearchStationsDto;
@@ -98,7 +98,7 @@ describe('RadioController', () => {
 
   describe('getTopVoted', () => {
     it('should return top voted stations', async () => {
-      const mockStations = [{ name: 'Best FM' }];
+      const mockStations = [{ name: 'Best FM' }] as any;
       searchStationsUseCase.getTopVoted.mockResolvedValue(mockStations);
 
       const result = await controller.getTopVoted(10);
@@ -129,7 +129,7 @@ describe('RadioController', () => {
 
   describe('getByCountry', () => {
     it('should return stations by country code', async () => {
-      const mockStations = [{ name: 'Local FM', country: 'US' }];
+      const mockStations = [{ name: 'Local FM', country: 'US' }] as any;
       searchStationsUseCase.getByCountry.mockResolvedValue(mockStations);
 
       const result = await controller.getByCountry('US', 50);
@@ -164,7 +164,7 @@ describe('RadioController', () => {
 
   describe('getCountries', () => {
     it('should return available countries', async () => {
-      const mockCountries = [{ name: 'United States', stationcount: 5000 }];
+      const mockCountries = [{ name: 'United States', stationcount: 5000 }] as any;
       searchStationsUseCase.getCountries.mockResolvedValue(mockCountries);
 
       const result = await controller.getCountries();
