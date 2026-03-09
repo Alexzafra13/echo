@@ -6,40 +6,28 @@ onlyBuiltDependencies:
   - ffmpeg-static
 
 overrides:
-  # Fastify ecosystem - used by echo-api
-  fastify@<=5.7.2: '>=5.7.3'
+  '@hono/node-server@<1.19.10': '>=1.19.10'
   '@nestjs/platform-fastify@<11.1.10': '>=11.1.11'
-  # Axios - used by echo-web
-  axios@>=1.0.0 <=1.13.4: '>=1.13.5'
-  # Transitive deps of @lhci/cli (devDependency)
-  lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
-  qs@>=6.7.0 <=6.14.1: '>=6.14.2'
-  js-yaml@>=4.0.0 <4.1.1: '>=4.1.1'
-  tmp@<=0.2.3: '>=0.2.4'
-  # basic-ftp path traversal (via @lhci/cli>proxy-agent)
-  basic-ftp@<5.2.0: '>=5.2.0'
-  # hono auth/JWT vulnerabilities (via drizzle-orm>prisma>@prisma/dev)
-  hono@<4.11.10: '>=4.11.10'
-  # valibot ReDoS (via drizzle-orm>prisma>@prisma/dev)
-  valibot@>=0.31.0 <1.2.0: '>=1.2.0'
-  # glob command injection (via @nestjs/cli)
-  glob@>=11.0.0 <11.1.0: '>=11.1.0'
-  # minimatch ReDoS (pin within same major to avoid API breaks)
-  minimatch@>=5.0.0 <5.1.8: '>=5.1.8 <6.0.0'
-  minimatch@>=3.0.0 <3.1.3: '>=3.1.3 <4.0.0'
-  # rollup path traversal (via vite, only v4+)
-  rollup@>=4.0.0 <4.59.0: '>=4.59.0'
-  rollup@>=2.80.0 <3.0.0: '>=2.80.0'
-  # webpack SSRF (via @nestjs/cli)
-  webpack@>=5.49.0 <5.104.0: '>=5.104.0'
-  # minimatch ReDoS (v9/v10 ranges)
-  minimatch@>=9.0.0 <9.0.7: '>=9.0.7 <10.0.0'
-  minimatch@>=10.0.0 <10.2.3: '>=10.2.3 <11.0.0'
-  # multer DoS (via @nestjs/platform-express transitive)
-  multer@<2.1.0: '>=2.1.0'
-  # serialize-javascript XSS (via workbox-build>terser-webpack-plugin)
-  serialize-javascript@<=7.0.2: '>=7.0.3'
-  # esbuild local file access
-  esbuild@<=0.24.2: '>=0.25.0'
-  # ajv ReDoS
   ajv@>=7.0.0-alpha.0 <8.18.0: '>=8.18.0'
+  axios@>=1.0.0 <=1.13.4: '>=1.13.5'
+  basic-ftp@<5.2.0: '>=5.2.0'
+  esbuild@<=0.24.2: '>=0.25.0'
+  fastify@<=5.7.2: '>=5.7.3'
+  fastify@>=5.7.2 <=5.8.0: '>=5.8.1'
+  glob@>=11.0.0 <11.1.0: '>=11.1.0'
+  hono@<4.11.10: '>=4.11.10'
+  js-yaml@>=4.0.0 <4.1.1: '>=4.1.1'
+  lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
+  minimatch@>=10.0.0 <10.2.3: '>=10.2.3 <11.0.0'
+  minimatch@>=3.0.0 <3.1.3: '>=3.1.3 <4.0.0'
+  minimatch@>=5.0.0 <5.1.8: '>=5.1.8 <6.0.0'
+  minimatch@>=9.0.0 <9.0.7: '>=9.0.7 <10.0.0'
+  multer@<2.1.0: '>=2.1.0'
+  multer@<2.1.1: '>=2.1.1'
+  qs@>=6.7.0 <=6.14.1: '>=6.14.2'
+  rollup@>=2.80.0 <3.0.0: '>=2.80.0'
+  rollup@>=4.0.0 <4.59.0: '>=4.59.0'
+  serialize-javascript@<=7.0.2: '>=7.0.3'
+  tmp@<=0.2.3: '>=0.2.4'
+  valibot@>=0.31.0 <1.2.0: '>=1.2.0'
+  webpack@>=5.49.0 <5.104.0: '>=5.104.0'
