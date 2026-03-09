@@ -1,10 +1,19 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
-import { SearchArtistAvatarsUseCase } from '../infrastructure/use-cases/search-artist-avatars';
-import { ApplyArtistAvatarUseCase } from '../infrastructure/use-cases/apply-artist-avatar';
-import { UpdateArtistBackgroundPositionUseCase } from '../infrastructure/use-cases/update-artist-background-position';
+import { SearchArtistAvatarsUseCase } from '../domain/use-cases/search-artist-avatars';
+import { ApplyArtistAvatarUseCase } from '../domain/use-cases/apply-artist-avatar';
+import { UpdateArtistBackgroundPositionUseCase } from '../domain/use-cases/update-artist-background-position';
 import { SearchArtistAvatarsResponseDto } from './dtos/search-artist-avatars.response.dto';
 import { ApplyArtistAvatarRequestDto } from './dtos/apply-artist-avatar.request.dto';
 import { ApplyArtistAvatarResponseDto } from './dtos/apply-artist-avatar.response.dto';
@@ -19,7 +28,7 @@ export class ArtistAvatarsController {
   constructor(
     private readonly searchArtistAvatars: SearchArtistAvatarsUseCase,
     private readonly applyArtistAvatar: ApplyArtistAvatarUseCase,
-    private readonly updateArtistBackgroundPosition: UpdateArtistBackgroundPositionUseCase,
+    private readonly updateArtistBackgroundPosition: UpdateArtistBackgroundPositionUseCase
   ) {}
 
   @Get(':artistId/avatars/search')
@@ -29,7 +38,7 @@ export class ArtistAvatarsController {
       'Queries all available metadata providers for artist image options (profile, background, banner, logo)',
   })
   async searchAvatars(
-    @Param('artistId', ParseUUIDPipe) artistId: string,
+    @Param('artistId', ParseUUIDPipe) artistId: string
   ): Promise<SearchArtistAvatarsResponseDto> {
     const result = await this.searchArtistAvatars.execute({ artistId });
     return SearchArtistAvatarsResponseDto.fromDomain(result);
@@ -42,7 +51,7 @@ export class ArtistAvatarsController {
       'Downloads and applies a selected image (profile/background/banner/logo), replacing the existing one',
   })
   async applyAvatar(
-    @Body() body: ApplyArtistAvatarRequestDto,
+    @Body() body: ApplyArtistAvatarRequestDto
   ): Promise<ApplyArtistAvatarResponseDto> {
     const result = await this.applyArtistAvatar.execute({
       artistId: body.artistId,
@@ -56,11 +65,10 @@ export class ArtistAvatarsController {
   @Patch('background-position')
   @ApiOperation({
     summary: 'Update artist background position',
-    description:
-      'Updates the CSS background-position for an artist background image',
+    description: 'Updates the CSS background-position for an artist background image',
   })
   async updateBackgroundPosition(
-    @Body() body: UpdateArtistBackgroundPositionRequestDto,
+    @Body() body: UpdateArtistBackgroundPositionRequestDto
   ): Promise<UpdateArtistBackgroundPositionResponseDto> {
     const result = await this.updateArtistBackgroundPosition.execute({
       artistId: body.artistId,

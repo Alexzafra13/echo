@@ -21,7 +21,7 @@ export class ApplyCustomAlbumCoverUseCase {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEventsService,
+    private readonly metadataGateway: MetadataEventsService
   ) {}
 
   async execute(input: ApplyCustomAlbumCoverInput): Promise<ApplyCustomAlbumCoverOutput> {
@@ -49,8 +49,8 @@ export class ApplyCustomAlbumCoverUseCase {
       .where(
         and(
           eq(customAlbumCovers.id, input.customCoverId),
-          eq(customAlbumCovers.albumId, input.albumId),
-        ),
+          eq(customAlbumCovers.albumId, input.albumId)
+        )
       )
       .limit(1);
 
@@ -58,7 +58,7 @@ export class ApplyCustomAlbumCoverUseCase {
 
     if (!customCover) {
       throw new NotFoundException(
-        `Custom cover ${input.customCoverId} not found for album ${input.albumId}`,
+        `Custom cover ${input.customCoverId} not found for album ${input.albumId}`
       );
     }
 
@@ -69,10 +69,7 @@ export class ApplyCustomAlbumCoverUseCase {
       .update(customAlbumCovers)
       .set({ isActive: false })
       .where(
-        and(
-          eq(customAlbumCovers.albumId, input.albumId),
-          eq(customAlbumCovers.isActive, true),
-        ),
+        and(eq(customAlbumCovers.albumId, input.albumId), eq(customAlbumCovers.isActive, true))
       );
 
     // Activate the selected custom cover

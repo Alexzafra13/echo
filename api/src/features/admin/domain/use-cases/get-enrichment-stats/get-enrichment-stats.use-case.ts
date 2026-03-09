@@ -16,9 +16,7 @@ import {
 export class GetEnrichmentStatsUseCase {
   constructor(private readonly drizzle: DrizzleService) {}
 
-  async execute(
-    input: GetEnrichmentStatsInput,
-  ): Promise<GetEnrichmentStatsOutput> {
+  async execute(input: GetEnrichmentStatsInput): Promise<GetEnrichmentStatsOutput> {
     const period = input.period || 'all';
 
     // Calcular fecha de inicio según el período
@@ -46,9 +44,7 @@ export class GetEnrichmentStatsUseCase {
     const partialCount = logs.filter((l) => l.status === 'partial').length;
     const errorCount = logs.filter((l) => l.status === 'error').length;
     const successRate =
-      totalEnrichments > 0
-        ? Math.round((successCount / totalEnrichments) * 100)
-        : 0;
+      totalEnrichments > 0 ? Math.round((successCount / totalEnrichments) * 100) : 0;
 
     // Calcular tiempo promedio de procesamiento
     const timesWithValue = logs.filter((l) => l.processingTime !== null);
@@ -56,7 +52,7 @@ export class GetEnrichmentStatsUseCase {
       timesWithValue.length > 0
         ? Math.round(
             timesWithValue.reduce((sum, l) => sum + (l.processingTime || 0), 0) /
-              timesWithValue.length,
+              timesWithValue.length
           )
         : 0;
 
@@ -81,15 +77,10 @@ export class GetEnrichmentStatsUseCase {
     });
 
     // Calcular success rate por proveedor
-    const byProvider: ProviderStats[] = Array.from(providerMap.values()).map(
-      (stats) => ({
-        ...stats,
-        successRate:
-          stats.total > 0
-            ? Math.round((stats.success / stats.total) * 100)
-            : 0,
-      }),
-    );
+    const byProvider: ProviderStats[] = Array.from(providerMap.values()).map((stats) => ({
+      ...stats,
+      successRate: stats.total > 0 ? Math.round((stats.success / stats.total) * 100) : 0,
+    }));
 
     // Estadísticas por tipo de entidad (agrupar en memoria)
     const byEntityType = {
@@ -134,7 +125,7 @@ export class GetEnrichmentStatsUseCase {
   }
 
   private calculateRecentActivity(
-    logs: Array<{ createdAt: Date }>,
+    logs: Array<{ createdAt: Date }>
   ): Array<{ date: string; count: number }> {
     const activityMap = new Map<string, number>();
     const now = new Date();

@@ -14,9 +14,11 @@ import {
  */
 @Injectable()
 export class ListCustomAlbumCoversUseCase {
-  constructor(@InjectPinoLogger(ListCustomAlbumCoversUseCase.name)
+  constructor(
+    @InjectPinoLogger(ListCustomAlbumCoversUseCase.name)
     private readonly logger: PinoLogger,
-    private readonly drizzle: DrizzleService) {}
+    private readonly drizzle: DrizzleService
+  ) {}
 
   async execute(input: ListCustomAlbumCoversInput): Promise<ListCustomAlbumCoversOutput> {
     // Validate album exists

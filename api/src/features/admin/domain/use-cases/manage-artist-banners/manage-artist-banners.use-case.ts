@@ -23,7 +23,7 @@ export class ManageArtistBannersUseCase {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly imageDownload: ImageDownloadService,
-    private readonly storage: StorageService,
+    private readonly storage: StorageService
   ) {}
 
   async list(input: ListArtistBannersInput): Promise<ListArtistBannersOutput> {
@@ -119,9 +119,7 @@ export class ManageArtistBannersUseCase {
     }
 
     // Delete database record
-    await this.drizzle.db
-      .delete(artistBanners)
-      .where(eq(artistBanners.id, input.bannerId));
+    await this.drizzle.db.delete(artistBanners).where(eq(artistBanners.id, input.bannerId));
 
     this.logger.info(`Deleted banner ${input.bannerId}`);
 

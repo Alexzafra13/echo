@@ -23,7 +23,7 @@ export class DeleteCustomAlbumCoverUseCase {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
-    private readonly imageService: ImageService,
+    private readonly imageService: ImageService
   ) {}
 
   async execute(input: DeleteCustomAlbumCoverInput): Promise<DeleteCustomAlbumCoverOutput> {
@@ -50,8 +50,8 @@ export class DeleteCustomAlbumCoverUseCase {
       .where(
         and(
           eq(customAlbumCovers.id, input.customCoverId),
-          eq(customAlbumCovers.albumId, input.albumId),
-        ),
+          eq(customAlbumCovers.albumId, input.albumId)
+        )
       )
       .limit(1);
 
@@ -59,7 +59,7 @@ export class DeleteCustomAlbumCoverUseCase {
 
     if (!customCover) {
       throw new NotFoundException(
-        `Custom cover ${input.customCoverId} not found for album ${input.albumId}`,
+        `Custom cover ${input.customCoverId} not found for album ${input.albumId}`
       );
     }
 
@@ -79,7 +79,7 @@ export class DeleteCustomAlbumCoverUseCase {
       this.logger.debug(`Deleted file: ${absolutePath}`);
     } catch (error) {
       this.logger.warn(
-        `Failed to delete file ${customCover.filePath}: ${(error as Error).message}`,
+        `Failed to delete file ${customCover.filePath}: ${(error as Error).message}`
       );
       // Continue with database deletion even if file deletion fails
     }

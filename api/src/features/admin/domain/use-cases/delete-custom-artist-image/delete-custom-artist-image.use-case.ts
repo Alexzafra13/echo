@@ -26,7 +26,7 @@ export class DeleteCustomArtistImageUseCase {
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
-    private readonly redis: RedisService,
+    private readonly redis: RedisService
   ) {}
 
   async execute(input: DeleteCustomArtistImageInput): Promise<DeleteCustomArtistImageOutput> {
@@ -60,7 +60,7 @@ export class DeleteCustomArtistImageUseCase {
     }
 
     this.logger.info(
-      `Deleting custom ${customImage.imageType} image for artist: ${customImage.artist.name} (ID: ${input.customImageId})`,
+      `Deleting custom ${customImage.imageType} image for artist: ${customImage.artist.name} (ID: ${input.customImageId})`
     );
 
     // Get full path to the image file
@@ -101,7 +101,7 @@ export class DeleteCustomArtistImageUseCase {
       .where(eq(customArtistImages.id, input.customImageId));
 
     this.logger.info(
-      `✅ Successfully deleted custom ${customImage.imageType} image for ${customImage.artist.name}`,
+      `✅ Successfully deleted custom ${customImage.imageType} image for ${customImage.artist.name}`
     );
 
     return {

@@ -21,11 +21,11 @@ export class UpdateArtistBackgroundPositionUseCase {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
-    private readonly metadataGateway: MetadataEventsService,
+    private readonly metadataGateway: MetadataEventsService
   ) {}
 
   async execute(
-    input: UpdateArtistBackgroundPositionInput,
+    input: UpdateArtistBackgroundPositionInput
   ): Promise<UpdateArtistBackgroundPositionOutput> {
     // Get artist from database
     const artistResult = await this.drizzle.db
@@ -44,7 +44,7 @@ export class UpdateArtistBackgroundPositionUseCase {
     }
 
     this.logger.info(
-      `Updating background position for artist: ${artist.name} to "${input.backgroundPosition}"`,
+      `Updating background position for artist: ${artist.name} to "${input.backgroundPosition}"`
     );
 
     // Update the background position
@@ -68,9 +68,7 @@ export class UpdateArtistBackgroundPositionUseCase {
       updatedAt: new Date(),
     });
 
-    this.logger.info(
-      `✅ Successfully updated background position for ${artist.name}`,
-    );
+    this.logger.info(`✅ Successfully updated background position for ${artist.name}`);
 
     return {
       success: true,

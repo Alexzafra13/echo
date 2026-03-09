@@ -17,7 +17,7 @@ import {
 export class SearchAlbumCoversUseCase {
   constructor(
     private readonly drizzle: DrizzleService,
-    private readonly imageSearchOrchestrator: ImageSearchOrchestratorService,
+    private readonly imageSearchOrchestrator: ImageSearchOrchestratorService
   ) {}
 
   async execute(input: SearchAlbumCoversInput): Promise<SearchAlbumCoversOutput> {
