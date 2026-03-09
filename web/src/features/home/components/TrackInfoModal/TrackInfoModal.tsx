@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Music2 } from 'lucide-react';
 import type { Track } from '../../types';
 import { formatDuration, formatFileSize, formatBitrate, formatDate } from '@shared/utils/format';
@@ -19,13 +19,18 @@ interface TrackInfoModalProps {
  */
 export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
   // Use coverImage (federated tracks) or local album cover endpoint
-  const coverUrl = track.coverImage || (track.albumId ? getCoverUrl(`/api/albums/${track.albumId}/cover`) : undefined);
+  const coverUrl =
+    track.coverImage ||
+    (track.albumId ? getCoverUrl(`/api/albums/${track.albumId}/cover`) : undefined);
   const { djAnalysis: fetchedDjAnalysis, isLoading: djLoading } = useTrackDjAnalysis(track.id);
   // Use fetched DJ analysis, or fall back to embedded data (for federated tracks)
   const djAnalysis = fetchedDjAnalysis || track.djAnalysis || null;
   const dominantColor = useDominantColor(coverUrl);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [closing, setClosing] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(closeTimerRef.current), []);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -45,7 +50,7 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
     if (closing) return;
     if (isMobile) {
       setClosing(true);
-      setTimeout(() => onClose(), 300);
+      closeTimerRef.current = setTimeout(() => onClose(), 300);
     } else {
       onClose();
     }
@@ -143,7 +148,9 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
           {track.createdAt && (
             <div className={styles.trackInfoModal__infoRow}>
               <span className={styles.trackInfoModal__infoLabel}>Agregado:</span>
-              <span className={styles.trackInfoModal__infoValue}>{formatDate(track.createdAt)}</span>
+              <span className={styles.trackInfoModal__infoValue}>
+                {formatDate(track.createdAt)}
+              </span>
             </div>
           )}
         </div>
@@ -198,9 +205,7 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
           <div className={styles.trackInfoModal__djGrid}>
             <div className={styles.trackInfoModal__djItem}>
               <span className={styles.trackInfoModal__djLabel}>BPM</span>
-              <span className={styles.trackInfoModal__djValue}>
-                {Math.round(track.bpm)}
-              </span>
+              <span className={styles.trackInfoModal__djValue}>{Math.round(track.bpm)}</span>
             </div>
           </div>
         ) : !djAnalysis ? (

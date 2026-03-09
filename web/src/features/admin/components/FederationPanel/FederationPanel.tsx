@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useModal, useNotification } from '@shared/hooks';
 import { Server, Link2, Plus, Shield, Activity, Edit3, Check, X, Palette } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
@@ -37,6 +37,9 @@ import styles from './FederationPanel.module.css';
 export function FederationPanel() {
   const [activeTab, setActiveTab] = useState<'servers' | 'invitations' | 'access'>('servers');
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(copyTimerRef.current), []);
 
   // Server name editing state
   const [serverName, setServerName] = useState('');
@@ -150,7 +153,8 @@ export function FederationPanel() {
     try {
       await navigator.clipboard.writeText(token);
       setCopiedToken(token);
-      setTimeout(() => setCopiedToken(null), 2000);
+      clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopiedToken(null), 2000);
     } catch {
       showError('Error al copiar el token');
     }
@@ -288,10 +292,12 @@ export function FederationPanel() {
       {/* Server Identity Card */}
       <div
         className={`${styles.serverIdentityCard} ${showIdentityColorPicker ? styles.serverIdentityCardExpanded : ''}`}
-        style={{
-          '--server-color': getServerColor(serverColor).hex,
-          '--server-color-rgb': getServerColor(serverColor).rgb,
-        } as React.CSSProperties}
+        style={
+          {
+            '--server-color': getServerColor(serverColor).hex,
+            '--server-color-rgb': getServerColor(serverColor).rgb,
+          } as React.CSSProperties
+        }
       >
         <div className={styles.serverIdentityIcon}>
           <Server size={24} />
@@ -368,7 +374,9 @@ export function FederationPanel() {
                 key={color.name}
                 type="button"
                 className={`${styles.colorSwatch} ${serverColor === color.name ? styles.colorSwatchActive : ''}`}
-                style={{ '--swatch-color': color.hex, '--swatch-rgb': color.rgb } as React.CSSProperties}
+                style={
+                  { '--swatch-color': color.hex, '--swatch-rgb': color.rgb } as React.CSSProperties
+                }
                 onClick={() => handleSaveServerColor(color.name)}
                 disabled={isSavingColor}
                 title={color.label}
@@ -453,11 +461,7 @@ export function FederationPanel() {
                     {checkHealthMutation.isPending ? 'Verificando...' : 'Verificar estado'}
                   </Button>
                 )}
-                <Button
-                  variant="primary"
-                  leftIcon={<Plus size={18} />}
-                  onClick={connectModal.open}
-                >
+                <Button variant="primary" leftIcon={<Plus size={18} />} onClick={connectModal.open}>
                   Conectar Servidor
                 </Button>
               </div>

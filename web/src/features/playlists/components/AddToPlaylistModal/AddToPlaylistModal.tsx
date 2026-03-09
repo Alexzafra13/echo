@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ListPlus, Plus, X, Loader2, Music } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { usePlaylists, useCreatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
@@ -16,6 +16,9 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [error, setError] = useState('');
+  const errorTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(errorTimerRef.current), []);
 
   const { data: playlistsData, isLoading: loadingPlaylists } = usePlaylists();
   const createPlaylistMutation = useCreatePlaylist();
@@ -30,7 +33,8 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
       onClose();
     } catch (err) {
       setError(getApiErrorMessage(err, 'Error al agregar la canción'));
-      setTimeout(() => setError(''), 3000);
+      clearTimeout(errorTimerRef.current);
+      errorTimerRef.current = setTimeout(() => setError(''), 3000);
     }
   };
 
@@ -56,7 +60,8 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
       onClose();
     } catch (err) {
       setError(getApiErrorMessage(err, 'Error al crear la playlist'));
-      setTimeout(() => setError(''), 3000);
+      clearTimeout(errorTimerRef.current);
+      errorTimerRef.current = setTimeout(() => setError(''), 3000);
     }
   };
 
@@ -163,9 +168,7 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
                         {playlist.songCount} {playlist.songCount === 1 ? 'canción' : 'canciones'}
                       </p>
                     </div>
-                    {addTrackMutation.isPending && (
-                      <Loader2 size={16} className={styles.spinner} />
-                    )}
+                    {addTrackMutation.isPending && <Loader2 size={16} className={styles.spinner} />}
                   </button>
                 ))
               )}

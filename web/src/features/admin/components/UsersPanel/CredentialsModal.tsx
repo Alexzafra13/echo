@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Key, Copy, Check, AlertCircle } from 'lucide-react';
 import { Button, Modal } from '@shared/components/ui';
 import { logger } from '@shared/utils/logger';
@@ -10,20 +10,18 @@ interface CredentialsModalProps {
   onClose: () => void;
 }
 
-export function CredentialsModal({
-  username,
-  password,
-  onClose,
-}: CredentialsModalProps) {
+export function CredentialsModal({ username, password, onClose }: CredentialsModalProps) {
   const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(copyTimerRef.current), []);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(
-        `Usuario: ${username}\nContraseña temporal: ${password}`
-      );
+      await navigator.clipboard.writeText(`Usuario: ${username}\nContraseña temporal: ${password}`);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       if (import.meta.env.DEV) {
         logger.error('Error copying to clipboard:', error);
@@ -32,18 +30,13 @@ export function CredentialsModal({
   };
 
   return (
-    <Modal
-      isOpen={true}
-      onClose={onClose}
-      title="Credenciales Generadas"
-      icon={Key}
-    >
+    <Modal isOpen={true} onClose={onClose} title="Credenciales Generadas" icon={Key}>
       <div className={styles.content}>
         <div className={styles.alert}>
           <AlertCircle size={20} />
           <p>
-            Esta información solo se mostrará <strong>una vez</strong>.
-            Asegúrate de comunicar estas credenciales al usuario.
+            Esta información solo se mostrará <strong>una vez</strong>. Asegúrate de comunicar estas
+            credenciales al usuario.
           </p>
         </div>
 

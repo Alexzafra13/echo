@@ -55,6 +55,9 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   const queueTouchStartY = useRef<number>(0);
   const queueStateRef = useRef(queueState);
   const queueDragOffsetRef = useRef(queueDragOffset);
+  const queueCloseTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(queueCloseTimerRef.current), []);
 
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
 
@@ -99,7 +102,8 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     if (isQueueOpen) {
       if (isDesktop) {
         setIsQueueClosing(true);
-        setTimeout(() => {
+        clearTimeout(queueCloseTimerRef.current);
+        queueCloseTimerRef.current = setTimeout(() => {
           setIsQueueOpen(false);
           setIsQueueClosing(false);
         }, 300);
@@ -114,7 +118,8 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   const handleCloseQueue = useCallback(() => {
     if (isDesktop) {
       setIsQueueClosing(true);
-      setTimeout(() => {
+      clearTimeout(queueCloseTimerRef.current);
+      queueCloseTimerRef.current = setTimeout(() => {
         setIsQueueOpen(false);
         setIsQueueClosing(false);
       }, 300);
