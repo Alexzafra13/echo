@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AlbumCoversController } from './album-covers.controller';
-import { SearchAlbumCoversUseCase } from '../infrastructure/use-cases/search-album-covers';
-import { ApplyAlbumCoverUseCase } from '../infrastructure/use-cases/apply-album-cover';
+import { SearchAlbumCoversUseCase } from '../domain/use-cases/search-album-covers';
+import { ApplyAlbumCoverUseCase } from '../domain/use-cases/apply-album-cover';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';
@@ -71,13 +71,9 @@ describe('AlbumCoversController', () => {
 
     it('should propagate errors from the use case', async () => {
       const albumId = '550e8400-e29b-41d4-a716-446655440000';
-      mockSearchAlbumCovers.execute.mockRejectedValue(
-        new Error('Album not found'),
-      );
+      mockSearchAlbumCovers.execute.mockRejectedValue(new Error('Album not found'));
 
-      await expect(controller.searchCovers(albumId)).rejects.toThrow(
-        'Album not found',
-      );
+      await expect(controller.searchCovers(albumId)).rejects.toThrow('Album not found');
     });
   });
 
@@ -113,13 +109,9 @@ describe('AlbumCoversController', () => {
         coverUrl: 'https://example.com/cover.jpg',
         provider: 'musicbrainz',
       };
-      mockApplyAlbumCover.execute.mockRejectedValue(
-        new Error('Failed to apply cover'),
-      );
+      mockApplyAlbumCover.execute.mockRejectedValue(new Error('Failed to apply cover'));
 
-      await expect(controller.applyCover(body)).rejects.toThrow(
-        'Failed to apply cover',
-      );
+      await expect(controller.applyCover(body)).rejects.toThrow('Failed to apply cover');
     });
   });
 });

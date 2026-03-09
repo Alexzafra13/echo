@@ -2,10 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { enrichmentLogs } from '@infrastructure/database/schema';
 import { eq, gte, lte, desc, and, count, SQL } from 'drizzle-orm';
-import {
-  ListEnrichmentLogsInput,
-  ListEnrichmentLogsOutput,
-} from './list-enrichment-logs.dto';
+import { ListEnrichmentLogsInput, ListEnrichmentLogsOutput } from './list-enrichment-logs.dto';
 
 /**
  * ListEnrichmentLogsUseCase
@@ -15,9 +12,7 @@ import {
 export class ListEnrichmentLogsUseCase {
   constructor(private readonly drizzle: DrizzleService) {}
 
-  async execute(
-    input: ListEnrichmentLogsInput,
-  ): Promise<ListEnrichmentLogsOutput> {
+  async execute(input: ListEnrichmentLogsInput): Promise<ListEnrichmentLogsOutput> {
     const skip = input.skip || 0;
     const take = input.take || 50;
 
@@ -65,10 +60,7 @@ export class ListEnrichmentLogsUseCase {
         .orderBy(desc(enrichmentLogs.createdAt))
         .limit(take)
         .offset(skip),
-      this.drizzle.db
-        .select({ count: count() })
-        .from(enrichmentLogs)
-        .where(whereClause),
+      this.drizzle.db.select({ count: count() }).from(enrichmentLogs).where(whereClause),
     ]);
 
     const total = totalResult[0]?.count ?? 0;

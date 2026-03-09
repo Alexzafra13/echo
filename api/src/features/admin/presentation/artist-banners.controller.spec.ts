@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ArtistBannersManagementController } from './artist-banners.controller';
-import { ManageArtistBannersUseCase } from '../infrastructure/use-cases/manage-artist-banners';
+import { ManageArtistBannersUseCase } from '../domain/use-cases/manage-artist-banners';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 
@@ -34,9 +34,7 @@ describe('ArtistBannersManagementController', () => {
       .useValue({ canActivate: jest.fn(() => true) })
       .compile();
 
-    controller = module.get<ArtistBannersManagementController>(
-      ArtistBannersManagementController,
-    );
+    controller = module.get<ArtistBannersManagementController>(ArtistBannersManagementController);
   });
 
   describe('listBanners', () => {
@@ -66,13 +64,9 @@ describe('ArtistBannersManagementController', () => {
 
     it('should propagate errors from the use case', async () => {
       const artistId = '550e8400-e29b-41d4-a716-446655440000';
-      mockManageBanners.list.mockRejectedValue(
-        new Error('Artist not found'),
-      );
+      mockManageBanners.list.mockRejectedValue(new Error('Artist not found'));
 
-      await expect(controller.listBanners(artistId)).rejects.toThrow(
-        'Artist not found',
-      );
+      await expect(controller.listBanners(artistId)).rejects.toThrow('Artist not found');
     });
   });
 
@@ -105,13 +99,9 @@ describe('ArtistBannersManagementController', () => {
         bannerUrl: 'https://example.com/banner.jpg',
         provider: 'fanart',
       };
-      mockManageBanners.add.mockRejectedValue(
-        new Error('Failed to add banner'),
-      );
+      mockManageBanners.add.mockRejectedValue(new Error('Failed to add banner'));
 
-      await expect(controller.addBanner(body)).rejects.toThrow(
-        'Failed to add banner',
-      );
+      await expect(controller.addBanner(body)).rejects.toThrow('Failed to add banner');
     });
   });
 
@@ -134,13 +124,9 @@ describe('ArtistBannersManagementController', () => {
 
     it('should propagate errors from the use case', async () => {
       const bannerId = '550e8400-e29b-41d4-a716-446655440001';
-      mockManageBanners.delete.mockRejectedValue(
-        new Error('Banner not found'),
-      );
+      mockManageBanners.delete.mockRejectedValue(new Error('Banner not found'));
 
-      await expect(controller.deleteBanner(bannerId)).rejects.toThrow(
-        'Banner not found',
-      );
+      await expect(controller.deleteBanner(bannerId)).rejects.toThrow('Banner not found');
     });
   });
 });

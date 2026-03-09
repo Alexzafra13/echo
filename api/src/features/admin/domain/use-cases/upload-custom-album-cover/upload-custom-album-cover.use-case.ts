@@ -35,7 +35,7 @@ export class UploadCustomAlbumCoverUseCase {
     private readonly redis: RedisService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEventsService,
+    private readonly metadataGateway: MetadataEventsService
   ) {}
 
   async execute(input: UploadCustomAlbumCoverInput): Promise<UploadCustomAlbumCoverOutput> {
@@ -65,7 +65,7 @@ export class UploadCustomAlbumCoverUseCase {
       await this.storage.getStoragePath(),
       'metadata',
       'albums',
-      input.albumId,
+      input.albumId
     );
     const customPath = path.join(basePath, 'custom', 'covers');
 
@@ -102,7 +102,7 @@ export class UploadCustomAlbumCoverUseCase {
     const customCover = customCoverResult[0];
 
     this.logger.info(
-      `✅ Successfully uploaded custom cover for ${album.name} (ID: ${customCover.id})`,
+      `✅ Successfully uploaded custom cover for ${album.name} (ID: ${customCover.id})`
     );
 
     // Generate URL for the uploaded cover

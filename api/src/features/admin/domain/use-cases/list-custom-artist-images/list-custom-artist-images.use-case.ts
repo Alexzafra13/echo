@@ -15,9 +15,11 @@ import {
  */
 @Injectable()
 export class ListCustomArtistImagesUseCase {
-  constructor(@InjectPinoLogger(ListCustomArtistImagesUseCase.name)
+  constructor(
+    @InjectPinoLogger(ListCustomArtistImagesUseCase.name)
     private readonly logger: PinoLogger,
-    private readonly drizzle: DrizzleService) {}
+    private readonly drizzle: DrizzleService
+  ) {}
 
   async execute(input: ListCustomArtistImagesInput): Promise<ListCustomArtistImagesOutput> {
     // Validate artist exists
@@ -64,7 +66,7 @@ export class ListCustomArtistImagesUseCase {
     }));
 
     this.logger.debug(
-      `Found ${images.length} custom images for artist ${artist.name}${input.imageType ? ` (type: ${input.imageType})` : ''}`,
+      `Found ${images.length} custom images for artist ${artist.name}${input.imageType ? ` (type: ${input.imageType})` : ''}`
     );
 
     return {

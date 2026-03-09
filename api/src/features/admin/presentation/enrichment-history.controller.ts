@@ -1,22 +1,9 @@
-import {
-  Controller,
-  Get,
-  Query,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiQuery,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { Controller, Get, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
-import { ListEnrichmentLogsUseCase } from '../infrastructure/use-cases/list-enrichment-logs';
-import { GetEnrichmentStatsUseCase } from '../infrastructure/use-cases/get-enrichment-stats';
+import { ListEnrichmentLogsUseCase } from '../domain/use-cases/list-enrichment-logs';
+import { GetEnrichmentStatsUseCase } from '../domain/use-cases/get-enrichment-stats';
 import {
   ListEnrichmentLogsRequestDto,
   ListEnrichmentLogsResponseDto,
@@ -31,15 +18,14 @@ import {
 export class EnrichmentHistoryController {
   constructor(
     private readonly listEnrichmentLogsUseCase: ListEnrichmentLogsUseCase,
-    private readonly getEnrichmentStatsUseCase: GetEnrichmentStatsUseCase,
+    private readonly getEnrichmentStatsUseCase: GetEnrichmentStatsUseCase
   ) {}
 
   @Get('history')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Listar historial de enriquecimientos',
-    description:
-      'Obtiene el historial de enriquecimientos de metadata con filtros opcionales',
+    description: 'Obtiene el historial de enriquecimientos de metadata con filtros opcionales',
   })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -91,8 +77,7 @@ export class EnrichmentHistoryController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Obtener estadísticas de enriquecimientos',
-    description:
-      'Obtiene estadísticas agregadas del historial de enriquecimientos',
+    description: 'Obtiene estadísticas agregadas del historial de enriquecimientos',
   })
   @ApiQuery({
     name: 'period',

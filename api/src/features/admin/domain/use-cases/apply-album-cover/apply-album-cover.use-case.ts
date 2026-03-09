@@ -12,10 +12,7 @@ import { ImageProcessingError } from '@shared/errors';
 import { safeDeleteFile, fileExists } from '@shared/utils';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import {
-  ApplyAlbumCoverInput,
-  ApplyAlbumCoverOutput,
-} from './apply-album-cover.dto';
+import { ApplyAlbumCoverInput, ApplyAlbumCoverOutput } from './apply-album-cover.dto';
 
 @Injectable()
 export class ApplyAlbumCoverUseCase {
@@ -27,7 +24,7 @@ export class ApplyAlbumCoverUseCase {
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEventsService,
+    private readonly metadataGateway: MetadataEventsService
   ) {}
 
   async execute(input: ApplyAlbumCoverInput): Promise<ApplyAlbumCoverOutput> {
@@ -43,9 +40,7 @@ export class ApplyAlbumCoverUseCase {
       throw new NotFoundException(`Album not found: ${input.albumId}`);
     }
 
-    this.logger.info(
-      `Applying cover for album: ${album.name} from ${input.provider}`,
-    );
+    this.logger.info(`Applying cover for album: ${album.name} from ${input.provider}`);
 
     await safeDeleteFile(album.externalCoverPath, 'old cover');
 
@@ -67,9 +62,7 @@ export class ApplyAlbumCoverUseCase {
       const width = dimensions.width;
       const height = dimensions.height;
 
-      this.logger.info(
-        `Cover dimensions: ${width}x${height}`,
-      );
+      this.logger.info(`Cover dimensions: ${width}x${height}`);
 
       const finalFilename = `cover-${width}x${height}.jpg`;
       const coverPath = path.join(targetFolder, finalFilename);
@@ -85,9 +78,7 @@ export class ApplyAlbumCoverUseCase {
     } catch (error) {
       await safeDeleteFile(tempPath, 'temp file cleanup');
 
-      this.logger.error(
-        `Failed to download or process cover: ${(error as Error).message}`,
-      );
+      this.logger.error(`Failed to download or process cover: ${(error as Error).message}`);
       throw error;
     }
 

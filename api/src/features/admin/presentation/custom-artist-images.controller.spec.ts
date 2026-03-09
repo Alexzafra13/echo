@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CustomArtistImagesController } from './custom-artist-images.controller';
-import { UploadCustomArtistImageUseCase } from '../infrastructure/use-cases/upload-custom-artist-image';
-import { ListCustomArtistImagesUseCase } from '../infrastructure/use-cases/list-custom-artist-images';
-import { DeleteCustomArtistImageUseCase } from '../infrastructure/use-cases/delete-custom-artist-image';
-import { ApplyCustomArtistImageUseCase } from '../infrastructure/use-cases/apply-custom-artist-image';
+import { UploadCustomArtistImageUseCase } from '../domain/use-cases/upload-custom-artist-image';
+import { ListCustomArtistImagesUseCase } from '../domain/use-cases/list-custom-artist-images';
+import { DeleteCustomArtistImageUseCase } from '../domain/use-cases/delete-custom-artist-image';
+import { ApplyCustomArtistImageUseCase } from '../domain/use-cases/apply-custom-artist-image';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { CanActivate } from '@nestjs/common';
@@ -221,7 +221,7 @@ describe('CustomArtistImagesController', () => {
         artistId,
         customImageId,
       });
-      expect(result).toBeUndefined();
+      expect(result).toEqual({ success: true, message: 'Image deleted successfully' });
     });
   });
 });

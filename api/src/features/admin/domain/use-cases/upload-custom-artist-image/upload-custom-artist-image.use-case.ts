@@ -35,7 +35,7 @@ export class UploadCustomArtistImageUseCase {
     private readonly redis: RedisService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEventsService,
+    private readonly metadataGateway: MetadataEventsService
   ) {}
 
   async execute(input: UploadCustomArtistImageInput): Promise<UploadCustomArtistImageOutput> {
@@ -104,7 +104,7 @@ export class UploadCustomArtistImageUseCase {
     const customImage = customImageResult[0];
 
     this.logger.info(
-      `✅ Successfully uploaded custom ${input.imageType} image for ${artist.name} (ID: ${customImage.id})`,
+      `✅ Successfully uploaded custom ${input.imageType} image for ${artist.name} (ID: ${customImage.id})`
     );
 
     // Generate URL for the uploaded image
