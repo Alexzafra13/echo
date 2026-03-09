@@ -51,7 +51,7 @@ export interface RemoteTrack {
   lufsAnalyzed?: boolean;
   // DJ analysis (from remote server)
   djAnalysis?: {
-    status: string;
+    status: 'pending' | 'analyzing' | 'completed' | 'failed';
     bpm?: number;
     key?: string;
     camelotKey?: string;

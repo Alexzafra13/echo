@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Music, Trash2, Edit2, Play, Music2 } from 'lucide-react';
+import { Plus, Music, Trash2, Edit2, Play } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { useGridDimensions } from '@features/home/hooks';
