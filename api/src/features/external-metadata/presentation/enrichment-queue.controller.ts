@@ -49,16 +49,7 @@ export class EnrichmentQueueController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getEnrichmentQueueStats(): Promise<EnrichmentQueueStats> {
-    try {
-      const stats = await this.enrichmentQueue.getQueueStats();
-      return stats;
-    } catch (error) {
-      this.logger.error(
-        `Error fetching queue stats: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return this.enrichmentQueue.getQueueStats();
   }
 
   @Post('enrichment-queue/start')
@@ -83,17 +74,8 @@ export class EnrichmentQueueController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async startEnrichmentQueue() {
-    try {
-      this.logger.info('Manual request to start enrichment queue');
-      const result = await this.enrichmentQueue.startEnrichmentQueue();
-      return result;
-    } catch (error) {
-      this.logger.error(
-        `Error starting queue: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    this.logger.info('Manual request to start enrichment queue');
+    return this.enrichmentQueue.startEnrichmentQueue();
   }
 
   @Post('enrichment-queue/stop')
@@ -116,19 +98,11 @@ export class EnrichmentQueueController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async stopEnrichmentQueue() {
-    try {
-      this.logger.info('Manual request to stop enrichment queue');
-      await this.enrichmentQueue.stopEnrichmentQueue();
-      return {
-        success: true,
-        message: 'Enrichment queue stopped',
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error stopping queue: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    this.logger.info('Manual request to stop enrichment queue');
+    await this.enrichmentQueue.stopEnrichmentQueue();
+    return {
+      success: true,
+      message: 'Enrichment queue stopped',
+    };
   }
 }

@@ -6,7 +6,6 @@ import {
   Delete,
   Param,
   Body,
-  Query,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -64,7 +63,7 @@ export class AdminSettingsController {
     private readonly settingsService: SettingsService,
     private readonly enrichmentQueueService: EnrichmentQueueService,
     private readonly fanartAgent: FanartTvAgent,
-    private readonly lastfmAgent: LastfmAgent,
+    private readonly lastfmAgent: LastfmAgent
   ) {}
 
   @Get()
@@ -92,16 +91,7 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getAllSettings() {
-    try {
-      const settings = await this.settingsService.findAll();
-
-      this.logger.debug(`Retrieved ${settings.length} settings`);
-
-      return settings;
-    } catch (error) {
-      this.logger.error(`Error retrieving settings: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
-    }
+    return this.settingsService.findAll();
   }
 
   @Get('category/:category')
@@ -120,25 +110,14 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getSettingsByCategory(@Param('category') category: string) {
-    try {
-      const settings = await this.settingsService.findByCategory(category);
-
-      this.logger.debug(`Retrieved ${settings.length} settings for category ${category}`);
-
-      return settings;
-    } catch (error) {
-      this.logger.error(
-        `Error retrieving settings for category ${category}: ${(error as Error).message}`,
-        (error as Error).stack,
-      );
-      throw error;
-    }
+    return this.settingsService.findByCategory(category);
   }
 
   @Get(':key')
   @ApiOperation({
     summary: 'Get specific setting',
-    description: 'Returns a specific configuration setting by key (admin only). Returns null if not found.',
+    description:
+      'Returns a specific configuration setting by key (admin only). Returns null if not found.',
   })
   @ApiParam({
     name: 'key',
@@ -163,21 +142,7 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getSetting(@Param('key') key: string) {
-    try {
-      const setting = await this.settingsService.findOne(key);
-
-      if (!setting) {
-        this.logger.debug(`Setting ${key} not found, returning null`);
-        return null;
-      }
-
-      this.logger.debug(`Retrieved setting: ${key}`);
-
-      return setting;
-    } catch (error) {
-      this.logger.error(`Error retrieving setting ${key}: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
-    }
+    return (await this.settingsService.findOne(key)) ?? null;
   }
 
   @Put(':key')
@@ -217,43 +182,26 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async updateSetting(@Param('key') key: string, @Body() dto: UpdateSettingDto) {
-    try {
-      // Obtener valor actual (puede no existir)
-      const currentSetting = await this.settingsService.findOne(key);
-      const oldValue = currentSetting?.value ?? null;
-      const isCreating = !currentSetting;
+    const currentSetting = await this.settingsService.findOne(key);
+    const oldValue = currentSetting?.value ?? null;
+    const isCreating = !currentSetting;
 
-      // Usar set() que hace upsert (crea si no existe)
-      await this.settingsService.set(key, dto.value);
+    await this.settingsService.set(key, dto.value);
 
-      if (isCreating) {
-        this.logger.info(`Setting ${key} created with value "${dto.value}"`);
-      } else {
-        this.logger.info(`Setting ${key} updated from "${oldValue}" to "${dto.value}"`);
-      }
+    this.logger.info(
+      isCreating
+        ? `Setting ${key} created with value "${dto.value}"`
+        : `Setting ${key} updated from "${oldValue}" to "${dto.value}"`
+    );
 
-      // Invalidar caché
-      this.settingsService.clearCache();
+    this.settingsService.clearCache();
+    await this.reloadAgentsIfNeeded(key);
 
-      // Reload agents if API key was updated
-      await this.reloadAgentsIfNeeded(key);
-
-      return {
-        success: true,
-        key,
-        oldValue,
-        newValue: dto.value,
-        created: isCreating,
-      };
-    } catch (error) {
-      this.logger.error(`Error updating setting ${key}: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
-    }
+    return { success: true, key, oldValue, newValue: dto.value, created: isCreating };
   }
 
   // Recarga agentes si se actualiza su API key y resetea items sin datos
   private async reloadAgentsIfNeeded(key: string): Promise<void> {
-    // Track which agents were enabled before reload
     const fanartWasEnabled = this.fanartAgent.isEnabled();
     const lastfmWasEnabled = this.lastfmAgent.isEnabled();
 
@@ -265,7 +213,6 @@ export class AdminSettingsController {
       const fanartNowEnabled = this.fanartAgent.isEnabled();
       this.logger.info(`Fanart.tv agent reloaded (enabled: ${fanartNowEnabled})`);
 
-      // Check if agent was just enabled (wasn't enabled before, now is)
       if (!fanartWasEnabled && fanartNowEnabled) {
         agentBecameEnabled = true;
         this.logger.info('Fanart.tv agent was just enabled!');
@@ -278,7 +225,6 @@ export class AdminSettingsController {
       const lastfmNowEnabled = this.lastfmAgent.isEnabled();
       this.logger.info(`Last.fm agent reloaded (enabled: ${lastfmNowEnabled})`);
 
-      // Check if agent was just enabled
       if (!lastfmWasEnabled && lastfmNowEnabled) {
         agentBecameEnabled = true;
         this.logger.info('Last.fm agent was just enabled!');
@@ -286,22 +232,23 @@ export class AdminSettingsController {
     }
 
     // If an agent was just enabled, reset enrichment state for items without external data
-    // This allows re-processing items that were skipped when no API keys were configured
     if (agentBecameEnabled) {
-      this.logger.info('Agent enabled - resetting enrichment state for items without external data...');
+      this.logger.info(
+        'Agent enabled - resetting enrichment state for items without external data...'
+      );
       try {
         const resetResult = await this.enrichmentQueueService.resetEnrichmentState({
           resetArtists: true,
           resetAlbums: true,
-          onlyWithoutExternalData: true, // Only reset items that have no external data
+          onlyWithoutExternalData: true,
         });
         this.logger.info(
           `Enrichment state reset: ${resetResult.artistsReset} artists, ${resetResult.albumsReset} albums ` +
-          `are now ready for re-processing`,
+            `are now ready for re-processing`
         );
       } catch (error) {
-        this.logger.warn(`Failed to reset enrichment state: ${(error as Error).message}`);
         // Don't throw - this is a nice-to-have, not critical
+        this.logger.warn(`Failed to reset enrichment state: ${(error as Error).message}`);
       }
     }
   }
@@ -343,38 +290,18 @@ export class AdminSettingsController {
   @ApiResponse({ status: 400, description: 'Invalid request' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async validateApiKey(@Body() dto: ValidateApiKeyDto) {
+    // This try-catch is intentional: validation errors return a graceful response, not 500
     try {
-      if (!dto.service || !dto.apiKey) {
-        throw new BadRequestException('Service y apiKey son requeridos');
-      }
-
-      if (!['lastfm', 'fanart'].includes(dto.service)) {
-        throw new BadRequestException('Service debe ser "lastfm" o "fanart"');
-      }
-
       this.logger.info(`Validating API key for ${dto.service}`);
 
       const isValid = await this.settingsService.validateApiKey(dto.service, dto.apiKey);
 
-      if (isValid) {
-        return {
-          valid: true,
-          service: dto.service,
-          message: 'API key is valid',
-        };
-      } else {
-        return {
-          valid: false,
-          service: dto.service,
-          message: 'API key is invalid or service is unavailable',
-        };
-      }
+      return {
+        valid: isValid,
+        service: dto.service,
+        message: isValid ? 'API key is valid' : 'API key is invalid or service is unavailable',
+      };
     } catch (error) {
-      this.logger.error(
-        `Error validating API key for ${dto.service}: ${(error as Error).message}`,
-        (error as Error).stack,
-      );
-
       return {
         valid: false,
         service: dto.service,
@@ -387,8 +314,7 @@ export class AdminSettingsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Delete setting (reset to default)',
-    description:
-      'Deletes a configuration setting, resetting it to default value (admin only)',
+    description: 'Deletes a configuration setting, resetting it to default value (admin only)',
   })
   @ApiParam({
     name: 'key',
@@ -410,29 +336,17 @@ export class AdminSettingsController {
   @ApiResponse({ status: 404, description: 'Setting not found' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async deleteSetting(@Param('key') key: string) {
-    try {
-      const setting = await this.settingsService.findOne(key);
+    const setting = await this.settingsService.findOne(key);
 
-      if (!setting) {
-        throw new BadRequestException(`Setting with key ${key} not found`);
-      }
-
-      await this.settingsService.delete(key);
-
-      this.logger.info(`Setting ${key} deleted (reset to default)`);
-
-      // Invalidar caché
-      this.settingsService.clearCache();
-
-      return {
-        success: true,
-        key,
-        message: 'Setting deleted successfully',
-      };
-    } catch (error) {
-      this.logger.error(`Error deleting setting ${key}: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
+    if (!setting) {
+      throw new BadRequestException(`Setting with key ${key} not found`);
     }
+
+    await this.settingsService.delete(key);
+    this.logger.info(`Setting ${key} deleted (reset to default)`);
+    this.settingsService.clearCache();
+
+    return { success: true, key, message: 'Setting deleted successfully' };
   }
 
   @Post('browse-directories')
@@ -475,21 +389,15 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async browseDirectories(@Body() dto: BrowseDirectoriesDto) {
-    try {
-      const result = await this.settingsService.browseDirectories(dto.path);
-      this.logger.debug(`Browsed directory: ${dto.path}`);
-      return result;
-    } catch (error) {
-      this.logger.error(`Error browsing directory ${dto.path}: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
-    }
+    return this.settingsService.browseDirectories(dto.path);
   }
 
   @Post('validate-storage-path')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Validate storage path',
-    description: 'Validates a storage path for metadata (checks permissions, space, etc.) (admin only)',
+    description:
+      'Validates a storage path for metadata (checks permissions, space, etc.) (admin only)',
   })
   @ApiBody({
     description: 'Path to validate',
@@ -518,20 +426,14 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async validateStoragePath(@Body() dto: ValidateStoragePathDto) {
-    try {
-      const result = await this.settingsService.validateStoragePath(dto.path);
-      this.logger.debug(`Validated storage path: ${dto.path}`);
-      return result;
-    } catch (error) {
-      this.logger.error(`Error validating path ${dto.path}: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
-    }
+    return this.settingsService.validateStoragePath(dto.path);
   }
 
   @Get('federation/server-name')
   @ApiOperation({
     summary: 'Get federation server name',
-    description: 'Returns the server name for federation. Generates a random default name if not configured.',
+    description:
+      'Returns the server name for federation. Generates a random default name if not configured.',
   })
   @ApiResponse({
     status: 200,
@@ -546,27 +448,18 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getFederationServerName() {
-    try {
-      let serverName = await this.settingsService.getString('server.name', '');
-      let isDefault = false;
+    let serverName = await this.settingsService.getString('server.name', '');
+    let isDefault = false;
 
-      if (!serverName) {
-        // Generate random server name: "Echo Server #XXXX"
-        const randomId = Math.floor(1000 + Math.random() * 9000);
-        serverName = `Echo Server #${randomId}`;
-        await this.settingsService.set('server.name', serverName);
-        isDefault = true;
-        this.logger.info(`Generated default server name: ${serverName}`);
-      }
-
-      return {
-        name: serverName,
-        isDefault,
-      };
-    } catch (error) {
-      this.logger.error(`Error getting federation server name: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
+    if (!serverName) {
+      const randomId = Math.floor(1000 + Math.random() * 9000);
+      serverName = `Echo Server #${randomId}`;
+      await this.settingsService.set('server.name', serverName);
+      isDefault = true;
+      this.logger.info(`Generated default server name: ${serverName}`);
     }
+
+    return { name: serverName, isDefault };
   }
 
   @Get('federation/server-color')
@@ -585,13 +478,8 @@ export class AdminSettingsController {
     },
   })
   async getFederationServerColor() {
-    try {
-      const serverColor = await this.settingsService.getString('server.color', '');
-      return { color: serverColor || 'purple' };
-    } catch (error) {
-      this.logger.error(`Error getting federation server color: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
-    }
+    const serverColor = await this.settingsService.getString('server.color', '');
+    return { color: serverColor || 'purple' };
   }
 
   @Post('cache/clear')
@@ -613,26 +501,17 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async clearCache() {
-    try {
-      this.settingsService.clearCache();
-
-      this.logger.info('Settings cache cleared');
-
-      return {
-        success: true,
-        message: 'Cache cleared successfully',
-      };
-    } catch (error) {
-      this.logger.error(`Error clearing cache: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
-    }
+    this.settingsService.clearCache();
+    this.logger.info('Settings cache cleared');
+    return { success: true, message: 'Cache cleared successfully' };
   }
 
   @Post('agents/reload')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Reload all metadata agents',
-    description: 'Reloads settings for all external metadata agents (Fanart.tv, Last.fm). Use this after updating API keys.',
+    description:
+      'Reloads settings for all external metadata agents (Fanart.tv, Last.fm). Use this after updating API keys.',
   })
   @ApiResponse({
     status: 200,
@@ -654,38 +533,32 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async reloadAgents() {
-    try {
-      // Clear settings cache first to pick up new values
-      this.settingsService.clearCache();
+    this.settingsService.clearCache();
 
-      // Reload all agents
-      await this.fanartAgent.loadSettings();
-      await this.lastfmAgent.loadSettings();
+    await this.fanartAgent.loadSettings();
+    await this.lastfmAgent.loadSettings();
 
-      const fanartEnabled = this.fanartAgent.isEnabled();
-      const lastfmEnabled = this.lastfmAgent.isEnabled();
+    const fanartEnabled = this.fanartAgent.isEnabled();
+    const lastfmEnabled = this.lastfmAgent.isEnabled();
 
-      this.logger.info(`Agents reloaded - Fanart.tv: ${fanartEnabled}, Last.fm: ${lastfmEnabled}`);
+    this.logger.info(`Agents reloaded - Fanart.tv: ${fanartEnabled}, Last.fm: ${lastfmEnabled}`);
 
-      return {
-        success: true,
-        message: 'All metadata agents reloaded successfully',
-        agents: {
-          fanart: { enabled: fanartEnabled },
-          lastfm: { enabled: lastfmEnabled },
-        },
-      };
-    } catch (error) {
-      this.logger.error(`Error reloading agents: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
-    }
+    return {
+      success: true,
+      message: 'All metadata agents reloaded successfully',
+      agents: {
+        fanart: { enabled: fanartEnabled },
+        lastfm: { enabled: lastfmEnabled },
+      },
+    };
   }
 
   @Post('enrichment/reset')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Reset enrichment state',
-    description: 'Resets enrichment state for artists/albums that were marked as processed but have no external data. ' +
+    description:
+      'Resets enrichment state for artists/albums that were marked as processed but have no external data. ' +
       'Use this after configuring API keys to re-process items that were skipped.',
   })
   @ApiBody({
@@ -693,8 +566,16 @@ export class AdminSettingsController {
     schema: {
       type: 'object',
       properties: {
-        resetArtists: { type: 'boolean', default: true, description: 'Reset artist enrichment state' },
-        resetAlbums: { type: 'boolean', default: true, description: 'Reset album enrichment state' },
+        resetArtists: {
+          type: 'boolean',
+          default: true,
+          description: 'Reset artist enrichment state',
+        },
+        resetAlbums: {
+          type: 'boolean',
+          default: true,
+          description: 'Reset album enrichment state',
+        },
         onlyWithoutExternalData: {
           type: 'boolean',
           default: true,
@@ -718,46 +599,44 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async resetEnrichmentState(
-    @Body() options: {
+    @Body()
+    options: {
       resetArtists?: boolean;
       resetAlbums?: boolean;
       onlyWithoutExternalData?: boolean;
-    } = {},
+    } = {}
   ) {
-    try {
-      this.logger.info('Resetting enrichment state...');
+    this.logger.info('Resetting enrichment state...');
 
-      const result = await this.enrichmentQueueService.resetEnrichmentState({
-        resetArtists: options.resetArtists ?? true,
-        resetAlbums: options.resetAlbums ?? true,
-        onlyWithoutExternalData: options.onlyWithoutExternalData ?? true,
-      });
+    const result = await this.enrichmentQueueService.resetEnrichmentState({
+      resetArtists: options.resetArtists ?? true,
+      resetAlbums: options.resetAlbums ?? true,
+      onlyWithoutExternalData: options.onlyWithoutExternalData ?? true,
+    });
 
-      const totalReset = result.artistsReset + result.albumsReset;
+    const totalReset = result.artistsReset + result.albumsReset;
 
-      this.logger.info(
-        `Enrichment state reset: ${result.artistsReset} artists, ${result.albumsReset} albums`,
-      );
+    this.logger.info(
+      `Enrichment state reset: ${result.artistsReset} artists, ${result.albumsReset} albums`
+    );
 
-      return {
-        success: true,
-        message: totalReset > 0
+    return {
+      success: true,
+      message:
+        totalReset > 0
           ? `Reset enrichment state for ${totalReset} items. They will be re-processed in the next enrichment run.`
           : 'No items needed to be reset (all items either have external data or were never processed).',
-        artistsReset: result.artistsReset,
-        albumsReset: result.albumsReset,
-      };
-    } catch (error) {
-      this.logger.error(`Error resetting enrichment state: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
-    }
+      artistsReset: result.artistsReset,
+      albumsReset: result.albumsReset,
+    };
   }
 
   @Post('enrichment/reset-and-start')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Reset enrichment state and start queue',
-    description: 'Resets enrichment state for items without external data and starts the enrichment queue. ' +
+    description:
+      'Resets enrichment state for items without external data and starts the enrichment queue. ' +
       'Useful after configuring API keys for the first time.',
   })
   @ApiResponse({
@@ -777,37 +656,30 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async resetAndStartEnrichment() {
-    try {
-      this.logger.info('Resetting enrichment state and starting queue...');
+    this.logger.info('Resetting enrichment state and starting queue...');
 
-      // First, reset enrichment state
-      const resetResult = await this.enrichmentQueueService.resetEnrichmentState({
-        resetArtists: true,
-        resetAlbums: true,
-        onlyWithoutExternalData: true,
-      });
+    const resetResult = await this.enrichmentQueueService.resetEnrichmentState({
+      resetArtists: true,
+      resetAlbums: true,
+      onlyWithoutExternalData: true,
+    });
 
-      // Then, start the enrichment queue
-      const queueResult = await this.enrichmentQueueService.startEnrichmentQueue();
+    const queueResult = await this.enrichmentQueueService.startEnrichmentQueue();
 
-      this.logger.info(
-        `Reset ${resetResult.artistsReset} artists, ${resetResult.albumsReset} albums. ` +
-        `Queue started: ${queueResult.started}, pending: ${queueResult.pending}`,
-      );
+    this.logger.info(
+      `Reset ${resetResult.artistsReset} artists, ${resetResult.albumsReset} albums. ` +
+        `Queue started: ${queueResult.started}, pending: ${queueResult.pending}`
+    );
 
-      return {
-        success: true,
-        message: queueResult.started
-          ? `Reset ${resetResult.artistsReset + resetResult.albumsReset} items. Enrichment queue started with ${queueResult.pending} items.`
-          : `Reset ${resetResult.artistsReset + resetResult.albumsReset} items. ${queueResult.message}`,
-        artistsReset: resetResult.artistsReset,
-        albumsReset: resetResult.albumsReset,
-        queueStarted: queueResult.started,
-        pendingItems: queueResult.pending,
-      };
-    } catch (error) {
-      this.logger.error(`Error in reset and start: ${(error as Error).message}`, (error as Error).stack);
-      throw error;
-    }
+    return {
+      success: true,
+      message: queueResult.started
+        ? `Reset ${resetResult.artistsReset + resetResult.albumsReset} items. Enrichment queue started with ${queueResult.pending} items.`
+        : `Reset ${resetResult.artistsReset + resetResult.albumsReset} items. ${queueResult.message}`,
+      artistsReset: resetResult.artistsReset,
+      albumsReset: resetResult.albumsReset,
+      queueStarted: queueResult.started,
+      pendingItems: queueResult.pending,
+    };
   }
 }
