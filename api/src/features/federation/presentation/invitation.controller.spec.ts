@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InvitationController } from './invitation.controller';
 import { FederationTokenService } from '../domain/services';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
+import {
+  IFederationRepository,
+  FEDERATION_REPOSITORY,
+} from '../domain/ports/federation.repository';
 import { getLoggerToken } from 'nestjs-pino';
 import { User } from '@infrastructure/database/schema';
 import { FederationToken } from '../domain/types';
@@ -119,7 +122,7 @@ describe('InvitationController', () => {
         mockUser.id,
         'Test Token',
         7,
-        1,
+        1
       );
     });
   });
@@ -139,7 +142,7 @@ describe('InvitationController', () => {
   describe('deleteInvitationToken', () => {
     it('should delete an invitation token', async () => {
       repository.findFederationTokenById.mockResolvedValue(mockFederationToken);
-      tokenService.deleteInvitationToken.mockResolvedValue(undefined);
+      tokenService.deleteInvitationToken.mockResolvedValue(true);
 
       await controller.deleteInvitationToken(mockUser, 'token-1');
 
@@ -149,8 +152,9 @@ describe('InvitationController', () => {
     it('should throw NotFoundException if token not found', async () => {
       repository.findFederationTokenById.mockResolvedValue(null);
 
-      await expect(controller.deleteInvitationToken(mockUser, 'non-existent'))
-        .rejects.toThrow(NotFoundException);
+      await expect(controller.deleteInvitationToken(mockUser, 'non-existent')).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('should throw ForbiddenException if user does not own token', async () => {
@@ -159,8 +163,9 @@ describe('InvitationController', () => {
         createdByUserId: 'other-user',
       });
 
-      await expect(controller.deleteInvitationToken(mockUser, 'token-1'))
-        .rejects.toThrow(ForbiddenException);
+      await expect(controller.deleteInvitationToken(mockUser, 'token-1')).rejects.toThrow(
+        ForbiddenException
+      );
     });
   });
 });

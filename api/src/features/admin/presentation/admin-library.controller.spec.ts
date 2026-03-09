@@ -6,7 +6,7 @@ import { SettingsService } from '@features/external-metadata/infrastructure/serv
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import * as fs from 'fs/promises';
-import type { Dirent, Stats } from 'fs';
+import type { Stats } from 'node:fs';
 
 // Mock fs/promises
 jest.mock('fs/promises');

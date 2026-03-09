@@ -10,10 +10,11 @@ import {
 import { RequestWithUser } from '@shared/types/request.types';
 import { SetRatingDto, GetUserInteractionsDto, ItemTypeDto } from '../dtos/interaction.dto';
 import {
-  RatingResponseDto,
-  UserInteractionDto,
-  ItemInteractionSummaryDto,
-} from '../dtos/interaction-response.dto';
+  UserRating,
+  UserInteraction,
+  ItemInteractionSummary,
+} from '../../domain/entities/user-interaction.entity';
+import { ItemInteractionSummaryDto } from '../dtos/interaction-response.dto';
 
 describe('UserInteractionsController', () => {
   let controller: UserInteractionsController;

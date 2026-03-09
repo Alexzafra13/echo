@@ -100,6 +100,7 @@ describe('TracksController', () => {
       // Arrange
       getTracksUseCase.execute.mockResolvedValue({
         data: [mockTrack.toPrimitives()],
+        total: 1,
         skip: 0,
         take: 10,
         hasMore: false,
@@ -118,6 +119,7 @@ describe('TracksController', () => {
       // Arrange
       getTracksUseCase.execute.mockResolvedValue({
         data: [],
+        total: 0,
         skip: 0,
         take: 10,
         hasMore: false,
@@ -136,6 +138,7 @@ describe('TracksController', () => {
       // Arrange
       searchTracksUseCase.execute.mockResolvedValue({
         data: [mockTrack.toPrimitives()],
+        total: 1,
         query: 'come',
         skip: 0,
         take: 10,

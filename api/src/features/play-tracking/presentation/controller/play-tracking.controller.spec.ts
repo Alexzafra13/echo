@@ -110,12 +110,12 @@ describe('PlayTrackingController', () => {
         userId: 'user-1',
         trackId: 'track-1',
         playedAt: new Date('2025-01-01'),
-        client: null,
-        playContext: 'playlist',
+        client: undefined,
+        playContext: 'playlist' as const,
         completionRate: 0.2,
         skipped: true,
-        sourceId: null,
-        sourceType: null,
+        sourceId: undefined,
+        sourceType: undefined,
         createdAt: new Date('2025-01-01'),
       };
 

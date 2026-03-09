@@ -58,7 +58,7 @@ describe('LoginUseCase', () => {
       mockPasswordService.compare.mockResolvedValue(true);
       mockTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockResolvedValue('refresh-token');
-      mockUserRepo.updatePartial.mockResolvedValue(undefined);
+      mockUserRepo.updatePartial.mockResolvedValue(validUser as unknown as User);
 
       const result = await useCase.execute({
         username: 'testuser',
