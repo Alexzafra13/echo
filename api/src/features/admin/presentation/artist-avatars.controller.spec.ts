@@ -77,13 +77,9 @@ describe('ArtistAvatarsController', () => {
 
     it('should propagate errors from the use case', async () => {
       const artistId = '550e8400-e29b-41d4-a716-446655440000';
-      mockSearchArtistAvatars.execute.mockRejectedValue(
-        new Error('Artist not found'),
-      );
+      mockSearchArtistAvatars.execute.mockRejectedValue(new Error('Artist not found'));
 
-      await expect(controller.searchAvatars(artistId)).rejects.toThrow(
-        'Artist not found',
-      );
+      await expect(controller.searchAvatars(artistId)).rejects.toThrow('Artist not found');
     });
   });
 
@@ -93,7 +89,7 @@ describe('ArtistAvatarsController', () => {
         artistId: '550e8400-e29b-41d4-a716-446655440000',
         avatarUrl: 'https://example.com/avatar.jpg',
         provider: 'fanart',
-        type: 'profile',
+        type: 'profile' as const,
       };
       const mockResult = {
         success: true,
@@ -120,15 +116,11 @@ describe('ArtistAvatarsController', () => {
         artistId: '550e8400-e29b-41d4-a716-446655440000',
         avatarUrl: 'https://example.com/avatar.jpg',
         provider: 'fanart',
-        type: 'profile',
+        type: 'profile' as const,
       };
-      mockApplyArtistAvatar.execute.mockRejectedValue(
-        new Error('Failed to apply avatar'),
-      );
+      mockApplyArtistAvatar.execute.mockRejectedValue(new Error('Failed to apply avatar'));
 
-      await expect(controller.applyAvatar(body)).rejects.toThrow(
-        'Failed to apply avatar',
-      );
+      await expect(controller.applyAvatar(body)).rejects.toThrow('Failed to apply avatar');
     });
   });
 
@@ -160,13 +152,9 @@ describe('ArtistAvatarsController', () => {
         artistId: '550e8400-e29b-41d4-a716-446655440000',
         backgroundPosition: 'center 30%',
       };
-      mockUpdateArtistBackgroundPosition.execute.mockRejectedValue(
-        new Error('Artist not found'),
-      );
+      mockUpdateArtistBackgroundPosition.execute.mockRejectedValue(new Error('Artist not found'));
 
-      await expect(controller.updateBackgroundPosition(body)).rejects.toThrow(
-        'Artist not found',
-      );
+      await expect(controller.updateBackgroundPosition(body)).rejects.toThrow('Artist not found');
     });
   });
 });

@@ -73,20 +73,36 @@ describe('CustomAlbumCoversController', () => {
   describe('listCovers', () => {
     it('should call listCustomCovers.execute with albumId', async () => {
       const albumId = 'album-123';
-      const mockResult = [
-        {
-          id: 'cover-1',
-          albumId: 'album-123',
-          url: 'https://example.com/cover1.jpg',
-          isActive: true,
-        },
-        {
-          id: 'cover-2',
-          albumId: 'album-123',
-          url: 'https://example.com/cover2.jpg',
-          isActive: false,
-        },
-      ];
+      const mockResult = {
+        albumId: 'album-123',
+        albumName: 'Test Album',
+        customCovers: [
+          {
+            id: 'cover-1',
+            albumId: 'album-123',
+            filePath: '/data/cover1.jpg',
+            fileName: 'cover1.jpg',
+            fileSize: '1024',
+            mimeType: 'image/jpeg',
+            isActive: true,
+            uploadedBy: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: 'cover-2',
+            albumId: 'album-123',
+            filePath: '/data/cover2.jpg',
+            fileName: 'cover2.jpg',
+            fileSize: '2048',
+            mimeType: 'image/jpeg',
+            isActive: false,
+            uploadedBy: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      };
 
       listCustomCovers.execute.mockResolvedValue(mockResult);
 
@@ -99,12 +115,16 @@ describe('CustomAlbumCoversController', () => {
 
     it('should return empty array when no covers exist', async () => {
       const albumId = 'album-456';
-      listCustomCovers.execute.mockResolvedValue([]);
+      listCustomCovers.execute.mockResolvedValue({
+        albumId,
+        albumName: 'Test Album',
+        customCovers: [],
+      });
 
       const result = await controller.listCovers(albumId);
 
       expect(listCustomCovers.execute).toHaveBeenCalledWith({ albumId });
-      expect(result).toEqual([]);
+      expect(result).toEqual({ albumId, albumName: 'Test Album', customCovers: [] });
     });
   });
 
@@ -113,10 +133,8 @@ describe('CustomAlbumCoversController', () => {
       const albumId = 'album-123';
       const customCoverId = 'cover-456';
       const mockResult = {
-        id: 'cover-456',
-        albumId: 'album-123',
-        url: 'https://example.com/cover.jpg',
-        isActive: true,
+        success: true,
+        message: 'Custom album cover applied successfully',
       };
 
       applyCustomCover.execute.mockResolvedValue(mockResult);
@@ -135,10 +153,8 @@ describe('CustomAlbumCoversController', () => {
       const albumId = 'album-789';
       const customCoverId = 'cover-012';
       const mockResult = {
-        id: 'cover-012',
-        albumId: 'album-789',
-        url: 'https://example.com/new-cover.jpg',
-        isActive: true,
+        success: true,
+        message: 'Custom album cover applied successfully',
       };
 
       applyCustomCover.execute.mockResolvedValue(mockResult);
@@ -158,7 +174,10 @@ describe('CustomAlbumCoversController', () => {
       const albumId = 'album-123';
       const customCoverId = 'cover-456';
 
-      deleteCustomCover.execute.mockResolvedValue(undefined);
+      deleteCustomCover.execute.mockResolvedValue({
+        success: true,
+        message: 'Cover deleted successfully',
+      });
 
       await controller.deleteCover(albumId, customCoverId);
 
@@ -173,7 +192,10 @@ describe('CustomAlbumCoversController', () => {
       const albumId = 'album-999';
       const customCoverId = 'cover-888';
 
-      deleteCustomCover.execute.mockResolvedValue(undefined);
+      deleteCustomCover.execute.mockResolvedValue({
+        success: true,
+        message: 'Cover deleted successfully',
+      });
 
       await controller.deleteCover(albumId, customCoverId);
 
@@ -187,7 +209,10 @@ describe('CustomAlbumCoversController', () => {
       const albumId = 'album-111';
       const customCoverId = 'cover-222';
 
-      deleteCustomCover.execute.mockResolvedValue(undefined);
+      deleteCustomCover.execute.mockResolvedValue({
+        success: true,
+        message: 'Cover deleted successfully',
+      });
 
       const result = await controller.deleteCover(albumId, customCoverId);
 

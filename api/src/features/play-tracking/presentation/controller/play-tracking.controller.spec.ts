@@ -189,19 +189,22 @@ describe('PlayTrackingController', () => {
 
   describe('getPlaySummary', () => {
     it('should return user play summary', async () => {
-      const mockSummary: {
-        totalPlays: number;
-        totalSkips: number;
-        avgCompletionRate: number;
-        topContext: 'album';
-        playsByContext: Record<string, number>;
-        recentPlays: PlayEvent[];
-      } = {
+      const mockSummary: UserPlaySummary = {
         totalPlays: 100,
         totalSkips: 10,
         avgCompletionRate: 0.85,
         topContext: 'album',
-        playsByContext: { album: 60, playlist: 30, search: 10 },
+        playsByContext: {
+          direct: 0,
+          album: 60,
+          playlist: 30,
+          artist: 0,
+          shuffle: 0,
+          radio: 0,
+          recommendation: 0,
+          search: 10,
+          queue: 0,
+        },
         recentPlays: [],
       };
 

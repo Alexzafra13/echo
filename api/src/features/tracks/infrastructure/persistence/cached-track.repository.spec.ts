@@ -3,6 +3,7 @@ import { Track } from '../../domain/entities/track.entity';
 import { ITrackRepository } from '../../domain/ports/track-repository.port';
 import { CachedTrackRepository } from './cached-track.repository';
 import { DrizzleTrackRepository } from './track.repository';
+import { RedisService } from '@infrastructure/cache/redis.service';
 import {
   MockCacheService,
   MockPinoLogger,
@@ -59,7 +60,7 @@ describe('CachedTrackRepository', () => {
     // Create instance directly without TestingModule for simplicity
     cachedRepository = new CachedTrackRepository(
       baseRepository as unknown as DrizzleTrackRepository,
-      cacheService,
+      cacheService as unknown as RedisService,
       mockLogger as unknown as PinoLogger
     );
   });

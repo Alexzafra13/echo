@@ -67,7 +67,7 @@ describe('AlbumsController', () => {
     bitRate: 1411,
     compilation: false,
     size: Number(45000000),
-    mimeType: 'audio/flac',
+    suffix: 'flac',
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
   });

@@ -59,9 +59,9 @@ describe('EnrichmentHistoryController', () => {
       const query = {
         skip: 0,
         take: 10,
-        entityType: 'SONG',
+        entityType: 'artist' as const,
         provider: 'SPOTIFY',
-        status: 'SUCCESS',
+        status: 'success' as const,
         entityId: 'entity-123',
         userId: 'user-123',
       };
@@ -130,7 +130,7 @@ describe('EnrichmentHistoryController', () => {
   describe('getEnrichmentStats', () => {
     it('should pass period to use case and call fromDomain', async () => {
       const query = {
-        period: 'WEEK',
+        period: 'week' as const,
       };
 
       const mockResult = {
