@@ -260,7 +260,7 @@ export class StorageService {
         try {
           await fs.unlink(tempPath);
         } catch (unlinkError) {
-          // Ignore cleanup errors
+          this.logger.warn(unlinkError, `Failed to clean up temp file: ${tempPath}`);
         }
         throw writeError;
       }

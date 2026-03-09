@@ -182,7 +182,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
             (radioStation as unknown as { destroy: () => void }).destroy();
           }
         } catch (cleanupError) {
-          // Ignore cleanup errors
+          this.logger.warn(cleanupError, `Failed to clean up ICY parser for ${stationUuid}`);
         }
       }
 

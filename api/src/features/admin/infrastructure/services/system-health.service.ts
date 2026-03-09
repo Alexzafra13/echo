@@ -1,19 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { desc, sql } from 'drizzle-orm';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { HealthCheckService } from '@features/health/health-check.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { libraryScans } from '@infrastructure/database/schema';
-import { SystemHealth, StorageBreakdown } from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
+import {
+  SystemHealth,
+  StorageBreakdown,
+} from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
 
 @Injectable()
 export class SystemHealthService {
   private readonly MAX_STORAGE_MB = 5120;
 
   constructor(
+    @InjectPinoLogger(SystemHealthService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly healthCheck: HealthCheckService,
-    private readonly settingsService: SettingsService,
+    private readonly settingsService: SettingsService
   ) {}
 
   async check(storageBreakdown: StorageBreakdown): Promise<SystemHealth> {
@@ -39,7 +45,8 @@ export class SystemHealthService {
     try {
       await this.drizzle.db.execute(sql`SELECT 1`);
       return 'healthy';
-    } catch {
+    } catch (error) {
+      this.logger.error(error, 'Database health check failed');
       return 'down';
     }
   }
@@ -51,7 +58,8 @@ export class SystemHealthService {
         return 'down';
       }
       return 'healthy';
-    } catch {
+    } catch (error) {
+      this.logger.error(error, 'Redis health check failed');
       return 'down';
     }
   }
