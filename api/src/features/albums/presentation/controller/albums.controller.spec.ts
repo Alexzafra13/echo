@@ -213,17 +213,30 @@ describe('AlbumsController', () => {
   });
 
   describe('getAlbumTracks', () => {
-    it('debería retornar tracks del álbum', async () => {
+    it('debería retornar tracks del álbum paginados', async () => {
       // Arrange
-      getAlbumTracksUseCase.execute.mockResolvedValue({ tracks: [mockTrack] });
+      getAlbumTracksUseCase.execute.mockResolvedValue({
+        tracks: [mockTrack],
+        albumId: 'album-1',
+        total: 1,
+        skip: 0,
+        take: 20,
+        hasMore: false,
+      });
 
       // Act
-      const result = await controller.getAlbumTracks('album-1');
+      const result = await controller.getAlbumTracks('album-1', { skip: 0, take: 20 });
 
       // Assert
-      expect(getAlbumTracksUseCase.execute).toHaveBeenCalledWith({ albumId: 'album-1' });
-      expect(result).toHaveLength(1);
-      expect(result[0].title).toBe('Come Together');
+      expect(getAlbumTracksUseCase.execute).toHaveBeenCalledWith({
+        albumId: 'album-1',
+        skip: 0,
+        take: 20,
+      });
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].title).toBe('Come Together');
+      expect(result.total).toBe(1);
+      expect(result.hasMore).toBe(false);
     });
   });
 

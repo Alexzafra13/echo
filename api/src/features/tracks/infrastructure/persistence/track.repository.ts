@@ -73,19 +73,35 @@ export class DrizzleTrackRepository
     return TrackMapper.toDomainArray(result);
   }
 
-  async findByAlbumId(albumId: string, includeMissing = true): Promise<Track[]> {
+  async findByAlbumId(albumId: string, includeMissing = true, skip?: number, take?: number): Promise<Track[]> {
     // For album views, include missing tracks as "ghost tracks" (shown grayed out)
     const whereCondition = includeMissing
       ? eq(tracks.albumId, albumId)
       : and(eq(tracks.albumId, albumId), isNull(tracks.missingAt));
 
-    const result = await this.drizzle.db
+    let query = this.drizzle.db
       .select()
       .from(tracks)
       .where(whereCondition)
       .orderBy(asc(tracks.discNumber), asc(tracks.trackNumber));
 
-    return TrackMapper.toDomainArray(result);
+    if (skip !== undefined) query = query.offset(skip) as typeof query;
+    if (take !== undefined) query = query.limit(take) as typeof query;
+
+    return TrackMapper.toDomainArray(await query);
+  }
+
+  async countByAlbumId(albumId: string, includeMissing = true): Promise<number> {
+    const whereCondition = includeMissing
+      ? eq(tracks.albumId, albumId)
+      : and(eq(tracks.albumId, albumId), isNull(tracks.missingAt));
+
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(tracks)
+      .where(whereCondition);
+
+    return result[0]?.count ?? 0;
   }
 
   async findByArtistId(artistId: string, skip: number, take: number): Promise<Track[]> {

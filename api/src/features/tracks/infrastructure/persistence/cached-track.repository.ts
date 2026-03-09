@@ -55,11 +55,19 @@ export class CachedTrackRepository
   }
 
   /**
-   * Find tracks by album ID.
+   * Find tracks by album ID with optional pagination.
    * Not cached - album track lists are typically small and change rarely.
    */
-  async findByAlbumId(albumId: string, includeMissing = true): Promise<Track[]> {
-    return this.baseRepository.findByAlbumId(albumId, includeMissing);
+  async findByAlbumId(albumId: string, includeMissing = true, skip?: number, take?: number): Promise<Track[]> {
+    return this.baseRepository.findByAlbumId(albumId, includeMissing, skip, take);
+  }
+
+  /**
+   * Count tracks in an album.
+   * Not cached - delegated to base repository.
+   */
+  async countByAlbumId(albumId: string, includeMissing = true): Promise<number> {
+    return this.baseRepository.countByAlbumId(albumId, includeMissing);
   }
 
   /**

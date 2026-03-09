@@ -10,6 +10,8 @@
   transition: all var(--transition-base);
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
+  position: relative;
+  overflow: hidden;
 }
 
 .artistCard:hover {
@@ -17,11 +19,49 @@
   border-color: var(--border-base);
 }
 
+/* Hidden probe image to detect load errors */
+.artistCard__bgProbe {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Background image with diagonal fade (like ActionCard / Wave Mix) */
+.artistCard__background {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.2;
+  mask-image: linear-gradient(
+    -60deg,
+    var(--black-80) 0%,
+    var(--black-50) 30%,
+    var(--black-20) 50%,
+    transparent 70%
+  );
+  -webkit-mask-image: linear-gradient(
+    -60deg,
+    var(--black-80) 0%,
+    var(--black-50) 30%,
+    var(--black-20) 50%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
 .artistCard__avatarContainer {
   position: relative;
   width: 64px;
   height: 64px;
   flex-shrink: 0;
+  z-index: 1;
 }
 
 .artistCard__avatar {
@@ -53,6 +93,8 @@
 .artistCard__info {
   flex: 1;
   min-width: 0; /* Allow text truncation */
+  position: relative;
+  z-index: 1;
 }
 
 .artistCard__name {

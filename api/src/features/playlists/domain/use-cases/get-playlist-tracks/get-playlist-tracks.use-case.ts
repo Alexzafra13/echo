@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
+import { validatePagination } from '@shared/utils';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { GetPlaylistTracksInput, GetPlaylistTracksOutput, TrackItem } from './get-playlist-tracks.dto';
 
@@ -22,10 +23,15 @@ export class GetPlaylistTracksUseCase {
 
     // Verificar acceso: solo el owner o playlists públicas
     if (!playlist.public && input.requesterId && playlist.ownerId !== input.requesterId) {
-      throw new ForbiddenError('You do not have access to this playlist'); // ← CAMBIADO
+      throw new ForbiddenError('You do not have access to this playlist');
     }
 
-    const tracks = await this.playlistRepository.getPlaylistTracks(input.playlistId);
+    const { skip, take } = validatePagination(input.skip, input.take);
+    const [tracks, total] = await Promise.all([
+      this.playlistRepository.getPlaylistTracks(input.playlistId, skip, take),
+      this.playlistRepository.countPlaylistTracks(input.playlistId),
+    ]);
+
     const items: TrackItem[] = tracks.map((track) => ({
       id: track.id,
       title: track.title,
@@ -59,7 +65,10 @@ export class GetPlaylistTracksUseCase {
       playlistId: playlist.id,
       playlistName: playlist.name,
       tracks: items,
-      total: items.length,
+      total,
+      skip,
+      take,
+      hasMore: skip + take < total,
     };
   }
 }

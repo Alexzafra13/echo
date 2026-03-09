@@ -202,8 +202,8 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
     return result.length > 0;
   }
 
-  async getPlaylistTracks(playlistId: string): Promise<TrackWithPlaylistOrder[]> {
-    const result = await this.drizzle.db
+  async getPlaylistTracks(playlistId: string, skip?: number, take?: number): Promise<TrackWithPlaylistOrder[]> {
+    let query = this.drizzle.db
       .select({
         playlistTrack: playlistTracks,
         track: tracks,
@@ -217,11 +217,26 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
       .where(eq(playlistTracks.playlistId, playlistId))
       .orderBy(asc(playlistTracks.trackOrder));
 
-    // Map tracks and attach playlistOrder (1-indexed for display)
+    if (skip !== undefined) query = query.offset(skip) as typeof query;
+    if (take !== undefined) query = query.limit(take) as typeof query;
+
+    const result = await query;
+
+    // Map tracks and attach playlistOrder (1-indexed for display, offset-aware)
+    const offset = skip ?? 0;
     return result.map((r, index) => {
       const track = TrackMapper.toDomain(r.track);
-      return Object.assign(track, { playlistOrder: index + 1 }) as TrackWithPlaylistOrder;
+      return Object.assign(track, { playlistOrder: offset + index + 1 }) as TrackWithPlaylistOrder;
     });
+  }
+
+  async countPlaylistTracks(playlistId: string): Promise<number> {
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(playlistTracks)
+      .where(eq(playlistTracks.playlistId, playlistId));
+
+    return result[0]?.count ?? 0;
   }
 
   async getPlaylistAlbumIds(playlistId: string): Promise<string[]> {

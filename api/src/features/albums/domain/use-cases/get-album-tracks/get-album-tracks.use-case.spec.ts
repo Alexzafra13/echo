@@ -72,28 +72,50 @@ describe('GetAlbumTracksUseCase', () => {
 
     mockTrackRepo = {
       findByAlbumId: jest.fn(),
+      countByAlbumId: jest.fn(),
     } as unknown as jest.Mocked<ITrackRepository>;
 
     useCase = new GetAlbumTracksUseCase(mockAlbumRepo, mockTrackRepo);
   });
 
   describe('execute', () => {
-    it('should return tracks for existing album', async () => {
+    it('should return paginated tracks for existing album', async () => {
       mockAlbumRepo.findById.mockResolvedValue(mockAlbum);
       mockTrackRepo.findByAlbumId.mockResolvedValue(mockTracks);
+      mockTrackRepo.countByAlbumId.mockResolvedValue(3);
 
       const result = await useCase.execute({ albumId: 'album-123' });
 
       expect(mockAlbumRepo.findById).toHaveBeenCalledWith('album-123');
-      expect(mockTrackRepo.findByAlbumId).toHaveBeenCalledWith('album-123');
+      expect(mockTrackRepo.findByAlbumId).toHaveBeenCalledWith('album-123', true, 0, 10);
+      expect(mockTrackRepo.countByAlbumId).toHaveBeenCalledWith('album-123');
       expect(result.albumId).toBe('album-123');
       expect(result.tracks).toHaveLength(3);
-      expect(result.totalTracks).toBe(3);
+      expect(result.total).toBe(3);
+      expect(result.skip).toBe(0);
+      expect(result.take).toBe(10);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('should respect skip and take parameters', async () => {
+      mockAlbumRepo.findById.mockResolvedValue(mockAlbum);
+      mockTrackRepo.findByAlbumId.mockResolvedValue([mockTracks[1]]);
+      mockTrackRepo.countByAlbumId.mockResolvedValue(3);
+
+      const result = await useCase.execute({ albumId: 'album-123', skip: 1, take: 1 });
+
+      expect(mockTrackRepo.findByAlbumId).toHaveBeenCalledWith('album-123', true, 1, 1);
+      expect(result.tracks).toHaveLength(1);
+      expect(result.total).toBe(3);
+      expect(result.skip).toBe(1);
+      expect(result.take).toBe(1);
+      expect(result.hasMore).toBe(true);
     });
 
     it('should return tracks in order', async () => {
       mockAlbumRepo.findById.mockResolvedValue(mockAlbum);
       mockTrackRepo.findByAlbumId.mockResolvedValue(mockTracks);
+      mockTrackRepo.countByAlbumId.mockResolvedValue(3);
 
       const result = await useCase.execute({ albumId: 'album-123' });
 
@@ -119,11 +141,13 @@ describe('GetAlbumTracksUseCase', () => {
     it('should return empty tracks array for album with no tracks', async () => {
       mockAlbumRepo.findById.mockResolvedValue(mockAlbum);
       mockTrackRepo.findByAlbumId.mockResolvedValue([]);
+      mockTrackRepo.countByAlbumId.mockResolvedValue(0);
 
       const result = await useCase.execute({ albumId: 'album-123' });
 
       expect(result.tracks).toHaveLength(0);
-      expect(result.totalTracks).toBe(0);
+      expect(result.total).toBe(0);
+      expect(result.hasMore).toBe(false);
     });
 
     it('should include tracks from multiple discs', async () => {
@@ -146,11 +170,12 @@ describe('GetAlbumTracksUseCase', () => {
 
       mockAlbumRepo.findById.mockResolvedValue(mockAlbum);
       mockTrackRepo.findByAlbumId.mockResolvedValue(multiDiscTracks);
+      mockTrackRepo.countByAlbumId.mockResolvedValue(4);
 
       const result = await useCase.execute({ albumId: 'album-123' });
 
       expect(result.tracks).toHaveLength(4);
-      expect(result.totalTracks).toBe(4);
+      expect(result.total).toBe(4);
       const discNumbers = result.tracks.map((t) => t.discNumber);
       expect(discNumbers).toContain(1);
       expect(discNumbers).toContain(2);
