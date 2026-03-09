@@ -31,6 +31,7 @@ describe('StartScanUseCase', () => {
       create: jest.fn(),
       update: jest.fn(),
       count: jest.fn(),
+      getLastCompletedScanTime: jest.fn(),
     };
 
     // Mock del processor

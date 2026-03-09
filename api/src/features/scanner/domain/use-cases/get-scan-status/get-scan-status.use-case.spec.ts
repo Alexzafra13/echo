@@ -17,6 +17,7 @@ describe('GetScanStatusUseCase', () => {
       create: jest.fn(),
       update: jest.fn(),
       count: jest.fn(),
+      getLastCompletedScanTime: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -68,18 +69,14 @@ describe('GetScanStatusUseCase', () => {
       scannerRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(useCase.execute({ id: 'non-existent' })).rejects.toThrow(
-        NotFoundError,
-      );
+      await expect(useCase.execute({ id: 'non-existent' })).rejects.toThrow(NotFoundError);
       expect(scannerRepository.findById).toHaveBeenCalledWith('non-existent');
     });
 
     it('should throw NotFoundError for empty/invalid id', async () => {
       // Act & Assert
       await expect(useCase.execute({ id: '' })).rejects.toThrow(NotFoundError);
-      await expect(useCase.execute({ id: '   ' })).rejects.toThrow(
-        NotFoundError,
-      );
+      await expect(useCase.execute({ id: '   ' })).rejects.toThrow(NotFoundError);
 
       // Should not call repository for invalid ids
       expect(scannerRepository.findById).not.toHaveBeenCalled();

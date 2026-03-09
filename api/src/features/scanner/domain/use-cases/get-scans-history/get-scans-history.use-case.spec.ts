@@ -6,25 +6,28 @@ describe('GetScansHistoryUseCase', () => {
   let useCase: GetScansHistoryUseCase;
   let mockRepo: jest.Mocked<IScannerRepository>;
 
-  const createScan = (overrides: Partial<{
-    id: string;
-    status: 'pending' | 'running' | 'completed' | 'failed';
-    startedAt: Date;
-    finishedAt: Date;
-    tracksAdded: number;
-    tracksUpdated: number;
-    tracksDeleted: number;
-    errorMessage: string;
-  }> = {}) => LibraryScan.fromPrimitives({
-    id: overrides.id || 'scan-1',
-    status: overrides.status || 'completed',
-    startedAt: overrides.startedAt || new Date('2024-01-01T10:00:00Z'),
-    finishedAt: overrides.finishedAt || new Date('2024-01-01T10:05:00Z'),
-    tracksAdded: overrides.tracksAdded ?? 10,
-    tracksUpdated: overrides.tracksUpdated ?? 5,
-    tracksDeleted: overrides.tracksDeleted ?? 2,
-    errorMessage: overrides.errorMessage,
-  });
+  const createScan = (
+    overrides: Partial<{
+      id: string;
+      status: 'pending' | 'running' | 'completed' | 'failed';
+      startedAt: Date;
+      finishedAt: Date;
+      tracksAdded: number;
+      tracksUpdated: number;
+      tracksDeleted: number;
+      errorMessage: string;
+    }> = {}
+  ) =>
+    LibraryScan.fromPrimitives({
+      id: overrides.id || 'scan-1',
+      status: overrides.status || 'completed',
+      startedAt: overrides.startedAt || new Date('2024-01-01T10:00:00Z'),
+      finishedAt: overrides.finishedAt || new Date('2024-01-01T10:05:00Z'),
+      tracksAdded: overrides.tracksAdded ?? 10,
+      tracksUpdated: overrides.tracksUpdated ?? 5,
+      tracksDeleted: overrides.tracksDeleted ?? 2,
+      errorMessage: overrides.errorMessage,
+    });
 
   beforeEach(() => {
     mockRepo = {
@@ -35,6 +38,7 @@ describe('GetScansHistoryUseCase', () => {
       create: jest.fn(),
       update: jest.fn(),
       count: jest.fn(),
+      getLastCompletedScanTime: jest.fn(),
     };
 
     useCase = new GetScansHistoryUseCase(mockRepo);

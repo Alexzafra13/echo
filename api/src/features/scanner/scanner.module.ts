@@ -23,6 +23,7 @@ import { DrizzleScannerRepository } from './infrastructure/persistence/scanner.r
 import { FileScannerService } from './infrastructure/services/file-scanner.service';
 import { MetadataExtractorService } from './infrastructure/services/metadata-extractor.service';
 import { ScanProcessorService } from './infrastructure/services/scan-processor.service';
+import { PostScanTasksService } from './infrastructure/services/post-scan-tasks.service';
 import { FileWatcherService } from './infrastructure/services/file-watcher.service';
 import { LufsAnalyzerService } from './infrastructure/services/lufs-analyzer.service';
 import { LufsAnalysisQueueService } from './infrastructure/services/lufs-analysis-queue.service';
@@ -60,6 +61,7 @@ import { CoverArtService } from '@shared/services';
     LibraryCleanupService,
     TrackGenreService,
     TrackProcessingService,
+    PostScanTasksService,
     ScanProcessorService,
     ScannerGateway,
     {

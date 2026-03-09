@@ -8,6 +8,7 @@ export interface IScannerRepository {
   create(scan: LibraryScan): Promise<LibraryScan>;
   update(id: string, data: Partial<LibraryScanProps>): Promise<LibraryScan | null>;
   count(): Promise<number>;
+  getLastCompletedScanTime(): Promise<Date | null>;
 }
 
 export const SCANNER_REPOSITORY = 'IScannerRepository';
