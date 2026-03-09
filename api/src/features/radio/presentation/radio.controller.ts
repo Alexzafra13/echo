@@ -18,6 +18,7 @@ import {
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { Public } from '@shared/decorators/public.decorator';
@@ -64,7 +65,8 @@ export class RadioController {
     description: 'Obtiene las emisoras con más votos de la comunidad',
   })
   async getTopVoted(@Query('limit') limit?: number) {
-    const stations = await this.searchStationsUseCase.getTopVoted(limit || 20);
+    const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 200);
+    const stations = await this.searchStationsUseCase.getTopVoted(safeLimit);
     return stations;
   }
 
@@ -75,7 +77,8 @@ export class RadioController {
     description: 'Obtiene las emisoras más escuchadas',
   })
   async getPopular(@Query('limit') limit?: number) {
-    const stations = await this.searchStationsUseCase.getPopular(limit || 20);
+    const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 200);
+    const stations = await this.searchStationsUseCase.getPopular(safeLimit);
     return stations;
   }
 
@@ -86,7 +89,8 @@ export class RadioController {
     description: 'Obtiene emisoras de un país específico',
   })
   async getByCountry(@Param('code') code: string, @Query('limit') limit?: number) {
-    const stations = await this.searchStationsUseCase.getByCountry(code, limit || 50);
+    const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
+    const stations = await this.searchStationsUseCase.getByCountry(code, safeLimit);
     return stations;
   }
 
@@ -97,7 +101,8 @@ export class RadioController {
     description: 'Obtiene emisoras de un género específico',
   })
   async getByTag(@Param('tag') tag: string, @Query('limit') limit?: number) {
-    const stations = await this.searchStationsUseCase.getByTag(tag, limit || 50);
+    const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
+    const stations = await this.searchStationsUseCase.getByTag(tag, safeLimit);
     return stations;
   }
 
@@ -108,7 +113,8 @@ export class RadioController {
     description: 'Lista todos los géneros/tags de emisoras',
   })
   async getTags(@Query('limit') limit?: number) {
-    return this.searchStationsUseCase.getTags(limit || 100);
+    const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 500);
+    return this.searchStationsUseCase.getTags(safeLimit);
   }
 
   @Get('countries')
@@ -252,6 +258,7 @@ export class RadioController {
   // Proxy HTTP→HTTPS para evitar Mixed Content en el navegador
   @Get('stream/proxy')
   @Public()
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @ApiOperation({
     summary: 'Proxy de stream de radio',
     description: 'Proxy HTTP streams through HTTPS to avoid Mixed Content blocking',

@@ -29,10 +29,7 @@ import {
 
 @WebSocketGateway({
   namespace: 'scanner',
-  cors: {
-    origin: '*',
-    credentials: true,
-  },
+  // CORS is configured globally by WebSocketAdapter (see websocket.adapter.ts)
   transports: ['websocket', 'polling'],
 })
 @UseGuards(WsJwtGuard)
