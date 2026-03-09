@@ -1,4 +1,4 @@
-import { Module, OnModuleInit} from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ConfigModule } from '@nestjs/config';
 import { QueueModule } from '@infrastructure/queue/queue.module';
@@ -15,10 +15,7 @@ import { SettingsService } from './infrastructure/services/settings.service';
 import { StorageService } from './infrastructure/services/storage.service';
 import { ImageDownloadService } from './infrastructure/services/image-download.service';
 import { CleanupService } from './infrastructure/services/cleanup.service';
-import {
-  OrphanedFileCleanerService,
-  StorageStatsService,
-} from './infrastructure/services/cleanup';
+import { OrphanedFileCleanerService, StorageStatsService } from './infrastructure/services/cleanup';
 import { MetadataConflictService } from './infrastructure/services/metadata-conflict.service';
 import {
   ConflictChangeApplierService,
@@ -68,7 +65,9 @@ import {
 import { ExternalMetadataController } from './presentation/external-metadata.controller';
 import { ImagesController } from './presentation/images.controller';
 import { AdminSettingsController } from './presentation/admin-settings.controller';
-import { MaintenanceController } from './presentation/maintenance.controller';
+import { StorageMaintenanceController } from './presentation/storage-maintenance.controller';
+import { EnrichmentQueueController } from './presentation/enrichment-queue.controller';
+import { DataSyncController } from './presentation/data-sync.controller';
 import { MetadataConflictsController } from './presentation/metadata-conflicts.controller';
 import { MusicBrainzSearchController } from './presentation/musicbrainz-search.controller';
 import { MbidAutoSearchController } from './presentation/mbid-auto-search.controller';
@@ -174,7 +173,9 @@ import { STORAGE_SERVICE, SETTINGS_REPOSITORY } from './domain/ports';
     ExternalMetadataController,
     ImagesController,
     AdminSettingsController,
-    MaintenanceController,
+    StorageMaintenanceController,
+    EnrichmentQueueController,
+    DataSyncController,
     MetadataConflictsController,
     MusicBrainzSearchController,
     MbidAutoSearchController,
@@ -222,7 +223,10 @@ export class ExternalMetadataModule implements OnModuleInit {
     try {
       await this.storageService.initialize();
     } catch (error) {
-      this.logger.error(`Failed to initialize storage: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Failed to initialize storage: ${(error as Error).message}`,
+        (error as Error).stack
+      );
     }
 
     // Register all agents
@@ -234,17 +238,13 @@ export class ExternalMetadataModule implements OnModuleInit {
 
     // Log agent status
     const allAgents = this.agentRegistry.getAllAgents();
-    const enabledAgents = allAgents.filter(agent => agent.isEnabled());
+    const enabledAgents = allAgents.filter((agent) => agent.isEnabled());
 
-    this.logger.info(
-      `Registered ${allAgents.length} agents (${enabledAgents.length} enabled):`
-    );
+    this.logger.info(`Registered ${allAgents.length} agents (${enabledAgents.length} enabled):`);
 
-    allAgents.forEach(agent => {
+    allAgents.forEach((agent) => {
       const status = agent.isEnabled() ? '✓' : '✗';
-      this.logger.info(
-        `  ${status} ${agent.name.padEnd(15)} (priority: ${agent.priority})`
-      );
+      this.logger.info(`  ${status} ${agent.name.padEnd(15)} (priority: ${agent.priority})`);
     });
 
     this.logger.info('External Metadata Module initialized successfully');
