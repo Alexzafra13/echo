@@ -25,7 +25,11 @@ export function useDominantColor(
           setColor(extractedColor);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (import.meta.env.DEV) {
+          console.warn('[Color] Failed to extract dominant color:', err?.message);
+        }
+      });
 
     return () => {
       isMounted = false;

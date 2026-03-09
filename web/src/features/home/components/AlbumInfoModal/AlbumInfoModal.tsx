@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X } from 'lucide-react';
 import { getCoverUrl } from '@shared/utils/cover.utils';
 import { formatDuration, formatFileSize, formatDate } from '@shared/utils/format';
@@ -21,6 +21,9 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
   );
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [closing, setClosing] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(closeTimerRef.current), []);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -39,7 +42,7 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
     if (closing) return;
     if (isMobile) {
       setClosing(true);
-      setTimeout(() => onClose(), 300);
+      closeTimerRef.current = setTimeout(() => onClose(), 300);
     } else {
       onClose();
     }
