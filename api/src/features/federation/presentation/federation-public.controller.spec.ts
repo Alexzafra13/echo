@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { FederationPublicController } from './federation-public.controller';
 import { FederationTokenService } from '../domain/services';
-import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { FederationLibraryRepository } from '../infrastructure/persistence/federation-library.repository';
 import { CoverArtService } from '@shared/services';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { getLoggerToken } from 'nestjs-pino';
@@ -21,7 +21,7 @@ jest.mock('fs', () => ({
 describe('FederationPublicController', () => {
   let controller: FederationPublicController;
   let tokenService: jest.Mocked<FederationTokenService>;
-  let drizzleService: jest.Mocked<DrizzleService>;
+  let libraryRepo: jest.Mocked<FederationLibraryRepository>;
   let coverArtService: jest.Mocked<CoverArtService>;
 
   const mockLogger = {
@@ -68,22 +68,7 @@ describe('FederationPublicController', () => {
     return reply as unknown as FastifyReply;
   };
 
-  // Mock Drizzle query builder
-  const createMockQueryBuilder = (result: unknown) => ({
-    select: jest.fn().mockReturnThis(),
-    from: jest.fn().mockReturnThis(),
-    leftJoin: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    offset: jest.fn().mockReturnThis(),
-    orderBy: jest.fn().mockResolvedValue(result),
-  });
-
   beforeEach(async () => {
-    const mockDb = {
-      select: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       controllers: [FederationPublicController],
       providers: [
@@ -100,9 +85,19 @@ describe('FederationPublicController', () => {
           },
         },
         {
-          provide: DrizzleService,
+          provide: FederationLibraryRepository,
           useValue: {
-            db: mockDb,
+            getCounts: jest.fn(),
+            findAlbums: jest.fn(),
+            findAlbumById: jest.fn(),
+            findAlbumCoverPath: jest.fn(),
+            findTrackPath: jest.fn(),
+            findAlbumTracks: jest.fn(),
+            findAlbumDjAnalysis: jest.fn(),
+            findAlbumForExport: jest.fn(),
+            findAlbumTracksForExport: jest.fn(),
+            findAlbumForDownload: jest.fn(),
+            findAlbumTrackPaths: jest.fn(),
           },
         },
         {
@@ -123,7 +118,7 @@ describe('FederationPublicController', () => {
 
     controller = module.get<FederationPublicController>(FederationPublicController);
     tokenService = module.get(FederationTokenService);
-    drizzleService = module.get(DrizzleService);
+    libraryRepo = module.get(FederationLibraryRepository);
     coverArtService = module.get(CoverArtService);
   });
 
@@ -144,13 +139,7 @@ describe('FederationPublicController', () => {
       };
 
       tokenService.useInvitationToken.mockResolvedValue(mockAccessToken);
-
-      // Mock db for getServerInfo
-      const mockSelectChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockResolvedValue([{ count: 10 }]),
-      };
-      (drizzleService.db.select as jest.Mock).mockReturnValue(mockSelectChain);
+      libraryRepo.getCounts.mockResolvedValue({ albumCount: 10, trackCount: 100, artistCount: 5 });
 
       const request = createMockRequest();
 
@@ -177,12 +166,7 @@ describe('FederationPublicController', () => {
       };
 
       tokenService.useInvitationToken.mockResolvedValue(mockAccessToken);
-
-      const mockSelectChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockResolvedValue([{ count: 10 }]),
-      };
-      (drizzleService.db.select as jest.Mock).mockReturnValue(mockSelectChain);
+      libraryRepo.getCounts.mockResolvedValue({ albumCount: 10, trackCount: 100, artistCount: 5 });
 
       const request = createMockRequest();
 
@@ -223,15 +207,14 @@ describe('FederationPublicController', () => {
 
   describe('getInfo', () => {
     it('should return server info', async () => {
-      const mockSelectChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockResolvedValue([{ count: 100 }]),
-      };
-      (drizzleService.db.select as jest.Mock).mockReturnValue(mockSelectChain);
+      libraryRepo.getCounts.mockResolvedValue({
+        albumCount: 100,
+        trackCount: 500,
+        artistCount: 50,
+      });
 
       const result = await controller.getInfo();
 
-      // Server name is now dynamic (random if not set)
       expect(result.name).toMatch(/^Echo Server #\d{4}$/);
       expect(result.version).toBe('1.0.0');
       expect(result.albumCount).toBe(100);
@@ -271,27 +254,8 @@ describe('FederationPublicController', () => {
         },
       ];
 
-      // Setup mock chain for albums query
-      const albumsChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        offset: jest.fn().mockResolvedValue(mockAlbums),
-      };
-
-      // Setup mock chain for count queries
-      const countChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockResolvedValue([{ count: 1 }]),
-      };
-
-      let callCount = 0;
-      (drizzleService.db.select as jest.Mock).mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) return albumsChain;
-        return countChain;
-      });
+      libraryRepo.findAlbums.mockResolvedValue({ albums: mockAlbums, total: 1 });
+      libraryRepo.getCounts.mockResolvedValue({ albumCount: 1, trackCount: 10, artistCount: 1 });
 
       const request = createMockRequest(mockAccessToken);
 
@@ -331,33 +295,14 @@ describe('FederationPublicController', () => {
         },
       ];
 
-      const albumsChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        offset: jest.fn().mockResolvedValue(mockAlbums),
-      };
-
-      const countChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockResolvedValue([{ count: 50 }]),
-      };
-
-      let callCount = 0;
-      (drizzleService.db.select as jest.Mock).mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) return albumsChain;
-        return countChain;
-      });
+      libraryRepo.findAlbums.mockResolvedValue({ albums: mockAlbums, total: 50 });
 
       const request = createMockRequest(mockAccessToken);
 
       const result = await controller.getAlbums({ page: 1, limit: 20 }, request);
 
       expect(result.albums).toHaveLength(1);
-      expect(result.albums[0].coverUrl).toBeUndefined(); // No cover art
+      expect(result.albums[0].coverUrl).toBeUndefined();
       expect(result.total).toBe(50);
     });
 
@@ -396,35 +341,30 @@ describe('FederationPublicController', () => {
           duration: 300,
           size: 25000000,
           bitRate: 320,
+          suffix: 'mp3',
           artistId: 'artist-1',
           artistName: 'Test Artist',
+          rgTrackGain: null,
+          rgTrackPeak: null,
+          rgAlbumGain: null,
+          rgAlbumPeak: null,
+          bpm: null,
+          initialKey: null,
+          outroStart: null,
+          lufsAnalyzedAt: null,
+          djStatus: null,
+          djBpm: null,
+          djKey: null,
+          djCamelotKey: null,
+          djEnergy: null,
+          djDanceability: null,
+          djAnalysisError: null,
+          djAnalyzedAt: null,
         },
       ];
 
-      // Album query chain
-      const albumChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([mockAlbum]),
-      };
-
-      // Tracks query chain
-      const tracksChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockResolvedValue(mockTracks),
-      };
-
-      let callCount = 0;
-      (drizzleService.db.select as jest.Mock).mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) return albumChain;
-        return tracksChain;
-      });
+      libraryRepo.findAlbumById.mockResolvedValue(mockAlbum);
+      libraryRepo.findAlbumTracks.mockResolvedValue(mockTracks);
 
       const request = createMockRequest(mockAccessToken);
 
@@ -436,15 +376,7 @@ describe('FederationPublicController', () => {
     });
 
     it('should throw NotFoundException for non-existent album', async () => {
-      const albumChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([]),
-      };
-
-      (drizzleService.db.select as jest.Mock).mockReturnValue(albumChain);
+      libraryRepo.findAlbumById.mockResolvedValue(null);
 
       const request = createMockRequest(mockAccessToken);
 
@@ -465,16 +397,7 @@ describe('FederationPublicController', () => {
 
   describe('getAlbumCover', () => {
     it('should return album cover', async () => {
-      const mockAlbum = { coverArtPath: 'cached-cover.jpg' };
-
-      const albumChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([mockAlbum]),
-      };
-
-      (drizzleService.db.select as jest.Mock).mockReturnValue(albumChain);
+      libraryRepo.findAlbumCoverPath.mockResolvedValue('cached-cover.jpg');
       coverArtService.getCoverPath.mockReturnValue('/path/to/cover.jpg');
 
       const mockStream = { pipe: jest.fn() };
@@ -491,14 +414,7 @@ describe('FederationPublicController', () => {
     });
 
     it('should return 404 when album has no cover', async () => {
-      const albumChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([{ coverArtPath: null }]),
-      };
-
-      (drizzleService.db.select as jest.Mock).mockReturnValue(albumChain);
+      libraryRepo.findAlbumCoverPath.mockResolvedValue(null);
 
       const request = createMockRequest(mockAccessToken);
       const reply = createMockReply();
@@ -530,16 +446,7 @@ describe('FederationPublicController', () => {
 
   describe('streamTrack', () => {
     it('should stream track without range header', async () => {
-      const mockTrack = { path: '/music/track.mp3', size: 5000000 };
-
-      const trackChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([mockTrack]),
-      };
-
-      (drizzleService.db.select as jest.Mock).mockReturnValue(trackChain);
+      libraryRepo.findTrackPath.mockResolvedValue({ path: '/music/track.mp3', size: 5000000 });
       (fs.existsSync as jest.Mock).mockReturnValue(true);
 
       const mockStream = { pipe: jest.fn() };
@@ -562,16 +469,7 @@ describe('FederationPublicController', () => {
     });
 
     it('should stream track with range header', async () => {
-      const mockTrack = { path: '/music/track.mp3', size: 5000000 };
-
-      const trackChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([mockTrack]),
-      };
-
-      (drizzleService.db.select as jest.Mock).mockReturnValue(trackChain);
+      libraryRepo.findTrackPath.mockResolvedValue({ path: '/music/track.mp3', size: 5000000 });
       (fs.existsSync as jest.Mock).mockReturnValue(true);
 
       const mockStream = { pipe: jest.fn() };
@@ -592,14 +490,7 @@ describe('FederationPublicController', () => {
     });
 
     it('should return 404 when track not found', async () => {
-      const trackChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([]),
-      };
-
-      (drizzleService.db.select as jest.Mock).mockReturnValue(trackChain);
+      libraryRepo.findTrackPath.mockResolvedValue(null);
 
       const request = createMockRequest(mockAccessToken);
       const reply = createMockReply();
@@ -624,22 +515,12 @@ describe('FederationPublicController', () => {
     });
 
     it('should return 416 for invalid range', async () => {
-      const mockTrack = { path: '/music/track.mp3', size: 1000 };
-
-      const trackChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([mockTrack]),
-      };
-
-      (drizzleService.db.select as jest.Mock).mockReturnValue(trackChain);
+      libraryRepo.findTrackPath.mockResolvedValue({ path: '/music/track.mp3', size: 1000 });
       (fs.existsSync as jest.Mock).mockReturnValue(true);
 
       const request = createMockRequest(mockAccessToken);
       const reply = createMockReply();
 
-      // Request a range beyond file size
       await controller.streamTrack('track-1', 'bytes=5000-6000', reply, request);
 
       expect(reply.status).toHaveBeenCalledWith(416);
@@ -706,31 +587,19 @@ describe('FederationPublicController', () => {
           mbzReleaseTrackId: 'mbz-release',
           catalogNum: 'CAT-001',
           path: '/music/artist/album/01-track.mp3',
+          djStatus: null,
+          djBpm: null,
+          djKey: null,
+          djCamelotKey: null,
+          djEnergy: null,
+          djDanceability: null,
+          djAnalysisError: null,
+          djAnalyzedAt: null,
         },
       ];
 
-      const albumChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([mockAlbum]),
-      };
-
-      const tracksChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockResolvedValue(mockTracks),
-      };
-
-      let callCount = 0;
-      (drizzleService.db.select as jest.Mock).mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) return albumChain;
-        return tracksChain;
-      });
+      libraryRepo.findAlbumForExport.mockResolvedValue(mockAlbum);
+      libraryRepo.findAlbumTracksForExport.mockResolvedValue(mockTracks);
 
       const request = createMockRequest(mockAccessToken);
 
@@ -744,15 +613,7 @@ describe('FederationPublicController', () => {
     });
 
     it('should throw NotFoundException for non-existent album', async () => {
-      const albumChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([]),
-      };
-
-      (drizzleService.db.select as jest.Mock).mockReturnValue(albumChain);
+      libraryRepo.findAlbumForExport.mockResolvedValue(null);
 
       const request = createMockRequest(mockAccessToken);
 
@@ -777,14 +638,14 @@ describe('FederationPublicController', () => {
 
   describe('downloadAlbum', () => {
     it('should return download URLs for album', async () => {
-      const mockAlbum = {
+      libraryRepo.findAlbumForDownload.mockResolvedValue({
         id: 'album-1',
         name: 'Test Album',
         coverArtPath: 'cover.jpg',
         artistName: 'Test Artist',
-      };
+      });
 
-      const mockTracks = [
+      libraryRepo.findAlbumTrackPaths.mockResolvedValue([
         {
           id: 'track-1',
           title: 'Track 1',
@@ -792,30 +653,7 @@ describe('FederationPublicController', () => {
           trackNumber: 1,
           discNumber: 1,
         },
-      ];
-
-      const albumChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([mockAlbum]),
-      };
-
-      const tracksChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockResolvedValue(mockTracks),
-      };
-
-      let callCount = 0;
-      (drizzleService.db.select as jest.Mock).mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) return albumChain;
-        return tracksChain;
-      });
+      ]);
 
       const request = createMockRequest(mockAccessToken);
       const reply = createMockReply();
@@ -838,15 +676,7 @@ describe('FederationPublicController', () => {
     });
 
     it('should return 404 for non-existent album', async () => {
-      const albumChain = {
-        select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockReturnThis(),
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([]),
-      };
-
-      (drizzleService.db.select as jest.Mock).mockReturnValue(albumChain);
+      libraryRepo.findAlbumForDownload.mockResolvedValue(null);
 
       const request = createMockRequest(mockAccessToken);
       const reply = createMockReply();
