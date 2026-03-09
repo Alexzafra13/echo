@@ -14,6 +14,7 @@ import {
   ForbiddenException,
   NotFoundException,
   ParseUUIDPipe,
+  Inject,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
@@ -23,7 +24,7 @@ import { CoverArtService } from '@shared/services';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { CAMELOT_COLORS } from '@features/dj/config/dj.config';
 import { FederationTokenService } from '../domain/services';
-import { FederationLibraryRepository } from '../infrastructure/persistence/federation-library.repository';
+import { IFederationLibraryRepository, FEDERATION_LIBRARY_REPOSITORY } from '../domain/ports';
 import { FederationAccessGuard } from './guards';
 import { RequestWithFederationToken } from '@shared/types/request.types';
 import {
@@ -44,7 +45,8 @@ export class FederationPublicController {
     @InjectPinoLogger(FederationPublicController.name)
     private readonly logger: PinoLogger,
     private readonly tokenService: FederationTokenService,
-    private readonly libraryRepo: FederationLibraryRepository,
+    @Inject(FEDERATION_LIBRARY_REPOSITORY)
+    private readonly libraryRepo: IFederationLibraryRepository,
     private readonly coverArtService: CoverArtService,
     private readonly settingsService: SettingsService
   ) {}

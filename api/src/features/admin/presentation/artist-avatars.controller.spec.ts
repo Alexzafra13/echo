@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ArtistAvatarsController } from './artist-avatars.controller';
-import { SearchArtistAvatarsUseCase } from '../domain/use-cases/search-artist-avatars';
-import { ApplyArtistAvatarUseCase } from '../domain/use-cases/apply-artist-avatar';
-import { UpdateArtistBackgroundPositionUseCase } from '../domain/use-cases/update-artist-background-position';
+import { SearchArtistAvatarsUseCase } from '../infrastructure/use-cases/search-artist-avatars';
+import { ApplyArtistAvatarUseCase } from '../infrastructure/use-cases/apply-artist-avatar';
+import { UpdateArtistBackgroundPositionUseCase } from '../infrastructure/use-cases/update-artist-background-position';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';

@@ -15,6 +15,7 @@ import { FederationAccessGuard } from './presentation/guards';
 import { FederationRepository } from './infrastructure/persistence/federation.repository';
 import { FederationLibraryRepository } from './infrastructure/persistence/federation-library.repository';
 import { FEDERATION_REPOSITORY } from './domain/ports/federation.repository';
+import { FEDERATION_LIBRARY_REPOSITORY } from './domain/ports/federation-library.repository';
 import { CoverArtService } from '@shared/services';
 import { StreamingModule } from '@features/streaming/streaming.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
@@ -36,7 +37,10 @@ import { ExternalMetadataModule } from '@features/external-metadata/external-met
     AlbumImportService,
     ImportProgressService,
     FederationAccessGuard,
-    FederationLibraryRepository,
+    {
+      provide: FEDERATION_LIBRARY_REPOSITORY,
+      useClass: FederationLibraryRepository,
+    },
     CoverArtService,
     {
       provide: FEDERATION_REPOSITORY,

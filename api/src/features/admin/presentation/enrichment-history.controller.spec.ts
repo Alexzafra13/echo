@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EnrichmentHistoryController } from './enrichment-history.controller';
-import { ListEnrichmentLogsUseCase } from '../domain/use-cases/list-enrichment-logs';
-import { GetEnrichmentStatsUseCase } from '../domain/use-cases/get-enrichment-stats';
+import { ListEnrichmentLogsUseCase } from '../infrastructure/use-cases/list-enrichment-logs';
+import { GetEnrichmentStatsUseCase } from '../infrastructure/use-cases/get-enrichment-stats';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 

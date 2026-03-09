@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { FederationPublicController } from './federation-public.controller';
 import { FederationTokenService } from '../domain/services';
-import { FederationLibraryRepository } from '../infrastructure/persistence/federation-library.repository';
+import { IFederationLibraryRepository, FEDERATION_LIBRARY_REPOSITORY } from '../domain/ports';
 import { CoverArtService } from '@shared/services';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { getLoggerToken } from 'nestjs-pino';
@@ -21,7 +21,7 @@ jest.mock('fs', () => ({
 describe('FederationPublicController', () => {
   let controller: FederationPublicController;
   let tokenService: jest.Mocked<FederationTokenService>;
-  let libraryRepo: jest.Mocked<FederationLibraryRepository>;
+  let libraryRepo: jest.Mocked<IFederationLibraryRepository>;
   let coverArtService: jest.Mocked<CoverArtService>;
 
   const mockLogger = {
@@ -85,7 +85,7 @@ describe('FederationPublicController', () => {
           },
         },
         {
-          provide: FederationLibraryRepository,
+          provide: FEDERATION_LIBRARY_REPOSITORY,
           useValue: {
             getCounts: jest.fn(),
             findAlbums: jest.fn(),
@@ -118,7 +118,7 @@ describe('FederationPublicController', () => {
 
     controller = module.get<FederationPublicController>(FederationPublicController);
     tokenService = module.get(FederationTokenService);
-    libraryRepo = module.get(FederationLibraryRepository);
+    libraryRepo = module.get(FEDERATION_LIBRARY_REPOSITORY);
     coverArtService = module.get(CoverArtService);
   });
 

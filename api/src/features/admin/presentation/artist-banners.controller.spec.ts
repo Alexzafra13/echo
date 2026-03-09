@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ArtistBannersManagementController } from './artist-banners.controller';
-import { ManageArtistBannersUseCase } from '../domain/use-cases/manage-artist-banners';
+import { ManageArtistBannersUseCase } from '../infrastructure/use-cases/manage-artist-banners';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 
