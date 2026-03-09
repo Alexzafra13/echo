@@ -1,5 +1,6 @@
 import { NotFoundError, ValidationError, UnauthorizedError } from '@shared/errors';
 import { ChangePasswordUseCase } from './change-password.use-case';
+import { LogService } from '@features/logs/application/log.service';
 import {
   MockUserRepository,
   MockPasswordService,
@@ -24,7 +25,7 @@ describe('ChangePasswordUseCase', () => {
     useCase = new ChangePasswordUseCase(
       mockUserRepository,
       mockPasswordService,
-      mockLogService,
+      mockLogService as unknown as LogService
     );
   });
 
@@ -34,9 +35,7 @@ describe('ChangePasswordUseCase', () => {
       const mockUser = UserFactory.create({ passwordHash: '$2b$12$old_password_hash' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
-      mockPasswordService.compare
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(false);
+      mockPasswordService.compare.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
       mockPasswordService.hash.mockResolvedValue('$2b$12$new_password_hash');
       mockUserRepository.updatePassword.mockResolvedValue(undefined);
 
@@ -67,9 +66,7 @@ describe('ChangePasswordUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
-      mockPasswordService.compare
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(false);
+      mockPasswordService.compare.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
       mockPasswordService.hash.mockResolvedValue('$2b$12$new_password_hash');
       mockUserRepository.updatePassword.mockResolvedValue(undefined);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -92,9 +89,7 @@ describe('ChangePasswordUseCase', () => {
       const mockUser = UserFactory.create({ passwordHash: '$2b$12$old_password_hash' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
-      mockPasswordService.compare
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(false);
+      mockPasswordService.compare.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
       mockPasswordService.hash.mockResolvedValue('$2b$12$new_password_hash');
       mockUserRepository.updatePassword.mockResolvedValue(undefined);
 
@@ -194,9 +189,7 @@ describe('ChangePasswordUseCase', () => {
       const mockUser = UserFactory.create({ passwordHash: '$2b$12$old_password_hash' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
-      mockPasswordService.compare
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(false);
+      mockPasswordService.compare.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
       mockPasswordService.hash.mockResolvedValue('$2b$12$new_password_hash');
       mockUserRepository.updatePassword.mockResolvedValue(undefined);
 

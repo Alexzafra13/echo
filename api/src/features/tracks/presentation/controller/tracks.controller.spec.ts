@@ -6,6 +6,7 @@ import { SearchTracksUseCase } from '../../domain/use-cases/search-tracks/search
 import { GetShuffledTracksUseCase } from '../../domain/use-cases/get-shuffled-tracks/get-shuffled-tracks.use-case';
 import { GetDjShuffledTracksUseCase } from '../../domain/use-cases/get-dj-shuffled-tracks/get-dj-shuffled-tracks.use-case';
 import { Track } from '../../domain/entities/track.entity';
+import { DjShuffledTrack } from '../../domain/use-cases/get-dj-shuffled-tracks/get-dj-shuffled-tracks.dto';
 import { DJ_ANALYSIS_REPOSITORY } from '@features/dj/domain/ports/dj-analysis.repository.port';
 
 describe('TracksController', () => {
@@ -33,6 +34,34 @@ describe('TracksController', () => {
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
   });
+
+  const mockDjTrack: DjShuffledTrack = {
+    id: 'track-1',
+    title: 'Come Together',
+    artistId: 'artist-1',
+    artistName: 'The Beatles',
+    albumId: 'album-1',
+    albumName: 'Abbey Road',
+    albumArtistId: null,
+    albumArtistName: null,
+    duration: 259,
+    trackNumber: 1,
+    discNumber: 1,
+    year: null,
+    path: '/music/beatles/abbey-road/01-come-together.flac',
+    bitRate: 1411,
+    size: 45000000,
+    suffix: null,
+    compilation: false,
+    rgTrackGain: null,
+    rgTrackPeak: null,
+    rgAlbumGain: null,
+    rgAlbumPeak: null,
+    outroStart: null,
+    bpm: null,
+    createdAt: new Date('2025-01-01'),
+    updatedAt: new Date('2025-01-01'),
+  };
 
   beforeEach(async () => {
     const mockGetTrackUseCase = {
@@ -209,7 +238,7 @@ describe('TracksController', () => {
     it('debería retornar tracks con ordenamiento DJ', async () => {
       // Arrange
       getDjShuffledTracksUseCase.execute.mockResolvedValue({
-        data: [mockTrack.toPrimitives()],
+        data: [mockDjTrack],
         seed: 0.5,
         skip: 0,
         take: 50,
@@ -234,7 +263,7 @@ describe('TracksController', () => {
     it('debería retornar djMode false cuando no hay suficiente análisis DJ', async () => {
       // Arrange
       getDjShuffledTracksUseCase.execute.mockResolvedValue({
-        data: [mockTrack.toPrimitives()],
+        data: [mockDjTrack],
         seed: 0.5,
         skip: 0,
         take: 50,

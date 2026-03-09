@@ -14,7 +14,6 @@ import {
   UserInteraction,
   ItemInteractionSummary,
 } from '../../domain/entities/user-interaction.entity';
-import { ItemInteractionSummaryDto } from '../dtos/interaction-response.dto';
 
 describe('UserInteractionsController', () => {
   let controller: UserInteractionsController;
@@ -62,7 +61,7 @@ describe('UserInteractionsController', () => {
         updatedAt: new Date('2025-01-01'),
       };
 
-      setRatingUseCase.execute.mockResolvedValue(mockResult as unknown as RatingResponseDto);
+      setRatingUseCase.execute.mockResolvedValue(mockResult as unknown as UserRating);
 
       const dto = { itemId: 'track-1', itemType: 'track', rating: 5 };
       const req = { user: mockUser } as unknown as RequestWithUser;
@@ -100,7 +99,7 @@ describe('UserInteractionsController', () => {
       ];
 
       getUserInteractionsUseCase.execute.mockResolvedValue(
-        mockInteractions as unknown as UserInteractionDto[]
+        mockInteractions as unknown as UserInteraction[]
       );
 
       const req = { user: mockUser } as unknown as RequestWithUser;
@@ -137,7 +136,7 @@ describe('UserInteractionsController', () => {
       };
 
       getItemSummaryUseCase.execute.mockResolvedValue(
-        mockSummary as unknown as ItemInteractionSummaryDto
+        mockSummary as unknown as ItemInteractionSummary
       );
 
       const req = { user: mockUser } as unknown as RequestWithUser;

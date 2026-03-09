@@ -100,6 +100,7 @@ describe('ArtistsController', () => {
       // Arrange
       getArtistsUseCase.execute.mockResolvedValue({
         data: [mockArtist.toPrimitives()],
+        total: 1,
         skip: 0,
         take: 10,
         hasMore: false,
@@ -117,6 +118,7 @@ describe('ArtistsController', () => {
       // Arrange
       getArtistsUseCase.execute.mockResolvedValue({
         data: [],
+        total: 0,
         skip: 0,
         take: 10,
         hasMore: false,
@@ -160,8 +162,24 @@ describe('ArtistsController', () => {
       // Arrange
       const mockTopTracksResult = {
         data: [
-          { trackId: 'track-1', title: 'Come Together', playCount: 100 },
-          { trackId: 'track-2', title: 'Something', playCount: 80 },
+          {
+            trackId: 'track-1',
+            title: 'Come Together',
+            albumId: 'album-1',
+            albumName: 'Abbey Road',
+            duration: 259,
+            playCount: 100,
+            uniqueListeners: 50,
+          },
+          {
+            trackId: 'track-2',
+            title: 'Something',
+            albumId: 'album-1',
+            albumName: 'Abbey Road',
+            duration: 182,
+            playCount: 80,
+            uniqueListeners: 40,
+          },
         ],
         artistId: 'artist-1',
         limit: 10,
@@ -289,6 +307,7 @@ describe('ArtistsController', () => {
       // Arrange
       searchArtistsUseCase.execute.mockResolvedValue({
         data: [mockArtist.toPrimitives()],
+        total: 1,
         query: 'beatles',
         skip: 0,
         take: 10,

@@ -232,10 +232,12 @@ describe('DjAnalysis Entity', () => {
     it('should accept custom tolerance', () => {
       const a1 = DjAnalysis.create({ ...baseCompletedProps, bpm: 128 });
       const a2 = DjAnalysis.create({ ...baseCompletedProps, trackId: 'track-2', bpm: 140 }); // ~9.4%
-      const wideTolerance: number = 10;
-      const narrowTolerance: number = 5;
-      expect(a1.isBpmCompatibleWith(a2, wideTolerance)).toBe(true);
-      expect(a1.isBpmCompatibleWith(a2, narrowTolerance)).toBe(false);
+      const isBpmCompatible = a1.isBpmCompatibleWith.bind(a1) as (
+        other: DjAnalysis,
+        tolerance: number
+      ) => boolean;
+      expect(isBpmCompatible(a2, 10)).toBe(true);
+      expect(isBpmCompatible(a2, 5)).toBe(false);
     });
 
     it('should return false when BPM is missing', () => {
