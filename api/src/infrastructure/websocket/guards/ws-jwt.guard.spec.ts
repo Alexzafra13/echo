@@ -5,6 +5,8 @@ import { PinoLogger } from 'nestjs-pino';
 import { WsJwtGuard } from './ws-jwt.guard';
 import { Socket } from 'socket.io';
 import { SecuritySecretsService } from '@config/security-secrets.service';
+import { DrizzleUserRepository } from '@features/auth/infrastructure/persistence/user.repository';
+import { User } from '@features/auth/domain/entities/user.entity';
 
 const createMockLogger = (): jest.Mocked<PinoLogger> =>
   ({
@@ -35,9 +37,32 @@ interface MockSocket {
   data: Record<string, unknown>;
 }
 
+const createMockUser = (overrides: Partial<{ isAdmin: boolean; isActive: boolean }> = {}) => {
+  const user = {
+    id: 'user-123',
+    username: 'testuser',
+    isAdmin: overrides.isAdmin ?? false,
+    isActive: overrides.isActive ?? true,
+    name: 'Test User',
+    toPrimitives: () => ({
+      id: 'user-123',
+      username: 'testuser',
+      isAdmin: overrides.isAdmin ?? false,
+      isActive: overrides.isActive ?? true,
+      name: 'Test User',
+      passwordHash: 'hash',
+      mustChangePassword: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+  };
+  return user as unknown as User;
+};
+
 describe('WsJwtGuard', () => {
   let guard: WsJwtGuard;
   let mockJwtService: { verifyAsync: jest.Mock };
+  let mockUserRepository: { findById: jest.Mock };
   let mockSocket: MockSocket;
   let mockContext: ExecutionContext;
   let mockLogger: jest.Mocked<PinoLogger>;
@@ -49,11 +74,15 @@ describe('WsJwtGuard', () => {
     mockJwtService = {
       verifyAsync: jest.fn(),
     };
+    mockUserRepository = {
+      findById: jest.fn().mockResolvedValue(createMockUser()),
+    };
 
     guard = new WsJwtGuard(
       mockLogger,
       mockJwtService as unknown as JwtService,
       mockSecretsService,
+      mockUserRepository as unknown as DrizzleUserRepository
     );
 
     mockSocket = {
@@ -76,7 +105,7 @@ describe('WsJwtGuard', () => {
   describe('canActivate', () => {
     it('should allow connection with valid token from query param', async () => {
       const token = 'valid-token';
-      const payload = { sub: 'user-123', username: 'testuser' };
+      const payload = { sub: 'user-123', username: 'testuser', userId: 'user-123' };
 
       mockSocket.handshake.query = { token };
       mockJwtService.verifyAsync.mockResolvedValue(payload);
@@ -84,7 +113,9 @@ describe('WsJwtGuard', () => {
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(mockSocket.data.user).toEqual(payload);
+      expect(mockSocket.data.user).toEqual(
+        expect.objectContaining({ sub: 'user-123', isAdmin: false })
+      );
       expect(mockSocket.data.userId).toBe('user-123');
       expect(mockJwtService.verifyAsync).toHaveBeenCalledWith(token, {
         secret: mockSecretsService.jwtSecret,
@@ -93,7 +124,7 @@ describe('WsJwtGuard', () => {
 
     it('should allow connection with valid token from auth object', async () => {
       const token = 'valid-token';
-      const payload = { sub: 'user-456', username: 'testuser2' };
+      const payload = { sub: 'user-456', username: 'testuser2', userId: 'user-123' };
 
       mockSocket.handshake.auth = { token };
       mockJwtService.verifyAsync.mockResolvedValue(payload);
@@ -106,7 +137,7 @@ describe('WsJwtGuard', () => {
 
     it('should allow connection with valid token from Authorization header', async () => {
       const token = 'valid-token';
-      const payload = { sub: 'user-789', username: 'testuser3' };
+      const payload = { sub: 'user-789', username: 'testuser3', userId: 'user-123' };
 
       mockSocket.handshake.headers = { authorization: `Bearer ${token}` };
       mockJwtService.verifyAsync.mockResolvedValue(payload);
@@ -137,9 +168,48 @@ describe('WsJwtGuard', () => {
       await expect(guard.canActivate(mockContext)).rejects.toThrow(WsException);
     });
 
+    it('should reject inactive user', async () => {
+      mockSocket.handshake.query = { token: 'valid-token' };
+      mockJwtService.verifyAsync.mockResolvedValue({
+        sub: 'user-123',
+        username: 'testuser',
+        userId: 'user-123',
+      });
+      mockUserRepository.findById.mockResolvedValue(createMockUser({ isActive: false }));
+
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(WsException);
+      await expect(guard.canActivate(mockContext)).rejects.toThrow('Unauthorized');
+    });
+
+    it('should reject when user not found in database', async () => {
+      mockSocket.handshake.query = { token: 'valid-token' };
+      mockJwtService.verifyAsync.mockResolvedValue({
+        sub: 'user-123',
+        username: 'testuser',
+        userId: 'user-123',
+      });
+      mockUserRepository.findById.mockResolvedValue(null);
+
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(WsException);
+    });
+
+    it('should include isAdmin from database user', async () => {
+      const token = 'valid-token';
+      const payload = { sub: 'admin-123', username: 'admin', userId: 'user-123' };
+
+      mockSocket.handshake.query = { token };
+      mockJwtService.verifyAsync.mockResolvedValue(payload);
+      mockUserRepository.findById.mockResolvedValue(createMockUser({ isAdmin: true }));
+
+      const result = await guard.canActivate(mockContext);
+
+      expect(result).toBe(true);
+      expect(mockSocket.data.user).toEqual(expect.objectContaining({ isAdmin: true }));
+    });
+
     it('should handle array of tokens in query param', async () => {
       const token = 'valid-token';
-      const payload = { sub: 'user-999', username: 'testuser4' };
+      const payload = { sub: 'user-999', username: 'testuser4', userId: 'user-123' };
 
       mockSocket.handshake.query = { token: [token, 'other-token'] };
       mockJwtService.verifyAsync.mockResolvedValue(payload);

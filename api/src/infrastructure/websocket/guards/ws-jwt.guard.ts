@@ -4,14 +4,16 @@ import { WsException } from '@nestjs/websockets';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Socket } from 'socket.io';
 import { SecuritySecretsService } from '@config/security-secrets.service';
+import { DrizzleUserRepository } from '@features/auth/infrastructure/persistence/user.repository';
 
 /**
  * WsJwtGuard - Guard de autenticación JWT para WebSocket
  *
  * Responsabilidades:
  * - Validar token JWT en handshake de WebSocket
- * - Extraer usuario del token y adjuntarlo al socket
- * - Rechazar conexiones sin token válido
+ * - Buscar usuario en BD para obtener datos completos (isAdmin, isActive)
+ * - Adjuntar usuario al socket
+ * - Rechazar conexiones sin token válido o de usuarios inactivos
  *
  * El token se puede enviar de 3 formas:
  * 1. Query param: ?token=xxx
@@ -30,6 +32,7 @@ export class WsJwtGuard implements CanActivate {
     private readonly logger: PinoLogger,
     private jwtService: JwtService,
     private secretsService: SecuritySecretsService,
+    private userRepository: DrizzleUserRepository
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -51,8 +54,21 @@ export class WsJwtGuard implements CanActivate {
         throw new WsException('Password change required before using WebSocket features');
       }
 
-      // Adjuntar usuario al socket para acceso posterior
-      client.data.user = payload;
+      // Buscar usuario en BD para obtener datos completos (isAdmin, isActive)
+      const user = await this.userRepository.findById(payload.userId);
+
+      if (!user || !user.isActive) {
+        throw new WsException('Unauthorized');
+      }
+
+      // Adjuntar usuario completo al socket (incluye isAdmin de BD)
+      const userProps = user.toPrimitives();
+      client.data.user = {
+        ...payload,
+        isAdmin: userProps.isAdmin,
+        isActive: userProps.isActive,
+        name: userProps.name,
+      };
       client.data.userId = payload.sub;
 
       this.logger.debug(`User ${payload.sub} authenticated via WebSocket`);
