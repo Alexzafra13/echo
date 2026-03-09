@@ -5,7 +5,7 @@ import { albums, tracks, artists } from '@infrastructure/database/schema';
 import { djAnalysis } from '@infrastructure/database/schema/dj';
 import { IFederationLibraryRepository } from '../../domain/ports/federation-library.repository';
 
-export { IFederationLibraryRepository };
+export type { IFederationLibraryRepository };
 
 export interface FederationAlbumRow {
   id: string;
