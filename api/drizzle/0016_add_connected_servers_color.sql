@@ -1,0 +1,1 @@
+ALTER TABLE "connected_servers" ADD COLUMN "color" varchar(20);
