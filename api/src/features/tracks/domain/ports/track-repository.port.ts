@@ -45,9 +45,19 @@ export interface ITrackRepository {
    * Obtiene tracks de un álbum específico
    * @param albumId - ID del álbum
    * @param includeMissing - Incluir tracks con archivo desaparecido (default: true)
-   * @returns Array de tracks del álbum ordenados por trackNumber
+   * @param skip - Cuántos registros saltar (opcional, sin paginación si no se pasa)
+   * @param take - Cuántos registros traer (opcional, sin paginación si no se pasa)
+   * @returns Array de tracks del álbum ordenados por discNumber y trackNumber
    */
-  findByAlbumId(albumId: string, includeMissing?: boolean): Promise<Track[]>;
+  findByAlbumId(albumId: string, includeMissing?: boolean, skip?: number, take?: number): Promise<Track[]>;
+
+  /**
+   * Cuenta los tracks de un álbum específico
+   * @param albumId - ID del álbum
+   * @param includeMissing - Incluir tracks con archivo desaparecido (default: true)
+   * @returns Número de tracks en el álbum
+   */
+  countByAlbumId(albumId: string, includeMissing?: boolean): Promise<number>;
 
   /**
    * Obtiene tracks de un artista específico

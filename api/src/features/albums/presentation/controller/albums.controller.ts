@@ -47,6 +47,7 @@ import { AlbumsPaginationQueryDto, AlbumsLimitQueryDto } from '../dtos/albums-so
 import { TrackResponseDto } from '@features/tracks/presentation/dtos';
 import { Track } from '@features/tracks/domain/entities/track.entity';
 import { parsePaginationParams } from '@shared/utils';
+import { OffsetPaginationQueryDto, SimplePaginatedResponse } from '@shared/dtos';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser, ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
 import { JwtUser } from '@shared/types/request.types';
@@ -404,12 +405,23 @@ export class AlbumsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de canciones obtenida exitosamente',
-    type: [TrackResponseDto],
+    description: 'Lista de canciones obtenida exitosamente (paginada)',
   })
-  async getAlbumTracks(@Param('id', ParseUUIDPipe) albumId: string): Promise<TrackResponseDto[]> {
-    const result = await this.getAlbumTracksUseCase.execute({ albumId });
-    return result.tracks.map((track: Track) => TrackResponseDto.fromDomain(track));
+  async getAlbumTracks(
+    @Param('id', ParseUUIDPipe) albumId: string,
+    @Query() query: OffsetPaginationQueryDto,
+  ): Promise<SimplePaginatedResponse<TrackResponseDto>> {
+    const result = await this.getAlbumTracksUseCase.execute({
+      albumId,
+      skip: query.skip,
+      take: query.take,
+    });
+    const data = result.tracks.map((track: Track) => TrackResponseDto.fromDomain(track));
+    return SimplePaginatedResponse.create(data, {
+      total: result.total,
+      skip: result.skip,
+      take: result.take,
+    });
   }
 
   @Get(':id/cover')

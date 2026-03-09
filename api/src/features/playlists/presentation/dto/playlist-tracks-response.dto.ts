@@ -122,12 +122,24 @@ export class PlaylistTracksResponseDto {
   @ApiProperty({ example: 10 })
   total!: number;
 
+  @ApiPropertyOptional({ example: 0 })
+  skip?: number;
+
+  @ApiPropertyOptional({ example: 20 })
+  take?: number;
+
+  @ApiProperty({ example: true })
+  hasMore!: boolean;
+
   static fromDomain(output: GetPlaylistTracksOutput): PlaylistTracksResponseDto {
     return {
       playlistId: output.playlistId,
       playlistName: output.playlistName,
       tracks: output.tracks.map((track) => PlaylistTrackResponseDto.fromTrackItem(track)),
       total: output.total,
+      skip: output.skip,
+      take: output.take,
+      hasMore: output.hasMore,
     };
   }
 }

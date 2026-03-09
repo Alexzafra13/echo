@@ -1,6 +1,8 @@
 export interface GetPlaylistTracksInput {
   playlistId: string;
   requesterId?: string;
+  skip?: number;
+  take?: number;
 }
 
 export interface TrackItem {
@@ -36,4 +38,7 @@ export interface GetPlaylistTracksOutput {
   playlistName: string;
   tracks: TrackItem[];
   total: number;
+  skip: number;
+  take: number;
+  hasMore: boolean;
 }

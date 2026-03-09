@@ -29,7 +29,8 @@ export interface IPlaylistRepository {
   addTrack(playlistTrack: PlaylistTrack): Promise<PlaylistTrack>;
   addTrackWithAutoOrder(playlistId: string, trackId: string): Promise<PlaylistTrack>;
   removeTrack(playlistId: string, trackId: string): Promise<boolean>;
-  getPlaylistTracks(playlistId: string): Promise<TrackWithPlaylistOrder[]>;
+  getPlaylistTracks(playlistId: string, skip?: number, take?: number): Promise<TrackWithPlaylistOrder[]>;
+  countPlaylistTracks(playlistId: string): Promise<number>;
   getPlaylistAlbumIds(playlistId: string): Promise<string[]>;
   getBatchPlaylistAlbumIds(playlistIds: string[]): Promise<Map<string, string[]>>;
   reorderTracks(

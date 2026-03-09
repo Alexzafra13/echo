@@ -40,6 +40,7 @@ describe('CachedTrackRepository', () => {
       findAll: jest.fn(),
       search: jest.fn(),
       findByAlbumId: jest.fn(),
+      countByAlbumId: jest.fn(),
       findByArtistId: jest.fn(),
       count: jest.fn(),
       findShuffledPaginated: jest.fn(),
@@ -185,9 +186,36 @@ describe('CachedTrackRepository', () => {
       const result = await cachedRepository.findByAlbumId('album-1');
 
       // Assert
-      expect(baseRepository.findByAlbumId).toHaveBeenCalledWith('album-1', true);
+      expect(baseRepository.findByAlbumId).toHaveBeenCalledWith('album-1', true, undefined, undefined);
       expect(cacheService.get).not.toHaveBeenCalled();
       expect(result).toBe(tracks);
+    });
+
+    it('should pass pagination params to base repository', async () => {
+      // Arrange
+      const tracks = [mockTrack];
+      baseRepository.findByAlbumId.mockResolvedValue(tracks);
+
+      // Act
+      const result = await cachedRepository.findByAlbumId('album-1', true, 0, 10);
+
+      // Assert
+      expect(baseRepository.findByAlbumId).toHaveBeenCalledWith('album-1', true, 0, 10);
+      expect(result).toBe(tracks);
+    });
+  });
+
+  describe('countByAlbumId', () => {
+    it('should delegate to base repository', async () => {
+      // Arrange
+      baseRepository.countByAlbumId.mockResolvedValue(5);
+
+      // Act
+      const result = await cachedRepository.countByAlbumId('album-1');
+
+      // Assert
+      expect(baseRepository.countByAlbumId).toHaveBeenCalledWith('album-1', true);
+      expect(result).toBe(5);
     });
   });
 

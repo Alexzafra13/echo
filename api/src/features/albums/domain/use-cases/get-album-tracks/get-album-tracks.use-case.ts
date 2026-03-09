@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError } from '@shared/errors';
+import { validatePagination } from '@shared/utils';
 import { ALBUM_REPOSITORY, IAlbumRepository } from '../../ports';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { GetAlbumTracksInput, GetAlbumTracksOutput } from './get-album-tracks.dto';
@@ -23,12 +24,19 @@ export class GetAlbumTracksUseCase {
       throw new NotFoundError('Album', input.albumId);
     }
 
-    const tracks = await this.trackRepository.findByAlbumId(input.albumId);
+    const { skip, take } = validatePagination(input.skip, input.take);
+    const [tracks, total] = await Promise.all([
+      this.trackRepository.findByAlbumId(input.albumId, true, skip, take),
+      this.trackRepository.countByAlbumId(input.albumId),
+    ]);
 
     return {
       tracks,
       albumId: input.albumId,
-      totalTracks: tracks.length,
+      total,
+      skip,
+      take,
+      hasMore: skip + take < total,
     };
   }
 }

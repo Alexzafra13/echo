@@ -294,26 +294,50 @@ describe('PlaylistsController', () => {
   });
 
   describe('getPlaylistTracks', () => {
-    it('debería retornar tracks de una playlist', async () => {
+    it('debería retornar tracks de una playlist paginados', async () => {
       // Arrange
       getPlaylistTracksUseCase.execute.mockResolvedValue({
         playlistId: 'playlist-1',
-        tracks: [{ track: mockTrack, order: 1 }],
-        totalCount: 1,
+        playlistName: 'My Playlist',
+        tracks: [{
+          id: mockTrack.id,
+          title: mockTrack.title,
+          trackNumber: mockTrack.trackNumber,
+          discNumber: mockTrack.discNumber,
+          duration: mockTrack.duration ?? 0,
+          size: mockTrack.size ?? 0,
+          path: mockTrack.path,
+          albumId: mockTrack.albumId,
+          artistId: mockTrack.artistId,
+          artistName: mockTrack.artistName,
+          albumName: mockTrack.albumName,
+          playlistOrder: 1,
+          createdAt: mockTrack.createdAt,
+          updatedAt: mockTrack.updatedAt,
+        }],
+        total: 1,
+        skip: 0,
+        take: 20,
+        hasMore: false,
       });
 
       // Act
       const result = await controller.getPlaylistTracks(
         'playlist-1',
-        mockRequestWithUser as unknown as RequestWithUser
+        mockRequestWithUser as unknown as RequestWithUser,
+        { skip: 0, take: 20 },
       );
 
       // Assert
       expect(getPlaylistTracksUseCase.execute).toHaveBeenCalledWith({
         playlistId: 'playlist-1',
         requesterId: 'user-1',
+        skip: 0,
+        take: 20,
       });
       expect(result.tracks).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.hasMore).toBe(false);
     });
   });
 

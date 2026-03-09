@@ -41,6 +41,7 @@ import {
   PlaylistDjShuffledTracksResponseDto,
 } from '../dto';
 import { validatePagination } from '@shared/utils';
+import { OffsetPaginationQueryDto } from '@shared/dtos';
 
 @ApiTags('playlists')
 @ApiBearerAuth('JWT-auth')
@@ -282,11 +283,14 @@ export class PlaylistsController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
   async getPlaylistTracks(
     @Param('id', ParseUUIDPipe) id: string,
-    @Req() req: RequestWithUser
+    @Req() req: RequestWithUser,
+    @Query() query: OffsetPaginationQueryDto,
   ): Promise<PlaylistTracksResponseDto> {
     const result = await this.getPlaylistTracksUseCase.execute({
       playlistId: id,
       requesterId: req.user.id,
+      skip: query.skip,
+      take: query.take,
     });
     return PlaylistTracksResponseDto.fromDomain(result);
   }

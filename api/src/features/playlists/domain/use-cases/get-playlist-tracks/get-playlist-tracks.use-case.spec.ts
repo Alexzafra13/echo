@@ -80,6 +80,7 @@ describe('GetPlaylistTracksUseCase', () => {
     const mockRepository: Partial<IPlaylistRepository> = {
       findById: jest.fn(),
       getPlaylistTracks: jest.fn(),
+      countPlaylistTracks: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -97,18 +98,38 @@ describe('GetPlaylistTracksUseCase', () => {
   });
 
   describe('execute', () => {
-    it('should return playlist tracks for a public playlist', async () => {
+    it('should return paginated playlist tracks for a public playlist', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(mockPlaylist);
       (repository.getPlaylistTracks as jest.Mock).mockResolvedValue(mockTracks);
+      (repository.countPlaylistTracks as jest.Mock).mockResolvedValue(2);
 
       const result = await useCase.execute({ playlistId: 'playlist-1' });
 
       expect(repository.findById).toHaveBeenCalledWith('playlist-1');
-      expect(repository.getPlaylistTracks).toHaveBeenCalledWith('playlist-1');
+      expect(repository.getPlaylistTracks).toHaveBeenCalledWith('playlist-1', 0, 10);
+      expect(repository.countPlaylistTracks).toHaveBeenCalledWith('playlist-1');
       expect(result.playlistId).toBe('playlist-1');
       expect(result.playlistName).toBe('My Playlist');
       expect(result.tracks).toHaveLength(2);
       expect(result.total).toBe(2);
+      expect(result.skip).toBe(0);
+      expect(result.take).toBe(10);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('should respect skip and take parameters', async () => {
+      (repository.findById as jest.Mock).mockResolvedValue(mockPlaylist);
+      (repository.getPlaylistTracks as jest.Mock).mockResolvedValue([mockTracks[1]]);
+      (repository.countPlaylistTracks as jest.Mock).mockResolvedValue(2);
+
+      const result = await useCase.execute({ playlistId: 'playlist-1', skip: 1, take: 1 });
+
+      expect(repository.getPlaylistTracks).toHaveBeenCalledWith('playlist-1', 1, 1);
+      expect(result.tracks).toHaveLength(1);
+      expect(result.total).toBe(2);
+      expect(result.skip).toBe(1);
+      expect(result.take).toBe(1);
+      expect(result.hasMore).toBe(false);
     });
 
     it('should throw ValidationError when playlistId is empty', async () => {
@@ -138,6 +159,7 @@ describe('GetPlaylistTracksUseCase', () => {
     it('should allow owner to access private playlist', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(mockPrivatePlaylist);
       (repository.getPlaylistTracks as jest.Mock).mockResolvedValue(mockTracks);
+      (repository.countPlaylistTracks as jest.Mock).mockResolvedValue(2);
 
       const result = await useCase.execute({
         playlistId: 'playlist-private',
@@ -151,6 +173,7 @@ describe('GetPlaylistTracksUseCase', () => {
     it('should allow access to public playlist with any requesterId', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(mockPlaylist);
       (repository.getPlaylistTracks as jest.Mock).mockResolvedValue(mockTracks);
+      (repository.countPlaylistTracks as jest.Mock).mockResolvedValue(2);
 
       const result = await useCase.execute({
         playlistId: 'playlist-1',
@@ -163,6 +186,7 @@ describe('GetPlaylistTracksUseCase', () => {
     it('should allow access to private playlist without requesterId', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(mockPrivatePlaylist);
       (repository.getPlaylistTracks as jest.Mock).mockResolvedValue(mockTracks);
+      (repository.countPlaylistTracks as jest.Mock).mockResolvedValue(2);
 
       const result = await useCase.execute({ playlistId: 'playlist-private' });
 
@@ -172,6 +196,7 @@ describe('GetPlaylistTracksUseCase', () => {
     it('should map track properties correctly', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(mockPlaylist);
       (repository.getPlaylistTracks as jest.Mock).mockResolvedValue([mockTracks[0]]);
+      (repository.countPlaylistTracks as jest.Mock).mockResolvedValue(1);
 
       const result = await useCase.execute({ playlistId: 'playlist-1' });
 
@@ -189,11 +214,13 @@ describe('GetPlaylistTracksUseCase', () => {
     it('should return empty tracks for a playlist with no tracks', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(mockPlaylist);
       (repository.getPlaylistTracks as jest.Mock).mockResolvedValue([]);
+      (repository.countPlaylistTracks as jest.Mock).mockResolvedValue(0);
 
       const result = await useCase.execute({ playlistId: 'playlist-1' });
 
       expect(result.tracks).toEqual([]);
       expect(result.total).toBe(0);
+      expect(result.hasMore).toBe(false);
     });
 
     it('should propagate repository errors', async () => {
