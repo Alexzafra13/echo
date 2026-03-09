@@ -150,8 +150,8 @@ export default function AlbumsPage() {
 
   // Client-side sort for shared albums
   const sharedAlbums = [...rawSharedAlbums].sort((a, b) => {
-    if (sharedSortBy === 'alphabetical') return a.title.localeCompare(b.title);
-    if (sharedSortBy === 'artist') return a.artist.localeCompare(b.artist);
+    if (sharedSortBy === 'alphabetical') return a.name.localeCompare(b.name);
+    if (sharedSortBy === 'artist') return a.artistName.localeCompare(b.artistName);
     return 0;
   });
 
