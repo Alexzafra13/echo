@@ -65,6 +65,6 @@ import { CacheModule } from '@infrastructure/cache/cache.module';
 
     JwtStrategy,
   ],
-  exports: [USER_REPOSITORY, TOKEN_SERVICE, PASSWORD_SERVICE, DrizzleUserRepository],
+  exports: [USER_REPOSITORY, TOKEN_SERVICE, PASSWORD_SERVICE],
 })
 export class AuthModule {}
