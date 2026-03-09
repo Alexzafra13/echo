@@ -6,9 +6,14 @@ import { AccessTokenController } from './presentation/access-token.controller';
 import { FederationPublicController } from './presentation/federation-public.controller';
 import { FederationImportController } from './presentation/federation-import.controller';
 import { FederationTokenService } from './domain/services';
-import { RemoteServerService, AlbumImportService, ImportProgressService } from './infrastructure/services';
+import {
+  RemoteServerService,
+  AlbumImportService,
+  ImportProgressService,
+} from './infrastructure/services';
 import { FederationAccessGuard } from './presentation/guards';
 import { FederationRepository } from './infrastructure/persistence/federation.repository';
+import { FederationLibraryRepository } from './infrastructure/persistence/federation-library.repository';
 import { FEDERATION_REPOSITORY } from './domain/ports/federation.repository';
 import { CoverArtService } from '@shared/services';
 import { StreamingModule } from '@features/streaming/streaming.module';
@@ -31,6 +36,7 @@ import { ExternalMetadataModule } from '@features/external-metadata/external-met
     AlbumImportService,
     ImportProgressService,
     FederationAccessGuard,
+    FederationLibraryRepository,
     CoverArtService,
     {
       provide: FEDERATION_REPOSITORY,

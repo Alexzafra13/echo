@@ -15,25 +15,15 @@ import {
   NotFoundException,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiHeader,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { eq, count, or, ilike } from 'drizzle-orm';
-import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { getAudioMimeType, getImageMimeType } from '@shared/utils/mime-type.util';
 import { CoverArtService } from '@shared/services';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
-import { albums, tracks, artists } from '@infrastructure/database/schema';
-import { djAnalysis } from '@infrastructure/database/schema/dj';
 import { CAMELOT_COLORS } from '@features/dj/config/dj.config';
 import { FederationTokenService } from '../domain/services';
+import { FederationLibraryRepository } from '../infrastructure/persistence/federation-library.repository';
 import { FederationAccessGuard } from './guards';
 import { RequestWithFederationToken } from '@shared/types/request.types';
 import {
@@ -54,9 +44,9 @@ export class FederationPublicController {
     @InjectPinoLogger(FederationPublicController.name)
     private readonly logger: PinoLogger,
     private readonly tokenService: FederationTokenService,
-    private readonly drizzle: DrizzleService,
+    private readonly libraryRepo: FederationLibraryRepository,
     private readonly coverArtService: CoverArtService,
-    private readonly settingsService: SettingsService,
+    private readonly settingsService: SettingsService
   ) {}
 
   @Post('connect')
@@ -73,7 +63,7 @@ export class FederationPublicController {
   @ApiResponse({ status: 401, description: 'Token de invitación inválido' })
   async connect(
     @Body() dto: AcceptConnectionDto,
-    @Req() request: FastifyRequest,
+    @Req() request: FastifyRequest
   ): Promise<ConnectionResponseDto> {
     const ip = request.ip;
 
@@ -85,27 +75,28 @@ export class FederationPublicController {
         token: dto.invitationToken?.substring(0, 4) + '...',
         requestMutual: dto.requestMutual,
       },
-      'Federation connection attempt',
+      'Federation connection attempt'
     );
 
     try {
       // Pass the mutual invitation token if requesting mutual federation
-      const mutualToken = dto.requestMutual && dto.serverUrl && dto.mutualInvitationToken
-        ? dto.mutualInvitationToken
-        : undefined;
+      const mutualToken =
+        dto.requestMutual && dto.serverUrl && dto.mutualInvitationToken
+          ? dto.mutualInvitationToken
+          : undefined;
 
       const accessToken = await this.tokenService.useInvitationToken(
         dto.invitationToken,
         dto.serverName,
         dto.serverUrl,
         ip,
-        mutualToken,
+        mutualToken
       );
 
       if (!accessToken) {
         this.logger.warn(
           { serverName: dto.serverName, token: dto.invitationToken?.substring(0, 4) + '...' },
-          'Invalid or expired invitation token',
+          'Invalid or expired invitation token'
         );
         throw new UnauthorizedException('Token de invitación inválido o expirado');
       }
@@ -113,7 +104,7 @@ export class FederationPublicController {
       if (mutualToken) {
         this.logger.info(
           { serverName: dto.serverName, serverUrl: dto.serverUrl },
-          'Mutual federation requested',
+          'Mutual federation requested'
         );
       }
 
@@ -122,7 +113,7 @@ export class FederationPublicController {
 
       this.logger.info(
         { serverName: dto.serverName, serverUrl: dto.serverUrl, ip },
-        'New server connected via invitation',
+        'New server connected via invitation'
       );
 
       return {
@@ -134,8 +125,11 @@ export class FederationPublicController {
         throw error;
       }
       this.logger.error(
-        { error: error instanceof Error ? error.message : String(error), serverName: dto.serverName },
-        'Error processing federation connection',
+        {
+          error: error instanceof Error ? error.message : String(error),
+          serverName: dto.serverName,
+        },
+        'Error processing federation connection'
       );
       throw error;
     }
@@ -186,10 +180,7 @@ export class FederationPublicController {
     // Revoke the access token
     await this.tokenService.revokeAccessToken(federationAccessToken.id);
 
-    this.logger.info(
-      { serverName: federationAccessToken.serverName },
-      'Server disconnected',
-    );
+    this.logger.info({ serverName: federationAccessToken.serverName }, 'Server disconnected');
 
     return { ok: true };
   }
@@ -202,10 +193,7 @@ export class FederationPublicController {
   })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  async getLibrary(
-    @Query() query: PaginationQueryDto,
-    @Req() request: RequestWithFederationToken,
-  ) {
+  async getLibrary(@Query() query: PaginationQueryDto, @Req() request: RequestWithFederationToken) {
     const { federationAccessToken } = request;
 
     if (!federationAccessToken.permissions.canBrowse) {
@@ -216,52 +204,16 @@ export class FederationPublicController {
     const limit = query.limit || 50;
     const offset = (page - 1) * limit;
 
-    // Get albums with artists
-    const albumsResult = await this.drizzle.db
-      .select({
-        id: albums.id,
-        name: albums.name,
-        year: albums.year,
-        songCount: albums.songCount,
-        duration: albums.duration,
-        size: albums.size,
-        coverArtPath: albums.coverArtPath,
-        artistId: artists.id,
-        artistName: artists.name,
-      })
-      .from(albums)
-      .leftJoin(artists, eq(albums.albumArtistId, artists.id))
-      .limit(limit)
-      .offset(offset);
-
-    // Get totals
-    const [albumCount] = await this.drizzle.db
-      .select({ count: count() })
-      .from(albums);
-    const [trackCount] = await this.drizzle.db
-      .select({ count: count() })
-      .from(tracks);
-    const [artistCount] = await this.drizzle.db
-      .select({ count: count() })
-      .from(artists);
+    const [{ albums: albumsResult }, counts] = await Promise.all([
+      this.libraryRepo.findAlbums({ limit, offset }),
+      this.libraryRepo.getCounts(),
+    ]);
 
     return {
-      albums: albumsResult.map((album) => ({
-        id: album.id,
-        name: album.name,
-        artistName: album.artistName || 'Unknown Artist',
-        artistId: album.artistId || '',
-        year: album.year,
-        songCount: album.songCount,
-        duration: album.duration,
-        size: album.size,
-        coverUrl: album.coverArtPath
-          ? `/api/federation/albums/${album.id}/cover`
-          : undefined,
-      })),
-      totalAlbums: Number(albumCount?.count ?? 0),
-      totalTracks: Number(trackCount?.count ?? 0),
-      totalArtists: Number(artistCount?.count ?? 0),
+      albums: this.mapAlbums(albumsResult),
+      totalAlbums: counts.albumCount,
+      totalTracks: counts.trackCount,
+      totalArtists: counts.artistCount,
     };
   }
 
@@ -270,10 +222,7 @@ export class FederationPublicController {
   @ApiOperation({
     summary: 'Listar álbums',
   })
-  async getAlbums(
-    @Query() query: PaginationQueryDto,
-    @Req() request: RequestWithFederationToken,
-  ) {
+  async getAlbums(@Query() query: PaginationQueryDto, @Req() request: RequestWithFederationToken) {
     const { federationAccessToken } = request;
 
     if (!federationAccessToken.permissions.canBrowse) {
@@ -285,59 +234,11 @@ export class FederationPublicController {
     const offset = (page - 1) * limit;
     const search = query.search?.trim();
 
-    // Build search condition if provided
-    const searchCondition = search
-      ? or(
-          ilike(albums.name, `%${search}%`),
-          ilike(artists.name, `%${search}%`),
-        )
-      : undefined;
-
-    // Query albums with optional search filter
-    const baseQuery = this.drizzle.db
-      .select({
-        id: albums.id,
-        name: albums.name,
-        year: albums.year,
-        songCount: albums.songCount,
-        duration: albums.duration,
-        size: albums.size,
-        coverArtPath: albums.coverArtPath,
-        artistId: artists.id,
-        artistName: artists.name,
-      })
-      .from(albums)
-      .leftJoin(artists, eq(albums.albumArtistId, artists.id));
-
-    const albumsResult = searchCondition
-      ? await baseQuery.where(searchCondition).limit(limit).offset(offset)
-      : await baseQuery.limit(limit).offset(offset);
-
-    // Count query with same search filter
-    const countBaseQuery = this.drizzle.db
-      .select({ count: count() })
-      .from(albums)
-      .leftJoin(artists, eq(albums.albumArtistId, artists.id));
-
-    const [total] = searchCondition
-      ? await countBaseQuery.where(searchCondition)
-      : await countBaseQuery;
+    const result = await this.libraryRepo.findAlbums({ limit, offset, search });
 
     return {
-      albums: albumsResult.map((album) => ({
-        id: album.id,
-        name: album.name,
-        artistName: album.artistName || 'Unknown Artist',
-        artistId: album.artistId || '',
-        year: album.year,
-        songCount: album.songCount,
-        duration: album.duration,
-        size: album.size,
-        coverUrl: album.coverArtPath
-          ? `/api/federation/albums/${album.id}/cover`
-          : undefined,
-      })),
-      total: Number(total?.count ?? 0),
+      albums: this.mapAlbums(result.albums),
+      total: result.total,
     };
   }
 
@@ -349,7 +250,7 @@ export class FederationPublicController {
   @ApiParam({ name: 'id', description: 'ID del álbum' })
   async getAlbum(
     @Param('id', ParseUUIDPipe) id: string,
-    @Req() request: RequestWithFederationToken,
+    @Req() request: RequestWithFederationToken
   ) {
     const { federationAccessToken } = request;
 
@@ -357,83 +258,17 @@ export class FederationPublicController {
       throw new ForbiddenException('Permiso de navegación no otorgado');
     }
 
-    // Get album
-    const [album] = await this.drizzle.db
-      .select({
-        id: albums.id,
-        name: albums.name,
-        year: albums.year,
-        songCount: albums.songCount,
-        duration: albums.duration,
-        size: albums.size,
-        coverArtPath: albums.coverArtPath,
-        artistId: artists.id,
-        artistName: artists.name,
-      })
-      .from(albums)
-      .leftJoin(artists, eq(albums.albumArtistId, artists.id))
-      .where(eq(albums.id, id))
-      .limit(1);
-
+    const album = await this.libraryRepo.findAlbumById(id);
     if (!album) {
       throw new NotFoundException('Álbum no encontrado');
     }
 
-    // Get tracks with DJ analysis
-    const albumTracks = await this.drizzle.db
-      .select({
-        id: tracks.id,
-        title: tracks.title,
-        trackNumber: tracks.trackNumber,
-        discNumber: tracks.discNumber,
-        duration: tracks.duration,
-        size: tracks.size,
-        bitRate: tracks.bitRate,
-        suffix: tracks.suffix,
-        artistId: artists.id,
-        artistName: artists.name,
-        // Audio analysis fields
-        rgTrackGain: tracks.rgTrackGain,
-        rgTrackPeak: tracks.rgTrackPeak,
-        rgAlbumGain: tracks.rgAlbumGain,
-        rgAlbumPeak: tracks.rgAlbumPeak,
-        bpm: tracks.bpm,
-        initialKey: tracks.initialKey,
-        outroStart: tracks.outroStart,
-        lufsAnalyzedAt: tracks.lufsAnalyzedAt,
-        // DJ analysis fields
-        djStatus: djAnalysis.status,
-        djBpm: djAnalysis.bpm,
-        djKey: djAnalysis.key,
-        djCamelotKey: djAnalysis.camelotKey,
-        djEnergy: djAnalysis.energy,
-        djDanceability: djAnalysis.danceability,
-        djAnalysisError: djAnalysis.analysisError,
-        djAnalyzedAt: djAnalysis.analyzedAt,
-      })
-      .from(tracks)
-      .leftJoin(artists, eq(tracks.artistId, artists.id))
-      .leftJoin(djAnalysis, eq(tracks.id, djAnalysis.trackId))
-      .where(eq(tracks.albumId, id))
-      .orderBy(tracks.discNumber, tracks.trackNumber);
+    const albumTracks = await this.libraryRepo.findAlbumTracks(id);
 
     return {
-      id: album.id,
-      name: album.name,
-      artistName: album.artistName || 'Unknown Artist',
-      artistId: album.artistId || '',
-      year: album.year,
-      songCount: album.songCount,
-      duration: album.duration,
-      size: album.size,
-      coverUrl: album.coverArtPath
-        ? `/api/federation/albums/${album.id}/cover`
-        : undefined,
+      ...this.mapAlbum(album),
       tracks: albumTracks.map((track) => {
-        // Build camelot color from key
-        const camelotColor = track.djCamelotKey
-          ? CAMELOT_COLORS[track.djCamelotKey] || null
-          : null;
+        const camelotColor = track.djCamelotKey ? CAMELOT_COLORS[track.djCamelotKey] || null : null;
 
         return {
           id: track.id,
@@ -448,7 +283,6 @@ export class FederationPublicController {
           size: track.size,
           bitRate: track.bitRate,
           format: track.suffix,
-          // Audio analysis
           rgTrackGain: track.rgTrackGain,
           rgTrackPeak: track.rgTrackPeak,
           rgAlbumGain: track.rgAlbumGain,
@@ -457,20 +291,21 @@ export class FederationPublicController {
           initialKey: track.initialKey,
           outroStart: track.outroStart,
           lufsAnalyzed: !!track.lufsAnalyzedAt,
-          // DJ analysis
-          djAnalysis: track.djStatus ? {
-            status: track.djStatus,
-            bpm: track.djBpm,
-            key: track.djKey,
-            camelotKey: track.djCamelotKey,
-            camelotColor: camelotColor
-              ? { bg: camelotColor.bg, text: camelotColor.text, name: camelotColor.name }
-              : undefined,
-            energy: track.djEnergy,
-            danceability: track.djDanceability,
-            analysisError: track.djAnalysisError,
-            analyzedAt: track.djAnalyzedAt?.toISOString(),
-          } : undefined,
+          djAnalysis: track.djStatus
+            ? {
+                status: track.djStatus,
+                bpm: track.djBpm,
+                key: track.djKey,
+                camelotKey: track.djCamelotKey,
+                camelotColor: camelotColor
+                  ? { bg: camelotColor.bg, text: camelotColor.text, name: camelotColor.name }
+                  : undefined,
+                energy: track.djEnergy,
+                danceability: track.djDanceability,
+                analysisError: track.djAnalysisError,
+                analyzedAt: track.djAnalyzedAt?.toISOString(),
+              }
+            : undefined,
         };
       }),
     };
@@ -480,12 +315,13 @@ export class FederationPublicController {
   @UseGuards(FederationAccessGuard)
   @ApiOperation({
     summary: 'Obtener análisis DJ de tracks del álbum',
-    description: 'Retorna datos de análisis DJ (BPM, key, energía, bailabilidad) para todos los tracks del álbum',
+    description:
+      'Retorna datos de análisis DJ (BPM, key, energía, bailabilidad) para todos los tracks del álbum',
   })
   @ApiParam({ name: 'id', description: 'ID del álbum' })
   async getAlbumDjAnalysis(
     @Param('id', ParseUUIDPipe) id: string,
-    @Req() request: RequestWithFederationToken,
+    @Req() request: RequestWithFederationToken
   ) {
     const { federationAccessToken } = request;
 
@@ -493,24 +329,10 @@ export class FederationPublicController {
       throw new ForbiddenException('Browse permission not granted');
     }
 
-    const albumTracks = await this.drizzle.db
-      .select({
-        trackId: tracks.id,
-        status: djAnalysis.status,
-        bpm: djAnalysis.bpm,
-        key: djAnalysis.key,
-        camelotKey: djAnalysis.camelotKey,
-        energy: djAnalysis.energy,
-        danceability: djAnalysis.danceability,
-        analysisError: djAnalysis.analysisError,
-        analyzedAt: djAnalysis.analyzedAt,
-      })
-      .from(tracks)
-      .innerJoin(djAnalysis, eq(tracks.id, djAnalysis.trackId))
-      .where(eq(tracks.albumId, id));
+    const albumTracks = await this.libraryRepo.findAlbumDjAnalysis(id);
 
     return {
-      tracks: albumTracks.map(t => {
+      tracks: albumTracks.map((t) => {
         const camelotColor = t.camelotKey ? CAMELOT_COLORS[t.camelotKey] : undefined;
         return {
           trackId: t.trackId,
@@ -539,7 +361,7 @@ export class FederationPublicController {
   async getAlbumCover(
     @Param('id', ParseUUIDPipe) id: string,
     @Res() res: FastifyReply,
-    @Req() request: RequestWithFederationToken,
+    @Req() request: RequestWithFederationToken
   ) {
     const { federationAccessToken } = request;
 
@@ -548,19 +370,14 @@ export class FederationPublicController {
       return;
     }
 
-    const [album] = await this.drizzle.db
-      .select({ coverArtPath: albums.coverArtPath })
-      .from(albums)
-      .where(eq(albums.id, id))
-      .limit(1);
+    const coverArtPath = await this.libraryRepo.findAlbumCoverPath(id);
 
-    if (!album?.coverArtPath) {
+    if (!coverArtPath) {
       res.status(HttpStatus.NOT_FOUND).send({ error: 'Cover not found' });
       return;
     }
 
-    // Use CoverArtService to get the full path from the cached cover filename
-    const coverPath = this.coverArtService.getCoverPath(album.coverArtPath);
+    const coverPath = this.coverArtService.getCoverPath(coverArtPath);
     if (!coverPath) {
       res.status(HttpStatus.NOT_FOUND).send({ error: 'Cover file not found' });
       return;
@@ -584,7 +401,7 @@ export class FederationPublicController {
     @Param('trackId', ParseUUIDPipe) trackId: string,
     @Headers('range') range: string | undefined,
     @Res() res: FastifyReply,
-    @Req() request: RequestWithFederationToken,
+    @Req() request: RequestWithFederationToken
   ) {
     const { federationAccessToken } = request;
 
@@ -593,12 +410,7 @@ export class FederationPublicController {
       return;
     }
 
-    // Get track
-    const [track] = await this.drizzle.db
-      .select({ path: tracks.path, size: tracks.size })
-      .from(tracks)
-      .where(eq(tracks.id, trackId))
-      .limit(1);
+    const track = await this.libraryRepo.findTrackPath(trackId);
 
     if (!track || !fs.existsSync(track.path)) {
       res.status(HttpStatus.NOT_FOUND).send({ error: 'Track not found' });
@@ -649,12 +461,13 @@ export class FederationPublicController {
   @UseGuards(FederationAccessGuard)
   @ApiOperation({
     summary: 'Exportar metadatos completos del álbum',
-    description: 'Retorna todos los metadatos del álbum incluyendo LUFS, ReplayGain, MusicBrainz IDs para importación',
+    description:
+      'Retorna todos los metadatos del álbum incluyendo LUFS, ReplayGain, MusicBrainz IDs para importación',
   })
   @ApiParam({ name: 'id', description: 'ID del álbum' })
   async exportAlbumMetadata(
     @Param('id', ParseUUIDPipe) id: string,
-    @Req() request: RequestWithFederationToken,
+    @Req() request: RequestWithFederationToken
   ) {
     const { federationAccessToken } = request;
 
@@ -662,89 +475,12 @@ export class FederationPublicController {
       throw new ForbiddenException('Permiso de descarga no otorgado');
     }
 
-    // Get album with all metadata
-    const [album] = await this.drizzle.db
-      .select({
-        id: albums.id,
-        name: albums.name,
-        year: albums.year,
-        releaseDate: albums.releaseDate,
-        originalDate: albums.originalDate,
-        compilation: albums.compilation,
-        songCount: albums.songCount,
-        duration: albums.duration,
-        size: albums.size,
-        coverArtPath: albums.coverArtPath,
-        mbzAlbumId: albums.mbzAlbumId,
-        mbzAlbumArtistId: albums.mbzAlbumArtistId,
-        mbzAlbumType: albums.mbzAlbumType,
-        catalogNum: albums.catalogNum,
-        comment: albums.comment,
-        description: albums.description,
-        artistId: artists.id,
-        artistName: artists.name,
-      })
-      .from(albums)
-      .leftJoin(artists, eq(albums.albumArtistId, artists.id))
-      .where(eq(albums.id, id))
-      .limit(1);
-
+    const album = await this.libraryRepo.findAlbumForExport(id);
     if (!album) {
       throw new NotFoundException('Álbum no encontrado');
     }
 
-    // Get tracks with ALL metadata including LUFS/ReplayGain and DJ analysis
-    const albumTracks = await this.drizzle.db
-      .select({
-        id: tracks.id,
-        title: tracks.title,
-        trackNumber: tracks.trackNumber,
-        discNumber: tracks.discNumber,
-        discSubtitle: tracks.discSubtitle,
-        duration: tracks.duration,
-        size: tracks.size,
-        bitRate: tracks.bitRate,
-        channels: tracks.channels,
-        suffix: tracks.suffix,
-        year: tracks.year,
-        date: tracks.date,
-        originalDate: tracks.originalDate,
-        releaseDate: tracks.releaseDate,
-        artistName: tracks.artistName,
-        albumArtistName: tracks.albumArtistName,
-        comment: tracks.comment,
-        lyrics: tracks.lyrics,
-        bpm: tracks.bpm,
-        // ReplayGain data
-        rgAlbumGain: tracks.rgAlbumGain,
-        rgAlbumPeak: tracks.rgAlbumPeak,
-        rgTrackGain: tracks.rgTrackGain,
-        rgTrackPeak: tracks.rgTrackPeak,
-        // LUFS analyzed flag
-        lufsAnalyzedAt: tracks.lufsAnalyzedAt,
-        // MusicBrainz IDs
-        mbzTrackId: tracks.mbzTrackId,
-        mbzAlbumId: tracks.mbzAlbumId,
-        mbzArtistId: tracks.mbzArtistId,
-        mbzAlbumArtistId: tracks.mbzAlbumArtistId,
-        mbzReleaseTrackId: tracks.mbzReleaseTrackId,
-        catalogNum: tracks.catalogNum,
-        // File info
-        path: tracks.path,
-        // DJ analysis
-        djStatus: djAnalysis.status,
-        djBpm: djAnalysis.bpm,
-        djKey: djAnalysis.key,
-        djCamelotKey: djAnalysis.camelotKey,
-        djEnergy: djAnalysis.energy,
-        djDanceability: djAnalysis.danceability,
-        djAnalysisError: djAnalysis.analysisError,
-        djAnalyzedAt: djAnalysis.analyzedAt,
-      })
-      .from(tracks)
-      .leftJoin(djAnalysis, eq(tracks.id, djAnalysis.trackId))
-      .where(eq(tracks.albumId, id))
-      .orderBy(tracks.discNumber, tracks.trackNumber);
+    const albumTracks = await this.libraryRepo.findAlbumTracksForExport(id);
 
     return {
       album: {
@@ -761,7 +497,6 @@ export class FederationPublicController {
         size: album.size,
         hasCover: !!album.coverArtPath,
         coverUrl: album.coverArtPath ? `/api/federation/albums/${album.id}/cover` : null,
-        // MusicBrainz
         mbzAlbumId: album.mbzAlbumId,
         mbzAlbumArtistId: album.mbzAlbumArtistId,
         mbzAlbumType: album.mbzAlbumType,
@@ -789,37 +524,35 @@ export class FederationPublicController {
         comment: t.comment,
         lyrics: t.lyrics,
         bpm: t.bpm,
-        // ReplayGain/LUFS - the key data for normalization
         rgAlbumGain: t.rgAlbumGain,
         rgAlbumPeak: t.rgAlbumPeak,
         rgTrackGain: t.rgTrackGain,
         rgTrackPeak: t.rgTrackPeak,
         lufsAnalyzed: !!t.lufsAnalyzedAt,
-        // MusicBrainz
         mbzTrackId: t.mbzTrackId,
         mbzAlbumId: t.mbzAlbumId,
         mbzArtistId: t.mbzArtistId,
         mbzAlbumArtistId: t.mbzAlbumArtistId,
         mbzReleaseTrackId: t.mbzReleaseTrackId,
         catalogNum: t.catalogNum,
-        // DJ analysis
-        djAnalysis: t.djStatus ? (() => {
-          const camelotColor = t.djCamelotKey ? CAMELOT_COLORS[t.djCamelotKey] : undefined;
-          return {
-            status: t.djStatus,
-            bpm: t.djBpm,
-            key: t.djKey,
-            camelotKey: t.djCamelotKey,
-            camelotColor: camelotColor
-              ? { bg: camelotColor.bg, text: camelotColor.text, name: camelotColor.name }
-              : undefined,
-            energy: t.djEnergy,
-            danceability: t.djDanceability,
-            analysisError: t.djAnalysisError,
-            analyzedAt: t.djAnalyzedAt?.toISOString(),
-          };
-        })() : undefined,
-        // File info for download
+        djAnalysis: t.djStatus
+          ? (() => {
+              const camelotColor = t.djCamelotKey ? CAMELOT_COLORS[t.djCamelotKey] : undefined;
+              return {
+                status: t.djStatus,
+                bpm: t.djBpm,
+                key: t.djKey,
+                camelotKey: t.djCamelotKey,
+                camelotColor: camelotColor
+                  ? { bg: camelotColor.bg, text: camelotColor.text, name: camelotColor.name }
+                  : undefined,
+                energy: t.djEnergy,
+                danceability: t.djDanceability,
+                analysisError: t.djAnalysisError,
+                analyzedAt: t.djAnalyzedAt?.toISOString(),
+              };
+            })()
+          : undefined,
         filename: t.path.split('/').pop(),
         streamUrl: `/api/federation/stream/${t.id}`,
       })),
@@ -836,7 +569,7 @@ export class FederationPublicController {
   async downloadAlbum(
     @Param('id', ParseUUIDPipe) id: string,
     @Res() res: FastifyReply,
-    @Req() request: RequestWithFederationToken,
+    @Req() request: RequestWithFederationToken
   ) {
     const { federationAccessToken } = request;
 
@@ -845,37 +578,14 @@ export class FederationPublicController {
       return;
     }
 
-    // Get album with tracks
-    const [album] = await this.drizzle.db
-      .select({
-        id: albums.id,
-        name: albums.name,
-        coverArtPath: albums.coverArtPath,
-        artistName: artists.name,
-      })
-      .from(albums)
-      .leftJoin(artists, eq(albums.albumArtistId, artists.id))
-      .where(eq(albums.id, id))
-      .limit(1);
-
+    const album = await this.libraryRepo.findAlbumForDownload(id);
     if (!album) {
       res.status(HttpStatus.NOT_FOUND).send({ error: 'Album not found' });
       return;
     }
 
-    const albumTracks = await this.drizzle.db
-      .select({
-        id: tracks.id,
-        title: tracks.title,
-        path: tracks.path,
-        trackNumber: tracks.trackNumber,
-        discNumber: tracks.discNumber,
-      })
-      .from(tracks)
-      .where(eq(tracks.albumId, id))
-      .orderBy(tracks.discNumber, tracks.trackNumber);
+    const albumTracks = await this.libraryRepo.findAlbumTrackPaths(id);
 
-    // Create JSON metadata
     const metadata = {
       album: {
         id: album.id,
@@ -891,15 +601,11 @@ export class FederationPublicController {
       })),
     };
 
-    // For now, just return metadata with download URLs
-    // A full implementation would stream a ZIP file
     res.header('Content-Type', 'application/json');
     res.send({
       metadata,
       downloadUrls: {
-        cover: album.coverArtPath
-          ? `/api/federation/albums/${album.id}/cover`
-          : null,
+        cover: album.coverArtPath ? `/api/federation/albums/${album.id}/cover` : null,
         tracks: albumTracks.map((t) => ({
           id: t.id,
           url: `/api/federation/stream/${t.id}`,
@@ -908,37 +614,65 @@ export class FederationPublicController {
     });
   }
 
-  private async getServerInfo(): Promise<ServerInfoResponseDto> {
-    const [albumCount] = await this.drizzle.db
-      .select({ count: count() })
-      .from(albums);
-    const [trackCount] = await this.drizzle.db
-      .select({ count: count() })
-      .from(tracks);
-    const [artistCount] = await this.drizzle.db
-      .select({ count: count() })
-      .from(artists);
+  private mapAlbum(album: {
+    id: string;
+    name: string;
+    artistName: string | null;
+    artistId: string | null;
+    year: number | null;
+    songCount: number | null;
+    duration: number | null;
+    size: number | null;
+    coverArtPath: string | null;
+  }) {
+    return {
+      id: album.id,
+      name: album.name,
+      artistName: album.artistName || 'Unknown Artist',
+      artistId: album.artistId || '',
+      year: album.year,
+      songCount: album.songCount,
+      duration: album.duration,
+      size: album.size,
+      coverUrl: album.coverArtPath ? `/api/federation/albums/${album.id}/cover` : undefined,
+    };
+  }
 
-    // Get server name from settings, generate random default if not set
+  private mapAlbums(
+    albumsList: Array<{
+      id: string;
+      name: string;
+      artistName: string | null;
+      artistId: string | null;
+      year: number | null;
+      songCount: number | null;
+      duration: number | null;
+      size: number | null;
+      coverArtPath: string | null;
+    }>
+  ) {
+    return albumsList.map((album) => this.mapAlbum(album));
+  }
+
+  private async getServerInfo(): Promise<ServerInfoResponseDto> {
+    const counts = await this.libraryRepo.getCounts();
+
     let serverName = await this.settingsService.getString('server.name', '');
     if (!serverName) {
-      // Generate random server name: "Echo Server #XXXX"
       const randomId = Math.floor(1000 + Math.random() * 9000);
       serverName = `Echo Server #${randomId}`;
       await this.settingsService.set('server.name', serverName);
     }
 
-    // Get server color from settings
     const serverColor = await this.settingsService.getString('server.color', '');
 
     return {
       name: serverName,
       version: '1.0.0',
       color: serverColor || undefined,
-      albumCount: Number(albumCount?.count ?? 0),
-      trackCount: Number(trackCount?.count ?? 0),
-      artistCount: Number(artistCount?.count ?? 0),
+      albumCount: counts.albumCount,
+      trackCount: counts.trackCount,
+      artistCount: counts.artistCount,
     };
   }
-
 }
