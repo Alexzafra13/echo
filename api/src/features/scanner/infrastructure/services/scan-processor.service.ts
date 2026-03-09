@@ -1,18 +1,13 @@
 import { Injectable, Inject, OnModuleInit, forwardRef } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { eq, desc } from 'drizzle-orm';
-import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { libraryScans } from '@infrastructure/database/schema';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { IScannerRepository, SCANNER_REPOSITORY } from '../../domain/ports/scanner-repository.port';
 import { FileScannerService } from './file-scanner.service';
-import { LufsAnalysisQueueService } from './lufs-analysis-queue.service';
-import { DjAnalysisQueueService } from '@features/dj/infrastructure/services/dj-analysis-queue.service';
+import { PostScanTasksService } from './post-scan-tasks.service';
 import { ScannerGateway } from '../gateways/scanner.gateway';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
-import { EnrichmentQueueService } from '@features/external-metadata/infrastructure/services/enrichment-queue.service';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { generateUuid } from '@shared/utils';
 import { TrackProcessingService, ScanProgressTracker, LibraryCleanupService } from './scanning';
@@ -70,19 +65,16 @@ export class ScanProcessorService implements OnModuleInit {
   constructor(
     @Inject(SCANNER_REPOSITORY)
     private readonly scannerRepository: IScannerRepository,
-    private readonly drizzle: DrizzleService,
     private readonly bullmq: BullmqService,
     private readonly fileScanner: FileScannerService,
-    private readonly lufsAnalysisQueue: LufsAnalysisQueueService,
-    private readonly djAnalysisQueue: DjAnalysisQueueService,
     @Inject(forwardRef(() => ScannerGateway))
     private readonly scannerGateway: ScannerGateway,
     private readonly cachedAlbumRepository: CachedAlbumRepository,
     private readonly settingsService: SettingsService,
-    private readonly enrichmentQueueService: EnrichmentQueueService,
     private readonly logService: LogService,
     private readonly trackProcessing: TrackProcessingService,
     private readonly libraryCleanup: LibraryCleanupService,
+    private readonly postScanTasks: PostScanTasksService,
     @InjectPinoLogger(ScanProcessorService.name)
     private readonly logger: PinoLogger
   ) {}
@@ -392,9 +384,7 @@ export class ScanProcessorService implements OnModuleInit {
       await this.cachedAlbumRepository.invalidateListCaches();
 
       // Post-scan tasks
-      await this.performAutoEnrichment(tracker.artistsCreated, tracker.albumsCreated);
-      await this.startLufsAnalysis();
-      await this.startDjAnalysis();
+      await this.postScanTasks.runAll();
 
       await this.logService.info(LogCategory.SCANNER, `Scan completado exitosamente: ${scanId}`, {
         entityId: scanId,
@@ -464,14 +454,7 @@ export class ScanProcessorService implements OnModuleInit {
    * Get last completed scan timestamp
    */
   private async getLastScanTime(): Promise<Date | null> {
-    const lastCompletedScan = await this.drizzle.db
-      .select({ finishedAt: libraryScans.finishedAt })
-      .from(libraryScans)
-      .where(eq(libraryScans.status, 'completed'))
-      .orderBy(desc(libraryScans.finishedAt))
-      .limit(1);
-
-    return lastCompletedScan[0]?.finishedAt ?? null;
+    return this.scannerRepository.getLastCompletedScanTime();
   }
 
   /**
@@ -568,9 +551,7 @@ export class ScanProcessorService implements OnModuleInit {
       await this.cachedAlbumRepository.invalidateListCaches();
 
       // Post-scan tasks
-      await this.performAutoEnrichment(tracker.artistsCreated, tracker.albumsCreated);
-      await this.startLufsAnalysis();
-      await this.startDjAnalysis();
+      await this.postScanTasks.runAll();
 
       // Emit: completed
       this.scannerGateway.emitCompleted({
@@ -602,99 +583,6 @@ export class ScanProcessorService implements OnModuleInit {
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString(),
       });
-    }
-  }
-
-  /**
-   * Trigger auto-enrichment after scan
-   */
-  private async performAutoEnrichment(
-    artistsCreated: number,
-    albumsCreated: number
-  ): Promise<void> {
-    try {
-      const autoEnrichEnabled = await this.settingsService.getBoolean(
-        'metadata.auto_enrich.enabled',
-        true
-      );
-
-      if (!autoEnrichEnabled) {
-        this.logger.info('Auto-enriquecimiento deshabilitado en configuración');
-        return;
-      }
-
-      const result = await this.enrichmentQueueService.startEnrichmentQueue();
-
-      if (result.started) {
-        this.logger.info(`🚀 Cola de enriquecimiento iniciada: ${result.pending} items pendientes`);
-      } else {
-        this.logger.info(`ℹ️ ${result.message}`);
-      }
-    } catch (error) {
-      this.logger.error(
-        `Error al iniciar cola de enriquecimiento: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-    }
-  }
-
-  /**
-   * Trigger LUFS analysis after scan
-   */
-  private async startLufsAnalysis(): Promise<void> {
-    try {
-      const lufsAnalysisEnabled = await this.settingsService.getBoolean(
-        'lufs.auto_analysis.enabled',
-        true // Enabled by default
-      );
-
-      if (!lufsAnalysisEnabled) {
-        this.logger.info('🎚️ Análisis LUFS deshabilitado en configuración');
-        return;
-      }
-
-      const result = await this.lufsAnalysisQueue.startLufsAnalysisQueue();
-
-      if (result.started) {
-        this.logger.info(`🎚️ Cola de análisis LUFS iniciada: ${result.pending} tracks pendientes`);
-      } else if (result.pending > 0) {
-        this.logger.info(`ℹ️ ${result.message}`);
-      }
-    } catch (error) {
-      this.logger.error(
-        `Error al iniciar cola de análisis LUFS: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-    }
-  }
-
-  /**
-   * Trigger DJ analysis (BPM, Key, Energy) after scan
-   */
-  private async startDjAnalysis(): Promise<void> {
-    try {
-      const djAnalysisEnabled = await this.settingsService.getBoolean(
-        'dj.auto_analysis.enabled',
-        true // Enabled by default
-      );
-
-      if (!djAnalysisEnabled) {
-        this.logger.info('🎧 Análisis DJ deshabilitado en configuración');
-        return;
-      }
-
-      const result = await this.djAnalysisQueue.startAnalysisQueue();
-
-      if (result.started) {
-        this.logger.info(`🎧 Cola de análisis DJ iniciada: ${result.pending} tracks pendientes`);
-      } else if (result.pending > 0) {
-        this.logger.info(`ℹ️ ${result.message}`);
-      }
-    } catch (error) {
-      this.logger.error(
-        `Error al iniciar cola de análisis DJ: ${(error as Error).message}`,
-        (error as Error).stack
-      );
     }
   }
 }

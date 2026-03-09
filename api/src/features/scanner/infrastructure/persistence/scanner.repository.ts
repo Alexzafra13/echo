@@ -95,4 +95,15 @@ export class DrizzleScannerRepository implements IScannerRepository {
 
     return result[0]?.count ?? 0;
   }
+
+  async getLastCompletedScanTime(): Promise<Date | null> {
+    const result = await this.drizzle.db
+      .select({ finishedAt: libraryScans.finishedAt })
+      .from(libraryScans)
+      .where(eq(libraryScans.status, 'completed'))
+      .orderBy(desc(libraryScans.finishedAt))
+      .limit(1);
+
+    return result[0]?.finishedAt ?? null;
+  }
 }
