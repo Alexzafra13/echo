@@ -185,8 +185,7 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
         </div>
       </div>
 
-      {/* DJ Analysis - only show when data exists or is loading */}
-      {(djAnalysis || djLoading || track.bpm) && (
+      {/* DJ Analysis */}
       <div className={styles.trackInfoModal__section}>
         <h4 className={styles.trackInfoModal__sectionTitle}>
           <Music2 size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
@@ -204,7 +203,9 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
               </span>
             </div>
           </div>
-        ) : djAnalysis?.status === 'pending' ? (
+        ) : !djAnalysis ? (
+          <div className={styles.trackInfoModal__djNotAvailable}>No disponible</div>
+        ) : djAnalysis.status === 'pending' ? (
           <div className={styles.trackInfoModal__infoRow}>
             <span className={styles.trackInfoModal__infoLabel}>Estado:</span>
             <span className={styles.trackInfoModal__infoValue}>
@@ -306,7 +307,6 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
           </div>
         )}
       </div>
-      )}
 
       {/* Lyrics if available */}
       {track.lyrics && (
