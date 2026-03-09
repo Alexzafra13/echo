@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CustomAlbumCoversController } from './custom-album-covers.controller';
-import { UploadCustomAlbumCoverUseCase } from '../domain/use-cases/upload-custom-album-cover';
-import { ListCustomAlbumCoversUseCase } from '../domain/use-cases/list-custom-album-covers';
-import { DeleteCustomAlbumCoverUseCase } from '../domain/use-cases/delete-custom-album-cover';
-import { ApplyCustomAlbumCoverUseCase } from '../domain/use-cases/apply-custom-album-cover';
+import { UploadCustomAlbumCoverUseCase } from '../infrastructure/use-cases/upload-custom-album-cover';
+import { ListCustomAlbumCoversUseCase } from '../infrastructure/use-cases/list-custom-album-covers';
+import { DeleteCustomAlbumCoverUseCase } from '../infrastructure/use-cases/delete-custom-album-cover';
+import { ApplyCustomAlbumCoverUseCase } from '../infrastructure/use-cases/apply-custom-album-cover';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { CanActivate } from '@nestjs/common';

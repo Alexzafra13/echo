@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { SearchAlbumCoversOutput } from '../../domain/use-cases/search-album-covers';
+import { SearchAlbumCoversOutput } from '../../infrastructure/use-cases/search-album-covers';
 
 export class CoverOptionDto {
   @Expose()

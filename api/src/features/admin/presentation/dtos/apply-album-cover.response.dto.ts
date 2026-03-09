@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { ApplyAlbumCoverOutput } from '../../domain/use-cases/apply-album-cover';
+import { ApplyAlbumCoverOutput } from '../../infrastructure/use-cases/apply-album-cover';
 
 export class ApplyAlbumCoverResponseDto {
   @Expose()

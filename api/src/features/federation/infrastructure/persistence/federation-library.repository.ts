@@ -3,6 +3,9 @@ import { eq, count, or, ilike } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { albums, tracks, artists } from '@infrastructure/database/schema';
 import { djAnalysis } from '@infrastructure/database/schema/dj';
+import { IFederationLibraryRepository } from '../../domain/ports/federation-library.repository';
+
+export { IFederationLibraryRepository };
 
 export interface FederationAlbumRow {
   id: string;
@@ -84,7 +87,7 @@ export interface LibraryCounts {
 }
 
 @Injectable()
-export class FederationLibraryRepository {
+export class FederationLibraryRepository implements IFederationLibraryRepository {
   constructor(private readonly drizzle: DrizzleService) {}
 
   async getCounts(): Promise<LibraryCounts> {

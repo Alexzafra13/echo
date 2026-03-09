@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AlbumCoversController } from './album-covers.controller';
-import { SearchAlbumCoversUseCase } from '../domain/use-cases/search-album-covers';
-import { ApplyAlbumCoverUseCase } from '../domain/use-cases/apply-album-cover';
+import { SearchAlbumCoversUseCase } from '../infrastructure/use-cases/search-album-covers';
+import { ApplyAlbumCoverUseCase } from '../infrastructure/use-cases/apply-album-cover';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';

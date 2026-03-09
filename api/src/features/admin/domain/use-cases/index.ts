@@ -21,9 +21,9 @@ export {
   ListEnrichmentLogsUseCase,
   type ListEnrichmentLogsInput,
   type ListEnrichmentLogsOutput,
-} from './list-enrichment-logs';
+} from '../../infrastructure/use-cases/list-enrichment-logs';
 export {
   GetEnrichmentStatsUseCase,
   type GetEnrichmentStatsInput,
   type GetEnrichmentStatsOutput,
-} from './get-enrichment-stats';
+} from '../../infrastructure/use-cases/get-enrichment-stats';

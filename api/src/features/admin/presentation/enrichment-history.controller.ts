@@ -2,8 +2,8 @@ import { Controller, Get, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
-import { ListEnrichmentLogsUseCase } from '../domain/use-cases/list-enrichment-logs';
-import { GetEnrichmentStatsUseCase } from '../domain/use-cases/get-enrichment-stats';
+import { ListEnrichmentLogsUseCase } from '../infrastructure/use-cases/list-enrichment-logs';
+import { GetEnrichmentStatsUseCase } from '../infrastructure/use-cases/get-enrichment-stats';
 import {
   ListEnrichmentLogsRequestDto,
   ListEnrichmentLogsResponseDto,

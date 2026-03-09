@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { ListEnrichmentLogsOutput } from '../../domain/use-cases/list-enrichment-logs';
+import { ListEnrichmentLogsOutput } from '../../infrastructure/use-cases/list-enrichment-logs';
 
 export class EnrichmentLogItemDto {
   @Expose()
