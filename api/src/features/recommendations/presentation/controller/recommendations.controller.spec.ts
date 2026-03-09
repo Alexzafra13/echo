@@ -15,6 +15,7 @@ import {
   DailyMixConfigDto,
   SmartPlaylistConfigDto,
 } from '../dtos/recommendations.dto';
+import { TrackScore } from '../../domain/entities/track-score.entity';
 
 describe('RecommendationsController', () => {
   let controller: RecommendationsController;
@@ -107,7 +108,7 @@ describe('RecommendationsController', () => {
     it('should generate and return a daily mix playlist', async () => {
       const mockDailyMix = {
         id: 'mix-1',
-        type: 'daily_mix',
+        type: 'wave-mix' as const,
         userId: 'user-1',
         name: 'Daily Mix',
         description: 'Your personalized mix',
@@ -131,10 +132,9 @@ describe('RecommendationsController', () => {
           avgScore: 90,
           topGenres: ['rock'],
           topArtists: ['artist-1'],
-          temporalDistribution: {},
+          temporalDistribution: { lastWeek: 0, lastMonth: 0, lastYear: 0, older: 0 },
         },
         coverColor: '#FF0000',
-        coverImageUrl: null,
       };
 
       generateDailyMixUseCase.execute.mockResolvedValue(
@@ -235,16 +235,20 @@ describe('RecommendationsController', () => {
       const mockPlaylists = [
         {
           id: 'playlist-1',
-          type: 'daily_mix',
+          type: 'wave-mix' as const,
           userId: 'user-1',
           name: 'Wave Mix',
           description: 'Auto generated',
-          tracks: [],
+          tracks: [] as TrackScore[],
           createdAt: new Date(),
           expiresAt: new Date(),
-          metadata: {},
-          coverColor: null,
-          coverImageUrl: null,
+          metadata: {
+            totalTracks: 0,
+            avgScore: 0,
+            topGenres: [] as string[],
+            topArtists: [] as string[],
+            temporalDistribution: { lastWeek: 0, lastMonth: 0, lastYear: 0, older: 0 },
+          },
         },
       ];
 

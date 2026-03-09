@@ -11,11 +11,13 @@ describe('PlaylistShuffleService', () => {
   const createTrackScore = (trackId: string, score: number): TrackScore => ({
     trackId,
     totalScore: score,
-    recencyScore: 50,
-    frequencyScore: 50,
-    artistBonus: 0,
-    freshnessBonus: 0,
-    genreDiversityBonus: 0,
+    rank: 0,
+    breakdown: {
+      explicitFeedback: 0,
+      implicitBehavior: score,
+      recency: 0,
+      diversity: 0,
+    },
   });
 
   const mockTrackDetails = [

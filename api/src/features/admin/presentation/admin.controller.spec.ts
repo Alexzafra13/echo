@@ -17,7 +17,19 @@ import { JwtUser } from '@shared/types/request.types';
 const mockCurrentUser: JwtUser = {
   id: 'admin-999',
   username: 'adminuser',
+  passwordHash: 'hashed-password',
+  isActive: true,
   isAdmin: true,
+  theme: 'dark',
+  language: 'en',
+  mustChangePassword: false,
+  isPublicProfile: false,
+  showTopTracks: false,
+  showTopArtists: false,
+  showTopAlbums: false,
+  showPlaylists: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 describe('AdminController', () => {
@@ -144,9 +156,7 @@ describe('AdminController', () => {
         username: 'test',
       };
 
-      mockCreateUserUseCase.execute.mockRejectedValue(
-        new Error('Username already exists')
-      );
+      mockCreateUserUseCase.execute.mockRejectedValue(new Error('Username already exists'));
 
       // Act & Assert
       await expect(controller.createUser(dto, mockCurrentUser)).rejects.toThrow(
@@ -191,8 +201,8 @@ describe('AdminController', () => {
 
       // Assert
       expect(mockListUsersUseCase.execute).toHaveBeenCalledWith({
-        skip: 0,        // ← CORREGIDO
-        take: 20,       // ← CORREGIDO
+        skip: 0, // ← CORREGIDO
+        take: 20, // ← CORREGIDO
       });
       expect(result.users).toHaveLength(2);
       expect(result.total).toBe(2);
@@ -260,7 +270,7 @@ describe('AdminController', () => {
       // Assert
       expect(mockListUsersUseCase.execute).toHaveBeenCalledWith({
         skip: 5,
-        take: 20,       // ← CORREGIDO
+        take: 20, // ← CORREGIDO
       });
     });
 
@@ -276,7 +286,7 @@ describe('AdminController', () => {
 
       // Assert
       expect(mockListUsersUseCase.execute).toHaveBeenCalledWith({
-        skip: 0,        // ← CORREGIDO
+        skip: 0, // ← CORREGIDO
         take: 10,
       });
     });
@@ -384,14 +394,10 @@ describe('AdminController', () => {
       const userId = 'user-123';
       const dto = { name: 'Test' };
 
-      mockUpdateUserUseCase.execute.mockRejectedValue(
-        new Error('User not found')
-      );
+      mockUpdateUserUseCase.execute.mockRejectedValue(new Error('User not found'));
 
       // Act & Assert
-      await expect(controller.updateUser(userId, dto)).rejects.toThrow(
-        'User not found'
-      );
+      await expect(controller.updateUser(userId, dto)).rejects.toThrow('User not found');
     });
   });
 
@@ -432,9 +438,7 @@ describe('AdminController', () => {
       // Arrange
       const userId = 'nonexistent-123';
 
-      mockDeleteUserUseCase.execute.mockRejectedValue(
-        new Error('User not found')
-      );
+      mockDeleteUserUseCase.execute.mockRejectedValue(new Error('User not found'));
 
       // Act & Assert
       await expect(controller.deleteUser(userId, mockCurrentUser)).rejects.toThrow(
@@ -488,9 +492,7 @@ describe('AdminController', () => {
       // Arrange
       const userId = 'nonexistent-123';
 
-      mockResetUserPasswordUseCase.execute.mockRejectedValue(
-        new Error('User not found')
-      );
+      mockResetUserPasswordUseCase.execute.mockRejectedValue(new Error('User not found'));
 
       // Act & Assert
       await expect(controller.resetUserPassword(userId, mockCurrentUser)).rejects.toThrow(

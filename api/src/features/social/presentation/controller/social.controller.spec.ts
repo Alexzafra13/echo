@@ -22,7 +22,7 @@ import {
 } from '../dtos/social.dto';
 
 /** Request type matching the controller's internal RequestWithUser interface */
-interface RequestWithUser {
+interface RequestWithUser extends Request {
   user: { id: string };
 }
 
@@ -82,10 +82,11 @@ describe('SocialController', () => {
         id: 'friend-1',
         friendshipId: 'fs-1',
         username: 'friend',
-        displayName: 'Friend',
+        name: 'Friend',
         avatarPath: null,
         avatarUpdatedAt: null,
-        since: new Date('2025-01-01'),
+        isPublicProfile: true,
+        friendsSince: new Date('2025-01-01'),
       };
 
       getFriendsUseCase.execute.mockResolvedValue([mockFriend]);
@@ -115,10 +116,11 @@ describe('SocialController', () => {
         id: 'friend-1',
         friendshipId: 'fs-1',
         username: 'friend',
-        displayName: 'Friend',
+        name: 'Friend',
         avatarPath: null,
         avatarUpdatedAt: null,
-        since: new Date('2025-01-01'),
+        isPublicProfile: true,
+        friendsSince: new Date('2025-01-01'),
       };
 
       getFriendsUseCase.execute.mockResolvedValue([mockFriend]);
@@ -248,11 +250,9 @@ describe('SocialController', () => {
       const mockSearchResult = {
         id: 'user-2',
         username: 'otheruser',
-        displayName: 'Other',
+        name: 'Other',
         avatarPath: null,
-        avatarUpdatedAt: null,
-        isFriend: false,
-        hasPendingRequest: false,
+        friendshipStatus: null,
       };
 
       searchUsersUseCase.execute.mockResolvedValue([mockSearchResult]);

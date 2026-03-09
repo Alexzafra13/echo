@@ -56,19 +56,32 @@ describe('PlaylistsController', () => {
     trackNumber: 1,
     discNumber: 1,
     path: '/music/beatles/abbey-road/01-come-together.flac',
-    bitrate: 1411,
-    sampleRate: 44100,
-    channels: 2,
-    codec: 'flac',
+    bitRate: 1411,
     size: Number(45000000),
-    mimeType: 'audio/flac',
+    compilation: false,
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
   });
 
   const mockRequestWithUser = {
-    user: { id: 'user-1', username: 'testuser' },
-  };
+    user: {
+      id: 'user-1',
+      username: 'testuser',
+      passwordHash: 'hashedpassword',
+      isActive: true,
+      isAdmin: false,
+      theme: 'dark',
+      language: 'en',
+      mustChangePassword: false,
+      isPublicProfile: false,
+      showTopTracks: true,
+      showTopArtists: true,
+      showTopAlbums: true,
+      showPlaylists: true,
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-01-01'),
+    },
+  } as unknown as RequestWithUser;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -277,7 +290,10 @@ describe('PlaylistsController', () => {
   describe('deletePlaylist', () => {
     it('debería eliminar una playlist', async () => {
       // Arrange
-      deletePlaylistUseCase.execute.mockResolvedValue(undefined);
+      deletePlaylistUseCase.execute.mockResolvedValue({
+        success: true,
+        message: 'Playlist deleted successfully',
+      });
 
       // Act
       await controller.deletePlaylist(
@@ -299,22 +315,24 @@ describe('PlaylistsController', () => {
       getPlaylistTracksUseCase.execute.mockResolvedValue({
         playlistId: 'playlist-1',
         playlistName: 'My Playlist',
-        tracks: [{
-          id: mockTrack.id,
-          title: mockTrack.title,
-          trackNumber: mockTrack.trackNumber,
-          discNumber: mockTrack.discNumber,
-          duration: mockTrack.duration ?? 0,
-          size: mockTrack.size ?? 0,
-          path: mockTrack.path,
-          albumId: mockTrack.albumId,
-          artistId: mockTrack.artistId,
-          artistName: mockTrack.artistName,
-          albumName: mockTrack.albumName,
-          playlistOrder: 1,
-          createdAt: mockTrack.createdAt,
-          updatedAt: mockTrack.updatedAt,
-        }],
+        tracks: [
+          {
+            id: mockTrack.id,
+            title: mockTrack.title,
+            trackNumber: mockTrack.trackNumber,
+            discNumber: mockTrack.discNumber,
+            duration: mockTrack.duration ?? 0,
+            size: mockTrack.size ?? 0,
+            path: mockTrack.path,
+            albumId: mockTrack.albumId,
+            artistId: mockTrack.artistId,
+            artistName: mockTrack.artistName,
+            albumName: mockTrack.albumName,
+            playlistOrder: 1,
+            createdAt: mockTrack.createdAt,
+            updatedAt: mockTrack.updatedAt,
+          },
+        ],
         total: 1,
         skip: 0,
         take: 20,
@@ -325,7 +343,7 @@ describe('PlaylistsController', () => {
       const result = await controller.getPlaylistTracks(
         'playlist-1',
         mockRequestWithUser as unknown as RequestWithUser,
-        { skip: 0, take: 20 },
+        { skip: 0, take: 20 }
       );
 
       // Assert

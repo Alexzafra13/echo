@@ -2,6 +2,8 @@ import { PinoLogger } from 'nestjs-pino';
 import { Track } from '../../domain/entities/track.entity';
 import { ITrackRepository } from '../../domain/ports/track-repository.port';
 import { CachedTrackRepository } from './cached-track.repository';
+import { DrizzleTrackRepository } from './track.repository';
+import { RedisService } from '@infrastructure/cache/redis.service';
 import {
   MockCacheService,
   MockPinoLogger,
@@ -19,13 +21,13 @@ describe('CachedTrackRepository', () => {
     title: 'Test Track',
     duration: 240,
     trackNumber: 1,
+    discNumber: 1,
     albumId: 'album-1',
     artistId: 'artist-1',
-    filePath: '/music/track1.mp3',
-    fileSize: 5242880,
-    mimeType: 'audio/mpeg',
-    bitrate: 320,
-    sampleRate: 44100,
+    path: '/music/track1.mp3',
+    size: 5242880,
+    bitRate: 320,
+    compilation: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -57,9 +59,9 @@ describe('CachedTrackRepository', () => {
 
     // Create instance directly without TestingModule for simplicity
     cachedRepository = new CachedTrackRepository(
-      baseRepository,
-      cacheService,
-      mockLogger as unknown as PinoLogger,
+      baseRepository as unknown as DrizzleTrackRepository,
+      cacheService as unknown as RedisService,
+      mockLogger as unknown as PinoLogger
     );
   });
 
@@ -96,7 +98,7 @@ describe('CachedTrackRepository', () => {
       expect(cacheService.set).toHaveBeenCalledWith(
         'track:track-1',
         expect.any(Object),
-        expect.any(Number),
+        expect.any(Number)
       );
       expect(result).toBe(mockTrack);
     });
@@ -186,7 +188,12 @@ describe('CachedTrackRepository', () => {
       const result = await cachedRepository.findByAlbumId('album-1');
 
       // Assert
-      expect(baseRepository.findByAlbumId).toHaveBeenCalledWith('album-1', true, undefined, undefined);
+      expect(baseRepository.findByAlbumId).toHaveBeenCalledWith(
+        'album-1',
+        true,
+        undefined,
+        undefined
+      );
       expect(cacheService.get).not.toHaveBeenCalled();
       expect(result).toBe(tracks);
     });

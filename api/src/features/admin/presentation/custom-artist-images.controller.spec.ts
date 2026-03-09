@@ -73,20 +73,39 @@ describe('CustomArtistImagesController', () => {
   describe('listImages', () => {
     it('should call listCustomImages.execute with artistId', async () => {
       const artistId = 'artist-123';
-      const mockResult = [
-        {
-          id: 'image-1',
-          artistId: 'artist-123',
-          url: 'https://example.com/image1.jpg',
-          isActive: true,
-        },
-        {
-          id: 'image-2',
-          artistId: 'artist-123',
-          url: 'https://example.com/image2.jpg',
-          isActive: false,
-        },
-      ];
+      const mockResult = {
+        customImages: [
+          {
+            id: 'image-1',
+            artistId: 'artist-123',
+            imageType: 'profile',
+            filePath: '/data/image1.jpg',
+            fileName: 'image1.jpg',
+            fileSize: '1024',
+            mimeType: 'image/jpeg',
+            url: 'https://example.com/image1.jpg',
+            isActive: true,
+            uploadedBy: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: 'image-2',
+            artistId: 'artist-123',
+            imageType: 'profile',
+            filePath: '/data/image2.jpg',
+            fileName: 'image2.jpg',
+            fileSize: '2048',
+            mimeType: 'image/jpeg',
+            url: 'https://example.com/image2.jpg',
+            isActive: false,
+            uploadedBy: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+        total: 2,
+      };
 
       listCustomImages.execute.mockResolvedValue(mockResult);
 
@@ -99,12 +118,12 @@ describe('CustomArtistImagesController', () => {
 
     it('should return empty array when no images exist', async () => {
       const artistId = 'artist-456';
-      listCustomImages.execute.mockResolvedValue([]);
+      listCustomImages.execute.mockResolvedValue({ customImages: [], total: 0 });
 
       const result = await controller.listImages(artistId);
 
       expect(listCustomImages.execute).toHaveBeenCalledWith({ artistId });
-      expect(result).toEqual([]);
+      expect(result).toEqual({ customImages: [], total: 0 });
     });
   });
 
@@ -113,10 +132,9 @@ describe('CustomArtistImagesController', () => {
       const artistId = 'artist-123';
       const customImageId = 'image-456';
       const mockResult = {
-        id: 'image-456',
-        artistId: 'artist-123',
-        url: 'https://example.com/image.jpg',
-        isActive: true,
+        success: true,
+        message: 'Custom artist image applied successfully',
+        imageType: 'profile',
       };
 
       applyCustomImage.execute.mockResolvedValue(mockResult);
@@ -135,10 +153,9 @@ describe('CustomArtistImagesController', () => {
       const artistId = 'artist-789';
       const customImageId = 'image-012';
       const mockResult = {
-        id: 'image-012',
-        artistId: 'artist-789',
-        url: 'https://example.com/new-image.jpg',
-        isActive: true,
+        success: true,
+        message: 'Custom artist image applied successfully',
+        imageType: 'profile',
       };
 
       applyCustomImage.execute.mockResolvedValue(mockResult);
@@ -158,7 +175,10 @@ describe('CustomArtistImagesController', () => {
       const artistId = 'artist-123';
       const customImageId = 'image-456';
 
-      deleteCustomImage.execute.mockResolvedValue(undefined);
+      deleteCustomImage.execute.mockResolvedValue({
+        success: true,
+        message: 'Image deleted successfully',
+      });
 
       await controller.deleteImage(artistId, customImageId);
 
@@ -173,7 +193,10 @@ describe('CustomArtistImagesController', () => {
       const artistId = 'artist-999';
       const customImageId = 'image-888';
 
-      deleteCustomImage.execute.mockResolvedValue(undefined);
+      deleteCustomImage.execute.mockResolvedValue({
+        success: true,
+        message: 'Image deleted successfully',
+      });
 
       await controller.deleteImage(artistId, customImageId);
 
@@ -187,7 +210,10 @@ describe('CustomArtistImagesController', () => {
       const artistId = 'artist-111';
       const customImageId = 'image-222';
 
-      deleteCustomImage.execute.mockResolvedValue(undefined);
+      deleteCustomImage.execute.mockResolvedValue({
+        success: true,
+        message: 'Image deleted successfully',
+      });
 
       const result = await controller.deleteImage(artistId, customImageId);
 

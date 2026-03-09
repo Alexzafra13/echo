@@ -66,10 +66,7 @@ describe('JwtAuthGuard', () => {
 
       guard.canActivate(mockContext);
 
-      expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(
-        'isPublic',
-        expect.any(Array),
-      );
+      expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith('isPublic', expect.any(Array));
     });
   });
 
@@ -82,36 +79,30 @@ describe('JwtAuthGuard', () => {
     it('debería retornar el usuario si la autenticación es exitosa', () => {
       const mockUser: MockUser = { id: 'user-123', username: 'testuser' };
 
-      const result = guard.handleRequest(null, mockUser, null);
+      const result = guard.handleRequest(null, mockUser, undefined);
 
       expect(result).toBe(mockUser);
     });
 
     it('debería lanzar UnauthorizedException si no hay usuario', () => {
-      expect(() => guard.handleRequest(null, null, null)).toThrow(
-        UnauthorizedException,
-      );
-      expect(() => guard.handleRequest(null, null, null)).toThrow('Invalid or expired token');
+      expect(() => guard.handleRequest(null, null, undefined)).toThrow(UnauthorizedException);
+      expect(() => guard.handleRequest(null, null, undefined)).toThrow('Invalid or expired token');
     });
 
     it('debería lanzar el error original si hay un error', () => {
       const mockError = new Error('Custom auth error');
 
-      expect(() => guard.handleRequest(mockError, null, null)).toThrow(mockError);
+      expect(() => guard.handleRequest(mockError, null, undefined)).toThrow(mockError);
     });
 
     it('debería lanzar UnauthorizedException si user es undefined', () => {
-      expect(() => guard.handleRequest(null, undefined, null)).toThrow(
-        UnauthorizedException,
-      );
+      expect(() => guard.handleRequest(null, undefined, undefined)).toThrow(UnauthorizedException);
     });
 
     it('debería priorizar el error sobre la falta de usuario', () => {
       const customError = new UnauthorizedException('Custom error');
 
-      expect(() => guard.handleRequest(customError, { id: '123' }, null)).toThrow(
-        customError,
-      );
+      expect(() => guard.handleRequest(customError, { id: '123' }, undefined)).toThrow(customError);
     });
   });
 });

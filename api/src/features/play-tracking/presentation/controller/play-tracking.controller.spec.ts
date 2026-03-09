@@ -12,6 +12,7 @@ import {
 } from '../../domain/use-cases';
 import { RequestWithUser } from '@shared/types/request.types';
 import { RecordPlayDto, RecordSkipDto, UpdatePlaybackStateDto } from '../dtos/play-tracking.dto';
+import { PlayEvent, UserPlaySummary } from '../../domain/entities/play-event.entity';
 
 describe('PlayTrackingController', () => {
   let controller: PlayTrackingController;
@@ -65,11 +66,11 @@ describe('PlayTrackingController', () => {
         trackId: 'track-1',
         playedAt: new Date('2025-01-01'),
         client: 'test-agent',
-        playContext: 'album',
+        playContext: 'album' as const,
         completionRate: 0.95,
         skipped: false,
         sourceId: 'album-1',
-        sourceType: 'album',
+        sourceType: 'album' as const,
         createdAt: new Date('2025-01-01'),
       };
 
@@ -110,12 +111,12 @@ describe('PlayTrackingController', () => {
         userId: 'user-1',
         trackId: 'track-1',
         playedAt: new Date('2025-01-01'),
-        client: null,
-        playContext: 'playlist',
+        client: undefined,
+        playContext: 'playlist' as const,
         completionRate: 0.2,
         skipped: true,
-        sourceId: null,
-        sourceType: null,
+        sourceId: undefined,
+        sourceType: undefined,
         createdAt: new Date('2025-01-01'),
       };
 
@@ -140,11 +141,11 @@ describe('PlayTrackingController', () => {
           trackId: 'track-1',
           playedAt: new Date('2025-01-01'),
           client: 'web',
-          playContext: 'album',
+          playContext: 'album' as const,
           completionRate: 1,
           skipped: false,
-          sourceId: null,
-          sourceType: null,
+          sourceId: undefined,
+          sourceType: undefined,
           createdAt: new Date('2025-01-01'),
         },
       ];
@@ -162,9 +163,7 @@ describe('PlayTrackingController', () => {
 
   describe('getTopTracks', () => {
     it('should return user top tracks', async () => {
-      const mockTopTracks = [
-        { trackId: 'track-1', title: 'Song', playCount: 10, weightedScore: 8.5 },
-      ];
+      const mockTopTracks = [{ trackId: 'track-1', playCount: 10, weightedPlayCount: 8.5 }];
 
       getUserTopTracksUseCase.execute.mockResolvedValue(mockTopTracks);
 
@@ -190,12 +189,22 @@ describe('PlayTrackingController', () => {
 
   describe('getPlaySummary', () => {
     it('should return user play summary', async () => {
-      const mockSummary = {
+      const mockSummary: UserPlaySummary = {
         totalPlays: 100,
         totalSkips: 10,
         avgCompletionRate: 0.85,
         topContext: 'album',
-        playsByContext: { album: 60, playlist: 30, search: 10 },
+        playsByContext: {
+          direct: 0,
+          album: 60,
+          playlist: 30,
+          artist: 0,
+          shuffle: 0,
+          radio: 0,
+          recommendation: 0,
+          search: 10,
+          queue: 0,
+        },
         recentPlays: [],
       };
 

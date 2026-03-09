@@ -57,11 +57,15 @@ describe('DjAnalysis Entity', () => {
     });
 
     it('should throw for invalid energy (below 0)', () => {
-      expect(() => DjAnalysis.create({ ...basePendingProps, energy: -0.1 })).toThrow('Invalid energy');
+      expect(() => DjAnalysis.create({ ...basePendingProps, energy: -0.1 })).toThrow(
+        'Invalid energy'
+      );
     });
 
     it('should throw for invalid energy (above 1)', () => {
-      expect(() => DjAnalysis.create({ ...basePendingProps, energy: 1.5 })).toThrow('Invalid energy');
+      expect(() => DjAnalysis.create({ ...basePendingProps, energy: 1.5 })).toThrow(
+        'Invalid energy'
+      );
     });
 
     it('should accept boundary BPM values', () => {
@@ -172,7 +176,11 @@ describe('DjAnalysis Entity', () => {
     });
 
     it('should identify failed status', () => {
-      const analysis = DjAnalysis.create({ ...basePendingProps, status: 'failed', analysisError: 'timeout' });
+      const analysis = DjAnalysis.create({
+        ...basePendingProps,
+        status: 'failed',
+        analysisError: 'timeout',
+      });
       expect(analysis.isPending()).toBe(false);
       expect(analysis.isAnalyzing()).toBe(false);
       expect(analysis.isAnalyzed()).toBe(false);
@@ -224,8 +232,12 @@ describe('DjAnalysis Entity', () => {
     it('should accept custom tolerance', () => {
       const a1 = DjAnalysis.create({ ...baseCompletedProps, bpm: 128 });
       const a2 = DjAnalysis.create({ ...baseCompletedProps, trackId: 'track-2', bpm: 140 }); // ~9.4%
-      expect(a1.isBpmCompatibleWith(a2, 10)).toBe(true);
-      expect(a1.isBpmCompatibleWith(a2, 5)).toBe(false);
+      const isBpmCompatible = a1.isBpmCompatibleWith.bind(a1) as (
+        other: DjAnalysis,
+        tolerance: number
+      ) => boolean;
+      expect(isBpmCompatible(a2, 10)).toBe(true);
+      expect(isBpmCompatible(a2, 5)).toBe(false);
     });
 
     it('should return false when BPM is missing', () => {

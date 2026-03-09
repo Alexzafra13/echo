@@ -2,10 +2,10 @@ import { UnauthorizedError } from '@shared/errors';
 import { AuthController } from './auth.controller';
 import { LoginRequestDto } from './dtos';
 import { JwtUser } from '@shared/types/request.types';
-import { IUserRepository } from '../../domain/ports';
-import { LoginUseCase } from '../../domain/use-cases/login';
-import { RefreshTokenUseCase } from '../../domain/use-cases/refresh-token';
-import { LogoutUseCase } from '../../domain/use-cases/logout';
+import { IUserRepository } from '../domain/ports';
+import { LoginUseCase } from '../domain/use-cases/login';
+import { RefreshTokenUseCase } from '../domain/use-cases/refresh-token';
+import { LogoutUseCase } from '../domain/use-cases/logout';
 
 interface MockLoginUseCase {
   execute: jest.Mock;
@@ -53,7 +53,7 @@ describe('AuthController', () => {
       mockLoginUseCase as unknown as LoginUseCase,
       mockRefreshTokenUseCase as unknown as RefreshTokenUseCase,
       mockLogoutUseCase as unknown as LogoutUseCase,
-      mockUserRepository as unknown as IUserRepository,
+      mockUserRepository as unknown as IUserRepository
     );
   });
 
@@ -120,46 +120,40 @@ describe('AuthController', () => {
 
     it('debería lanzar error 401 con credenciales inválidas', async () => {
       // Arrange
-      mockLoginUseCase.execute.mockRejectedValue(
-        new UnauthorizedError('Invalid credentials'),
-      );
+      mockLoginUseCase.execute.mockRejectedValue(new UnauthorizedError('Invalid credentials'));
 
       // Act & Assert
       await expect(
         controller.login({
           username: 'testuser',
           password: 'Wrong',
-        }),
+        })
       ).rejects.toThrow(UnauthorizedError);
     });
 
     it('debería lanzar error si username está vacío', async () => {
       // Arrange
-      mockLoginUseCase.execute.mockRejectedValue(
-        new UnauthorizedError('Invalid credentials'),
-      );
+      mockLoginUseCase.execute.mockRejectedValue(new UnauthorizedError('Invalid credentials'));
 
       // Act & Assert
       await expect(
         controller.login({
           username: '',
           password: 'Pass123!',
-        }),
+        })
       ).rejects.toThrow();
     });
 
     it('debería lanzar error si password está vacío', async () => {
       // Arrange
-      mockLoginUseCase.execute.mockRejectedValue(
-        new UnauthorizedError('Invalid credentials'),
-      );
+      mockLoginUseCase.execute.mockRejectedValue(new UnauthorizedError('Invalid credentials'));
 
       // Act & Assert
       await expect(
         controller.login({
           username: 'testuser',
           password: '',
-        }),
+        })
       ).rejects.toThrow();
     });
   });
@@ -188,28 +182,26 @@ describe('AuthController', () => {
     it('debería lanzar error con token inválido', async () => {
       // Arrange
       mockRefreshTokenUseCase.execute.mockRejectedValue(
-        new UnauthorizedError('Invalid refresh token'),
+        new UnauthorizedError('Invalid refresh token')
       );
 
       // Act & Assert
       await expect(
         controller.refreshToken({
           refreshToken: 'invalid_token',
-        }),
+        })
       ).rejects.toThrow(UnauthorizedError);
     });
 
     it('debería lanzar error con token expirado', async () => {
       // Arrange
-      mockRefreshTokenUseCase.execute.mockRejectedValue(
-        new UnauthorizedError('Token expired'),
-      );
+      mockRefreshTokenUseCase.execute.mockRejectedValue(new UnauthorizedError('Token expired'));
 
       // Act & Assert
       await expect(
         controller.refreshToken({
           refreshToken: 'expired_token',
-        }),
+        })
       ).rejects.toThrow(UnauthorizedError);
     });
   });
@@ -283,7 +275,7 @@ describe('AuthController', () => {
         isAdmin: false,
         isActive: true,
         mustChangePassword: false,
-        avatarPath: null,
+        avatarPath: undefined,
         createdAt: new Date(),
       };
 

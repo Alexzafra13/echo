@@ -12,6 +12,8 @@ import { PlaylistShuffleService } from '../../domain/services/playlists';
 import { PlaylistCoverService } from './playlists/playlist-cover.service';
 import { ArtistPlaylistService } from './playlists/artist-playlist.service';
 import { GenrePlaylistService } from './playlists/genre-playlist.service';
+import { AutoPlaylist, TrackScore } from '../../domain/entities/track-score.entity';
+import { PlayEvent } from '@features/play-tracking/domain/entities/play-event.entity';
 
 interface MockLogger {
   info: jest.Mock;
@@ -83,7 +85,7 @@ describe('WaveMixService', () => {
       db: {
         select: jest.fn().mockImplementation(() => createSelectMock()),
         selectDistinct: jest.fn().mockImplementation(() => createSelectMock()),
-      },
+      } as any,
     };
 
     mockRedis = {
@@ -172,7 +174,7 @@ describe('WaveMixService', () => {
     it('debería retornar un Wave Mix vacío cuando el usuario no tiene historial', async () => {
       // Arrange
       const userId = 'user-123';
-      mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue([]);
+      mockPlayTrackingRepo.getUserTopTracks!.mockResolvedValue([]);
 
       // Act
       const result = await service.generateWaveMix(userId);
@@ -193,34 +195,52 @@ describe('WaveMixService', () => {
       // Arrange
       const userId = 'user-123';
       const mockTopTracks = [
-        { trackId: 'track-1', playCount: 100 },
-        { trackId: 'track-2', playCount: 80 },
+        { trackId: 'track-1', playCount: 100, weightedPlayCount: 90 },
+        { trackId: 'track-2', playCount: 80, weightedPlayCount: 70 },
       ];
       mockTracksData = [
         { id: 'track-1', artistId: 'artist-1', albumId: 'album-1', title: 'Track 1' },
         { id: 'track-2', artistId: 'artist-1', albumId: 'album-1', title: 'Track 2' },
       ];
-      const mockScoredTracks = [
+      const mockScoredTracks: TrackScore[] = [
         {
           trackId: 'track-1',
           totalScore: 85,
-          breakdown: { frequency: 80, recency: 90, diversity: 85 },
+          breakdown: { explicitFeedback: 20, implicitBehavior: 40, recency: 15, diversity: 1 },
+          rank: 1,
         },
         {
           trackId: 'track-2',
           totalScore: 75,
-          breakdown: { frequency: 70, recency: 80, diversity: 75 },
+          breakdown: { explicitFeedback: 15, implicitBehavior: 35, recency: 14, diversity: 1 },
+          rank: 2,
         },
       ];
-      const mockPlayHistory = [
-        { trackId: 'track-1', playedAt: new Date() },
-        { trackId: 'track-2', playedAt: new Date() },
+      const mockPlayHistory: PlayEvent[] = [
+        {
+          id: 'play-1',
+          userId,
+          trackId: 'track-1',
+          playedAt: new Date(),
+          playContext: 'direct',
+          skipped: false,
+          createdAt: new Date(),
+        },
+        {
+          id: 'play-2',
+          userId,
+          trackId: 'track-2',
+          playedAt: new Date(),
+          playContext: 'direct',
+          skipped: false,
+          createdAt: new Date(),
+        },
       ];
 
-      mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue(mockTopTracks);
-      mockScoringService.calculateAndRankTracks.mockResolvedValue(mockScoredTracks);
-      mockPlayTrackingRepo.getUserPlayHistory.mockResolvedValue(mockPlayHistory);
-      mockPlayTrackingRepo.getUserPlayStats.mockResolvedValue([
+      mockPlayTrackingRepo.getUserTopTracks!.mockResolvedValue(mockTopTracks);
+      mockScoringService.calculateAndRankTracks!.mockResolvedValue(mockScoredTracks);
+      mockPlayTrackingRepo.getUserPlayHistory!.mockResolvedValue(mockPlayHistory);
+      mockPlayTrackingRepo.getUserPlayStats!.mockResolvedValue([
         {
           userId,
           itemId: 'track-1',
@@ -264,21 +284,22 @@ describe('WaveMixService', () => {
     it('debería usar fallback cuando ningún track supera el score mínimo pero hay tracks disponibles', async () => {
       // Arrange
       const userId = 'user-123';
-      const mockTopTracks = [{ trackId: 'track-1', playCount: 5 }];
+      const mockTopTracks = [{ trackId: 'track-1', playCount: 5, weightedPlayCount: 3 }];
       mockTracksData = [
         { id: 'track-1', artistId: 'artist-1', albumId: 'album-1', title: 'Track 1' },
       ];
-      const mockScoredTracks = [
+      const mockScoredTracks: TrackScore[] = [
         {
           trackId: 'track-1',
           totalScore: 5, // Below default minScore of 10
-          breakdown: { frequency: 5, recency: 5, diversity: 5 },
+          breakdown: { explicitFeedback: 2, implicitBehavior: 2, recency: 1, diversity: 0 },
+          rank: 1,
         },
       ];
 
-      mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue(mockTopTracks);
-      mockPlayTrackingRepo.getUserPlayHistory.mockResolvedValue([]);
-      mockPlayTrackingRepo.getUserPlayStats.mockResolvedValue([
+      mockPlayTrackingRepo.getUserTopTracks!.mockResolvedValue(mockTopTracks);
+      mockPlayTrackingRepo.getUserPlayHistory!.mockResolvedValue([]);
+      mockPlayTrackingRepo.getUserPlayStats!.mockResolvedValue([
         {
           userId,
           itemId: 'track-1',
@@ -290,7 +311,7 @@ describe('WaveMixService', () => {
           skipCount: 0,
         },
       ]);
-      mockScoringService.calculateAndRankTracks.mockResolvedValue(mockScoredTracks);
+      mockScoringService.calculateAndRankTracks!.mockResolvedValue(mockScoredTracks);
 
       // Act
       const result = await service.generateWaveMix(userId);
@@ -339,7 +360,7 @@ describe('WaveMixService', () => {
         },
       ];
 
-      mockRedis.get.mockResolvedValue(cachedPlaylists);
+      mockRedis.get!.mockResolvedValue(cachedPlaylists);
 
       // Act
       const result = await service.getAllAutoPlaylists(userId);
@@ -356,10 +377,10 @@ describe('WaveMixService', () => {
     it('debería generar playlists frescas si no hay cache pero no cachear si están vacías', async () => {
       // Arrange
       const userId = 'user-123';
-      mockRedis.get.mockResolvedValue(null);
-      mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue([]);
-      mockArtistPlaylistService.generatePlaylists.mockResolvedValue([]);
-      mockGenrePlaylistService.generatePlaylists.mockResolvedValue([]);
+      mockRedis.get!.mockResolvedValue(null);
+      mockPlayTrackingRepo.getUserTopTracks!.mockResolvedValue([]);
+      mockArtistPlaylistService.generatePlaylists!.mockResolvedValue([]);
+      mockGenrePlaylistService.generatePlaylists!.mockResolvedValue([]);
 
       // Act
       const result = await service.getAllAutoPlaylists(userId);
@@ -381,9 +402,9 @@ describe('WaveMixService', () => {
     it('debería forzar la regeneración ignorando el cache', async () => {
       // Arrange
       const userId = 'user-123';
-      mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue([]);
-      mockArtistPlaylistService.generatePlaylists.mockResolvedValue([]);
-      mockGenrePlaylistService.generatePlaylists.mockResolvedValue([]);
+      mockPlayTrackingRepo.getUserTopTracks!.mockResolvedValue([]);
+      mockArtistPlaylistService.generatePlaylists!.mockResolvedValue([]);
+      mockGenrePlaylistService.generatePlaylists!.mockResolvedValue([]);
 
       // Act
       const result = await service.refreshAutoPlaylists(userId);
@@ -400,8 +421,26 @@ describe('WaveMixService', () => {
     it('debería delegar a ArtistPlaylistService', async () => {
       // Arrange
       const userId = 'user-123';
-      const mockPlaylists = [{ id: 'artist-mix-1', type: 'artist' }];
-      mockArtistPlaylistService.generatePlaylists.mockResolvedValue(mockPlaylists);
+      const mockPlaylists: AutoPlaylist[] = [
+        {
+          id: 'artist-mix-1',
+          type: 'artist',
+          userId,
+          name: 'Artist Mix',
+          description: 'Test',
+          tracks: [],
+          createdAt: new Date(),
+          expiresAt: new Date(),
+          metadata: {
+            totalTracks: 0,
+            avgScore: 0,
+            topGenres: [],
+            topArtists: [],
+            temporalDistribution: { lastWeek: 0, lastMonth: 0, lastYear: 0, older: 0 },
+          },
+        },
+      ];
+      mockArtistPlaylistService.generatePlaylists!.mockResolvedValue(mockPlaylists);
 
       // Act
       const result = await service.generateArtistPlaylists(userId, 5);
@@ -416,8 +455,26 @@ describe('WaveMixService', () => {
     it('debería delegar a GenrePlaylistService', async () => {
       // Arrange
       const userId = 'user-123';
-      const mockPlaylists = [{ id: 'genre-mix-1', type: 'genre' }];
-      mockGenrePlaylistService.generatePlaylists.mockResolvedValue(mockPlaylists);
+      const mockPlaylists: AutoPlaylist[] = [
+        {
+          id: 'genre-mix-1',
+          type: 'genre',
+          userId,
+          name: 'Genre Mix',
+          description: 'Test',
+          tracks: [],
+          createdAt: new Date(),
+          expiresAt: new Date(),
+          metadata: {
+            totalTracks: 0,
+            avgScore: 0,
+            topGenres: [],
+            topArtists: [],
+            temporalDistribution: { lastWeek: 0, lastMonth: 0, lastYear: 0, older: 0 },
+          },
+        },
+      ];
+      mockGenrePlaylistService.generatePlaylists!.mockResolvedValue(mockPlaylists);
 
       // Act
       const result = await service.generateGenrePlaylists(userId, 5);
@@ -433,7 +490,7 @@ describe('WaveMixService', () => {
       // Arrange
       const userId = 'user-123';
       const mockResult = { playlists: [], total: 10, hasMore: true };
-      mockArtistPlaylistService.getPaginated.mockResolvedValue(mockResult);
+      mockArtistPlaylistService.getPaginated!.mockResolvedValue(mockResult);
 
       // Act
       const result = await service.getArtistPlaylistsPaginated(userId, 0, 5);
@@ -449,7 +506,7 @@ describe('WaveMixService', () => {
       // Arrange
       const userId = 'user-123';
       const mockResult = { playlists: [], total: 8, hasMore: false };
-      mockGenrePlaylistService.getPaginated.mockResolvedValue(mockResult);
+      mockGenrePlaylistService.getPaginated!.mockResolvedValue(mockResult);
 
       // Act
       const result = await service.getGenrePlaylistsPaginated(userId, 5, 5);

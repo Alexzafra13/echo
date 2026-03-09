@@ -48,6 +48,14 @@ describe('LogsController', () => {
             level: LogLevel.ERROR,
             category: LogCategory.AUTH,
             message: 'Authentication failed',
+            details: null,
+            userId: null,
+            entityId: null,
+            entityType: null,
+            stackTrace: null,
+            requestId: null,
+            ipAddress: null,
+            userAgent: null,
             createdAt: new Date(),
           },
           {
@@ -55,6 +63,14 @@ describe('LogsController', () => {
             level: LogLevel.WARNING,
             category: LogCategory.SCANNER,
             message: 'File not found',
+            details: null,
+            userId: null,
+            entityId: null,
+            entityType: null,
+            stackTrace: null,
+            requestId: null,
+            ipAddress: null,
+            userAgent: null,
             createdAt: new Date(),
           },
         ],
@@ -92,6 +108,14 @@ describe('LogsController', () => {
             level: LogLevel.ERROR,
             category: LogCategory.DATABASE,
             message: 'Connection error',
+            details: null,
+            userId: null,
+            entityId: null,
+            entityType: null,
+            stackTrace: null,
+            requestId: null,
+            ipAddress: null,
+            userAgent: null,
             createdAt: new Date(),
           },
         ],
@@ -121,6 +145,14 @@ describe('LogsController', () => {
             level: LogLevel.INFO,
             category: LogCategory.SCANNER,
             message: 'Scan completed',
+            details: null,
+            userId: null,
+            entityId: null,
+            entityType: null,
+            stackTrace: null,
+            requestId: null,
+            ipAddress: null,
+            userAgent: null,
             createdAt: new Date(),
           },
         ],
@@ -157,9 +189,7 @@ describe('LogsController', () => {
       await controller.getLogs(undefined, undefined, userId);
 
       // Assert
-      expect(mockLogService.getLogs).toHaveBeenCalledWith(
-        expect.objectContaining({ userId })
-      );
+      expect(mockLogService.getLogs).toHaveBeenCalledWith(expect.objectContaining({ userId }));
     });
 
     it('debería filtrar logs por entityId', async () => {
@@ -178,9 +208,7 @@ describe('LogsController', () => {
       await controller.getLogs(undefined, undefined, undefined, entityId);
 
       // Assert
-      expect(mockLogService.getLogs).toHaveBeenCalledWith(
-        expect.objectContaining({ entityId })
-      );
+      expect(mockLogService.getLogs).toHaveBeenCalledWith(expect.objectContaining({ entityId }));
     });
 
     it('debería filtrar logs por rango de fechas', async () => {
@@ -197,14 +225,7 @@ describe('LogsController', () => {
       mockLogService.getLogs.mockResolvedValue(mockLogs);
 
       // Act
-      await controller.getLogs(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        startDate,
-        endDate
-      );
+      await controller.getLogs(undefined, undefined, undefined, undefined, startDate, endDate);
 
       // Assert
       expect(mockLogService.getLogs).toHaveBeenCalledWith(

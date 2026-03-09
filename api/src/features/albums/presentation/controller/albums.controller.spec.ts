@@ -64,12 +64,10 @@ describe('AlbumsController', () => {
     trackNumber: 1,
     discNumber: 1,
     path: '/music/beatles/abbey-road/01-come-together.flac',
-    bitrate: 1411,
-    sampleRate: 44100,
-    channels: 2,
-    codec: 'flac',
+    bitRate: 1411,
+    compilation: false,
     size: Number(45000000),
-    mimeType: 'audio/flac',
+    suffix: 'flac',
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
   });
@@ -137,6 +135,7 @@ describe('AlbumsController', () => {
       // Arrange
       getAlbumsUseCase.execute.mockResolvedValue({
         data: [mockAlbum.toPrimitives()],
+        total: 1,
         skip: 0,
         take: 10,
         hasMore: false,
@@ -274,6 +273,7 @@ describe('AlbumsController', () => {
       // Arrange
       searchAlbumsUseCase.execute.mockResolvedValue({
         data: [mockAlbum.toPrimitives()],
+        total: 1,
         query: 'abbey',
         skip: 0,
         take: 10,

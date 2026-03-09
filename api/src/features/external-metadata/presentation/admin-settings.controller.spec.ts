@@ -50,7 +50,9 @@ describe('AdminSettingsController', () => {
     // Create mock enrichment queue service
     const mockEnrichmentQueueService = {
       resetEnrichmentState: jest.fn().mockResolvedValue({ artistsReset: 0, albumsReset: 0 }),
-      startEnrichmentQueue: jest.fn().mockResolvedValue({ started: false, pending: 0, message: 'No items pending' }),
+      startEnrichmentQueue: jest
+        .fn()
+        .mockResolvedValue({ started: false, pending: 0, message: 'No items pending' }),
       getQueueStats: jest.fn().mockResolvedValue({ isRunning: false, totalPending: 0 }),
     };
 
@@ -237,9 +239,9 @@ describe('AdminSettingsController', () => {
       settingsService.set.mockRejectedValue(new Error('Database error'));
 
       // Act & Assert
-      await expect(
-        controller.updateSetting('test.key', { value: 'new-value' })
-      ).rejects.toThrow('Database error');
+      await expect(controller.updateSetting('test.key', { value: 'new-value' })).rejects.toThrow(
+        'Database error'
+      );
     });
   });
 
@@ -323,7 +325,7 @@ describe('AdminSettingsController', () => {
     it('debería eliminar una configuración', async () => {
       // Arrange
       settingsService.findOne.mockResolvedValue(mockSetting);
-      settingsService.delete.mockResolvedValue(mockSetting);
+      settingsService.delete.mockResolvedValue(undefined);
 
       // Act
       const result = await controller.deleteSetting('test.key');

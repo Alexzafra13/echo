@@ -3,7 +3,10 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { AccessTokenController } from './access-token.controller';
 import { FederationTokenService } from '../domain/services';
 import { RemoteServerService } from '../infrastructure/services';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
+import {
+  IFederationRepository,
+  FEDERATION_REPOSITORY,
+} from '../domain/ports/federation.repository';
 import { getLoggerToken } from 'nestjs-pino';
 import { User } from '@infrastructure/database/schema';
 import { FederationAccessToken, ConnectedServer } from '../domain/types';
@@ -65,6 +68,7 @@ describe('AccessTokenController', () => {
     name: 'Test Server',
     baseUrl: 'https://test.example.com',
     authToken: 'auth-token',
+    color: null,
     isActive: true,
     isOnline: true,
     lastOnlineAt: new Date(),
@@ -148,7 +152,7 @@ describe('AccessTokenController', () => {
   describe('revokeOrDeleteAccessToken', () => {
     it('should revoke access token by default', async () => {
       repository.findFederationAccessTokenById.mockResolvedValue(mockAccessToken);
-      tokenService.revokeAccessToken.mockResolvedValue(undefined);
+      tokenService.revokeAccessToken.mockResolvedValue(true);
 
       await controller.revokeOrDeleteAccessToken(mockUser, 'access-1');
 
@@ -158,7 +162,7 @@ describe('AccessTokenController', () => {
 
     it('should delete permanently when permanent=true', async () => {
       repository.findFederationAccessTokenById.mockResolvedValue(mockAccessToken);
-      tokenService.deleteAccessToken.mockResolvedValue(undefined);
+      tokenService.deleteAccessToken.mockResolvedValue(true);
 
       await controller.revokeOrDeleteAccessToken(mockUser, 'access-1', 'true');
 
@@ -169,8 +173,9 @@ describe('AccessTokenController', () => {
     it('should throw NotFoundException if token not found', async () => {
       repository.findFederationAccessTokenById.mockResolvedValue(null);
 
-      await expect(controller.revokeOrDeleteAccessToken(mockUser, 'non-existent'))
-        .rejects.toThrow(NotFoundException);
+      await expect(controller.revokeOrDeleteAccessToken(mockUser, 'non-existent')).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('should throw ForbiddenException if user does not own token', async () => {
@@ -179,8 +184,9 @@ describe('AccessTokenController', () => {
         ownerId: 'other-user',
       });
 
-      await expect(controller.revokeOrDeleteAccessToken(mockUser, 'access-1'))
-        .rejects.toThrow(ForbiddenException);
+      await expect(controller.revokeOrDeleteAccessToken(mockUser, 'access-1')).rejects.toThrow(
+        ForbiddenException
+      );
     });
   });
 
@@ -199,14 +205,18 @@ describe('AccessTokenController', () => {
       repository.findFederationAccessTokenById.mockResolvedValue(mockAccessToken);
       tokenService.reactivateAccessToken.mockResolvedValue(null);
 
-      await expect(controller.reactivateAccessToken(mockUser, 'access-1'))
-        .rejects.toThrow(NotFoundException);
+      await expect(controller.reactivateAccessToken(mockUser, 'access-1')).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 
   describe('updateAccessTokenPermissions', () => {
     it('should update permissions', async () => {
-      const updatedToken = { ...mockAccessToken, permissions: { canBrowse: true, canStream: false, canDownload: false } };
+      const updatedToken = {
+        ...mockAccessToken,
+        permissions: { canBrowse: true, canStream: false, canDownload: false },
+      };
       repository.findFederationAccessTokenById.mockResolvedValue(mockAccessToken);
       tokenService.updateAccessTokenPermissions.mockResolvedValue(updatedToken);
 
@@ -214,7 +224,9 @@ describe('AccessTokenController', () => {
         canStream: false,
       });
 
-      expect(tokenService.updateAccessTokenPermissions).toHaveBeenCalledWith('access-1', { canStream: false });
+      expect(tokenService.updateAccessTokenPermissions).toHaveBeenCalledWith('access-1', {
+        canStream: false,
+      });
       expect(result.permissions.canStream).toBe(false);
     });
   });
@@ -241,7 +253,10 @@ describe('AccessTokenController', () => {
           serverUrl: 'https://remote.example.com',
         };
         tokenService.getAccessTokenById.mockResolvedValue(pendingToken);
-        tokenService.approveMutualRequest.mockResolvedValue(true);
+        tokenService.approveMutualRequest.mockResolvedValue({
+          ...mockAccessToken,
+          mutualStatus: 'approved' as const,
+        });
         remoteServerService.connectToServer.mockResolvedValue(mockConnectedServer);
 
         const result = await controller.approveMutualRequest(mockUser, 'access-1');
@@ -252,7 +267,7 @@ describe('AccessTokenController', () => {
           mockUser.id,
           pendingToken.serverUrl,
           pendingToken.mutualInvitationToken,
-          pendingToken.serverName,
+          pendingToken.serverName
         );
       });
 
@@ -262,8 +277,9 @@ describe('AccessTokenController', () => {
           mutualStatus: 'none',
         });
 
-        await expect(controller.approveMutualRequest(mockUser, 'access-1'))
-          .rejects.toThrow(NotFoundException);
+        await expect(controller.approveMutualRequest(mockUser, 'access-1')).rejects.toThrow(
+          NotFoundException
+        );
       });
 
       it('should throw ForbiddenException if user does not own token', async () => {
@@ -272,15 +288,16 @@ describe('AccessTokenController', () => {
           ownerId: 'other-user',
         });
 
-        await expect(controller.approveMutualRequest(mockUser, 'access-1'))
-          .rejects.toThrow(ForbiddenException);
+        await expect(controller.approveMutualRequest(mockUser, 'access-1')).rejects.toThrow(
+          ForbiddenException
+        );
       });
     });
 
     describe('rejectMutualRequest', () => {
       it('should reject mutual request', async () => {
         tokenService.getAccessTokenById.mockResolvedValue(mockAccessToken);
-        tokenService.rejectMutualRequest.mockResolvedValue(undefined);
+        tokenService.rejectMutualRequest.mockResolvedValue(mockAccessToken);
 
         await controller.rejectMutualRequest(mockUser, 'access-1');
 

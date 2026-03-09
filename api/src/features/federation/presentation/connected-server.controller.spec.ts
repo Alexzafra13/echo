@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ConnectedServerController } from './connected-server.controller';
 import { RemoteServerService } from '../infrastructure/services';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
+import {
+  IFederationRepository,
+  FEDERATION_REPOSITORY,
+} from '../domain/ports/federation.repository';
 import { getLoggerToken } from 'nestjs-pino';
 import { User } from '@infrastructure/database/schema';
 import { ConnectedServer } from '../domain/types';
@@ -45,6 +48,7 @@ describe('ConnectedServerController', () => {
     name: 'Test Server',
     baseUrl: 'https://test.example.com',
     authToken: 'auth-token',
+    color: null,
     isActive: true,
     isOnline: true,
     lastOnlineAt: new Date(),
@@ -122,7 +126,7 @@ describe('ConnectedServerController', () => {
         'ABCD-1234-EFGH-5678',
         'Test Server',
         undefined,
-        false,
+        false
       );
     });
   });
@@ -150,8 +154,9 @@ describe('ConnectedServerController', () => {
     it('should throw NotFoundException if server not found', async () => {
       repository.findConnectedServerById.mockResolvedValue(null);
 
-      await expect(controller.getConnectedServer(mockUser, 'non-existent'))
-        .rejects.toThrow(NotFoundException);
+      await expect(controller.getConnectedServer(mockUser, 'non-existent')).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('should throw ForbiddenException if user does not own server', async () => {
@@ -160,8 +165,9 @@ describe('ConnectedServerController', () => {
         userId: 'other-user',
       });
 
-      await expect(controller.getConnectedServer(mockUser, 'server-1'))
-        .rejects.toThrow(ForbiddenException);
+      await expect(controller.getConnectedServer(mockUser, 'server-1')).rejects.toThrow(
+        ForbiddenException
+      );
     });
   });
 
@@ -180,7 +186,7 @@ describe('ConnectedServerController', () => {
   describe('disconnectFromServer', () => {
     it('should disconnect from a server', async () => {
       repository.findConnectedServerById.mockResolvedValue(mockConnectedServer);
-      remoteServerService.disconnectFromServer.mockResolvedValue(undefined);
+      remoteServerService.disconnectFromServer.mockResolvedValue(true);
 
       await controller.disconnectFromServer(mockUser, 'server-1');
 
@@ -202,7 +208,7 @@ describe('ConnectedServerController', () => {
   describe('checkServerHealth', () => {
     it('should check health of a specific server', async () => {
       repository.findConnectedServerById.mockResolvedValue(mockConnectedServer);
-      remoteServerService.pingServer.mockResolvedValue(undefined);
+      remoteServerService.pingServer.mockResolvedValue(true);
 
       const result = await controller.checkServerHealth(mockUser, 'server-1');
 

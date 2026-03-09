@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { RemoteLibraryController } from './remote-library.controller';
 import { RemoteServerService } from '../infrastructure/services';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
+import {
+  IFederationRepository,
+  FEDERATION_REPOSITORY,
+} from '../domain/ports/federation.repository';
 import { StreamTokenService } from '@features/streaming/infrastructure/services/stream-token.service';
 import { getLoggerToken } from 'nestjs-pino';
 import { User } from '@infrastructure/database/schema';
@@ -46,6 +49,7 @@ describe('RemoteLibraryController', () => {
     name: 'Test Server',
     baseUrl: 'https://test.example.com',
     authToken: 'auth-token',
+    color: null,
     isActive: true,
     isOnline: true,
     lastOnlineAt: new Date(),
@@ -134,7 +138,9 @@ describe('RemoteLibraryController', () => {
       expect(result.albums).toHaveLength(1);
       expect(result.albums[0].serverId).toBe(mockConnectedServer.id);
       expect(result.albums[0].serverName).toBe(mockConnectedServer.name);
-      expect(result.albums[0].coverUrl).toBe('/api/federation/servers/server-1/albums/album-1/cover');
+      expect(result.albums[0].coverUrl).toBe(
+        '/api/federation/servers/server-1/albums/album-1/cover'
+      );
     });
 
     it('should return empty when no servers connected', async () => {
@@ -169,17 +175,23 @@ describe('RemoteLibraryController', () => {
         totalArtists: 1,
       });
 
-      const result = await controller.getRemoteLibrary(mockUser, 'server-1', { page: 1, limit: 50 });
+      const result = await controller.getRemoteLibrary(mockUser, 'server-1', {
+        page: 1,
+        limit: 50,
+      });
 
       expect(result.albums).toHaveLength(1);
-      expect(result.albums[0].coverUrl).toBe('/api/federation/servers/server-1/albums/album-1/cover');
+      expect(result.albums[0].coverUrl).toBe(
+        '/api/federation/servers/server-1/albums/album-1/cover'
+      );
     });
 
     it('should throw NotFoundException if server not found', async () => {
       repository.findConnectedServerById.mockResolvedValue(null);
 
-      await expect(controller.getRemoteLibrary(mockUser, 'non-existent', { page: 1 }))
-        .rejects.toThrow(NotFoundException);
+      await expect(
+        controller.getRemoteLibrary(mockUser, 'non-existent', { page: 1 })
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException if user does not own server', async () => {
@@ -188,8 +200,9 @@ describe('RemoteLibraryController', () => {
         userId: 'other-user',
       });
 
-      await expect(controller.getRemoteLibrary(mockUser, 'server-1', { page: 1 }))
-        .rejects.toThrow(ForbiddenException);
+      await expect(controller.getRemoteLibrary(mockUser, 'server-1', { page: 1 })).rejects.toThrow(
+        ForbiddenException
+      );
     });
   });
 
@@ -214,7 +227,9 @@ describe('RemoteLibraryController', () => {
 
       const result = await controller.getRemoteAlbums(mockUser, 'server-1', { page: 1, limit: 50 });
 
-      expect(result.albums[0].coverUrl).toBe('/api/federation/servers/server-1/albums/album-1/cover');
+      expect(result.albums[0].coverUrl).toBe(
+        '/api/federation/servers/server-1/albums/album-1/cover'
+      );
     });
   });
 

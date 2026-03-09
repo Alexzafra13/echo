@@ -1,5 +1,6 @@
 import { DrizzleBaseRepository, EntityMapper } from './drizzle-base.repository';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { PgTableWithColumns } from 'drizzle-orm/pg-core';
 
 // Test entity types
 interface TestDomain {
@@ -16,11 +17,12 @@ interface TestPersistence {
 }
 
 // Mock table with id column
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockTable = {
   id: { name: 'id' },
   name: { name: 'name' },
   active: { name: 'active' },
-} as unknown as Record<string, { name: string }>;
+} as unknown as PgTableWithColumns<any>;
 
 // Test mapper
 const testMapper: EntityMapper<TestDomain, TestPersistence> = {

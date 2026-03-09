@@ -6,7 +6,7 @@ import { SettingsService } from '@features/external-metadata/infrastructure/serv
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import * as fs from 'fs/promises';
-import type { Dirent, Stats } from 'fs';
+import type { Stats } from 'fs';
 
 // Mock fs/promises
 jest.mock('fs/promises');
@@ -83,7 +83,7 @@ describe('AdminLibraryController', () => {
       mockedFs.readdir.mockResolvedValue([
         { name: 'song1.mp3', isFile: () => true, isDirectory: () => false },
         { name: 'song2.flac', isFile: () => true, isDirectory: () => false },
-      ] as unknown as Dirent[]);
+      ] as never);
 
       // Act
       const result = await controller.getLibrary();
@@ -112,7 +112,7 @@ describe('AdminLibraryController', () => {
       // Arrange
       process.env.MUSIC_LIBRARY_PATH = '/custom/music';
       mockSettingsService.getString.mockImplementation((key, defaultValue) =>
-        Promise.resolve(defaultValue)
+        Promise.resolve(defaultValue ?? '')
       );
       mockedFs.access.mockRejectedValue(new Error('ENOENT'));
 
@@ -223,7 +223,7 @@ describe('AdminLibraryController', () => {
         { name: 'song1.mp3', isFile: () => true, isDirectory: () => false },
         { name: 'song2.flac', isFile: () => true, isDirectory: () => false },
         { name: 'cover.jpg', isFile: () => true, isDirectory: () => false },
-      ] as unknown as Dirent[]);
+      ] as never);
       mockSettingsService.set.mockResolvedValue(undefined);
 
       // Act
@@ -282,7 +282,7 @@ describe('AdminLibraryController', () => {
         { name: 'subdir2', isDirectory: () => true, isFile: () => false },
         { name: 'file.txt', isDirectory: () => false, isFile: () => true },
         { name: '.hidden', isDirectory: () => true, isFile: () => false },
-      ] as unknown as Dirent[]);
+      ] as never);
 
       // Act
       const result = await controller.browseDirectories({ path: '/music' });
@@ -318,8 +318,8 @@ describe('AdminLibraryController', () => {
       mockedFs.readdir
         .mockResolvedValueOnce([
           { name: 'album1', isDirectory: () => true, isFile: () => false },
-        ] as unknown as Dirent[])
-        .mockResolvedValueOnce(['song.mp3', 'song.flac']); // Contents of album1
+        ] as never)
+        .mockResolvedValueOnce(['song.mp3', 'song.flac'] as never); // Contents of album1
 
       // Act
       const result = await controller.browseDirectories({ path: '/music' });
@@ -351,7 +351,7 @@ describe('AdminLibraryController', () => {
         { name: 'zebra', isDirectory: () => true, isFile: () => false },
         { name: 'alpha', isDirectory: () => true, isFile: () => false },
         { name: 'beta', isDirectory: () => true, isFile: () => false },
-      ] as unknown as Dirent[]);
+      ] as never);
 
       // Act
       const result = await controller.browseDirectories({ path: '/music' });

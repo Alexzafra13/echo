@@ -59,7 +59,10 @@ describe('GenerateSmartPlaylistUseCase', () => {
 
       const result = await useCase.execute('user-123', config);
 
-      expect(mockSmartPlaylistGenerator.generateSmartPlaylist).toHaveBeenCalledWith('user-123', config);
+      expect(mockSmartPlaylistGenerator.generateSmartPlaylist).toHaveBeenCalledWith(
+        'user-123',
+        config
+      );
       expect(result).toEqual(mockResult);
     });
 
@@ -73,7 +76,10 @@ describe('GenerateSmartPlaylistUseCase', () => {
 
       const result = await useCase.execute('user-123', config);
 
-      expect(mockSmartPlaylistGenerator.generateSmartPlaylist).toHaveBeenCalledWith('user-123', config);
+      expect(mockSmartPlaylistGenerator.generateSmartPlaylist).toHaveBeenCalledWith(
+        'user-123',
+        config
+      );
       expect(result.tracks).toHaveLength(2);
     });
 
@@ -87,7 +93,10 @@ describe('GenerateSmartPlaylistUseCase', () => {
 
       const result = await useCase.execute('user-123', config);
 
-      expect(mockSmartPlaylistGenerator.generateSmartPlaylist).toHaveBeenCalledWith('user-123', config);
+      expect(mockSmartPlaylistGenerator.generateSmartPlaylist).toHaveBeenCalledWith(
+        'user-123',
+        config
+      );
       expect(result.metadata).toBeDefined();
     });
 
@@ -98,7 +107,7 @@ describe('GenerateSmartPlaylistUseCase', () => {
       };
       mockSmartPlaylistGenerator.generateSmartPlaylist.mockResolvedValue({
         tracks: [mockTracks[0]],
-        metadata: { totalTracks: 1, avgScore: 90, topGenres: ['indie'] },
+        metadata: { totalTracks: 1, avgScore: 90 },
       });
 
       const result = await useCase.execute('user-123', config);
@@ -112,7 +121,9 @@ describe('GenerateSmartPlaylistUseCase', () => {
       const error = new Error('Playlist generation failed');
       mockSmartPlaylistGenerator.generateSmartPlaylist.mockRejectedValue(error);
 
-      await expect(useCase.execute('user-123', config)).rejects.toThrow('Playlist generation failed');
+      await expect(useCase.execute('user-123', config)).rejects.toThrow(
+        'Playlist generation failed'
+      );
     });
   });
 });

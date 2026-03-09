@@ -1,10 +1,7 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect, useRef } from 'react';
 import { useWebSocketConnection } from './useWebSocketConnection';
 import { useAuthStore } from '@shared/store';
-import {
-  useScanProgressStore,
-  type ScanProgressEvent,
-} from '@shared/store/scanProgressStore';
+import { useScanProgressStore, type ScanProgressEvent } from '@shared/store/scanProgressStore';
 
 const COMPLETED_DISPLAY_DURATION = 5000; // 5 seconds
 
@@ -27,8 +24,13 @@ interface ScanCompletedEvent {
  */
 export function useGlobalScanProgress() {
   const accessToken = useAuthStore((state) => state.accessToken);
-  const { activeScans, updateScan, removeScan, setConnected } =
-    useScanProgressStore();
+  const { activeScans, updateScan, removeScan, setConnected } = useScanProgressStore();
+  const cleanupTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
+
+  useEffect(() => {
+    const timers = cleanupTimers.current;
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
   // Handle progress events
   const handleProgress = useCallback(
@@ -37,9 +39,11 @@ export function useGlobalScanProgress() {
 
       // Auto-remove completed/failed scans after delay
       if (data.status === 'completed' || data.status === 'failed') {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
+          cleanupTimers.current.delete(timer);
           removeScan(data.scanId);
         }, COMPLETED_DISPLAY_DURATION);
+        cleanupTimers.current.add(timer);
       }
     },
     [updateScan, removeScan]
@@ -64,9 +68,11 @@ export function useGlobalScanProgress() {
       });
 
       // Auto-remove after delay
-      setTimeout(() => {
+      const timer = setTimeout(() => {
+        cleanupTimers.current.delete(timer);
         removeScan(data.scanId);
       }, COMPLETED_DISPLAY_DURATION);
+      cleanupTimers.current.add(timer);
     },
     [updateScan, removeScan]
   );
@@ -104,10 +110,7 @@ export function useGlobalScanProgress() {
 
   // Check if any scan is active (not completed/failed)
   const hasActiveScans = useMemo(
-    () =>
-      scans.some(
-        (scan) => scan.status !== 'completed' && scan.status !== 'failed'
-      ),
+    () => scans.some((scan) => scan.status !== 'completed' && scan.status !== 'failed'),
     [scans]
   );
 
