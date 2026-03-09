@@ -166,10 +166,10 @@ describe('GetFeaturedAlbumUseCase', () => {
       const result = await useCase.execute();
 
       // Assert
-      expect(result.artistId).toBeUndefined();
-      expect(result.artistName).toBeUndefined();
-      expect(result.coverArtPath).toBeUndefined();
-      expect(result.year).toBeUndefined();
+      expect(result!.artistId).toBeUndefined();
+      expect(result!.artistName).toBeUndefined();
+      expect(result!.coverArtPath).toBeUndefined();
+      expect(result!.year).toBeUndefined();
     });
   });
 });

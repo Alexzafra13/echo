@@ -141,9 +141,7 @@ describe('ExploreController', () => {
         { id: 'album-4', name: 'Random 1' },
         { id: 'album-5', name: 'Random 2' },
       ];
-      exploreService.getRandomAlbums.mockResolvedValue(
-        mockAlbums as unknown as RandomAlbumResponseDto['album'][]
-      );
+      exploreService.getRandomAlbums.mockResolvedValue(mockAlbums as unknown as ExploreAlbum[]);
 
       const result = await controller.getRandomAlbums(6);
 

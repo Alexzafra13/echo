@@ -16,10 +16,14 @@ describe('CachedAlbumRepository', () => {
 
   const mockAlbumPrimitives = {
     id: 'album-1',
-    title: 'Test Album',
+    name: 'Test Album',
     artistId: 'artist-1',
     releaseDate: new Date('2024-01-01'),
-    coverPath: '/covers/album1.jpg',
+    coverArtPath: '/covers/album1.jpg',
+    compilation: false,
+    songCount: 10,
+    duration: 2400,
+    size: Number(50000000),
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -35,14 +39,17 @@ describe('CachedAlbumRepository', () => {
       findByArtistId: jest.fn(),
       findRecent: jest.fn(),
       findMostPlayed: jest.fn(),
+      findMostPlayedByUser: jest.fn(),
       findAlphabetically: jest.fn(),
+      findByArtistName: jest.fn(),
       findRecentlyPlayed: jest.fn(),
       findFavorites: jest.fn(),
       count: jest.fn(),
+      countByArtistId: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    } as jest.Mocked<IAlbumRepository>;
+    } as unknown as jest.Mocked<IAlbumRepository>;
 
     // Mock cache service
     cacheService = createMockCacheService();
@@ -54,8 +61,8 @@ describe('CachedAlbumRepository', () => {
     // Constructor expects: (baseRepository, cache, logger)
     cachedRepository = new CachedAlbumRepository(
       baseRepository as unknown as import('./album.repository').DrizzleAlbumRepository,
-      cacheService,
-      mockLogger as unknown as PinoLogger,
+      cacheService as unknown as import('@infrastructure/cache/redis.service').RedisService,
+      mockLogger as unknown as PinoLogger
     );
   });
 
@@ -92,7 +99,7 @@ describe('CachedAlbumRepository', () => {
       expect(cacheService.set).toHaveBeenCalledWith(
         'album:album-1',
         expect.any(Object),
-        expect.any(Number),
+        expect.any(Number)
       );
       expect(result).toBe(mockAlbum);
     });
@@ -202,7 +209,7 @@ describe('CachedAlbumRepository', () => {
       expect(cacheService.set).toHaveBeenCalledWith(
         'albums:artist:artist-1:0:10',
         expect.any(Array),
-        expect.any(Number),
+        expect.any(Number)
       );
       expect(result).toHaveLength(1);
     });
@@ -220,7 +227,7 @@ describe('CachedAlbumRepository', () => {
       expect(cacheService.set).toHaveBeenCalledWith(
         'albums:artist:artist-2:0:10',
         [],
-        expect.any(Number),
+        expect.any(Number)
       );
       expect(result).toHaveLength(0);
     });
@@ -241,7 +248,7 @@ describe('CachedAlbumRepository', () => {
       expect(cacheService.set).toHaveBeenCalledWith(
         'albums:recent:10',
         expect.any(Array),
-        300, // 5 minutes TTL
+        300 // 5 minutes TTL
       );
       expect(result).toHaveLength(1);
     });
@@ -275,7 +282,7 @@ describe('CachedAlbumRepository', () => {
       expect(cacheService.set).toHaveBeenCalledWith(
         'albums:most-played:10',
         expect.any(Array),
-        600, // 10 minutes TTL
+        600 // 10 minutes TTL
       );
       expect(result).toHaveLength(1);
     });
@@ -331,7 +338,7 @@ describe('CachedAlbumRepository', () => {
   describe('update', () => {
     it('should update album and invalidate caches', async () => {
       // Arrange
-      const updates = { title: 'Updated Title' };
+      const updates = { name: 'Updated Title' } as Partial<Album>;
       baseRepository.update.mockResolvedValue(mockAlbum);
 
       // Act
