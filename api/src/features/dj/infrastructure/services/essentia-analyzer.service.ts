@@ -66,7 +66,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
 
   constructor(
     @InjectPinoLogger(EssentiaAnalyzerService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {
     this.poolSize = this.calculatePoolSize();
     this.workerPath = path.join(
@@ -76,11 +76,11 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       'dj',
       'infrastructure',
       'workers',
-      'essentia-worker.js',
+      'essentia-worker.js'
     );
     this.logger.info(
       { poolSize: this.poolSize },
-      'DJ Analysis service initialized (Essentia.js worker pool + FFmpeg backend)',
+      'DJ Analysis service initialized (Essentia.js worker pool + FFmpeg backend)'
     );
   }
 
@@ -127,7 +127,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       }
 
       const results = await Promise.allSettled(
-        Array.from({ length: this.poolSize }, () => this.spawnWorker()),
+        Array.from({ length: this.poolSize }, () => this.spawnWorker())
       );
 
       const successCount = results.filter((r) => r.status === 'fulfilled').length;
@@ -139,7 +139,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       this.poolReady = true;
       this.logger.info(
         { ready: successCount, requested: this.poolSize },
-        'Essentia worker pool ready',
+        'Essentia worker pool ready'
       );
     })();
 
@@ -184,7 +184,10 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
           stderrBuffer = lines.pop() || '';
           for (const line of lines) {
             if (line.trim()) {
-              this.logger.warn({ source: 'essentia-worker', workerId }, `Worker stderr: ${line.trim()}`);
+              this.logger.warn(
+                { source: 'essentia-worker', workerId },
+                `Worker stderr: ${line.trim()}`
+              );
             }
           }
         });
@@ -214,15 +217,21 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
             this.logger.info({ workerId }, 'Essentia worker ready');
             resolve();
           } else if (message.type === 'init_error') {
-            this.logger.warn({ error: message.error, workerId }, 'Essentia WASM initialization failed');
+            this.logger.warn(
+              { error: message.error, workerId },
+              'Essentia WASM initialization failed'
+            );
             clearTimeout(startupTimeout);
             reject(new Error(message.error || 'WASM init failed'));
           } else if (message.type === 'debug') {
-            this.logger.debug({ workerDebug: message, workerId }, `Worker ${workerId} step: ${message.step}`);
+            this.logger.debug(
+              { workerDebug: message, workerId },
+              `Worker ${workerId} step: ${message.step}`
+            );
           } else if (message.type === 'result') {
             this.handleWorkerResult(worker, message);
           }
-        },
+        }
       );
 
       childProcess.on('error', (error) => {
@@ -249,7 +258,13 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
    */
   private handleWorkerResult(
     worker: WorkerInstance,
-    message: { requestId?: string; success?: boolean; data?: AudioAnalysisResult; error?: string; stack?: string },
+    message: {
+      requestId?: string;
+      success?: boolean;
+      data?: AudioAnalysisResult;
+      error?: string;
+      stack?: string;
+    }
   ): void {
     const requestId = message.requestId;
 
@@ -269,7 +284,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       } else {
         this.logger.warn(
           { workerError: message.error, workerStack: message.stack, workerId: worker.id },
-          'Worker returned error for analysis',
+          'Worker returned error for analysis'
         );
         reject(new Error(message.error || 'Analysis failed'));
       }
@@ -277,7 +292,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       // Request already timed out — worker released, nothing else to do
       this.logger.debug(
         { requestId, workerId: worker.id },
-        'Late result for timed-out request (worker released)',
+        'Late result for timed-out request (worker released)'
       );
     }
   }
@@ -320,7 +335,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
           if (this.workers.size === 0) {
             this.drainWaitingCallers(new Error('No Essentia workers available'));
           }
-        },
+        }
       );
     }
   }
@@ -336,7 +351,10 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       if (worker.ready && !worker.busy) {
         // Recycle if past threshold
         if (worker.analysisCount >= EssentiaAnalyzerService.RESTART_THRESHOLD) {
-          this.logger.info({ workerId: worker.id, count: worker.analysisCount }, 'Recycling worker for memory health');
+          this.logger.info(
+            { workerId: worker.id, count: worker.analysisCount },
+            'Recycling worker for memory health'
+          );
           this.killWorkerProcess(worker);
           continue;
         }
@@ -357,7 +375,10 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
    */
   private serveNextCaller(worker: WorkerInstance): void {
     if (worker.analysisCount >= EssentiaAnalyzerService.RESTART_THRESHOLD) {
-      this.logger.info({ workerId: worker.id, count: worker.analysisCount }, 'Recycling worker for memory health');
+      this.logger.info(
+        { workerId: worker.id, count: worker.analysisCount },
+        'Recycling worker for memory health'
+      );
       this.killWorkerProcess(worker);
       // handleWorkerExit → replacement spawn → serve waiters
       return;
@@ -392,15 +413,16 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       setTimeout(() => {
         try {
           worker.process.kill();
-        } catch {
-          /* already dead */
+        } catch (killError) {
+          this.logger.debug(killError, 'Worker process already terminated (SIGTERM)');
         }
       }, 200);
-    } catch {
+    } catch (sendError) {
+      this.logger.debug(sendError, 'Failed to send exit message to worker, forcing kill');
       try {
         worker.process.kill();
-      } catch {
-        /* already dead */
+      } catch (killError) {
+        this.logger.debug(killError, 'Worker process already terminated (forced kill)');
       }
     }
   }
@@ -428,7 +450,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
             worker.process.removeListener('exit', onExit);
             resolve();
           }, 1000);
-        }),
+        })
     );
 
     await Promise.all(killPromises);
@@ -462,7 +484,10 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.warn({ error: errorMessage, filePath }, 'Essentia analysis failed, falling back to FFmpeg');
+      this.logger.warn(
+        { error: errorMessage, filePath },
+        'Essentia analysis failed, falling back to FFmpeg'
+      );
     }
 
     // Fallback to FFmpeg for energy only
@@ -471,7 +496,10 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
 
   // ─── Analysis implementations ──────────────────────────────────────
 
-  private async analyzeWithEssentia(filePath: string, hints?: AnalysisHints): Promise<AudioAnalysisResult> {
+  private async analyzeWithEssentia(
+    filePath: string,
+    hints?: AnalysisHints
+  ): Promise<AudioAnalysisResult> {
     const worker = await this.acquireWorker();
     const requestId = crypto.randomUUID();
 
@@ -486,7 +514,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
           if (worker.busy && this.workers.has(worker.id)) {
             this.logger.warn(
               { workerId: worker.id },
-              'Worker still busy after timeout grace period, killing and replacing',
+              'Worker still busy after timeout grace period, killing and replacing'
             );
             this.killWorkerProcess(worker);
           }
@@ -531,7 +559,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       const { stdout } = await execFileAsync(
         getFfprobePath(),
         ['-v', 'quiet', '-print_format', 'json', '-show_streams', '-show_format', filePath],
-        { encoding: 'utf8' },
+        { encoding: 'utf8' }
       );
 
       const info = JSON.parse(stdout);
@@ -542,7 +570,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       const { stderr: loudnessOutput } = await execFileAsync(
         getFfmpegPath(),
         ['-i', filePath, '-af', 'volumedetect', '-f', 'null', '/dev/null'],
-        { timeout: 60000, encoding: 'utf8' },
+        { timeout: 60000, encoding: 'utf8' }
       );
 
       // Parse mean volume for energy estimate
@@ -554,7 +582,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       const linearEnergy = Math.min(1, Math.max(0, (meanVolume + 35) / 30));
       // Sigmoid contrast to spread values across full 0-1 range
       // Center 0.50, steepness 6: maps -30dB→0.12, -20dB→0.50, -10dB→0.88
-      const energy = 1 / (1 + Math.exp(-6 * (linearEnergy - 0.50)));
+      const energy = 1 / (1 + Math.exp(-6 * (linearEnergy - 0.5)));
 
       return {
         bpm: 0,
