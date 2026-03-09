@@ -47,23 +47,13 @@ export class StorageMaintenanceController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getStorageStats() {
-    try {
-      this.logger.info('Fetching storage statistics');
+    const stats = await this.cleanupService.getStorageStats();
 
-      const stats = await this.cleanupService.getStorageStats();
-
-      return {
-        ...stats,
-        totalSizeMB: stats.totalSize / 1024 / 1024,
-        avgSizePerArtistMB: stats.avgSizePerArtist / 1024 / 1024,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error fetching storage stats: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return {
+      ...stats,
+      totalSizeMB: stats.totalSize / 1024 / 1024,
+      avgSizePerArtistMB: stats.avgSizePerArtist / 1024 / 1024,
+    };
   }
 
   @Post('cleanup/orphaned')
@@ -106,28 +96,20 @@ export class StorageMaintenanceController {
   async cleanupOrphanedFiles(@Query('dryRun') dryRun?: string) {
     const isDryRun = dryRun === 'true' || dryRun === '1' || dryRun === undefined;
 
-    try {
-      this.logger.info(`Starting cleanup (dry run: ${isDryRun})`);
+    this.logger.info(`Starting cleanup (dry run: ${isDryRun})`);
 
-      const result = await this.cleanupService.cleanupOrphanedFiles(isDryRun);
+    const result = await this.cleanupService.cleanupOrphanedFiles(isDryRun);
 
-      return {
-        success: result.errors.length === 0,
-        filesRemoved: result.filesRemoved,
-        spaceFree: result.spaceFree,
-        spaceFreeMB: result.spaceFree / 1024 / 1024,
-        orphanedFiles: result.orphanedFiles,
-        errors: result.errors,
-        duration: result.duration,
-        dryRun: isDryRun,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error during cleanup: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return {
+      success: result.errors.length === 0,
+      filesRemoved: result.filesRemoved,
+      spaceFree: result.spaceFree,
+      spaceFreeMB: result.spaceFree / 1024 / 1024,
+      orphanedFiles: result.orphanedFiles,
+      errors: result.errors,
+      duration: result.duration,
+      dryRun: isDryRun,
+    };
   }
 
   @Post('cleanup/full')
@@ -180,31 +162,23 @@ export class StorageMaintenanceController {
   async runFullCleanup(@Query('dryRun') dryRun?: string) {
     const isDryRun = dryRun === 'true' || dryRun === '1' || dryRun === undefined;
 
-    try {
-      this.logger.info(`Starting full cleanup (dry run: ${isDryRun})`);
+    this.logger.info(`Starting full cleanup (dry run: ${isDryRun})`);
 
-      const result = await this.cleanupService.runFullCleanup(isDryRun);
+    const result = await this.cleanupService.runFullCleanup(isDryRun);
 
-      return {
-        success: result.files.errors.length === 0 && result.cache.errors.length === 0,
-        files: {
-          filesRemoved: result.files.filesRemoved,
-          spaceFree: result.files.spaceFree,
-          spaceFreeMB: result.files.spaceFree / 1024 / 1024,
-          orphanedFiles: result.files.orphanedFiles,
-          errors: result.files.errors,
-          duration: result.files.duration,
-        },
-        cache: result.cache,
-        dryRun: isDryRun,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error during full cleanup: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return {
+      success: result.files.errors.length === 0 && result.cache.errors.length === 0,
+      files: {
+        filesRemoved: result.files.filesRemoved,
+        spaceFree: result.files.spaceFree,
+        spaceFreeMB: result.files.spaceFree / 1024 / 1024,
+        orphanedFiles: result.files.orphanedFiles,
+        errors: result.files.errors,
+        duration: result.files.duration,
+      },
+      cache: result.cache,
+      dryRun: isDryRun,
+    };
   }
 
   @Post('storage/recalculate')
@@ -228,23 +202,15 @@ export class StorageMaintenanceController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async recalculateStorageSizes() {
-    try {
-      this.logger.info('Starting storage size recalculation');
+    this.logger.info('Starting storage size recalculation');
 
-      const result = await this.cleanupService.recalculateStorageSizes();
+    const result = await this.cleanupService.recalculateStorageSizes();
 
-      return {
-        success: result.errors.length === 0,
-        updated: result.updated,
-        errors: result.errors,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error recalculating storage: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return {
+      success: result.errors.length === 0,
+      updated: result.updated,
+      errors: result.errors,
+    };
   }
 
   @Get('verify/integrity')
@@ -273,25 +239,17 @@ export class StorageMaintenanceController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async verifyIntegrity() {
-    try {
-      this.logger.info('Starting file integrity check');
+    this.logger.info('Starting file integrity check');
 
-      const result = await this.cleanupService.verifyIntegrity();
+    const result = await this.cleanupService.verifyIntegrity();
 
-      return {
-        success: result.missing.length === 0 && result.errors.length === 0,
-        totalChecked: result.totalChecked,
-        missing: result.missing,
-        missingCount: result.missing.length,
-        errors: result.errors,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error verifying integrity: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return {
+      success: result.missing.length === 0 && result.errors.length === 0,
+      totalChecked: result.totalChecked,
+      missing: result.missing,
+      missingCount: result.missing.length,
+      errors: result.errors,
+    };
   }
 
   @Get('storage/paths')
@@ -317,26 +275,18 @@ export class StorageMaintenanceController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getStoragePaths() {
-    try {
-      const dataPath = this.config.get<string>('DATA_PATH', '/app/data');
-      const musicPath = this.config.get<string>('MUSIC_LIBRARY_PATH', '/music');
-      const metadataBasePath = await this.storage.getBasePath();
+    const dataPath = this.config.get<string>('DATA_PATH', '/app/data');
+    const musicPath = this.config.get<string>('MUSIC_LIBRARY_PATH', '/music');
+    const metadataBasePath = await this.storage.getBasePath();
 
-      return {
-        dataPath,
-        musicPath,
-        metadataPath: metadataBasePath,
-        albumCoversPath: path.join(metadataBasePath, 'albums'),
-        artistImagesPath: path.join(metadataBasePath, 'artists'),
-        userUploadsPath: path.join(dataPath, 'uploads', 'users'),
-        isReadOnlyMusic: true, // By design, music folder should be read-only
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error getting storage paths: ${(error as Error).message}`,
-        (error as Error).stack
-      );
-      throw error;
-    }
+    return {
+      dataPath,
+      musicPath,
+      metadataPath: metadataBasePath,
+      albumCoversPath: path.join(metadataBasePath, 'albums'),
+      artistImagesPath: path.join(metadataBasePath, 'artists'),
+      userUploadsPath: path.join(dataPath, 'uploads', 'users'),
+      isReadOnlyMusic: true,
+    };
   }
 }
