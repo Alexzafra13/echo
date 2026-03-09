@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Check, X, AlertCircle, Key, Shield, CheckCircle2, XCircle } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
@@ -44,11 +44,16 @@ export function ProvidersTab() {
     lastfm?: { valid: boolean; message: string };
     fanarttv?: { valid: boolean; message: string };
   }>({});
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [saveMessage, setSaveMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Fetch settings on mount
   useEffect(() => {
     loadSettings();
+    return () => clearTimeout(saveTimerRef.current);
   }, []);
 
   const loadSettings = async () => {
@@ -179,18 +184,18 @@ export function ProvidersTab() {
       await loadSettings();
 
       setSaveMessage({ type: 'success', text: 'Configuración guardada correctamente' });
-      // Clear message after 5 seconds
-      setTimeout(() => setSaveMessage(null), 5000);
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => setSaveMessage(null), 5000);
     } catch (error: unknown) {
       if (import.meta.env.DEV) {
         logger.error('Error saving settings:', error);
       }
       setSaveMessage({
         type: 'error',
-        text: getApiErrorMessage(error, 'Error al guardar configuración')
+        text: getApiErrorMessage(error, 'Error al guardar configuración'),
       });
-      // Clear message after 5 seconds
-      setTimeout(() => setSaveMessage(null), 5000);
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => setSaveMessage(null), 5000);
     } finally {
       setIsSaving(false);
     }
@@ -220,9 +225,7 @@ export function ProvidersTab() {
             }
             className={styles.checkbox}
           />
-          <span className={styles.toggleLabel}>
-            Activar auto-enrichment post-scan
-          </span>
+          <span className={styles.toggleLabel}>Activar auto-enrichment post-scan</span>
         </label>
       </div>
 
@@ -252,9 +255,7 @@ export function ProvidersTab() {
             <Key size={24} className={styles.providerIcon} />
             <div className={styles.providerInfo}>
               <h4 className={styles.providerName}>Last.fm</h4>
-              <p className={styles.providerDescription}>
-                Biografías de artistas y álbumes
-              </p>
+              <p className={styles.providerDescription}>Biografías de artistas y álbumes</p>
             </div>
             {settings.lastfmEnabled && validationStatus.lastfm?.valid && (
               <span className={styles.statusBadgeEnabled}>
@@ -297,16 +298,10 @@ export function ProvidersTab() {
             {validationStatus.lastfm && (
               <div
                 className={`${styles.validationMessage} ${
-                  validationStatus.lastfm.valid
-                    ? styles.validationSuccess
-                    : styles.validationError
+                  validationStatus.lastfm.valid ? styles.validationSuccess : styles.validationError
                 }`}
               >
-                {validationStatus.lastfm.valid ? (
-                  <Check size={16} />
-                ) : (
-                  <X size={16} />
-                )}
+                {validationStatus.lastfm.valid ? <Check size={16} /> : <X size={16} />}
                 <span>{validationStatus.lastfm.message}</span>
               </div>
             )}
@@ -371,11 +366,7 @@ export function ProvidersTab() {
                     : styles.validationError
                 }`}
               >
-                {validationStatus.fanarttv.valid ? (
-                  <Check size={16} />
-                ) : (
-                  <X size={16} />
-                )}
+                {validationStatus.fanarttv.valid ? <Check size={16} /> : <X size={16} />}
                 <span>{validationStatus.fanarttv.message}</span>
               </div>
             )}
@@ -389,8 +380,8 @@ export function ProvidersTab() {
         <div className={styles.infoContent}>
           <p className={styles.infoTitle}>Sobre los proveedores:</p>
           <p className={styles.infoText}>
-            Cover Art Archive está siempre activado y no requiere configuración.
-            Last.fm y Fanart.tv requieren API keys gratuitas que puedes obtener creando una cuenta.
+            Cover Art Archive está siempre activado y no requiere configuración. Last.fm y Fanart.tv
+            requieren API keys gratuitas que puedes obtener creando una cuenta.
           </p>
         </div>
       </div>
@@ -410,11 +401,7 @@ export function ProvidersTab() {
         {/* Save Message */}
         {saveMessage && (
           <div className={saveMessage.type === 'success' ? styles.saveSuccess : styles.saveError}>
-            {saveMessage.type === 'success' ? (
-              <CheckCircle2 size={18} />
-            ) : (
-              <XCircle size={18} />
-            )}
+            {saveMessage.type === 'success' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
             <span>{saveMessage.text}</span>
           </div>
         )}

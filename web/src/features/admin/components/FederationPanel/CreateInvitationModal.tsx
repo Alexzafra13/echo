@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, Link2, AlertCircle, Copy, Check } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { useCreateInvitation } from '../../hooks/useFederation';
@@ -17,6 +17,9 @@ export function CreateInvitationModal({ onClose, onSuccess }: CreateInvitationMo
   const [error, setError] = useState<string | null>(null);
   const [createdToken, setCreatedToken] = useState<InvitationToken | null>(null);
   const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(copyTimerRef.current), []);
 
   const createMutation = useCreateInvitation();
 
@@ -41,7 +44,8 @@ export function CreateInvitationModal({ onClose, onSuccess }: CreateInvitationMo
     try {
       await navigator.clipboard.writeText(createdToken.token);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       setError('Error al copiar el token');
     }
@@ -77,11 +81,7 @@ export function CreateInvitationModal({ onClose, onSuccess }: CreateInvitationMo
 
             <div className={styles.tokenDisplay}>
               <code className={styles.tokenLarge}>{createdToken.token}</code>
-              <button
-                className={styles.copyButtonLarge}
-                onClick={handleCopy}
-                title="Copiar token"
-              >
+              <button className={styles.copyButtonLarge} onClick={handleCopy} title="Copiar token">
                 {copied ? (
                   <>
                     <Check size={18} />
@@ -98,7 +98,9 @@ export function CreateInvitationModal({ onClose, onSuccess }: CreateInvitationMo
 
             <div className={styles.tokenInfo}>
               <p>Este token expira en {expiresInDays} días</p>
-              <p>Se puede usar {maxUses} {maxUses === 1 ? 'vez' : 'veces'}</p>
+              <p>
+                Se puede usar {maxUses} {maxUses === 1 ? 'vez' : 'veces'}
+              </p>
             </div>
 
             <div className={styles.modalActions}>
@@ -110,7 +112,8 @@ export function CreateInvitationModal({ onClose, onSuccess }: CreateInvitationMo
         ) : (
           <form onSubmit={handleSubmit} className={styles.modalContent}>
             <p className={styles.modalDescription}>
-              Crea un token de invitación para que un amigo pueda conectarse a tu servidor y ver tu biblioteca.
+              Crea un token de invitación para que un amigo pueda conectarse a tu servidor y ver tu
+              biblioteca.
             </p>
 
             {error && (

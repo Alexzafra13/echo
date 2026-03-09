@@ -1,6 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar, ChevronDown, Search, Database, Shield, Globe, HardDrive, Trash2, FileText, Copy, Check } from 'lucide-react';
+import {
+  AlertCircle,
+  AlertTriangle,
+  Info,
+  Bug,
+  XCircle,
+  Filter,
+  Calendar,
+  ChevronDown,
+  Search,
+  Database,
+  Shield,
+  Globe,
+  HardDrive,
+  Trash2,
+  FileText,
+  Copy,
+  Check,
+} from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { formatDateWithTime } from '@shared/utils/format';
@@ -29,9 +47,24 @@ interface LogsResponse {
 }
 
 const LEVEL_CONFIG = {
-  critical: { icon: XCircle, color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.15)', label: 'CRÍTICO' },
-  error: { icon: AlertCircle, color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.15)', label: 'ERROR' },
-  warning: { icon: AlertTriangle, color: '#eab308', bgColor: 'rgba(234, 179, 8, 0.15)', label: 'ADVERTENCIA' },
+  critical: {
+    icon: XCircle,
+    color: '#ef4444',
+    bgColor: 'rgba(239, 68, 68, 0.15)',
+    label: 'CRÍTICO',
+  },
+  error: {
+    icon: AlertCircle,
+    color: '#f97316',
+    bgColor: 'rgba(249, 115, 22, 0.15)',
+    label: 'ERROR',
+  },
+  warning: {
+    icon: AlertTriangle,
+    color: '#eab308',
+    bgColor: 'rgba(234, 179, 8, 0.15)',
+    label: 'ADVERTENCIA',
+  },
   info: { icon: Info, color: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.15)', label: 'INFO' },
   debug: { icon: Bug, color: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.15)', label: 'DEBUG' },
 };
@@ -60,6 +93,9 @@ export function LogsPanel() {
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(copyTimerRef.current), []);
 
   const loadLogs = useCallback(async () => {
     try {
@@ -114,7 +150,8 @@ export function LogsPanel() {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedField(fieldId);
-      setTimeout(() => setCopiedField(null), 2000);
+      clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopiedField(null), 2000);
     } catch {
       // Fallback for older browsers
       const textarea = document.createElement('textarea');
@@ -126,7 +163,8 @@ export function LogsPanel() {
       document.execCommand('copy');
       document.body.removeChild(textarea);
       setCopiedField(fieldId);
-      setTimeout(() => setCopiedField(null), 2000);
+      clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopiedField(null), 2000);
     }
   };
 
@@ -145,7 +183,7 @@ export function LogsPanel() {
           className={styles.categoryBadge}
           style={{
             background: config.bgColor,
-            borderColor: config.color
+            borderColor: config.color,
           }}
         >
           <Icon size={12} />
@@ -247,19 +285,18 @@ export function LogsPanel() {
               key={log.id}
               className={`${styles.logCard} ${styles[`level-${log.level}`]} ${expandedLog === log.id ? styles.logCardExpanded : ''}`}
             >
-              <div
-                className={styles.logHeader}
-                onClick={() => toggleLogDetails(log.id)}
-              >
+              <div className={styles.logHeader} onClick={() => toggleLogDetails(log.id)}>
                 <div
                   className={styles.levelBadge}
                   style={{
                     background: LEVEL_CONFIG[log.level].bgColor,
-                    borderColor: LEVEL_CONFIG[log.level].color
+                    borderColor: LEVEL_CONFIG[log.level].color,
                   }}
                 >
                   {renderLogIcon(log.level)}
-                  <span style={{ color: LEVEL_CONFIG[log.level].color }}>{LEVEL_CONFIG[log.level].label}</span>
+                  <span style={{ color: LEVEL_CONFIG[log.level].color }}>
+                    {LEVEL_CONFIG[log.level].label}
+                  </span>
                 </div>
 
                 {renderCategoryBadge(log.category)}
@@ -269,44 +306,51 @@ export function LogsPanel() {
                   {formatDateWithTime(log.createdAt)}
                 </div>
 
-                <div className={`${styles.expandIndicator} ${expandedLog === log.id ? styles.expandIndicatorOpen : ''}`}>
+                <div
+                  className={`${styles.expandIndicator} ${expandedLog === log.id ? styles.expandIndicatorOpen : ''}`}
+                >
                   <ChevronDown size={18} />
                 </div>
               </div>
 
-              <div
-                className={styles.logMessage}
-                onClick={() => toggleLogDetails(log.id)}
-              >
+              <div className={styles.logMessage} onClick={() => toggleLogDetails(log.id)}>
                 {log.message}
               </div>
 
               {expandedLog === log.id && (
-                <div
-                  className={styles.logDetails}
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <div className={styles.logDetails} onClick={(e) => e.stopPropagation()}>
                   {log.entityId && (
                     <div className={styles.detailRow}>
                       <div className={styles.detailRowHeader}>
                         <span className={styles.detailLabel}>Entity ID</span>
                         <button
                           className={styles.copyButton}
-                          onClick={() => handleCopy(
-                            log.entityType ? `${log.entityId} (${log.entityType})` : log.entityId!,
-                            `entity-${log.id}`
-                          )}
+                          onClick={() =>
+                            handleCopy(
+                              log.entityType
+                                ? `${log.entityId} (${log.entityType})`
+                                : log.entityId!,
+                              `entity-${log.id}`
+                            )
+                          }
                           title="Copiar"
                         >
-                          {copiedField === `entity-${log.id}`
-                            ? <><Check size={12} /> Copiado</>
-                            : <><Copy size={12} /> Copiar</>
-                          }
+                          {copiedField === `entity-${log.id}` ? (
+                            <>
+                              <Check size={12} /> Copiado
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={12} /> Copiar
+                            </>
+                          )}
                         </button>
                       </div>
                       <span className={styles.detailValue}>
                         {log.entityId}
-                        {log.entityType && <span className={styles.entityType}>{log.entityType}</span>}
+                        {log.entityType && (
+                          <span className={styles.entityType}>{log.entityType}</span>
+                        )}
                       </span>
                     </div>
                   )}
@@ -317,13 +361,20 @@ export function LogsPanel() {
                         <span className={styles.detailLabel}>Detalles</span>
                         <button
                           className={styles.copyButton}
-                          onClick={() => handleCopy(formatDetails(log.details) || '', `details-${log.id}`)}
+                          onClick={() =>
+                            handleCopy(formatDetails(log.details) || '', `details-${log.id}`)
+                          }
                           title="Copiar detalles"
                         >
-                          {copiedField === `details-${log.id}`
-                            ? <><Check size={12} /> Copiado</>
-                            : <><Copy size={12} /> Copiar</>
-                          }
+                          {copiedField === `details-${log.id}` ? (
+                            <>
+                              <Check size={12} /> Copiado
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={12} /> Copiar
+                            </>
+                          )}
                         </button>
                       </div>
                       <pre className={styles.detailsJson}>{formatDetails(log.details)}</pre>
@@ -339,10 +390,15 @@ export function LogsPanel() {
                           onClick={() => handleCopy(log.stackTrace || '', `stack-${log.id}`)}
                           title="Copiar stack trace"
                         >
-                          {copiedField === `stack-${log.id}`
-                            ? <><Check size={12} /> Copiado</>
-                            : <><Copy size={12} /> Copiar</>
-                          }
+                          {copiedField === `stack-${log.id}` ? (
+                            <>
+                              <Check size={12} /> Copiado
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={12} /> Copiar
+                            </>
+                          )}
                         </button>
                       </div>
                       <pre className={styles.stackTrace}>{log.stackTrace}</pre>
@@ -358,10 +414,7 @@ export function LogsPanel() {
       {/* Paginación */}
       {total > limit && (
         <div className={styles.pagination}>
-          <Button
-            onClick={() => setOffset(Math.max(0, offset - limit))}
-            disabled={offset === 0}
-          >
+          <Button onClick={() => setOffset(Math.max(0, offset - limit))} disabled={offset === 0}>
             ← Anterior
           </Button>
 
@@ -369,10 +422,7 @@ export function LogsPanel() {
             Página {Math.floor(offset / limit) + 1} de {Math.ceil(total / limit)}
           </span>
 
-          <Button
-            onClick={() => setOffset(offset + limit)}
-            disabled={offset + limit >= total}
-          >
+          <Button onClick={() => setOffset(offset + limit)} disabled={offset + limit >= total}>
             Siguiente →
           </Button>
         </div>

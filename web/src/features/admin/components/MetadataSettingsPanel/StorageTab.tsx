@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Folder, HardDrive, CheckCircle2, XCircle, AlertCircle, ChevronRight, ChevronLeft, Lock } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import {
+  Folder,
+  HardDrive,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  ChevronRight,
+  ChevronLeft,
+  Lock,
+} from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { logger } from '@shared/utils/logger';
@@ -38,7 +47,11 @@ export function StorageTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [saveMessage, setSaveMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   // File browser state
   const [currentPath, setCurrentPath] = useState('/app');
@@ -50,6 +63,7 @@ export function StorageTab() {
   // Fetch settings on mount
   useEffect(() => {
     loadSettings();
+    return () => clearTimeout(saveTimerRef.current);
   }, []);
 
   const loadSettings = async () => {
@@ -65,7 +79,8 @@ export function StorageTab() {
       });
 
       const modeValue = settingsMap['metadata.storage.location'] || 'centralized';
-      const mode: 'centralized' | 'portable' = modeValue === 'portable' ? 'portable' : 'centralized';
+      const mode: 'centralized' | 'portable' =
+        modeValue === 'portable' ? 'portable' : 'centralized';
       const path = settingsMap['metadata.storage.path'] || '/app/uploads/metadata';
 
       setStorageMode(mode);
@@ -166,16 +181,18 @@ export function StorageTab() {
       });
 
       setSaveMessage({ type: 'success', text: 'Configuración guardada correctamente' });
-      setTimeout(() => setSaveMessage(null), 3000);
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => setSaveMessage(null), 3000);
     } catch (error: unknown) {
       if (import.meta.env.DEV) {
         logger.error('Error saving settings:', error);
       }
       setSaveMessage({
         type: 'error',
-        text: getApiErrorMessage(error, 'Error al guardar la configuración')
+        text: getApiErrorMessage(error, 'Error al guardar la configuración'),
       });
-      setTimeout(() => setSaveMessage(null), 5000);
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => setSaveMessage(null), 5000);
     } finally {
       setIsSaving(false);
     }
@@ -197,7 +214,9 @@ export function StorageTab() {
         </h4>
 
         <div className={styles.radioGroup}>
-          <label className={`${styles.radioOption} ${storageMode === 'centralized' ? styles.selected : ''}`}>
+          <label
+            className={`${styles.radioOption} ${storageMode === 'centralized' ? styles.selected : ''}`}
+          >
             <input
               type="radio"
               name="storageMode"
@@ -216,7 +235,9 @@ export function StorageTab() {
             </div>
           </label>
 
-          <label className={`${styles.radioOption} ${storageMode === 'portable' ? styles.selected : ''}`}>
+          <label
+            className={`${styles.radioOption} ${storageMode === 'portable' ? styles.selected : ''}`}
+          >
             <input
               type="radio"
               name="storageMode"
@@ -252,29 +273,19 @@ export function StorageTab() {
               onBlur={handlePathBlur}
               placeholder="/app/uploads/metadata"
             />
-            <Button
-              onClick={handleOpenBrowser}
-              variant="outline"
-              size="sm"
-            >
+            <Button onClick={handleOpenBrowser} variant="outline" size="sm">
               Explorar
             </Button>
           </div>
 
           {/* Validation Status */}
-          {isValidating && (
-            <div className={styles.validating}>
-              Validando ruta...
-            </div>
-          )}
+          {isValidating && <div className={styles.validating}>Validando ruta...</div>}
 
           {validationResult && !isValidating && (
-            <div className={`${styles.validation} ${validationResult.valid ? styles.valid : styles.invalid}`}>
-              {validationResult.valid ? (
-                <CheckCircle2 size={16} />
-              ) : (
-                <XCircle size={16} />
-              )}
+            <div
+              className={`${styles.validation} ${validationResult.valid ? styles.valid : styles.invalid}`}
+            >
+              {validationResult.valid ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
               <div>
                 <strong>{validationResult.message}</strong>
                 {validationResult.readOnly && (
@@ -300,10 +311,7 @@ export function StorageTab() {
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h4>Seleccionar carpeta</h4>
-              <button
-                className={styles.closeButton}
-                onClick={() => setShowBrowser(false)}
-              >
+              <button className={styles.closeButton} onClick={() => setShowBrowser(false)}>
                 ✕
               </button>
             </div>
@@ -328,9 +336,7 @@ export function StorageTab() {
 
               <div className={styles.directoryList}>
                 {directories.length === 0 && !isBrowsing && (
-                  <div className={styles.emptyDirectory}>
-                    No hay subdirectorios
-                  </div>
+                  <div className={styles.emptyDirectory}>No hay subdirectorios</div>
                 )}
 
                 {directories.map((dir) => (
@@ -358,24 +364,14 @@ export function StorageTab() {
                 ))}
               </div>
 
-              {isBrowsing && (
-                <div className={styles.loadingBrowser}>
-                  Cargando...
-                </div>
-              )}
+              {isBrowsing && <div className={styles.loadingBrowser}>Cargando...</div>}
             </div>
 
             <div className={styles.modalFooter}>
-              <Button
-                onClick={() => handleSelectDirectory(currentPath)}
-                variant="primary"
-              >
+              <Button onClick={() => handleSelectDirectory(currentPath)} variant="primary">
                 Usar carpeta actual
               </Button>
-              <Button
-                onClick={() => setShowBrowser(false)}
-                variant="ghost"
-              >
+              <Button onClick={() => setShowBrowser(false)} variant="ghost">
                 Cancelar
               </Button>
             </div>
@@ -387,10 +383,13 @@ export function StorageTab() {
       <div className={styles.infoBox}>
         <AlertCircle size={18} />
         <div className={styles.infoContent}>
-          <p><strong>Información importante:</strong></p>
+          <p>
+            <strong>Información importante:</strong>
+          </p>
           <ul>
             <li>
-              <strong>Biblioteca de música:</strong> Montada como solo lectura en <code>/music</code>
+              <strong>Biblioteca de música:</strong> Montada como solo lectura en{' '}
+              <code>/music</code>
             </li>
             <li>
               <strong>Metadata descargada:</strong> Se guarda en la ruta configurada arriba
