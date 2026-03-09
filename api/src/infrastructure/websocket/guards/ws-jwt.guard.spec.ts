@@ -5,8 +5,7 @@ import { PinoLogger } from 'nestjs-pino';
 import { WsJwtGuard } from './ws-jwt.guard';
 import { Socket } from 'socket.io';
 import { SecuritySecretsService } from '@config/security-secrets.service';
-import { DrizzleUserRepository } from '@features/auth/infrastructure/persistence/user.repository';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 
 const createMockLogger = (): jest.Mocked<PinoLogger> =>
   ({
@@ -37,32 +36,17 @@ interface MockSocket {
   data: Record<string, unknown>;
 }
 
-const createMockUser = (overrides: Partial<{ isAdmin: boolean; isActive: boolean }> = {}) => {
-  const user = {
-    id: 'user-123',
-    username: 'testuser',
-    isAdmin: overrides.isAdmin ?? false,
-    isActive: overrides.isActive ?? true,
-    name: 'Test User',
-    toPrimitives: () => ({
-      id: 'user-123',
-      username: 'testuser',
-      isAdmin: overrides.isAdmin ?? false,
-      isActive: overrides.isActive ?? true,
-      name: 'Test User',
-      passwordHash: 'hash',
-      mustChangePassword: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }),
-  };
-  return user as unknown as User;
-};
+const createMockUserRow = (overrides: Partial<{ isAdmin: boolean; isActive: boolean }> = {}) => ({
+  id: 'user-123',
+  isAdmin: overrides.isAdmin ?? false,
+  isActive: overrides.isActive ?? true,
+  name: 'Test User',
+});
 
 describe('WsJwtGuard', () => {
   let guard: WsJwtGuard;
   let mockJwtService: { verifyAsync: jest.Mock };
-  let mockUserRepository: { findById: jest.Mock };
+  let mockDrizzleSelect: jest.Mock;
   let mockSocket: MockSocket;
   let mockContext: ExecutionContext;
   let mockLogger: jest.Mocked<PinoLogger>;
@@ -74,15 +58,28 @@ describe('WsJwtGuard', () => {
     mockJwtService = {
       verifyAsync: jest.fn(),
     };
-    mockUserRepository = {
-      findById: jest.fn().mockResolvedValue(createMockUser()),
+
+    // Build chainable mock: db.select({...}).from(users).where(...).limit(1) → [userRow]
+    const defaultUserRow = createMockUserRow();
+    mockDrizzleSelect = jest.fn().mockReturnValue({
+      from: jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnValue({
+          limit: jest.fn().mockResolvedValue([defaultUserRow]),
+        }),
+      }),
+    });
+
+    const mockDrizzle = {
+      db: {
+        select: mockDrizzleSelect,
+      },
     };
 
     guard = new WsJwtGuard(
       mockLogger,
       mockJwtService as unknown as JwtService,
       mockSecretsService,
-      mockUserRepository as unknown as DrizzleUserRepository
+      mockDrizzle as unknown as DrizzleService
     );
 
     mockSocket = {
@@ -101,6 +98,16 @@ describe('WsJwtGuard', () => {
       }),
     } as ExecutionContext;
   });
+
+  const setDbResult = (rows: Array<ReturnType<typeof createMockUserRow>> | null[]) => {
+    mockDrizzleSelect.mockReturnValue({
+      from: jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnValue({
+          limit: jest.fn().mockResolvedValue(rows),
+        }),
+      }),
+    });
+  };
 
   describe('canActivate', () => {
     it('should allow connection with valid token from query param', async () => {
@@ -175,7 +182,7 @@ describe('WsJwtGuard', () => {
         username: 'testuser',
         userId: 'user-123',
       });
-      mockUserRepository.findById.mockResolvedValue(createMockUser({ isActive: false }));
+      setDbResult([createMockUserRow({ isActive: false })]);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(WsException);
       await expect(guard.canActivate(mockContext)).rejects.toThrow('Unauthorized');
@@ -188,7 +195,7 @@ describe('WsJwtGuard', () => {
         username: 'testuser',
         userId: 'user-123',
       });
-      mockUserRepository.findById.mockResolvedValue(null);
+      setDbResult([]);
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(WsException);
     });
@@ -199,7 +206,7 @@ describe('WsJwtGuard', () => {
 
       mockSocket.handshake.query = { token };
       mockJwtService.verifyAsync.mockResolvedValue(payload);
-      mockUserRepository.findById.mockResolvedValue(createMockUser({ isAdmin: true }));
+      setDbResult([createMockUserRow({ isAdmin: true })]);
 
       const result = await guard.canActivate(mockContext);
 

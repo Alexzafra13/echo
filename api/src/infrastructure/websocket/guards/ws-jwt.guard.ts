@@ -4,7 +4,9 @@ import { WsException } from '@nestjs/websockets';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Socket } from 'socket.io';
 import { SecuritySecretsService } from '@config/security-secrets.service';
-import { DrizzleUserRepository } from '@features/auth/infrastructure/persistence/user.repository';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { users } from '@infrastructure/database/schema';
+import { eq } from 'drizzle-orm';
 
 /**
  * WsJwtGuard - Guard de autenticación JWT para WebSocket
@@ -32,7 +34,7 @@ export class WsJwtGuard implements CanActivate {
     private readonly logger: PinoLogger,
     private jwtService: JwtService,
     private secretsService: SecuritySecretsService,
-    private userRepository: DrizzleUserRepository
+    private drizzle: DrizzleService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -54,20 +56,30 @@ export class WsJwtGuard implements CanActivate {
         throw new WsException('Password change required before using WebSocket features');
       }
 
-      // Buscar usuario en BD para obtener datos completos (isAdmin, isActive)
-      const user = await this.userRepository.findById(payload.userId);
+      // Buscar usuario en BD para obtener isAdmin y isActive
+      // Usa DrizzleService directamente (global) para evitar dependencia con AuthModule
+      const userRows = await this.drizzle.db
+        .select({
+          id: users.id,
+          isAdmin: users.isAdmin,
+          isActive: users.isActive,
+          name: users.name,
+        })
+        .from(users)
+        .where(eq(users.id, payload.userId))
+        .limit(1);
 
+      const user = userRows[0];
       if (!user || !user.isActive) {
         throw new WsException('Unauthorized');
       }
 
       // Adjuntar usuario completo al socket (incluye isAdmin de BD)
-      const userProps = user.toPrimitives();
       client.data.user = {
         ...payload,
-        isAdmin: userProps.isAdmin,
-        isActive: userProps.isActive,
-        name: userProps.name,
+        isAdmin: user.isAdmin,
+        isActive: user.isActive,
+        name: user.name,
       };
       client.data.userId = payload.sub;
 
