@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Play,
   Pause,
@@ -36,6 +36,9 @@ import styles from './ScannerPanel.module.css';
 export function ScannerPanel() {
   const [showHistory, setShowHistory] = useState(false);
   const [currentScanId, setCurrentScanId] = useState<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const { data: history, isLoading: historyLoading, refetch } = useScannerHistory();
   const { mutate: startScan, isPending: isScanning, data: scanResponse } = useStartScan();
@@ -69,7 +72,8 @@ export function ScannerPanel() {
   // Cuando el scan se completa, refrescar historial
   useEffect(() => {
     if (isCompleted) {
-      setTimeout(() => {
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
         refetch();
         setCurrentScanId(null);
       }, 2000);
@@ -82,7 +86,8 @@ export function ScannerPanel() {
       {
         onSuccess: () => {
           // Refrescar historial después de iniciar
-          setTimeout(() => refetch(), 1000);
+          clearTimeout(timerRef.current);
+          timerRef.current = setTimeout(() => refetch(), 1000);
         },
       }
     );

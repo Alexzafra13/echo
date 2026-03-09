@@ -56,8 +56,15 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   const queueStateRef = useRef(queueState);
   const queueDragOffsetRef = useRef(queueDragOffset);
   const queueCloseTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const navTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => () => clearTimeout(queueCloseTimerRef.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(queueCloseTimerRef.current);
+      clearTimeout(navTimerRef.current);
+    },
+    []
+  );
 
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
 
@@ -77,7 +84,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       e.stopPropagation();
       if (!isRadioMode) {
         onClose();
-        setTimeout(() => setLocation(`/album/${albumId}`), 50);
+        navTimerRef.current = setTimeout(() => setLocation(`/album/${albumId}`), 50);
       }
     },
     [isRadioMode, onClose, setLocation]
@@ -88,7 +95,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       e.stopPropagation();
       if (!isRadioMode) {
         onClose();
-        setTimeout(() => setLocation(`/artists/${artistId}`), 50);
+        navTimerRef.current = setTimeout(() => setLocation(`/artists/${artistId}`), 50);
       }
     },
     [isRadioMode, onClose, setLocation]
