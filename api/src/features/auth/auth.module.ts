@@ -2,17 +2,18 @@ import { Module } from '@nestjs/common';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './presentation/auth.controller';
-import {
-  LoginUseCase,
-  RefreshTokenUseCase,
-  LogoutUseCase,
-} from './domain/use-cases';
+import { LoginUseCase, RefreshTokenUseCase, LogoutUseCase } from './domain/use-cases';
 import { DrizzleUserRepository } from './infrastructure/persistence/user.repository';
 import { JwtAdapter } from './infrastructure/adapters/jwt.adapter';
 import { BcryptAdapter } from './infrastructure/adapters/bcrypt.adapter';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { TokenBlacklistService } from './infrastructure/services/token-blacklist.service';
-import { USER_REPOSITORY, TOKEN_SERVICE, PASSWORD_SERVICE, TOKEN_BLACKLIST_SERVICE } from './domain/ports';
+import {
+  USER_REPOSITORY,
+  TOKEN_SERVICE,
+  PASSWORD_SERVICE,
+  TOKEN_BLACKLIST_SERVICE,
+} from './domain/ports';
 import { SecuritySecretsService } from '@config/security-secrets.service';
 import { LogsModule } from '@features/logs/logs.module';
 import { CacheModule } from '@infrastructure/cache/cache.module';
@@ -64,6 +65,6 @@ import { CacheModule } from '@infrastructure/cache/cache.module';
 
     JwtStrategy,
   ],
-  exports: [USER_REPOSITORY, TOKEN_SERVICE, PASSWORD_SERVICE],
+  exports: [USER_REPOSITORY, TOKEN_SERVICE, PASSWORD_SERVICE, DrizzleUserRepository],
 })
 export class AuthModule {}

@@ -1,6 +1,7 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, forwardRef } from '@nestjs/common';
 import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from '@features/auth/auth.module';
 
 import { WsJwtGuard } from './guards/ws-jwt.guard';
 import { WsThrottlerGuard } from './guards/ws-throttler.guard';
@@ -29,6 +30,7 @@ type ExpiresIn = JwtSignOptions['expiresIn'];
 @Global()
 @Module({
   imports: [
+    forwardRef(() => AuthModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
