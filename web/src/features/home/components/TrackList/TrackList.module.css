@@ -27,6 +27,22 @@
   letter-spacing: 0.5px;
 }
 
+/* Grid adjustments when hiding rating and/or options columns */
+.trackList--hideRating .trackList__header,
+.trackList--hideRating .trackList__track {
+  grid-template-columns: 40px 1fr 140px 80px 40px;
+}
+
+.trackList--hideOptions .trackList__header,
+.trackList--hideOptions .trackList__track {
+  grid-template-columns: 40px 1fr 140px 80px 200px;
+}
+
+.trackList--hideRating.trackList--hideOptions .trackList__header,
+.trackList--hideRating.trackList--hideOptions .trackList__track {
+  grid-template-columns: 40px 1fr 140px 80px;
+}
+
 .trackList__headerNumber {
   text-align: center;
 }

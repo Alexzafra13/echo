@@ -40,6 +40,7 @@ export default function AlbumsPage() {
     sourceParam === 'shared' ? 'shared' : 'local'
   );
   const [selectedServerId, setSelectedServerId] = useState<string | undefined>();
+  const [sharedSortBy, setSharedSortBy] = useState<'default' | 'alphabetical' | 'artist'>('default');
 
   // Debounce search query for shared albums (to avoid excessive API calls to remote servers)
   useEffect(() => {
@@ -140,13 +141,19 @@ export default function AlbumsPage() {
   // Pagination handler
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Shared albums data
-  const sharedAlbums = sharedAlbumsQuery.data?.albums || [];
+  const rawSharedAlbums = sharedAlbumsQuery.data?.albums || [];
   const sharedTotal = sharedAlbumsQuery.data?.total || 0;
   const sharedTotalPages = sharedAlbumsQuery.data?.totalPages || Math.ceil(sharedTotal / itemsPerPage) || 1;
+
+  // Client-side sort for shared albums
+  const sharedAlbums = [...rawSharedAlbums].sort((a, b) => {
+    if (sharedSortBy === 'alphabetical') return a.title.localeCompare(b.title);
+    if (sharedSortBy === 'artist') return a.artist.localeCompare(b.artist);
+    return 0;
+  });
 
   return (
     <div className={styles.albumsPage}>
@@ -297,9 +304,9 @@ export default function AlbumsPage() {
           {/* Shared Library Content */}
           {librarySource === 'shared' && (
             <>
-              {/* Server Filter - always show when there are connected servers */}
-              {connectedServers.length > 0 && (
-                <div className={styles.albumsPage__serverFilter}>
+              {/* Filters Row - Server + Sort */}
+              <div className={styles.albumsPage__sharedFilters}>
+                {connectedServers.length > 0 && (
                   <Select
                     label="Ver biblioteca de:"
                     value={selectedServerId || ''}
@@ -311,25 +318,34 @@ export default function AlbumsPage() {
                         label: `${server.name} (${server.remoteAlbumCount ?? '?'} álbumes)`,
                       })),
                     ]}
-                    className={styles.albumsPage__filterWrapper}
                   />
-                  {selectedServerId && (
-                    <div className={styles.albumsPage__serverInfo}>
-                      {(() => {
-                        const server = connectedServers.find(s => s.id === selectedServerId);
-                        return server ? (
-                          <>
-                            <span className={styles.albumsPage__serverStats}>
-                              {server.remoteAlbumCount ?? 0} álbumes • {server.remoteTrackCount ?? 0} canciones • {server.remoteArtistCount ?? 0} artistas
-                            </span>
-                            <span className={`${styles.albumsPage__serverStatus} ${server.isOnline ? styles['albumsPage__serverStatus--online'] : styles['albumsPage__serverStatus--offline']}`}>
-                              {server.isOnline ? 'Online' : 'Offline'}
-                            </span>
-                          </>
-                        ) : null;
-                      })()}
-                    </div>
-                  )}
+                )}
+                <Select
+                  label="Ordenar por:"
+                  value={sharedSortBy}
+                  onChange={(value) => setSharedSortBy(value as 'default' | 'alphabetical' | 'artist')}
+                  options={[
+                    { value: 'default', label: 'Por defecto' },
+                    { value: 'alphabetical', label: 'Por nombre (A-Z)' },
+                    { value: 'artist', label: 'Por artista (A-Z)' },
+                  ]}
+                />
+              </div>
+              {selectedServerId && (
+                <div className={styles.albumsPage__serverInfo}>
+                  {(() => {
+                    const server = connectedServers.find(s => s.id === selectedServerId);
+                    return server ? (
+                      <>
+                        <span className={styles.albumsPage__serverStats}>
+                          {server.remoteAlbumCount ?? 0} álbumes • {server.remoteTrackCount ?? 0} canciones • {server.remoteArtistCount ?? 0} artistas
+                        </span>
+                        <span className={`${styles.albumsPage__serverStatus} ${server.isOnline ? styles['albumsPage__serverStatus--online'] : styles['albumsPage__serverStatus--offline']}`}>
+                          {server.isOnline ? 'Online' : 'Offline'}
+                        </span>
+                      </>
+                    ) : null;
+                  })()}
                 </div>
               )}
 

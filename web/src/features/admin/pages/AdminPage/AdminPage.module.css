@@ -42,10 +42,6 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
-.breadcrumbsWrapper {
-  margin-bottom: 24px;
-}
-
 .header {
   margin-bottom: 40px;
 }
@@ -127,11 +123,6 @@
   .adminPage__main {
     margin-left: 0; /* No sidebar en mobile */
     padding-top: 0;
-  }
-
-  /* Hide breadcrumbs on mobile to save space */
-  .breadcrumbsWrapper {
-    display: none;
   }
 
   .adminPage__content {

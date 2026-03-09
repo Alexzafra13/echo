@@ -8,9 +8,10 @@ interface UseSheetDragToCloseOptions {
 
 /**
  * Hook for drag-down-to-close gesture on mobile bottom sheets.
- * When the user drags the sheet down past the threshold (and the
- * scrollable content is already at the top), the sheet slides off
- * and onClose is called.
+ *
+ * IMPORTANT: The sheet element MUST have `touch-action: none` in CSS
+ * to prevent the browser compositor from intercepting touch gestures.
+ * Without it, the drag gesture won't work on mobile.
  *
  * Returns refs to attach to the sheet container, the scrollable
  * content area, and optionally the overlay backdrop.
@@ -30,15 +31,27 @@ export function useSheetDragToClose({
     if (!enabled) return;
     const sheet = sheetRef.current;
     if (!sheet) return;
+    const scrollEl = scrollRef.current;
 
     let isDragging = false;
     let startY = 0;
     let currentY = 0;
 
+    // Clear CSS open-animation immediately so JS transforms work.
+    const clearAnimation = () => {
+      sheet.style.animation = 'none';
+    };
+    sheet.addEventListener('animationend', clearAnimation, { once: true });
+    const safetyTimer = setTimeout(clearAnimation, 400);
+
+    const isScrollAtTop = () => {
+      if (!scrollEl) return true;
+      return scrollEl.scrollTop <= 1;
+    };
+
     const handleTouchStart = (e: TouchEvent) => {
-      const scrollEl = scrollRef.current;
-      const atTop = !scrollEl || scrollEl.scrollTop <= 0;
-      if (atTop) {
+      clearAnimation();
+      if (isScrollAtTop()) {
         startY = e.touches[0].clientY;
         currentY = startY;
         isDragging = false;
@@ -46,11 +59,11 @@ export function useSheetDragToClose({
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      const scrollEl = scrollRef.current;
-      const atTop = !scrollEl || scrollEl.scrollTop <= 0;
+      if (!startY) return;
+
       const deltaY = e.touches[0].clientY - startY;
 
-      if (atTop && deltaY > 0) {
+      if (isScrollAtTop() && deltaY > 0) {
         isDragging = true;
         currentY = e.touches[0].clientY;
 
@@ -78,14 +91,17 @@ export function useSheetDragToClose({
     };
 
     const handleTouchEnd = () => {
-      if (!isDragging) return;
+      if (!isDragging) {
+        startY = 0;
+        return;
+      }
 
       const deltaY = currentY - startY;
       isDragging = false;
+      startY = 0;
       const overlay = overlayRef.current;
 
       if (deltaY > threshold) {
-        // Close: slide sheet off-screen
         sheet.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
         sheet.style.transform = 'translateY(100%)';
         if (overlay) {
@@ -94,7 +110,6 @@ export function useSheetDragToClose({
         }
         setTimeout(() => onCloseRef.current(), 250);
       } else {
-        // Snap back
         sheet.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
         sheet.style.transform = 'translateY(0)';
         if (overlay) {
@@ -117,6 +132,8 @@ export function useSheetDragToClose({
     sheet.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
+      clearTimeout(safetyTimer);
+      sheet.removeEventListener('animationend', clearAnimation);
       sheet.removeEventListener('touchstart', handleTouchStart);
       sheet.removeEventListener('touchmove', handleTouchMove);
       sheet.removeEventListener('touchend', handleTouchEnd);

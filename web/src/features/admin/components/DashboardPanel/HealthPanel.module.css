@@ -257,11 +257,30 @@
   .healthItem {
     padding: 8px 10px;
   }
+
+  .healthHeader svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .healthStatus span {
+    display: none;
+  }
+
+  .healthStatus {
+    padding: 4px;
+    border-radius: 50%;
+  }
+
+  .healthStatus svg {
+    width: 15px;
+    height: 15px;
+  }
 }
 
 @media (max-width: 480px) {
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

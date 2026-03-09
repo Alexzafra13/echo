@@ -39,6 +39,8 @@ interface TrackListProps {
   currentTrackId?: string;
   hideGoToAlbum?: boolean; // Hide "Go to Album" option when already in album view
   hideAlbumCover?: boolean; // Hide album cover icon when in album view (only useful in playlists)
+  hideRating?: boolean; // Hide rating stars column (e.g. for federated tracks)
+  hideOptionsMenu?: boolean; // Hide track options menu (e.g. for federated tracks)
   onRemoveFromPlaylist?: (track: Track) => void; // Handler to remove track from playlist (only in playlist view)
   onMoveUp?: (track: Track, index: number) => void; // Handler to move track up (for playlist reordering)
   onMoveDown?: (track: Track, index: number) => void; // Handler to move track down (for playlist reordering)
@@ -60,6 +62,8 @@ export function TrackList({
   currentTrackId,
   hideGoToAlbum = false,
   hideAlbumCover = false,
+  hideRating = false,
+  hideOptionsMenu = false,
   onRemoveFromPlaylist,
   onMoveUp,
   onMoveDown,
@@ -307,23 +311,24 @@ export function TrackList({
         <span className={styles.trackList__trackDuration}>{formatDuration(track.duration)}</span>
 
         {/* Rating Stars - Only render on desktop to avoid API rate limits */}
-        {!isMobile && !isMissingTrack && (
+        {!isMobile && !isMissingTrack && !hideRating && (
           <div className={styles.trackList__trackRating}>
             <RatingStars itemId={track.id} itemType="track" size={14} />
           </div>
         )}
 
         {/* Options Menu - hide for missing tracks */}
-        {!isMissingTrack && (
+        {!isMissingTrack && !hideOptionsMenu && (
           <TrackOptionsMenu
             track={track}
             onAddToPlaylist={handleAddToPlaylist}
             onAddToQueue={handleAddToQueue}
             onGoToAlbum={hideGoToAlbum ? undefined : handleGoToAlbum}
-            onGoToArtist={handleGoToArtist}
+            onGoToArtist={track.artistId ? handleGoToArtist : undefined}
             onShowInfo={handleShowInfo}
             onRemoveFromPlaylist={onRemoveFromPlaylist}
             onDownload={handleDownload}
+            hideRating={hideRating}
           />
         )}
       </div>
@@ -349,8 +354,17 @@ export function TrackList({
     );
   }
 
+  // Build container class names for grid column adjustments
+  const trackListClasses = [
+    styles.trackList,
+    hideRating ? styles['trackList--hideRating'] : '',
+    hideOptionsMenu ? styles['trackList--hideOptions'] : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className={styles.trackList}>
+    <div className={trackListClasses}>
       <div
         className={`${styles.trackList__header} ${canReorder ? styles['trackList__header--reorderable'] : ''}`}
       >
@@ -359,7 +373,7 @@ export function TrackList({
         <span className={styles.trackList__headerTitle}>Título</span>
         <span className={styles.trackList__headerFormat}>Formato</span>
         <span className={styles.trackList__headerDuration}>Duración</span>
-        <span className={styles.trackList__headerRating}>Calificación</span>
+        {!hideRating && <span className={styles.trackList__headerRating}>Calificación</span>}
       </div>
 
       <div className={styles.trackList__tracks}>

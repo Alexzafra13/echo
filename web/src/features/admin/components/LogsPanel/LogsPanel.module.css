@@ -142,52 +142,21 @@
 .logCard {
   background: var(--white-02);
   border: 1px solid var(--white-06);
-  border-radius: 8px;
-  padding: 14px 16px;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
+  border-radius: 12px;
+  padding: 16px 18px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
   position: relative;
   overflow: hidden;
 }
 
-.logCard::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  border-radius: 3px 0 0 3px;
-}
-
 .logCard:hover {
   border-color: var(--white-12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .logCardExpanded {
   background: var(--white-03);
   border-color: var(--white-10);
-}
-
-/* Level-specific left border colors */
-.level-critical::before {
-  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
-}
-
-.level-error::before {
-  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
-}
-
-.level-warning::before {
-  background: linear-gradient(180deg, #eab308 0%, #ca8a04 100%);
-}
-
-.level-info::before {
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-}
-
-.level-debug::before {
-  background: linear-gradient(180deg, #6b7280 0%, #4b5563 100%);
 }
 
 /* Log Header */
@@ -197,6 +166,7 @@
   gap: 12px;
   margin-bottom: 12px;
   flex-wrap: wrap;
+  cursor: pointer;
 }
 
 /* Level Badge */
@@ -282,6 +252,7 @@
   margin-bottom: 0;
   padding-left: 4px;
   word-break: break-all;
+  cursor: pointer;
 }
 
 /* Log Details (Expandable) */
@@ -318,12 +289,39 @@
   margin-bottom: 0;
 }
 
+.detailRowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .detailLabel {
   color: var(--color-text-tertiary, #6b7280);
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.copyButton {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
+  border-radius: 6px;
+  color: var(--color-text-tertiary, #6b7280);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.copyButton:hover {
+  background: var(--white-10);
+  border-color: var(--white-20);
+  color: var(--color-text-primary, #ffffff);
 }
 
 .detailValue {

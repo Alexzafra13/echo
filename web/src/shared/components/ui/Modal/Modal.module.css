@@ -111,6 +111,8 @@
   flex: 1;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  background: var(--bg-base);
+  --input-label-bg: var(--bg-base);
 }
 
 /* Animations - reference global keyframes */

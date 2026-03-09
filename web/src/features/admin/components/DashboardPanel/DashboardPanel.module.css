@@ -170,9 +170,10 @@
 }
 
 .activityValue {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
 /* Enrichment Stats */
@@ -203,9 +204,10 @@
 }
 
 .periodValue {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .periodDetails {
@@ -250,9 +252,10 @@
 }
 
 .scanValue {
-  font-size: var(--text-lg);
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .noScanInfo {
@@ -339,12 +342,6 @@
   .chartsRow {
     grid-template-columns: 1fr;
   }
-
-  .activityStats,
-  .enrichmentStats {
-    flex-direction: column;
-    gap: var(--space-4);
-  }
 }
 
 @media (max-width: 640px) {
@@ -358,7 +355,36 @@
     gap: var(--space-3);
   }
 
+  .activityStats,
+  .enrichmentStats {
+    flex-direction: row;
+    gap: 0;
+  }
+
+  .activityStat,
+  .enrichmentPeriod {
+    border-right: 1px solid var(--white-08);
+    padding-right: 16px;
+    margin-right: 16px;
+  }
+
+  .activityStat:last-child,
+  .enrichmentPeriod:last-child {
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0;
+  }
+
+  .activityValue,
+  .periodValue {
+    font-size: 20px;
+  }
+
   .scanInfo {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .scanValue {
+    font-size: 16px;
   }
 }

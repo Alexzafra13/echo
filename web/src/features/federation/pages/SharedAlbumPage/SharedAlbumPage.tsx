@@ -6,7 +6,6 @@ import {
   Loader2,
   Server,
   Play,
-  Pause,
   Shuffle,
   MoreHorizontal,
   AlertTriangle,
@@ -15,7 +14,7 @@ import {
 } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { Header } from '@shared/components/layout/Header';
-import { Sidebar } from '@features/home/components';
+import { Sidebar, TrackList } from '@features/home/components';
 import {
   useRemoteAlbum,
   useConnectedServers,
@@ -68,7 +67,7 @@ export default function SharedAlbumPage() {
   const isInProgress =
     existingImport?.status === 'downloading' || existingImport?.status === 'pending';
   const isImported = isCompleted || isInProgress;
-  const { playQueue, currentTrack, isPlaying, play, pause, setShuffle } = usePlayer();
+  const { playQueue, currentTrack, setShuffle } = usePlayer();
 
   const server = servers?.find((s) => s.id === serverId);
   const coverUrl = album?.coverUrl;
@@ -104,7 +103,17 @@ export default function SharedAlbumPage() {
         duration: remoteTrack.duration,
         size: remoteTrack.size,
         bitRate: remoteTrack.bitRate,
+        suffix: remoteTrack.format, // Map format to suffix for TrackList display
         coverImage: coverUrl,
+        // Audio analysis from remote server
+        rgTrackGain: remoteTrack.rgTrackGain,
+        rgTrackPeak: remoteTrack.rgTrackPeak,
+        rgAlbumGain: remoteTrack.rgAlbumGain,
+        rgAlbumPeak: remoteTrack.rgAlbumPeak,
+        bpm: remoteTrack.bpm,
+        outroStart: remoteTrack.outroStart,
+        // DJ analysis from remote server
+        djAnalysis: remoteTrack.djAnalysis,
         // Custom stream URL for federated tracks
         streamUrl: `${API_BASE_URL}/federation/servers/${serverId}/tracks/${remoteTrack.id}/stream`,
       }));
@@ -117,12 +126,6 @@ export default function SharedAlbumPage() {
     if (!album?.tracks) return [];
     return convertToPlayableTracks(album.tracks);
   }, [album?.tracks, convertToPlayableTracks]);
-
-  // Get the index of the currently playing track
-  const currentPlayingIndex = useMemo(() => {
-    if (!currentTrack || !album?.tracks) return -1;
-    return album.tracks.findIndex((track) => currentTrack.id === `${serverId}-${track.id}`);
-  }, [currentTrack, album?.tracks, serverId]);
 
   /**
    * Play all tracks starting from the beginning
@@ -152,23 +155,13 @@ export default function SharedAlbumPage() {
    * Play a specific track
    */
   const handlePlayTrack = useCallback(
-    (index: number) => {
-      if (playableTracks.length === 0 || index < 0 || index >= playableTracks.length) return;
-      playQueue(playableTracks, index, 'album');
+    (track: Track) => {
+      if (playableTracks.length === 0) return;
+      const index = playableTracks.findIndex((t) => t.id === track.id);
+      playQueue(playableTracks, index >= 0 ? index : 0, 'album');
     },
     [playableTracks, playQueue]
   );
-
-  /**
-   * Toggle play/pause for the current track
-   */
-  const handleTogglePlayPause = useCallback(() => {
-    if (isPlaying) {
-      pause();
-    } else {
-      play();
-    }
-  }, [isPlaying, play, pause]);
 
   // Close lightbox on Escape key
   useEffect(() => {
@@ -257,12 +250,6 @@ export default function SharedAlbumPage() {
     } finally {
       setIsCancelling(false);
     }
-  };
-
-  const formatDuration = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
   const formatTotalDuration = (seconds: number): string => {
@@ -498,64 +485,17 @@ export default function SharedAlbumPage() {
             </div>
           )}
 
-          {/* Track listing */}
+          {/* Track listing - using shared TrackList component */}
           <div className={styles.sharedAlbumPage__trackSection}>
-            {album.tracks && album.tracks.length > 0 ? (
-              <div className={styles.sharedAlbumPage__trackList}>
-                <div className={styles.sharedAlbumPage__trackHeader}>
-                  <span className={styles.sharedAlbumPage__trackNumber}>#</span>
-                  <span className={styles.sharedAlbumPage__trackTitle}>Titulo</span>
-                  <span className={styles.sharedAlbumPage__trackDuration}>Duracion</span>
-                </div>
-                {album.tracks.map((track: RemoteTrack, index: number) => {
-                  const isCurrentTrack = currentPlayingIndex === index;
-                  const isTrackPlaying = isCurrentTrack && isPlaying;
-
-                  return (
-                    <div
-                      key={track.id}
-                      className={`${styles.sharedAlbumPage__trackRow} ${isCurrentTrack ? styles['sharedAlbumPage__trackRow--active'] : ''}`}
-                      onClick={() =>
-                        isTrackPlaying ? handleTogglePlayPause() : handlePlayTrack(index)
-                      }
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          isTrackPlaying ? handleTogglePlayPause() : handlePlayTrack(index);
-                        }
-                      }}
-                    >
-                      <span className={styles.sharedAlbumPage__trackNumber}>
-                        {isTrackPlaying ? (
-                          <Pause size={14} className={styles.sharedAlbumPage__trackPlayIcon} />
-                        ) : isCurrentTrack ? (
-                          <Play size={14} className={styles.sharedAlbumPage__trackPlayIcon} />
-                        ) : (
-                          <span className={styles.sharedAlbumPage__trackNumberText}>
-                            {track.trackNumber || index + 1}
-                          </span>
-                        )}
-                        <Play size={14} className={styles.sharedAlbumPage__trackPlayIconHover} />
-                      </span>
-                      <div className={styles.sharedAlbumPage__trackInfo}>
-                        <span
-                          className={`${styles.sharedAlbumPage__trackName} ${isCurrentTrack ? styles['sharedAlbumPage__trackName--active'] : ''}`}
-                        >
-                          {track.title}
-                        </span>
-                        <span className={styles.sharedAlbumPage__trackArtist}>
-                          {track.artistName}
-                        </span>
-                      </div>
-                      <span className={styles.sharedAlbumPage__trackDuration}>
-                        {formatDuration(track.duration)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+            {playableTracks.length > 0 ? (
+              <TrackList
+                tracks={playableTracks}
+                onTrackPlay={handlePlayTrack}
+                currentTrackId={currentTrack?.id}
+                hideGoToAlbum={true}
+                hideAlbumCover={true}
+                hideRating={true}
+              />
             ) : (
               <div className={styles.sharedAlbumPage__emptyTracks}>
                 <p>No se encontraron canciones en este album</p>

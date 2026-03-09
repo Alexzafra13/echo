@@ -2,16 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "api",
-      "runtimeExecutable": "cmd",
-      "runtimeArgs": ["/c", "pnpm", "--dir", "api", "dev"],
-      "port": 3000
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "web", "dev"],
+      "port": 5173
     },
     {
-      "name": "web",
-      "runtimeExecutable": "cmd",
-      "runtimeArgs": ["/c", "pnpm", "--dir", "web", "dev"],
-      "port": 5173
+      "name": "api",
+      "runtimeExecutable": "C:\\Users\\alex\\AppData\\Roaming\\npm\\pnpm.cmd",
+      "runtimeArgs": ["--dir", "api", "start:dev"],
+      "port": 3000
     }
   ]
 }

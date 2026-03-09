@@ -28,6 +28,8 @@
   margin-bottom: 40px;
   padding: 0 24px;
   flex-shrink: 0;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .sidebar__logo {

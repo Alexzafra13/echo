@@ -3,6 +3,8 @@
  * Centralized type definitions for tracks used across the application
  */
 
+import type { DjAnalysis } from './dj-analysis.types';
+
 /**
  * Album cover information embedded in Track
  */
@@ -70,6 +72,9 @@ export interface Track {
   coverImage?: string; // Direct cover URL (for player UI)
   playlistOrder?: number; // Order in playlist (when track is from a playlist)
   streamUrl?: string; // Custom stream URL (for federated/remote tracks)
+
+  // DJ analysis (embedded, for federated tracks)
+  djAnalysis?: DjAnalysis;
 
   // Timestamps
   createdAt?: Date | string;

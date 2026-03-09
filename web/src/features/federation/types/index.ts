@@ -40,6 +40,27 @@ export interface RemoteTrack {
   size: number;
   bitRate?: number;
   format?: string;
+  // Audio analysis (from remote server)
+  rgTrackGain?: number;
+  rgTrackPeak?: number;
+  rgAlbumGain?: number;
+  rgAlbumPeak?: number;
+  bpm?: number;
+  initialKey?: string;
+  outroStart?: number;
+  lufsAnalyzed?: boolean;
+  // DJ analysis (from remote server)
+  djAnalysis?: {
+    status: string;
+    bpm?: number;
+    key?: string;
+    camelotKey?: string;
+    camelotColor?: { bg: string; text: string; name: string };
+    energy?: number;
+    danceability?: number;
+    analysisError?: string;
+    analyzedAt?: string;
+  };
 }
 
 export interface RemoteAlbumWithTracks {

@@ -52,13 +52,13 @@ export function Sidebar() {
 
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.sidebar__logoContainer}>
+      <Link href="/home" className={styles.sidebar__logoContainer}>
         <img
           src="/images/logos/echo_dark.svg"
           alt="Echo"
           className={styles.sidebar__logo}
         />
-      </div>
+      </Link>
 
       <nav className={styles.sidebar__nav}>
         {navItems.map((item) => {

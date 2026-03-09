@@ -38,14 +38,15 @@ export function Pagination({
       // Actualizar posición del indicador
       listRef.current.style.setProperty('--current-page-offset', offset.toString());
 
-      // En mobile, centrar el botón actual con scrollIntoView
+      // En mobile, centrar el botón actual dentro de la lista (solo scroll horizontal)
       const isMobile = window.innerWidth <= 768;
-      if (isMobile) {
-        currentButton.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center'
-        });
+      if (isMobile && listRef.current) {
+        const listLeft = listRef.current.getBoundingClientRect().left;
+        const listWidth = listRef.current.clientWidth;
+        const btnLeft = currentButton.getBoundingClientRect().left;
+        const btnWidth = currentButton.clientWidth;
+        const scrollTarget = listRef.current.scrollLeft + (btnLeft - listLeft) - (listWidth / 2) + (btnWidth / 2);
+        listRef.current.scrollTo({ left: scrollTarget, behavior: 'smooth' });
       }
     }
   }, [currentPage]);

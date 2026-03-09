@@ -1,9 +1,8 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearch } from 'wouter';
 import { LayoutDashboard, Library, Music2, Wrench, Users, FileText, Server } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { AdminSidebar } from '../../components/AdminSidebar';
-import { Breadcrumbs } from '../../components/Breadcrumbs';
 import { DashboardPanel } from '../../components/DashboardPanel';
 import { ScannerPanel } from '../../components/ScannerPanel/ScannerPanel';
 import { LibraryPanel } from '../../components/LibraryPanel';
@@ -58,25 +57,6 @@ export default function AdminPage() {
     }
   }, [activeTab]);
 
-  // Tab labels map
-  const tabLabels: Record<string, string> = {
-    dashboard: 'Dashboard',
-    library: 'Librería',
-    metadata: 'Metadata',
-    maintenance: 'Mantenimiento',
-    users: 'Usuarios',
-    federation: 'Federación',
-    logs: 'Logs',
-  };
-
-  // Breadcrumbs
-  const breadcrumbs = useMemo(() => {
-    return [
-      { label: 'Admin', onClick: () => setActiveTab('dashboard') },
-      { label: tabLabels[activeTab] || 'Dashboard' },
-    ];
-  }, [activeTab]);
-
   const tabs: Tab[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { id: 'library', label: 'Librería', icon: <Library size={20} /> },
@@ -128,11 +108,6 @@ export default function AdminPage() {
         <Header adminMode showBackButton />
 
         <div className={styles.adminPage__content} ref={contentRef}>
-          {/* Breadcrumbs (hidden on mobile) */}
-          <div className={styles.breadcrumbsWrapper}>
-            <Breadcrumbs items={breadcrumbs} />
-          </div>
-
           {/* Content */}
           <div className={styles.content}>
             {renderContent()}

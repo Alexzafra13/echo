@@ -26,6 +26,7 @@ interface TrackOptionsMenuProps {
   onShowInfo?: (track: Track) => void;
   onRemoveFromPlaylist?: (track: Track) => void;
   onDownload?: (track: Track) => void;
+  hideRating?: boolean; // Hide "Calificar" option entirely (e.g. for federated tracks)
 }
 
 /**
@@ -42,6 +43,7 @@ export function TrackOptionsMenu({
   onShowInfo,
   onRemoveFromPlaylist,
   onDownload,
+  hideRating = false,
 }: TrackOptionsMenuProps) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -113,8 +115,11 @@ export function TrackOptionsMenu({
 
   const coverUrl = track.albumId ? `/api/albums/${track.albumId}/cover` : '/placeholder-album.png';
 
-  // Shared options content
-  const renderOptions = (onOption: (e: React.MouseEvent, cb?: (track: Track) => void) => void) => (
+  // Shared options content (showRating: only show in mobile bottom sheet)
+  const renderOptions = (
+    onOption: (e: React.MouseEvent, cb?: (track: Track) => void) => void,
+    showRating = true
+  ) => (
     <>
       {onAddToPlaylist && (
         <button
@@ -194,15 +199,19 @@ export function TrackOptionsMenu({
         </>
       )}
 
-      {/* Rating */}
-      <div className={styles.trackOptionsMenu__separator} />
-      <div className={styles.trackOptionsMenu__ratingRow} onClick={(e) => e.stopPropagation()}>
-        <Star size={18} />
-        <span>Calificar</span>
-        <div className={styles.trackOptionsMenu__ratingStars}>
-          <RatingStars itemId={track.id} itemType="track" size={18} />
-        </div>
-      </div>
+      {/* Rating - only in mobile bottom sheet */}
+      {showRating && (
+        <>
+          <div className={styles.trackOptionsMenu__separator} />
+          <div className={styles.trackOptionsMenu__ratingRow} onClick={(e) => e.stopPropagation()}>
+            <Star size={18} />
+            <span>Calificar</span>
+            <div className={styles.trackOptionsMenu__ratingStars}>
+              <RatingStars itemId={track.id} itemType="track" size={18} />
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 
@@ -243,7 +252,7 @@ export function TrackOptionsMenu({
             }}
             data-placement={effectivePosition.placement}
           >
-            {renderOptions((e, cb) => handleDropdownOptionClick(e, cb, track))}
+            {renderOptions((e, cb) => handleDropdownOptionClick(e, cb, track), false /* no rating on desktop */)}
           </div>
         </Portal>
       )}
@@ -290,7 +299,7 @@ export function TrackOptionsMenu({
 
             {/* Options */}
             <div ref={dragScrollRef} className={styles.trackOptionsMenu__sheetContent}>
-              {renderOptions(handleSheetOptionClick)}
+              {renderOptions(handleSheetOptionClick, !hideRating /* show rating on mobile unless explicitly hidden */)}
             </div>
           </div>
         </Portal>

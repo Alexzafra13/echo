@@ -31,6 +31,8 @@ import { getAudioMimeType, getImageMimeType } from '@shared/utils/mime-type.util
 import { CoverArtService } from '@shared/services';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { albums, tracks, artists } from '@infrastructure/database/schema';
+import { djAnalysis } from '@infrastructure/database/schema/dj';
+import { CAMELOT_COLORS } from '@features/dj/config/dj.config';
 import { FederationTokenService } from '../domain/services';
 import { FederationAccessGuard } from './guards';
 import { RequestWithFederationToken } from '@shared/types/request.types';
@@ -377,7 +379,7 @@ export class FederationPublicController {
       throw new NotFoundException('Álbum no encontrado');
     }
 
-    // Get tracks
+    // Get tracks with DJ analysis
     const albumTracks = await this.drizzle.db
       .select({
         id: tracks.id,
@@ -387,11 +389,31 @@ export class FederationPublicController {
         duration: tracks.duration,
         size: tracks.size,
         bitRate: tracks.bitRate,
+        suffix: tracks.suffix,
         artistId: artists.id,
         artistName: artists.name,
+        // Audio analysis fields
+        rgTrackGain: tracks.rgTrackGain,
+        rgTrackPeak: tracks.rgTrackPeak,
+        rgAlbumGain: tracks.rgAlbumGain,
+        rgAlbumPeak: tracks.rgAlbumPeak,
+        bpm: tracks.bpm,
+        initialKey: tracks.initialKey,
+        outroStart: tracks.outroStart,
+        lufsAnalyzedAt: tracks.lufsAnalyzedAt,
+        // DJ analysis fields
+        djStatus: djAnalysis.status,
+        djBpm: djAnalysis.bpm,
+        djKey: djAnalysis.key,
+        djCamelotKey: djAnalysis.camelotKey,
+        djEnergy: djAnalysis.energy,
+        djDanceability: djAnalysis.danceability,
+        djAnalysisError: djAnalysis.analysisError,
+        djAnalyzedAt: djAnalysis.analyzedAt,
       })
       .from(tracks)
       .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .leftJoin(djAnalysis, eq(tracks.id, djAnalysis.trackId))
       .where(eq(tracks.albumId, id))
       .orderBy(tracks.discNumber, tracks.trackNumber);
 
@@ -407,19 +429,104 @@ export class FederationPublicController {
       coverUrl: album.coverArtPath
         ? `/api/federation/albums/${album.id}/cover`
         : undefined,
-      tracks: albumTracks.map((track) => ({
-        id: track.id,
-        title: track.title,
-        artistName: track.artistName || 'Unknown Artist',
-        artistId: track.artistId || '',
-        albumName: album.name,
-        albumId: album.id,
-        trackNumber: track.trackNumber,
-        discNumber: track.discNumber,
-        duration: track.duration,
-        size: track.size,
-        bitRate: track.bitRate,
-      })),
+      tracks: albumTracks.map((track) => {
+        // Build camelot color from key
+        const camelotColor = track.djCamelotKey
+          ? CAMELOT_COLORS[track.djCamelotKey] || null
+          : null;
+
+        return {
+          id: track.id,
+          title: track.title,
+          artistName: track.artistName || 'Unknown Artist',
+          artistId: track.artistId || '',
+          albumName: album.name,
+          albumId: album.id,
+          trackNumber: track.trackNumber,
+          discNumber: track.discNumber,
+          duration: track.duration,
+          size: track.size,
+          bitRate: track.bitRate,
+          format: track.suffix,
+          // Audio analysis
+          rgTrackGain: track.rgTrackGain,
+          rgTrackPeak: track.rgTrackPeak,
+          rgAlbumGain: track.rgAlbumGain,
+          rgAlbumPeak: track.rgAlbumPeak,
+          bpm: track.bpm,
+          initialKey: track.initialKey,
+          outroStart: track.outroStart,
+          lufsAnalyzed: !!track.lufsAnalyzedAt,
+          // DJ analysis
+          djAnalysis: track.djStatus ? {
+            status: track.djStatus,
+            bpm: track.djBpm,
+            key: track.djKey,
+            camelotKey: track.djCamelotKey,
+            camelotColor: camelotColor
+              ? { bg: camelotColor.bg, text: camelotColor.text, name: camelotColor.name }
+              : undefined,
+            energy: track.djEnergy,
+            danceability: track.djDanceability,
+            analysisError: track.djAnalysisError,
+            analyzedAt: track.djAnalyzedAt?.toISOString(),
+          } : undefined,
+        };
+      }),
+    };
+  }
+
+  @Get('albums/:id/dj-analysis')
+  @UseGuards(FederationAccessGuard)
+  @ApiOperation({
+    summary: 'Obtener análisis DJ de tracks del álbum',
+    description: 'Retorna datos de análisis DJ (BPM, key, energía, bailabilidad) para todos los tracks del álbum',
+  })
+  @ApiParam({ name: 'id', description: 'ID del álbum' })
+  async getAlbumDjAnalysis(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: RequestWithFederationToken,
+  ) {
+    const { federationAccessToken } = request;
+
+    if (!federationAccessToken.permissions.canBrowse) {
+      throw new ForbiddenException('Browse permission not granted');
+    }
+
+    const albumTracks = await this.drizzle.db
+      .select({
+        trackId: tracks.id,
+        status: djAnalysis.status,
+        bpm: djAnalysis.bpm,
+        key: djAnalysis.key,
+        camelotKey: djAnalysis.camelotKey,
+        energy: djAnalysis.energy,
+        danceability: djAnalysis.danceability,
+        analysisError: djAnalysis.analysisError,
+        analyzedAt: djAnalysis.analyzedAt,
+      })
+      .from(tracks)
+      .innerJoin(djAnalysis, eq(tracks.id, djAnalysis.trackId))
+      .where(eq(tracks.albumId, id));
+
+    return {
+      tracks: albumTracks.map(t => {
+        const camelotColor = t.camelotKey ? CAMELOT_COLORS[t.camelotKey] : undefined;
+        return {
+          trackId: t.trackId,
+          status: t.status,
+          bpm: t.bpm,
+          key: t.key,
+          camelotKey: t.camelotKey,
+          camelotColor: camelotColor
+            ? { bg: camelotColor.bg, text: camelotColor.text, name: camelotColor.name }
+            : undefined,
+          energy: t.energy,
+          danceability: t.danceability,
+          analysisError: t.analysisError,
+          analyzedAt: t.analyzedAt?.toISOString(),
+        };
+      }),
     };
   }
 
@@ -586,7 +693,7 @@ export class FederationPublicController {
       throw new NotFoundException('Álbum no encontrado');
     }
 
-    // Get tracks with ALL metadata including LUFS/ReplayGain
+    // Get tracks with ALL metadata including LUFS/ReplayGain and DJ analysis
     const albumTracks = await this.drizzle.db
       .select({
         id: tracks.id,
@@ -624,8 +731,18 @@ export class FederationPublicController {
         catalogNum: tracks.catalogNum,
         // File info
         path: tracks.path,
+        // DJ analysis
+        djStatus: djAnalysis.status,
+        djBpm: djAnalysis.bpm,
+        djKey: djAnalysis.key,
+        djCamelotKey: djAnalysis.camelotKey,
+        djEnergy: djAnalysis.energy,
+        djDanceability: djAnalysis.danceability,
+        djAnalysisError: djAnalysis.analysisError,
+        djAnalyzedAt: djAnalysis.analyzedAt,
       })
       .from(tracks)
+      .leftJoin(djAnalysis, eq(tracks.id, djAnalysis.trackId))
       .where(eq(tracks.albumId, id))
       .orderBy(tracks.discNumber, tracks.trackNumber);
 
@@ -685,6 +802,23 @@ export class FederationPublicController {
         mbzAlbumArtistId: t.mbzAlbumArtistId,
         mbzReleaseTrackId: t.mbzReleaseTrackId,
         catalogNum: t.catalogNum,
+        // DJ analysis
+        djAnalysis: t.djStatus ? (() => {
+          const camelotColor = t.djCamelotKey ? CAMELOT_COLORS[t.djCamelotKey] : undefined;
+          return {
+            status: t.djStatus,
+            bpm: t.djBpm,
+            key: t.djKey,
+            camelotKey: t.djCamelotKey,
+            camelotColor: camelotColor
+              ? { bg: camelotColor.bg, text: camelotColor.text, name: camelotColor.name }
+              : undefined,
+            energy: t.djEnergy,
+            danceability: t.djDanceability,
+            analysisError: t.djAnalysisError,
+            analyzedAt: t.djAnalyzedAt?.toISOString(),
+          };
+        })() : undefined,
         // File info for download
         filename: t.path.split('/').pop(),
         streamUrl: `/api/federation/stream/${t.id}`,

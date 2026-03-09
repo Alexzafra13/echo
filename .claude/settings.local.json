@@ -35,7 +35,18 @@
       "Bash(xargs grep -l \"isSystemAdmin\\\\|isMainAdmin\")",
       "Bash(pnpm --dir api exec tsc --noEmit)",
       "Bash(pnpm --dir web exec tsc --noEmit)",
-      "Bash(pnpm --dir api db:push)"
+      "Bash(pnpm --dir api db:push)",
+      "Bash(pnpm --dir api test -- --run --testPathPattern=\"reset-user-password\")",
+      "Bash(npx jest --testPathPattern=\"reset-user-password\")",
+      "Bash(ls /c/Users/alex/Desktop/ec/echo/web/src/features/*/pages/)",
+      "Bash(pnpm --dir web build)",
+      "Bash(npx tsc --noEmit --project web/tsconfig.json)",
+      "Bash(pnpm exec tsc --noEmit)",
+      "Bash(git -C \"C:\\\\Users\\\\alex\\\\Desktop\\\\ec\\\\echo\" status --short)",
+      "Bash(findstr nul)",
+      "Bash(python3 -c \"import os; os.remove\\(''\\\\\\\\?\\\\C:\\\\Users\\\\alex\\\\Desktop\\\\ec\\\\echo\\\\nul''\\)\")",
+      "Bash(python -c \"import os; os.remove\\(''\\\\\\\\?\\\\C:\\\\Users\\\\alex\\\\Desktop\\\\ec\\\\echo\\\\nul''\\)\")",
+      "Bash(node -e \"const fs = require\\(''fs''\\); fs.unlinkSync\\(''\\\\\\\\\\\\\\\\?\\\\\\\\C:\\\\\\\\Users\\\\\\\\alex\\\\\\\\Desktop\\\\\\\\ec\\\\\\\\echo\\\\\\\\nul''\\)\")"
     ]
   }
 }

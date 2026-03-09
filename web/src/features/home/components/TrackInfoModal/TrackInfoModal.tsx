@@ -18,8 +18,11 @@ interface TrackInfoModalProps {
  * Mobile: bottom sheet with album dominant color accent
  */
 export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
-  const coverUrl = track.albumId ? getCoverUrl(`/api/albums/${track.albumId}/cover`) : undefined;
-  const { djAnalysis, isLoading: djLoading } = useTrackDjAnalysis(track.id);
+  // Use coverImage (federated tracks) or local album cover endpoint
+  const coverUrl = track.coverImage || (track.albumId ? getCoverUrl(`/api/albums/${track.albumId}/cover`) : undefined);
+  const { djAnalysis: fetchedDjAnalysis, isLoading: djLoading } = useTrackDjAnalysis(track.id);
+  // Use fetched DJ analysis, or fall back to embedded data (for federated tracks)
+  const djAnalysis = fetchedDjAnalysis || track.djAnalysis || null;
   const dominantColor = useDominantColor(coverUrl);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [closing, setClosing] = useState(false);
@@ -129,16 +132,20 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
               <span className={styles.trackInfoModal__infoValue}>{formatFileSize(track.size)}</span>
             </div>
           )}
-          <div className={styles.trackInfoModal__infoRow}>
-            <span className={styles.trackInfoModal__infoLabel}>Ubicación:</span>
-            <span className={styles.trackInfoModal__infoValue} title={track.path}>
-              {track.path}
-            </span>
-          </div>
-          <div className={styles.trackInfoModal__infoRow}>
-            <span className={styles.trackInfoModal__infoLabel}>Agregado:</span>
-            <span className={styles.trackInfoModal__infoValue}>{formatDate(track.createdAt)}</span>
-          </div>
+          {track.path && (
+            <div className={styles.trackInfoModal__infoRow}>
+              <span className={styles.trackInfoModal__infoLabel}>Ubicación:</span>
+              <span className={styles.trackInfoModal__infoValue} title={track.path}>
+                {track.path}
+              </span>
+            </div>
+          )}
+          {track.createdAt && (
+            <div className={styles.trackInfoModal__infoRow}>
+              <span className={styles.trackInfoModal__infoLabel}>Agregado:</span>
+              <span className={styles.trackInfoModal__infoValue}>{formatDate(track.createdAt)}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -178,17 +185,26 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
         </div>
       </div>
 
-      {/* DJ Analysis */}
+      {/* DJ Analysis - only show when data exists or is loading */}
+      {(djAnalysis || djLoading || track.bpm) && (
       <div className={styles.trackInfoModal__section}>
         <h4 className={styles.trackInfoModal__sectionTitle}>
           <Music2 size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
           Análisis DJ
         </h4>
-        {djLoading ? (
+        {djLoading && !djAnalysis ? (
           <div className={styles.trackInfoModal__djNotAvailable}>Cargando...</div>
-        ) : !djAnalysis ? (
-          <div className={styles.trackInfoModal__djNotAvailable}>No disponible</div>
-        ) : djAnalysis.status === 'pending' ? (
+        ) : !djAnalysis && track.bpm ? (
+          // Fallback: show BPM from track data
+          <div className={styles.trackInfoModal__djGrid}>
+            <div className={styles.trackInfoModal__djItem}>
+              <span className={styles.trackInfoModal__djLabel}>BPM</span>
+              <span className={styles.trackInfoModal__djValue}>
+                {Math.round(track.bpm)}
+              </span>
+            </div>
+          </div>
+        ) : djAnalysis?.status === 'pending' ? (
           <div className={styles.trackInfoModal__infoRow}>
             <span className={styles.trackInfoModal__infoLabel}>Estado:</span>
             <span className={styles.trackInfoModal__infoValue}>
@@ -290,6 +306,7 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
           </div>
         )}
       </div>
+      )}
 
       {/* Lyrics if available */}
       {track.lyrics && (

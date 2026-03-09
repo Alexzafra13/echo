@@ -1,4 +1,4 @@
-import { Copy, Check, Trash2 } from 'lucide-react';
+import { Copy, Check, Trash2, Clock, Hash } from 'lucide-react';
 import { InvitationToken } from '../../api/federation.api';
 import { formatDistanceToNow } from '@shared/utils/format';
 import styles from './FederationPanel.module.css';
@@ -16,10 +16,12 @@ export function InvitationCard({
   onCopyToken,
   onDelete,
 }: InvitationCardProps) {
+  const isActive = !invitation.isUsed;
+
   return (
-    <div className={styles.invitationCard}>
-      <div className={styles.invitationHeader}>
-        <div className={styles.tokenWrapper}>
+    <div className={`${styles.invitationCard} ${isActive ? styles.invitationCardActive : styles.invitationCardUsed}`}>
+      <div className={styles.invitationTop}>
+        <div className={styles.invitationTokenRow}>
           <code className={styles.token}>{invitation.token}</code>
           <button
             className={styles.copyButton}
@@ -27,31 +29,37 @@ export function InvitationCard({
             title="Copiar token"
           >
             {copiedToken === invitation.token ? (
-              <Check size={16} className={styles.copySuccess} />
+              <Check size={14} className={styles.copySuccess} />
             ) : (
-              <Copy size={16} />
+              <Copy size={14} />
             )}
           </button>
         </div>
-        <span className={`${styles.badge} ${invitation.isUsed ? styles.badgeUsed : styles.badgeActive}`}>
-          {invitation.isUsed ? 'Usado' : 'Activo'}
-        </span>
+        <div className={styles.invitationTopRight}>
+          <span className={`${styles.badge} ${isActive ? styles.badgeActive : styles.badgeUsed}`}>
+            {isActive ? 'Activo' : 'Usado'}
+          </span>
+          <button
+            className={styles.invitationDeleteBtn}
+            onClick={() => onDelete(invitation)}
+            title="Eliminar invitación"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
       </div>
       {invitation.name && (
         <p className={styles.invitationName}>{invitation.name}</p>
       )}
       <div className={styles.invitationMeta}>
-        <span>Usos: {invitation.currentUses}/{invitation.maxUses}</span>
-        <span>Expira: {formatDistanceToNow(new Date(invitation.expiresAt))}</span>
-      </div>
-      <div className={styles.invitationActions}>
-        <button
-          className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-          onClick={() => onDelete(invitation)}
-        >
-          <Trash2 size={14} />
-          Eliminar
-        </button>
+        <span className={styles.invitationMetaItem}>
+          <Hash size={13} />
+          Usos: {invitation.currentUses}/{invitation.maxUses}
+        </span>
+        <span className={styles.invitationMetaItem}>
+          <Clock size={13} />
+          Expira: {formatDistanceToNow(new Date(invitation.expiresAt))}
+        </span>
       </div>
     </div>
   );

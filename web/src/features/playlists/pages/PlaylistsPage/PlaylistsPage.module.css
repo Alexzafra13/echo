@@ -314,48 +314,51 @@
 /* Playlists Grid */
 .playlistsPage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
 }
 
-/* Playlist Card - Clean floating design */
+/* Playlist Card */
 .playlistCard {
-  background: transparent;
-  border-radius: 8px;
-  padding: 8px;
+  background: var(--white-03);
+  border-radius: 14px;
+  padding: 12px;
   cursor: pointer;
-  transition: background var(--transition-base);
-  border: none;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid transparent;
   position: relative;
 }
 
 .playlistCard:hover {
-  background: var(--white-05);
+  background: var(--white-06);
+  border-color: var(--white-08);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px var(--black-30);
 }
 
 .playlistCard:hover .playlistCard__playOverlay {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 .playlistCard:hover .playlistCard__actions {
   opacity: 1;
 }
 
+.playlistCard:hover .playlistCard__cover {
+  box-shadow: 0 8px 28px var(--black-40);
+}
+
 .playlistCard__cover {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
   background: var(--white-05);
   position: relative;
-  box-shadow: 0 4px 12px var(--black-20);
-  transition: box-shadow var(--transition-slow);
-}
-
-.playlistCard:hover .playlistCard__cover {
-  box-shadow: 0 8px 24px var(--black-40);
+  box-shadow: 0 4px 16px var(--black-20);
+  transition: box-shadow 0.3s ease;
 }
 
 .playlistCard__cover img {
@@ -364,13 +367,36 @@
   object-fit: cover;
 }
 
+/* Track count badge on cover */
+.playlistCard__trackBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--black-60);
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.2px;
+}
+
+.playlistCard__trackBadge svg {
+  opacity: 0.7;
+}
+
 /* Play button overlay on cover hover */
 .playlistCard__playOverlay {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 40px;
-  height: 40px;
+  bottom: 10px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--color-primary-500, #ed6842);
   border: none;
@@ -380,15 +406,15 @@
   justify-content: center;
   cursor: pointer;
   opacity: 0;
-  transform: translateY(6px);
-  transition: all var(--transition-slow);
-  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.4);
+  transform: translateY(8px) scale(0.9);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.4);
   z-index: 2;
 }
 
 .playlistCard__playOverlay:hover {
-  transform: scale(1.06);
-  box-shadow: 0 6px 16px rgba(237, 104, 66, 0.5);
+  transform: scale(1.08) !important;
+  box-shadow: 0 6px 20px rgba(237, 104, 66, 0.5);
 }
 
 .playlistCard__coverPlaceholder {
@@ -412,23 +438,24 @@
 }
 
 .playlistCard__info {
-  padding: 0 2px;
+  padding: 0 4px;
 }
 
 .playlistCard__title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary, #ffffff);
   margin: 0 0 4px 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .playlistCard__description {
   font-size: 13px;
   color: var(--text-secondary, #b8bcc8);
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -448,21 +475,21 @@
   opacity: 0.5;
 }
 
-/* Actions - 3-dot menu button */
+/* Actions */
 .playlistCard__actions {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 16px;
+  right: 16px;
   display: flex;
   gap: 4px;
   opacity: 0;
-  transition: opacity var(--transition-base);
+  transition: opacity 0.2s ease;
   z-index: 3;
 }
 
 .playlistCard__actionButton {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--black-60);
   backdrop-filter: blur(8px);
@@ -494,8 +521,8 @@
   }
 
   .playlistsPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
   }
 
   .playlistsPage__title {
@@ -567,23 +594,38 @@
   }
 
   .playlistsPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
+  }
+
+  .playlistCard {
+    padding: 8px;
+    border-radius: 12px;
   }
 
   .playlistCard__cover {
     border-radius: 8px;
+    margin-bottom: 10px;
   }
 
   .playlistCard__playOverlay {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     width: 36px;
     height: 36px;
   }
 
   .playlistCard__actions {
     opacity: 1;
+  }
+
+  .playlistCard__title {
+    font-size: 14px;
+  }
+
+  .playlistCard__trackBadge {
+    font-size: 10px;
+    padding: 2px 6px;
   }
 }
 

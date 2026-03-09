@@ -140,22 +140,25 @@ export function ConnectServerModal({ onClose, onSuccess }: ConnectServerModalPro
             </span>
           </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={requestMutual}
-                onChange={(e) => setRequestMutual(e.target.checked)}
-                className={styles.checkbox}
-              />
-              <Users size={16} />
-              <span>Solicitar federación mutua</span>
-            </label>
-            <span className={styles.hint}>
-              Si activas esta opción, el servidor remoto también podrá ver tu biblioteca musical.
-              Requiere aprobación del administrador del otro servidor.
-            </span>
-          </div>
+          <label
+            className={`${styles.mutualToggle} ${requestMutual ? styles.mutualToggleActive : ''}`}
+          >
+            <div className={styles.mutualToggleLeft}>
+              <Users size={18} />
+              <div>
+                <span className={styles.mutualToggleTitle}>Solicitar federación mutua</span>
+                <span className={styles.mutualToggleHint}>
+                  El servidor remoto también podrá ver tu biblioteca. Requiere aprobación del otro admin.
+                </span>
+              </div>
+            </div>
+            <input
+              type="checkbox"
+              checked={requestMutual}
+              onChange={(e) => setRequestMutual(e.target.checked)}
+              className={styles.checkbox}
+            />
+          </label>
 
           {requestMutual && (
             <div className={styles.formGroup}>

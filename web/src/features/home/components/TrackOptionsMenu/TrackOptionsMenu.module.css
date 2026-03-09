@@ -222,6 +222,7 @@
   animation: sheetSlideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1);
   padding-bottom: env(safe-area-inset-bottom, 16px);
   pointer-events: auto;
+  touch-action: none;
 }
 
 .trackOptionsMenu__sheet--closing {
@@ -314,7 +315,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 4px 12px 16px;
-  overscroll-behavior: none;
+  overscroll-behavior: contain;
 }
 
 /* Larger touch targets for mobile sheet */

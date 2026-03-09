@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar, ChevronDown, Search, Database, Shield, Globe, HardDrive, Trash2, FileText } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar, ChevronDown, Search, Database, Shield, Globe, HardDrive, Trash2, FileText, Copy, Check } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { formatDateWithTime } from '@shared/utils/format';
@@ -59,13 +59,9 @@ export function LogsPanel() {
   const [offset, setOffset] = useState(0);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  // Cargar logs al montar
-  useEffect(() => {
-    loadLogs();
-  }, [selectedLevel, selectedCategory, offset]);
-
-  const loadLogs = async () => {
+  const loadLogs = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -94,7 +90,12 @@ export function LogsPanel() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [limit, offset, selectedLevel, selectedCategory]);
+
+  // Cargar logs al montar
+  useEffect(() => {
+    loadLogs();
+  }, [loadLogs]);
 
   const toggleLogDetails = (logId: string) => {
     setExpandedLog(expandedLog === logId ? null : logId);
@@ -106,6 +107,26 @@ export function LogsPanel() {
       return JSON.stringify(JSON.parse(details), null, 2);
     } catch {
       return details;
+    }
+  };
+
+  const handleCopy = async (text: string, fieldId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldId);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopiedField(fieldId);
+      setTimeout(() => setCopiedField(null), 2000);
     }
   };
 
@@ -225,9 +246,11 @@ export function LogsPanel() {
             <div
               key={log.id}
               className={`${styles.logCard} ${styles[`level-${log.level}`]} ${expandedLog === log.id ? styles.logCardExpanded : ''}`}
-              onClick={() => toggleLogDetails(log.id)}
             >
-              <div className={styles.logHeader}>
+              <div
+                className={styles.logHeader}
+                onClick={() => toggleLogDetails(log.id)}
+              >
                 <div
                   className={styles.levelBadge}
                   style={{
@@ -251,13 +274,36 @@ export function LogsPanel() {
                 </div>
               </div>
 
-              <div className={styles.logMessage}>{log.message}</div>
+              <div
+                className={styles.logMessage}
+                onClick={() => toggleLogDetails(log.id)}
+              >
+                {log.message}
+              </div>
 
               {expandedLog === log.id && (
-                <div className={styles.logDetails}>
+                <div
+                  className={styles.logDetails}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {log.entityId && (
                     <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Entity ID</span>
+                      <div className={styles.detailRowHeader}>
+                        <span className={styles.detailLabel}>Entity ID</span>
+                        <button
+                          className={styles.copyButton}
+                          onClick={() => handleCopy(
+                            log.entityType ? `${log.entityId} (${log.entityType})` : log.entityId!,
+                            `entity-${log.id}`
+                          )}
+                          title="Copiar"
+                        >
+                          {copiedField === `entity-${log.id}`
+                            ? <><Check size={12} /> Copiado</>
+                            : <><Copy size={12} /> Copiar</>
+                          }
+                        </button>
+                      </div>
                       <span className={styles.detailValue}>
                         {log.entityId}
                         {log.entityType && <span className={styles.entityType}>{log.entityType}</span>}
@@ -267,14 +313,38 @@ export function LogsPanel() {
 
                   {log.details && (
                     <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Detalles</span>
+                      <div className={styles.detailRowHeader}>
+                        <span className={styles.detailLabel}>Detalles</span>
+                        <button
+                          className={styles.copyButton}
+                          onClick={() => handleCopy(formatDetails(log.details) || '', `details-${log.id}`)}
+                          title="Copiar detalles"
+                        >
+                          {copiedField === `details-${log.id}`
+                            ? <><Check size={12} /> Copiado</>
+                            : <><Copy size={12} /> Copiar</>
+                          }
+                        </button>
+                      </div>
                       <pre className={styles.detailsJson}>{formatDetails(log.details)}</pre>
                     </div>
                   )}
 
                   {log.stackTrace && (
                     <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Stack Trace</span>
+                      <div className={styles.detailRowHeader}>
+                        <span className={styles.detailLabel}>Stack Trace</span>
+                        <button
+                          className={styles.copyButton}
+                          onClick={() => handleCopy(log.stackTrace || '', `stack-${log.id}`)}
+                          title="Copiar stack trace"
+                        >
+                          {copiedField === `stack-${log.id}`
+                            ? <><Check size={12} /> Copiado</>
+                            : <><Copy size={12} /> Copiar</>
+                          }
+                        </button>
+                      </div>
                       <pre className={styles.stackTrace}>{log.stackTrace}</pre>
                     </div>
                   )}

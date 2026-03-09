@@ -47,12 +47,14 @@ export function formatFileSize(bytes?: number | string): string {
 
 /**
  * Format bitrate to kbps string
- * @param bitrate - Bitrate in kbps
+ * @param bitrate - Bitrate in bps or kbps (auto-detected: values > 9999 are treated as bps)
  * @returns Formatted bitrate string
  */
 export function formatBitrate(bitrate?: number): string {
   if (!bitrate) return 'Desconocido';
-  return `${bitrate} kbps`;
+  // Auto-detect: values > 9999 are likely in bps, convert to kbps
+  const kbps = bitrate > 9999 ? Math.round(bitrate / 1000) : bitrate;
+  return `${kbps} kbps`;
 }
 
 // Re-export date formatting functions from the canonical source

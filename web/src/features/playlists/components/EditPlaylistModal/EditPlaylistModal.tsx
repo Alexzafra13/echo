@@ -72,23 +72,26 @@ export function EditPlaylistModal({ playlist, onClose, onSubmit, isLoading = fal
           />
         </div>
 
-        <div className={styles.checkboxField}>
-          <label className={styles.checkboxLabel}>
+        <div
+          className={styles.toggleField}
+          onClick={() => !isLoading && setIsPublic(!isPublic)}
+        >
+          <div className={styles.toggleContent}>
+            <span className={styles.toggleTitle}>Playlist pública</span>
+            <span className={styles.toggleHint}>
+              {isPublic
+                ? 'Visible en tu perfil público'
+                : 'Solo visible para ti'}
+            </span>
+          </div>
+          <label className={styles.toggleSwitch} onClick={(e) => e.stopPropagation()}>
             <input
               type="checkbox"
               checked={isPublic}
               onChange={(e) => setIsPublic(e.target.checked)}
               disabled={isLoading}
-              className={styles.checkbox}
             />
-            <div className={styles.checkboxContent}>
-              <span>Playlist pública</span>
-              <span className={styles.checkboxHint}>
-                {isPublic
-                  ? 'Visible en tu perfil público'
-                  : 'Solo visible para ti'}
-              </span>
-            </div>
+            <span className={styles.toggleTrack} />
           </label>
         </div>
 

@@ -42,6 +42,27 @@ export interface RemoteTrack {
   size: number;
   bitRate?: number;
   format?: string;
+  // Audio analysis (from remote server)
+  rgTrackGain?: number | null;
+  rgTrackPeak?: number | null;
+  rgAlbumGain?: number | null;
+  rgAlbumPeak?: number | null;
+  bpm?: number | null;
+  initialKey?: string | null;
+  outroStart?: number | null;
+  lufsAnalyzed?: boolean;
+  // DJ analysis (from remote server)
+  djAnalysis?: {
+    status: string;
+    bpm?: number | null;
+    key?: string | null;
+    camelotKey?: string | null;
+    camelotColor?: { bg: string; text: string; name: string };
+    energy?: number | null;
+    danceability?: number | null;
+    analysisError?: string | null;
+    analyzedAt?: string | null;
+  };
 }
 
 export interface RemoteArtist {
@@ -206,10 +227,132 @@ export class RemoteServerService {
     albumId: string
   ): Promise<RemoteAlbum & { tracks: RemoteTrack[] }> {
     try {
-      return await this.makeAuthenticatedRequest<RemoteAlbum & { tracks: RemoteTrack[] }>(
-        server,
-        `/api/federation/albums/${albumId}`
-      );
+      // Fetch both browse and export endpoints in parallel
+      // The export endpoint has full analysis data (ReplayGain, BPM, etc.)
+      // even on older servers that don't include it in the browse response
+      // Fetch browse, export, and DJ analysis endpoints in parallel
+      // Each provides different data; merge them for the most complete response
+      const [browseResult, exportResult, djResult] = await Promise.allSettled([
+        this.makeAuthenticatedRequest<RemoteAlbum & { tracks: RemoteTrack[] }>(
+          server,
+          `/api/federation/albums/${albumId}`
+        ),
+        this.makeAuthenticatedRequest<{
+          album: Record<string, unknown>;
+          tracks: Array<{
+            id: string;
+            rgTrackGain?: number | null;
+            rgTrackPeak?: number | null;
+            rgAlbumGain?: number | null;
+            rgAlbumPeak?: number | null;
+            bpm?: number | null;
+            initialKey?: string | null;
+            outroStart?: number | null;
+            lufsAnalyzed?: boolean;
+            suffix?: string;
+            djAnalysis?: {
+              status: string;
+              bpm?: number | null;
+              key?: string | null;
+              camelotKey?: string | null;
+              camelotColor?: { bg: string; text: string; name: string };
+              energy?: number | null;
+              danceability?: number | null;
+              analysisError?: string | null;
+              analyzedAt?: string | null;
+            };
+          }>;
+        }>(
+          server,
+          `/api/federation/albums/${albumId}/export`
+        ),
+        this.makeAuthenticatedRequest<{
+          tracks: Array<{
+            trackId: string;
+            status: string;
+            bpm?: number | null;
+            key?: string | null;
+            camelotKey?: string | null;
+            camelotColor?: { bg: string; text: string; name: string };
+            energy?: number | null;
+            danceability?: number | null;
+            analysisError?: string | null;
+            analyzedAt?: string | null;
+          }>;
+        }>(
+          server,
+          `/api/federation/albums/${albumId}/dj-analysis`
+        ),
+      ]);
+
+      if (browseResult.status === 'rejected') {
+        throw browseResult.reason;
+      }
+
+      const album = browseResult.value;
+
+      // Build export track map for LUFS/ReplayGain merge
+      type ExportTrackData = {
+        id: string;
+        rgTrackGain?: number | null;
+        rgTrackPeak?: number | null;
+        rgAlbumGain?: number | null;
+        rgAlbumPeak?: number | null;
+        bpm?: number | null;
+        initialKey?: string | null;
+        outroStart?: number | null;
+        lufsAnalyzed?: boolean;
+        suffix?: string;
+        djAnalysis?: RemoteTrack['djAnalysis'];
+      };
+      const exportTrackMap = new Map<string, ExportTrackData>();
+      if (exportResult.status === 'fulfilled' && exportResult.value?.tracks) {
+        for (const t of exportResult.value.tracks) {
+          exportTrackMap.set(t.id, t);
+        }
+      }
+
+      // Build DJ analysis map
+      const djTrackMap = new Map<string, RemoteTrack['djAnalysis']>();
+      if (djResult.status === 'fulfilled' && djResult.value?.tracks) {
+        for (const t of djResult.value.tracks) {
+          djTrackMap.set(t.trackId, {
+            status: t.status,
+            bpm: t.bpm,
+            key: t.key,
+            camelotKey: t.camelotKey,
+            camelotColor: t.camelotColor,
+            energy: t.energy,
+            danceability: t.danceability,
+            analysisError: t.analysisError,
+            analyzedAt: t.analyzedAt,
+          });
+        }
+      }
+
+      // Merge all data sources into tracks
+      album.tracks = album.tracks.map(track => {
+        const exportTrack = exportTrackMap.get(track.id);
+        const djData = djTrackMap.get(track.id);
+
+        return {
+          ...track,
+          // From export endpoint (LUFS/ReplayGain fallback)
+          format: track.format || exportTrack?.suffix,
+          rgTrackGain: track.rgTrackGain ?? exportTrack?.rgTrackGain,
+          rgTrackPeak: track.rgTrackPeak ?? exportTrack?.rgTrackPeak,
+          rgAlbumGain: track.rgAlbumGain ?? exportTrack?.rgAlbumGain,
+          rgAlbumPeak: track.rgAlbumPeak ?? exportTrack?.rgAlbumPeak,
+          bpm: track.bpm ?? exportTrack?.bpm,
+          initialKey: track.initialKey ?? exportTrack?.initialKey,
+          outroStart: track.outroStart ?? exportTrack?.outroStart,
+          lufsAnalyzed: track.lufsAnalyzed ?? exportTrack?.lufsAnalyzed,
+          // DJ analysis: browse > export > dedicated endpoint
+          djAnalysis: track.djAnalysis ?? exportTrack?.djAnalysis ?? djData,
+        };
+      });
+
+      return album;
     } catch (error) {
       await this.handleServerError(server, error);
       throw error;

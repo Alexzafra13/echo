@@ -276,9 +276,9 @@
 
 .sectionHeader {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 24px;
+  gap: 16px;
   margin-bottom: 24px;
 }
 
@@ -568,45 +568,74 @@
 
 /* Invitation List */
 .invitationList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
 }
 
 .invitationCard {
-  background: var(--white-05);
-  border: 1px solid var(--white-10);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 18px 20px;
+  transition: all 0.2s ease;
 }
 
-.invitationHeader {
+.invitationCardActive {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.03) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.invitationCardActive:hover {
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.invitationCardUsed {
+  background: var(--white-04);
+  border: 1px solid var(--white-08);
+  opacity: 0.7;
+}
+
+.invitationCardUsed:hover {
+  opacity: 0.85;
+}
+
+.invitationTop {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.tokenWrapper {
+.invitationTokenRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.invitationTopRight {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .token {
   font-family: 'SF Mono', 'Consolas', monospace;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-primary, #ed6842);
   background: var(--primary-10);
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: 6px;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .copyButton {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: 1px solid var(--white-10);
   border-radius: 6px;
   background: var(--white-05);
@@ -616,6 +645,7 @@
   align-items: center;
   justify-content: center;
   transition: all var(--transition-base);
+  flex-shrink: 0;
 }
 
 .copyButton:hover {
@@ -627,23 +657,49 @@
   color: var(--color-success);
 }
 
+.invitationDeleteBtn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--error-20, rgba(239, 68, 68, 0.2));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-error, #ef4444);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  opacity: 0.6;
+}
+
+.invitationCard:hover .invitationDeleteBtn {
+  opacity: 1;
+}
+
+.invitationDeleteBtn:hover {
+  background: var(--error-10);
+  border-color: var(--error-30, rgba(239, 68, 68, 0.3));
+  opacity: 1;
+}
+
 .invitationName {
   font-size: 14px;
+  font-weight: 500;
   color: var(--color-text-primary, #ffffff);
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
 }
 
 .invitationMeta {
   display: flex;
   gap: 16px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-text-secondary, #b8bcc8);
-  margin-bottom: 12px;
 }
 
-.invitationActions {
+.invitationMetaItem {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
 }
 
 /* Access List */
@@ -902,7 +958,9 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: var(--black-70);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -913,13 +971,14 @@
 .modal {
   background: var(--color-bg-secondary, #1a1b26);
   border: 1px solid var(--white-10);
-  border-radius: 16px;
+  border-radius: 20px;
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .modalSmall {
@@ -936,8 +995,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--white-08);
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--white-06);
 }
 
 .modalTitle {
@@ -970,7 +1029,7 @@
 }
 
 .modalContent {
-  padding: 24px;
+  padding: 24px 28px 28px;
   overflow-y: auto;
 }
 
@@ -985,7 +1044,9 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--white-06);
 }
 
 /* Confirm Dialog */
@@ -1044,24 +1105,29 @@
 .select {
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid var(--white-20);
-  border-radius: 8px;
-  background: var(--white-08);
+  border: 1px solid var(--white-12);
+  border-radius: 10px;
+  background: var(--white-05);
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
-  transition: all var(--transition-base);
+  transition: all 0.15s ease;
 }
 
 .input::placeholder {
-  color: var(--color-text-secondary, #b8bcc8);
-  opacity: 0.7;
+  color: var(--color-text-tertiary, #6b7280);
+}
+
+.input:hover {
+  border-color: var(--white-20);
+  background: var(--white-08);
 }
 
 .input:focus,
 .select:focus {
   outline: none;
   border-color: var(--color-primary, #ed6842);
-  background: var(--white-12);
+  background: var(--white-08);
+  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.12);
 }
 
 .select {
@@ -1073,11 +1139,70 @@
   padding-right: 36px;
 }
 
+.select:hover {
+  border-color: var(--white-20);
+  background-color: var(--white-08);
+}
+
 .hint {
   display: block;
   font-size: 12px;
   color: var(--color-text-secondary, #b8bcc8);
   margin-top: 6px;
+}
+
+.mutualToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--white-03);
+  border: 1px solid var(--white-10);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 20px;
+}
+
+.mutualToggle:hover {
+  background: var(--white-05);
+  border-color: var(--white-15);
+}
+
+.mutualToggleActive {
+  background: rgba(237, 104, 66, 0.06);
+  border-color: rgba(237, 104, 66, 0.3);
+}
+
+.mutualToggleActive:hover {
+  background: rgba(237, 104, 66, 0.1);
+}
+
+.mutualToggleLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+.mutualToggleActive .mutualToggleLeft {
+  color: var(--color-primary, #ed6842);
+}
+
+.mutualToggleTitle {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary, #ffffff);
+  margin-bottom: 2px;
+}
+
+.mutualToggleHint {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-tertiary, #6b7280);
+  line-height: 1.4;
 }
 
 .checkboxLabel {
@@ -1092,10 +1217,40 @@
 }
 
 .checkbox {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--color-primary, #ed6842);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--white-25);
+  border-radius: 6px;
+  background: var(--white-05);
   cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.checkbox:hover {
+  border-color: var(--color-primary, #ed6842);
+  background: rgba(237, 104, 66, 0.1);
+}
+
+.checkbox:checked {
+  background: var(--color-primary, #ed6842);
+  border-color: var(--color-primary, #ed6842);
+}
+
+.checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .errorMessage {
@@ -1336,7 +1491,8 @@
   }
 
   .serverGrid,
-  .accessList {
+  .accessList,
+  .invitationList {
     grid-template-columns: 1fr;
   }
 

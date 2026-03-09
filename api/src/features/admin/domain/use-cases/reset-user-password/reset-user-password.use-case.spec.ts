@@ -28,6 +28,9 @@ describe('ResetUserPasswordUseCase', () => {
     mockPasswordService = createMockPasswordService();
     mockLogService = createMockLogService();
 
+    // Default: findAll returns empty array (no system admin check blocks)
+    mockUserRepository.findAll.mockResolvedValue([]);
+
     useCase = new ResetUserPasswordUseCase(
       mockUserRepository,
       mockPasswordService,

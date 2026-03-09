@@ -128,15 +128,19 @@
 .sharedAlbumPage__serverBadge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--color-accent, #6366f1);
-  background: linear-gradient(135deg, var(--color-accent, #6366f1), #8b5cf6);
-  color: white;
-  border-radius: 20px;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--white-08);
+  border: 1px solid var(--white-10);
+  color: var(--text-secondary, #b8bcc8);
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
   width: fit-content;
+}
+
+.sharedAlbumPage__serverBadge svg {
+  opacity: 0.6;
 }
 
 .sharedAlbumPage__heroActions {
@@ -183,23 +187,26 @@
 }
 
 .sharedAlbumPage__optionsTrigger {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  border: 1px solid var(--white-15);
-  background: var(--white-05);
+  border: none;
+  background: transparent;
   color: var(--color-text-secondary, #b8bcc8);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
 }
 
 .sharedAlbumPage__optionsTrigger:hover {
   background: var(--white-10);
   color: var(--color-text-primary, #ffffff);
-  border-color: var(--white-20);
+}
+
+.sharedAlbumPage__optionsTrigger:active {
+  transform: scale(0.95);
 }
 
 .sharedAlbumPage__optionsDropdown {
@@ -284,7 +291,7 @@
 
 .sharedAlbumPage__trackHeader {
   display: grid;
-  grid-template-columns: 48px 1fr 80px;
+  grid-template-columns: 40px 1fr 80px;
   gap: 16px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--white-10);
@@ -297,11 +304,11 @@
 
 .sharedAlbumPage__trackRow {
   display: grid;
-  grid-template-columns: 48px 1fr 80px;
+  grid-template-columns: 40px 1fr 80px;
   gap: 16px;
   padding: 12px 16px;
-  border-radius: 8px;
-  transition: background var(--transition-fast);
+  border-radius: 6px;
+  transition: background-color var(--transition-fast);
   cursor: pointer;
 }
 
@@ -334,8 +341,15 @@
 .sharedAlbumPage__trackPlayIconHover {
   position: absolute;
   opacity: 0;
-  color: var(--color-text-primary, #ffffff);
-  transition: opacity var(--transition-fast);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary, #ed6842);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
 }
 
 .sharedAlbumPage__trackRow:hover .sharedAlbumPage__trackNumberText {
@@ -344,6 +358,15 @@
 
 .sharedAlbumPage__trackRow:hover .sharedAlbumPage__trackPlayIconHover {
   opacity: 1;
+}
+
+.sharedAlbumPage__trackRow:hover .sharedAlbumPage__trackPlayIconHover:hover {
+  transform: scale(1.1);
+  background: var(--color-primary-hover, #f5775a);
+}
+
+.sharedAlbumPage__trackRow--active {
+  background: var(--primary-15, rgba(237, 104, 66, 0.15));
 }
 
 .sharedAlbumPage__trackRow--active .sharedAlbumPage__trackPlayIconHover {
@@ -502,7 +525,7 @@
   }
 
   .sharedAlbumPage__content {
-    padding: 20px 32px;
+    padding: 20px 32px calc(40px + var(--player-bottom-spacer, 0px));
   }
 
   .sharedAlbumPage__hero {
@@ -525,7 +548,7 @@
   }
 }
 
-/* Mobile */
+/* Mobile - iOS Style */
 @media (max-width: 768px) {
   .sharedAlbumPage__main {
     margin-left: 0;
@@ -536,7 +559,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     margin-top: -52px; /* Content behind header for glass effect */
-    padding: 152px 20px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 72px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .sharedAlbumPage__hero {
@@ -551,9 +574,10 @@
 
   .sharedAlbumPage__heroCover,
   .sharedAlbumPage__heroCoverPlaceholder {
-    width: 280px;
-    height: 280px;
+    width: 320px;
+    height: 320px;
     border-radius: 8px;
+    box-shadow: 0 12px 40px var(--black-50);
   }
 
   .sharedAlbumPage__heroInfo {
@@ -578,6 +602,19 @@
     width: 100%;
   }
 
+  /* Botones más cuadrados y prominentes en móvil (excluye botón de opciones) */
+  .sharedAlbumPage__heroActions > button {
+    padding: 12px 24px;
+    font-size: 15px;
+    border-radius: 6px;
+    flex: 1;
+    max-width: 160px;
+  }
+
+  .sharedAlbumPage__serverBadge {
+    justify-content: center;
+  }
+
   .sharedAlbumPage__trackSection {
     padding: 0;
   }
@@ -595,8 +632,13 @@
 
 /* Small Mobile */
 @media (max-width: 480px) {
+  .sharedAlbumPage__main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
   .sharedAlbumPage__content {
-    padding: 142px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 68px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .sharedAlbumPage__hero {
@@ -606,8 +648,9 @@
 
   .sharedAlbumPage__heroCover,
   .sharedAlbumPage__heroCoverPlaceholder {
-    width: 240px;
-    height: 240px;
+    width: 280px;
+    height: 280px;
+    border-radius: 6px;
   }
 
   .sharedAlbumPage__heroTitle {
@@ -616,6 +659,17 @@
 
   .sharedAlbumPage__heroMeta {
     font-size: 12px;
+  }
+
+  .sharedAlbumPage__heroActions {
+    gap: 10px;
+  }
+
+  /* Botones cuadrados en móvil pequeño (excluye botón de opciones) */
+  .sharedAlbumPage__heroActions > button {
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 6px;
   }
 
   .sharedAlbumPage__trackSection {

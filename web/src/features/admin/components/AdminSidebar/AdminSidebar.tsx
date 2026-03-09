@@ -1,3 +1,4 @@
+import { Link } from 'wouter';
 import { MiniPlayer } from '@features/player/components/MiniPlayer';
 import { usePageEndDetection } from '@features/player/hooks/usePageEndDetection';
 import styles from './AdminSidebar.module.css';
@@ -23,13 +24,13 @@ export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps
 
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.sidebar__logoContainer}>
+      <Link href="/home" className={styles.sidebar__logoContainer}>
         <img
           src="/images/logos/echo_dark.svg"
           alt="Echo"
           className={styles.sidebar__logo}
         />
-      </div>
+      </Link>
 
       <nav className={styles.sidebar__nav}>
         {tabs.map((tab) => (

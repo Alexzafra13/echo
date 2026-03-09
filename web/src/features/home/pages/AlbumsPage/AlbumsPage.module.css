@@ -387,7 +387,15 @@
   margin-bottom: 16px;
 }
 
-/* ===== Server Filter Section ===== */
+/* ===== Shared Filters Row ===== */
+.albumsPage__sharedFilters {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Legacy server filter - kept for compat */
 .albumsPage__serverFilter {
   display: flex;
   flex-direction: column;
@@ -469,6 +477,13 @@
 }
 
 @media (max-width: 768px) {
+  .albumsPage__sharedFilters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
   .albumsPage__serverFilter {
     gap: 8px;
   }

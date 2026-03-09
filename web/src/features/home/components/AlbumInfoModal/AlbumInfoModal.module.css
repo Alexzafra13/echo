@@ -279,6 +279,7 @@
   flex-direction: column;
   animation: sheetSlideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1);
   pointer-events: auto;
+  touch-action: none;
 }
 
 .albumInfoModal__sheet--closing {
@@ -371,7 +372,7 @@
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 60px + var(--player-bottom-spacer, 0px));
   scrollbar-width: none;
-  overscroll-behavior: none;
+  overscroll-behavior: contain;
 }
 
 .albumInfoModal__sheetContent::-webkit-scrollbar {
