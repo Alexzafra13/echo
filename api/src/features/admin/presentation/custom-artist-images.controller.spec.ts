@@ -221,7 +221,7 @@ describe('CustomArtistImagesController', () => {
         artistId,
         customImageId,
       });
-      expect(result).toBeUndefined();
+      expect(result).toEqual({ success: true, message: 'Image deleted successfully' });
     });
   });
 });

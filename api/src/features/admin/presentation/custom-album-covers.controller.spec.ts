@@ -220,7 +220,7 @@ describe('CustomAlbumCoversController', () => {
         albumId,
         customCoverId,
       });
-      expect(result).toBeUndefined();
+      expect(result).toEqual({ success: true, message: 'Cover deleted successfully' });
     });
   });
 });
