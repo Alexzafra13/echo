@@ -719,6 +719,7 @@ describe('FederationPublicController', () => {
       const tracksChain = {
         select: jest.fn().mockReturnThis(),
         from: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockResolvedValue(mockTracks),
       };
@@ -803,6 +804,7 @@ describe('FederationPublicController', () => {
       const tracksChain = {
         select: jest.fn().mockReturnThis(),
         from: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockResolvedValue(mockTracks),
       };
