@@ -52,16 +52,13 @@ test.describe('Reproductor de Audio', () => {
       ).first()
     ).toBeVisible({ timeout: 15000 });
 
-    // Solo testear la interacción si hay álbumes disponibles
-    const albumLinks = page.getByRole('link').filter({ has: page.locator('img') });
-    const albumCount = await albumLinks.count();
+    // Los álbumes se renderizan como <article> con imagen, no como <a> links
+    const albumCards = page.locator('article').filter({ has: page.locator('img') });
+    const albumCount = await albumCards.count();
 
     if (albumCount > 0) {
-      await albumLinks.first().click();
-      await page.waitForURL(/\/albums\/|\/album\//, { timeout: 15000 });
-
-      // Debe navegar a la página de detalle del álbum
-      expect(page.url()).toMatch(/\/albums\/|\/album\//);
+      await albumCards.first().click();
+      await expect(page).toHaveURL(/\/album\//, { timeout: 15000 });
     }
   });
 });
