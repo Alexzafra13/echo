@@ -2,7 +2,13 @@ import { useState, useMemo } from 'react';
 import { Users as UsersIcon, UserPlus, Shield, UserCheck, UserX } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import { useModal, useNotification } from '@shared/hooks';
-import { useUsers, useDeleteUser, useResetPassword, usePermanentlyDeleteUser, useUpdateUser } from '../../hooks/useUsers';
+import {
+  useUsers,
+  useDeleteUser,
+  useResetPassword,
+  usePermanentlyDeleteUser,
+  useUpdateUser,
+} from '../../hooks/useUsers';
 import { User } from '../../api/users.api';
 import { CreateUserModal } from './CreateUserModal';
 import { EditUserModal } from './EditUserModal';
@@ -124,9 +130,9 @@ export function UsersPanel() {
   // Compute user stats
   const userStats = useMemo(() => {
     const total = allUsers.length;
-    const active = allUsers.filter(u => u.isActive).length;
-    const admins = allUsers.filter(u => u.isAdmin).length;
-    const inactive = allUsers.filter(u => !u.isActive).length;
+    const active = allUsers.filter((u) => u.isActive).length;
+    const admins = allUsers.filter((u) => u.isAdmin).length;
+    const inactive = allUsers.filter((u) => !u.isActive).length;
     return { total, active, admins, inactive };
   }, [allUsers]);
 
@@ -137,22 +143,20 @@ export function UsersPanel() {
     // Apply search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(user =>
-        user.username.toLowerCase().includes(query) ||
-        user.name?.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (user) =>
+          user.username.toLowerCase().includes(query) || user.name?.toLowerCase().includes(query)
       );
     }
 
     // Apply role filter
     if (roleFilter !== 'all') {
-      filtered = filtered.filter(user =>
-        roleFilter === 'admin' ? user.isAdmin : !user.isAdmin
-      );
+      filtered = filtered.filter((user) => (roleFilter === 'admin' ? user.isAdmin : !user.isAdmin));
     }
 
     // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(user =>
+      filtered = filtered.filter((user) =>
         statusFilter === 'active' ? user.isActive : !user.isActive
       );
     }
@@ -224,15 +228,9 @@ export function UsersPanel() {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <h2 className={styles.title}>Gestión de Usuarios</h2>
-          <p className={styles.description}>
-            Crea, edita y administra los usuarios del sistema.
-          </p>
+          <p className={styles.description}>Crea, edita y administra los usuarios del sistema.</p>
         </div>
-        <Button
-          variant="primary"
-          leftIcon={<UserPlus size={18} />}
-          onClick={createModal.open}
-        >
+        <Button variant="primary" leftIcon={<UserPlus size={18} />} onClick={createModal.open}>
           Crear Usuario
         </Button>
       </div>
@@ -242,7 +240,7 @@ export function UsersPanel() {
         <div className={`${styles.statPill} ${styles.statPillTotal}`}>
           <UsersIcon size={15} />
           <span className={styles.statPillValue}>{userStats.total}</span>
-          <span className={styles.statPillLabel}>Total</span>
+          <span className={styles.statPillLabel}>Total: {userStats.total} usuarios</span>
         </div>
         <div className={`${styles.statPill} ${styles.statPillActive}`}>
           <UserCheck size={15} />
@@ -342,17 +340,11 @@ export function UsersPanel() {
 
       {/* Modals */}
       {createModal.isOpen && (
-        <CreateUserModal
-          onClose={createModal.close}
-          onSuccess={handleCreateSuccess}
-        />
+        <CreateUserModal onClose={createModal.close} onSuccess={handleCreateSuccess} />
       )}
 
       {editModal.isOpen && editModal.data && (
-        <EditUserModal
-          user={editModal.data}
-          onClose={editModal.close}
-        />
+        <EditUserModal user={editModal.data} onClose={editModal.close} />
       )}
 
       {credentialsModal.isOpen && credentialsModal.data && (
