@@ -6,6 +6,7 @@ import { GetUserFavoritesUseCase } from '../domain/use-cases/get-user-favorites/
 import { DeleteFavoriteStationUseCase } from '../domain/use-cases/delete-favorite-station/delete-favorite-station.use-case';
 import { SearchStationsUseCase } from '../domain/use-cases/search-stations/search-stations.use-case';
 import { IcyMetadataService } from '../domain/services/icy-metadata.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RadioStation, RadioStationProps } from '../domain/entities/radio-station.entity';
 import { SearchStationsDto } from './dto/search-stations.dto';
 import { SaveApiStationDto } from './dto/save-api-station.dto';
@@ -70,6 +71,18 @@ describe('RadioController', () => {
         {
           provide: IcyMetadataService,
           useValue: { subscribe: jest.fn(), unsubscribe: jest.fn() },
+        },
+        {
+          provide: DrizzleService,
+          useValue: {
+            db: {
+              select: jest
+                .fn()
+                .mockReturnValue({
+                  from: jest.fn().mockReturnValue({ where: jest.fn().mockResolvedValue([]) }),
+                }),
+            },
+          },
         },
         { provide: getLoggerToken(RadioController.name), useValue: mockLogger },
       ],
