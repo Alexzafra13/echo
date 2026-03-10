@@ -1,4 +1,4 @@
-import { ArgumentsHost, Catch, ExceptionFilter, Injectable } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Injectable } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Socket } from 'socket.io';
@@ -61,6 +61,17 @@ export class WsExceptionFilter implements ExceptionFilter {
         message = errorObj.message ?? 'WebSocket error';
         code = errorObj.code ?? 'WS_EXCEPTION';
       }
+    } else if (exception instanceof HttpException) {
+      const response = exception.getResponse();
+      if (typeof response === 'string') {
+        message = response;
+      } else if (typeof response === 'object' && response !== null) {
+        const res = response as Record<string, unknown>;
+        message = Array.isArray(res.message)
+          ? res.message.join('; ')
+          : String(res.message ?? exception.message);
+      }
+      code = 'HTTP_EXCEPTION';
     } else if (exception instanceof Error) {
       message = exception.message;
       code = 'ERROR';
