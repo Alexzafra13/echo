@@ -7,7 +7,7 @@ import { StorageService } from '@features/external-metadata/infrastructure/servi
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { fetchWithTimeout } from '@shared/utils';
 
-interface FetchFaviconResult {
+export interface FetchFaviconResult {
   success: boolean;
   source?: string;
   url?: string;
