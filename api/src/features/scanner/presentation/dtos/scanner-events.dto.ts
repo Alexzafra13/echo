@@ -1,13 +1,4 @@
-import {
-  IsString,
-  IsNumber,
-  IsBoolean,
-  IsOptional,
-  IsEnum,
-  IsUUID,
-  Min,
-  Max,
-} from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsOptional, IsEnum, Min, Max } from 'class-validator';
 
 /**
  * Estado del escaneo
@@ -148,7 +139,7 @@ export class ScanCompletedDto {
  * DTO para pausar el scan
  */
 export class PauseScanDto {
-  @IsUUID()
+  @IsString()
   scanId!: string;
 }
 
@@ -156,7 +147,7 @@ export class PauseScanDto {
  * DTO para cancelar el scan
  */
 export class CancelScanDto {
-  @IsUUID()
+  @IsString()
   scanId!: string;
 
   @IsOptional()
@@ -168,7 +159,7 @@ export class CancelScanDto {
  * DTO para resumir el scan
  */
 export class ResumeScanDto {
-  @IsUUID()
+  @IsString()
   scanId!: string;
 }
 
