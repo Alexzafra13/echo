@@ -205,6 +205,7 @@ vi.mock('../../hooks/useFederation', () => ({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
   }),
+  useUpdateServer: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
 }));
 
 describe('FederationPanel', () => {

@@ -47,9 +47,57 @@ vi.mock('@shared/components/layout/Header', () => ({
   Header: () => <header data-testid="header">Header</header>,
 }));
 
-vi.mock('@features/home/components', () => ({
-  Sidebar: () => <aside data-testid="sidebar">Sidebar</aside>,
-}));
+vi.mock('@features/home/components', async () => {
+  const playerCtx = await import('@features/player/context/PlayerContext');
+  return {
+    Sidebar: () => <aside data-testid="sidebar">Sidebar</aside>,
+    TrackList: ({
+      tracks,
+      onTrackPlay,
+      currentTrackId,
+    }: {
+      tracks: unknown[];
+      onTrackPlay?: (track: unknown, index: number) => void;
+      currentTrackId?: string;
+    }) => {
+      const { isPlaying, pause, play } = playerCtx.usePlayer();
+      return (
+        <div data-testid="track-list">
+          <div>
+            <span>#</span>
+            <span>Titulo</span>
+            <span>Duracion</span>
+          </div>
+          {(
+            tracks as Array<{ id: string; title: string; duration: number; trackNumber?: number }>
+          ).map((track, index) => (
+            <div
+              key={track.id}
+              data-testid={`track-${track.id}`}
+              onClick={() => {
+                if (track.id === currentTrackId) {
+                  if (isPlaying) {
+                    pause();
+                  } else {
+                    play();
+                  }
+                } else {
+                  onTrackPlay?.(track, index);
+                }
+              }}
+            >
+              <span>{track.trackNumber ?? index + 1}</span>
+              <span>{track.title}</span>
+              <span>
+                {Math.floor(track.duration / 60)}:{String(track.duration % 60).padStart(2, '0')}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+    },
+  };
+});
 
 vi.mock('@shared/components/ui', () => ({
   Button: ({
