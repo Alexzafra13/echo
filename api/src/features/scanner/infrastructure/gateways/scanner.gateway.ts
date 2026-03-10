@@ -10,9 +10,21 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { UseGuards, UseInterceptors, UsePipes, ValidationPipe, Inject } from '@nestjs/common';
+import {
+  UseGuards,
+  UseFilters,
+  UseInterceptors,
+  UsePipes,
+  ValidationPipe,
+  Inject,
+} from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { WsJwtGuard, WsThrottlerGuard, WsLoggingInterceptor } from '@infrastructure/websocket';
+import {
+  WsJwtGuard,
+  WsThrottlerGuard,
+  WsLoggingInterceptor,
+  WsExceptionFilter,
+} from '@infrastructure/websocket';
 import { IScanControl, SCAN_CONTROL } from '../../domain/ports/scan-control.port';
 import {
   SubscribeScanDto,
@@ -33,6 +45,7 @@ import {
   transports: ['websocket', 'polling'],
 })
 @UseGuards(WsJwtGuard)
+@UseFilters(WsExceptionFilter)
 @UseInterceptors(WsLoggingInterceptor)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {

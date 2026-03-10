@@ -1,5 +1,5 @@
-import { ArgumentsHost, Catch, Injectable } from '@nestjs/common';
-import { BaseWsExceptionFilter, WsException } from '@nestjs/websockets';
+import { ArgumentsHost, Catch, ExceptionFilter, Injectable } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Socket } from 'socket.io';
 import { sanitizeForLog } from '@shared/utils/log-sanitizer.util';
@@ -33,17 +33,15 @@ interface WsExceptionError {
  * }
  *
  * Uso:
- * app.useGlobalFilters(new WsExceptionFilter());
+ * @UseFilters(WsExceptionFilter)
  */
 @Catch()
 @Injectable()
-export class WsExceptionFilter extends BaseWsExceptionFilter {
+export class WsExceptionFilter implements ExceptionFilter {
   constructor(
     @InjectPinoLogger(WsExceptionFilter.name)
-    private readonly logger: PinoLogger,
-  ) {
-    super();
-  }
+    private readonly logger: PinoLogger
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const client = host.switchToWs().getClient<Socket>();
@@ -86,19 +84,17 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
 
     this.logger.error(`WebSocket error on client ${client.id}:`, logContext);
 
-    // Enviar error al cliente
-    const errorResponse = {
-      event: 'error',
-      data: {
-        message,
-        code,
-        timestamp: new Date().toISOString(),
-      },
+    // Enviar error al cliente en ambos eventos:
+    // - 'exception': evento estándar de NestJS (BaseWsExceptionFilter)
+    // - 'error': evento custom para compatibilidad
+    const errorData = {
+      status: 'error',
+      message,
+      code,
+      timestamp: new Date().toISOString(),
     };
 
-    client.emit('error', errorResponse.data);
-
-    // Llamar al filter base para logging adicional
-    super.catch(exception, host);
+    client.emit('exception', errorData);
+    client.emit('error', errorData);
   }
 }

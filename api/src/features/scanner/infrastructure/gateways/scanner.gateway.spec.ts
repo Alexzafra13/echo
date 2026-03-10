@@ -7,6 +7,7 @@ import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { WsJwtGuard } from '../../../../infrastructure/websocket/guards/ws-jwt.guard';
 import { WsThrottlerGuard } from '../../../../infrastructure/websocket/guards/ws-throttler.guard';
 import { WsLoggingInterceptor } from '../../../../infrastructure/websocket/interceptors/ws-logging.interceptor';
+import { WsExceptionFilter } from '../../../../infrastructure/websocket/filters/ws-exception.filter';
 
 const mockLogger = {
   trace: jest.fn(),
@@ -57,8 +58,10 @@ describe('ScannerGateway', () => {
       providers: [
         ScannerGateway,
         WsLoggingInterceptor,
+        WsExceptionFilter,
         { provide: getLoggerToken(ScannerGateway.name), useValue: mockLogger },
         { provide: getLoggerToken(WsLoggingInterceptor.name), useValue: mockLogger },
+        { provide: getLoggerToken(WsExceptionFilter.name), useValue: mockLogger },
         { provide: SCAN_CONTROL, useValue: mockScanProcessor },
       ],
     })

@@ -1,10 +1,7 @@
 import { ArgumentsHost } from '@nestjs/common';
-import { WsException, BaseWsExceptionFilter } from '@nestjs/websockets';
+import { WsException } from '@nestjs/websockets';
 import { PinoLogger } from 'nestjs-pino';
 import { WsExceptionFilter } from './ws-exception.filter';
-
-// Mock the base class catch method to avoid issues with Socket.io internals
-jest.spyOn(BaseWsExceptionFilter.prototype, 'catch').mockImplementation(() => {});
 
 const createMockLogger = (): jest.Mocked<PinoLogger> =>
   ({
@@ -55,7 +52,14 @@ describe('WsExceptionFilter', () => {
 
       filter.catch(exception, mockHost);
 
+      expect(mockClient.emit).toHaveBeenCalledWith('exception', {
+        status: 'error',
+        message: 'Connection error',
+        code: 'WS_EXCEPTION',
+        timestamp: expect.any(String),
+      });
       expect(mockClient.emit).toHaveBeenCalledWith('error', {
+        status: 'error',
         message: 'Connection error',
         code: 'WS_EXCEPTION',
         timestamp: expect.any(String),
@@ -70,7 +74,8 @@ describe('WsExceptionFilter', () => {
 
       filter.catch(exception, mockHost);
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error', {
+      expect(mockClient.emit).toHaveBeenCalledWith('exception', {
+        status: 'error',
         message: 'Unauthorized access',
         code: 'UNAUTHORIZED',
         timestamp: expect.any(String),
@@ -82,7 +87,8 @@ describe('WsExceptionFilter', () => {
 
       filter.catch(exception, mockHost);
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error', {
+      expect(mockClient.emit).toHaveBeenCalledWith('exception', {
+        status: 'error',
         message: 'Something went wrong',
         code: 'ERROR',
         timestamp: expect.any(String),
@@ -94,7 +100,8 @@ describe('WsExceptionFilter', () => {
 
       filter.catch(exception, mockHost);
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error', {
+      expect(mockClient.emit).toHaveBeenCalledWith('exception', {
+        status: 'error',
         message: 'Internal server error',
         code: 'INTERNAL_ERROR',
         timestamp: expect.any(String),
@@ -104,7 +111,8 @@ describe('WsExceptionFilter', () => {
     it('should handle null/undefined exceptions', () => {
       filter.catch(null, mockHost);
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error', {
+      expect(mockClient.emit).toHaveBeenCalledWith('exception', {
+        status: 'error',
         message: 'Internal server error',
         code: 'INTERNAL_ERROR',
         timestamp: expect.any(String),
@@ -116,6 +124,7 @@ describe('WsExceptionFilter', () => {
       filter.catch(new Error('Test'), mockHost);
       const after = new Date().toISOString();
 
+      // First call is 'exception', second is 'error'
       const call = mockClient.emit.mock.calls[0];
       const timestamp = call[1].timestamp;
 
@@ -123,13 +132,14 @@ describe('WsExceptionFilter', () => {
       expect(timestamp <= after).toBe(true);
     });
 
-    it('should emit error event to client', () => {
+    it('should emit both exception and error events to client', () => {
       const exception = new WsException('Test error');
 
       filter.catch(exception, mockHost);
 
-      expect(mockClient.emit).toHaveBeenCalledTimes(1);
-      expect(mockClient.emit.mock.calls[0][0]).toBe('error');
+      expect(mockClient.emit).toHaveBeenCalledTimes(2);
+      expect(mockClient.emit.mock.calls[0][0]).toBe('exception');
+      expect(mockClient.emit.mock.calls[1][0]).toBe('error');
     });
 
     it('should handle WsException without code in error object', () => {
@@ -137,7 +147,8 @@ describe('WsExceptionFilter', () => {
 
       filter.catch(exception, mockHost);
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error', {
+      expect(mockClient.emit).toHaveBeenCalledWith('exception', {
+        status: 'error',
         message: 'Error without code',
         code: 'WS_EXCEPTION',
         timestamp: expect.any(String),
