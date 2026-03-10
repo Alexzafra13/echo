@@ -21,6 +21,7 @@ export interface RadioStation {
   urlResolved?: string | null;
   homepage?: string | null;
   favicon?: string | null;
+  customFaviconUrl?: string | null;
   country?: string | null;
   countryCode?: string | null;
   state?: string | null;

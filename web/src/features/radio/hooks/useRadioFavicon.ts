@@ -1,0 +1,45 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { radioFaviconsApi } from '@features/admin/api/radio-favicons.api';
+
+export function useUploadRadioFavicon() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ stationUuid, file }: { stationUuid: string; file: File }) =>
+      radioFaviconsApi.uploadFavicon(stationUuid, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['radio', 'favorites'] });
+    },
+  });
+}
+
+export function useDeleteRadioFavicon() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (stationUuid: string) =>
+      radioFaviconsApi.deleteFavicon(stationUuid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['radio', 'favorites'] });
+    },
+  });
+}
+
+export function useAutoFetchRadioFavicon() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      stationUuid,
+      name,
+      homepage,
+    }: {
+      stationUuid: string;
+      name: string;
+      homepage?: string;
+    }) => radioFaviconsApi.autoFetch(stationUuid, name, homepage),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['radio', 'favorites'] });
+    },
+  });
+}

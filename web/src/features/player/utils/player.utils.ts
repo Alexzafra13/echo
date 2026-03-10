@@ -27,7 +27,7 @@ export function getPlayerDisplayInfo(
         currentRadioStation.country,
         firstTag
       ].filter(Boolean).join(' • ') || 'Radio',
-      cover: currentRadioStation.favicon || '/images/covers/placeholder.jpg'
+      cover: currentRadioStation.customFaviconUrl || currentRadioStation.favicon || '/images/covers/placeholder.jpg'
     };
   }
 

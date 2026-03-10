@@ -31,6 +31,9 @@ import { RadioStationResponseDto } from './dto/radio-station-response.dto';
 import { SearchStationsDto } from './dto/search-stations.dto';
 import { CreateCustomStationDto } from './dto/create-custom-station.dto';
 import { SaveApiStationDto } from './dto/save-api-station.dto';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { radioStationImages } from '@infrastructure/database/schema';
+import { inArray } from 'drizzle-orm';
 import * as http from 'http';
 import * as https from 'https';
 
@@ -43,8 +46,31 @@ export class RadioController {
     private readonly getUserFavoritesUseCase: GetUserFavoritesUseCase,
     private readonly deleteFavoriteUseCase: DeleteFavoriteStationUseCase,
     private readonly searchStationsUseCase: SearchStationsUseCase,
-    private readonly icyMetadataService: IcyMetadataService
+    private readonly icyMetadataService: IcyMetadataService,
+    private readonly drizzle: DrizzleService,
   ) {}
+
+  /**
+   * Build a map of stationUuid -> customFaviconUrl for a set of station UUIDs
+   */
+  private async getCustomFaviconMap(stationUuids: string[]): Promise<Map<string, string>> {
+    if (stationUuids.length === 0) return new Map();
+
+    const customImages = await this.drizzle.db
+      .select({
+        stationUuid: radioStationImages.stationUuid,
+        updatedAt: radioStationImages.updatedAt,
+      })
+      .from(radioStationImages)
+      .where(inArray(radioStationImages.stationUuid, stationUuids));
+
+    const map = new Map<string, string>();
+    for (const img of customImages) {
+      const tag = img.updatedAt ? img.updatedAt.getTime().toString(36) : '';
+      map.set(img.stationUuid, `/api/images/radio/${img.stationUuid}/favicon?tag=${tag}`);
+    }
+    return map;
+  }
 
   @Get('search')
   @HttpCode(HttpStatus.OK)
@@ -136,7 +162,14 @@ export class RadioController {
   @ApiResponse({ status: 200, type: [RadioStationResponseDto] })
   async getFavorites(@CurrentUser('id') userId: string) {
     const stations = await this.getUserFavoritesUseCase.execute(userId);
-    return RadioStationResponseDto.fromDomainArray(stations);
+
+    // Enrich with custom favicon URLs
+    const stationUuids = stations
+      .map(s => s.stationUuid)
+      .filter((uuid): uuid is string => !!uuid);
+    const customFaviconMap = await this.getCustomFaviconMap(stationUuids);
+
+    return RadioStationResponseDto.fromDomainArray(stations, customFaviconMap);
   }
 
   @Post('favorites/from-api')
@@ -153,7 +186,13 @@ export class RadioController {
       isCustom: false,
     });
 
-    return RadioStationResponseDto.fromDomain(station);
+    // Check for existing custom favicon
+    const customFaviconMap = station.stationUuid
+      ? await this.getCustomFaviconMap([station.stationUuid])
+      : new Map();
+    const customUrl = station.stationUuid ? customFaviconMap.get(station.stationUuid) : undefined;
+
+    return RadioStationResponseDto.fromDomain(station, customUrl);
   }
 
   @Post('favorites/custom')

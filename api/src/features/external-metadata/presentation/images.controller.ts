@@ -327,6 +327,41 @@ export class ImagesController {
   }
 
   @Public()
+  @Get('radio/:stationUuid/favicon')
+  @ApiOperation({
+    summary: 'Serve radio station custom favicon',
+    description: 'Returns a custom favicon image for a radio station identified by stationUuid.',
+  })
+  @ApiParam({ name: 'stationUuid', description: 'Radio Browser station UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Favicon image returned successfully',
+    content: { 'image/jpeg': {}, 'image/png': {}, 'image/webp': {} },
+  })
+  @ApiResponse({ status: 404, description: 'Custom favicon not found' })
+  async getRadioFavicon(
+    @Param('stationUuid') stationUuid: string,
+    @Headers('if-none-match') ifNoneMatch: string | undefined,
+    @Res({ passthrough: true }) res: FastifyReply
+  ): Promise<StreamableFile | void> {
+    try {
+      const imageResult = await this.imageService.getRadioFavicon(stationUuid);
+
+      const currentETag = `"${imageResult.tag}"`;
+      if (ifNoneMatch && ifNoneMatch === currentETag) {
+        res.status(304);
+        return;
+      }
+
+      this.setCacheHeaders(res, imageResult);
+      return new StreamableFile(createReadStream(imageResult.filePath));
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new NotFoundException(`No custom favicon for station ${stationUuid}`);
+    }
+  }
+
+  @Public()
   @Get('artists/:artistId/all')
   @ApiOperation({
     summary: 'Get all available artist images',

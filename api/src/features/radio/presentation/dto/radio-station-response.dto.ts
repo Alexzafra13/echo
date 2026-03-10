@@ -11,6 +11,7 @@ export class RadioStationResponseDto {
   urlResolved?: string;
   homepage?: string;
   favicon?: string;
+  customFaviconUrl?: string;
   country?: string;
   countryCode?: string;
   state?: string;
@@ -26,7 +27,10 @@ export class RadioStationResponseDto {
   createdAt!: Date;
   updatedAt!: Date;
 
-  static fromDomain(station: RadioStation): RadioStationResponseDto {
+  static fromDomain(
+    station: RadioStation,
+    customFaviconUrl?: string,
+  ): RadioStationResponseDto {
     return {
       id: station.id,
       stationUuid: station.stationUuid,
@@ -35,6 +39,7 @@ export class RadioStationResponseDto {
       urlResolved: station.urlResolved,
       homepage: station.homepage,
       favicon: station.favicon,
+      customFaviconUrl,
       country: station.country,
       countryCode: station.countryCode,
       state: station.state,
@@ -52,7 +57,15 @@ export class RadioStationResponseDto {
     };
   }
 
-  static fromDomainArray(stations: RadioStation[]): RadioStationResponseDto[] {
-    return stations.map((station) => this.fromDomain(station));
+  static fromDomainArray(
+    stations: RadioStation[],
+    customFaviconMap?: Map<string, string>,
+  ): RadioStationResponseDto[] {
+    return stations.map((station) => {
+      const customUrl = station.stationUuid && customFaviconMap
+        ? customFaviconMap.get(station.stationUuid)
+        : undefined;
+      return this.fromDomain(station, customUrl);
+    });
   }
 }

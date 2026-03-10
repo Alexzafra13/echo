@@ -78,6 +78,10 @@ export class StorageService {
       const userStoragePath = path.join(dataPath, 'uploads', 'users');
       await this.ensureDirectoryExists(userStoragePath);
 
+      // Radio station images storage
+      const radioStoragePath = path.join(dataPath, 'uploads', 'radio');
+      await this.ensureDirectoryExists(radioStoragePath);
+
       // Copy default images if they don't exist
       await this.initializeDefaultImages();
 
@@ -169,6 +173,18 @@ export class StorageService {
   async getUserAvatarPath(userId: string, extension: string): Promise<string> {
     const userPath = await this.getUserStoragePath(userId);
     return path.join(userPath, `avatar.${extension}`);
+  }
+
+  /**
+   * Get favicon path for a radio station
+   * Returns: {DATA_PATH}/uploads/radio/{stationUuid}/favicon.{ext}
+   */
+  async getRadioFaviconPath(stationUuid: string, extension: string): Promise<string> {
+    const dataPath = this.config.get<string>('DATA_PATH', '/app/data');
+    const radioStorageBase = path.join(dataPath, 'uploads', 'radio');
+    const stationPath = path.join(radioStorageBase, stationUuid);
+    await this.ensureDirectoryExists(stationPath);
+    return path.join(stationPath, `favicon.${extension}`);
   }
 
   /**

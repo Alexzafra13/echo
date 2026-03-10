@@ -119,7 +119,7 @@ export function AudioPlayer() {
   }, [currentTrack, currentRadioStation, isMiniMode, preference, isMobile]);
 
   const colorSourceUrl = useMemo(() => {
-    if (isRadioMode) return currentRadioStation?.favicon || undefined;
+    if (isRadioMode) return currentRadioStation?.customFaviconUrl || currentRadioStation?.favicon || undefined;
     if (currentTrack) {
       const rawUrl =
         currentTrack.album?.cover ||
