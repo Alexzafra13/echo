@@ -332,7 +332,7 @@ describe('WebSocket E2E', () => {
           2000,
         );
 
-        socket.emit('scanner:pause', { scanId: 'admin-scan-123' });
+        socket.emit('scanner:pause', { scanId: '00000000-0000-0000-0000-000000000123' });
 
         const response = await errorPromise;
         expect(response.message).toContain('no está en ejecución');
@@ -355,7 +355,7 @@ describe('WebSocket E2E', () => {
         );
 
         socket.emit('scanner:cancel', {
-          scanId: 'admin-scan-456',
+          scanId: '00000000-0000-0000-0000-000000000456',
           reason: 'Test cancellation',
         });
 
@@ -379,7 +379,7 @@ describe('WebSocket E2E', () => {
           2000,
         );
 
-        socket.emit('scanner:resume', { scanId: 'admin-scan-789' });
+        socket.emit('scanner:resume', { scanId: '00000000-0000-0000-0000-000000000789' });
 
         const response = await errorPromise;
         expect(response.message).toContain('no está en pausa');
@@ -402,7 +402,7 @@ describe('WebSocket E2E', () => {
           2000,
         );
 
-        socket.emit('scanner:pause', { scanId: 'user-scan-123' });
+        socket.emit('scanner:pause', { scanId: '00000000-0000-0000-0000-100000000123' });
 
         const error = await errorPromise;
         expect(error.message).toContain('Unauthorized');
@@ -425,7 +425,7 @@ describe('WebSocket E2E', () => {
         );
 
         socket.emit('scanner:cancel', {
-          scanId: 'user-scan-456',
+          scanId: '00000000-0000-0000-0000-100000000456',
           reason: 'Unauthorized attempt',
         });
 
@@ -449,7 +449,7 @@ describe('WebSocket E2E', () => {
           2000,
         );
 
-        socket.emit('scanner:resume', { scanId: 'user-scan-789' });
+        socket.emit('scanner:resume', { scanId: '00000000-0000-0000-0000-100000000789' });
 
         const error = await errorPromise;
         expect(error.message).toContain('Unauthorized');
