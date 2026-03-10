@@ -6,7 +6,7 @@ import { isFileNotFoundError } from '@shared/types/error.types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { eq } from 'drizzle-orm';
-import { users } from '@infrastructure/database/schema';
+import { users, radioStationImages } from '@infrastructure/database/schema';
 import {
   ImageCacheService,
   CachedImageResult,
@@ -133,6 +133,46 @@ export class ImageService {
     this.cache.set(cacheKey, result);
 
     return result;
+  }
+
+  // ============================================
+  // RADIO STATION FAVICONS
+  // ============================================
+
+  /**
+   * Get radio station custom favicon by stationUuid
+   */
+  async getRadioFavicon(stationUuid: string): Promise<ImageResult> {
+    const cacheKey = `radio:${stationUuid}:favicon`;
+
+    const cached = this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const imageResult = await this.drizzle.db
+      .select({
+        filePath: radioStationImages.filePath,
+      })
+      .from(radioStationImages)
+      .where(eq(radioStationImages.stationUuid, stationUuid))
+      .limit(1);
+
+    const image = imageResult[0];
+
+    if (!image) {
+      throw new NotFoundException(`No custom favicon for station ${stationUuid}`);
+    }
+
+    const result = await this.getImageFileInfo(image.filePath, 'local');
+    this.cache.set(cacheKey, result);
+
+    return result;
+  }
+
+  /**
+   * Invalidate radio station favicon cache
+   */
+  invalidateRadioFaviconCache(stationUuid: string): void {
+    this.cache.invalidate(`radio:${stationUuid}:favicon`);
   }
 
   // ============================================

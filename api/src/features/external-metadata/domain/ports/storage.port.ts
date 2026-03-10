@@ -16,6 +16,11 @@ export interface IStorageService {
    * Get the path for a user avatar
    */
   getUserAvatarPath(userId: string, extension: string): Promise<string>;
+
+  /**
+   * Get the path for a radio station favicon
+   */
+  getRadioFaviconPath(stationUuid: string, extension: string): Promise<string>;
 }
 
 // Injection token

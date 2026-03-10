@@ -13,6 +13,7 @@ import { ArtistAvatarsController } from './presentation/artist-avatars.controlle
 import { ArtistBannersManagementController } from './presentation/artist-banners.controller';
 import { CustomArtistImagesController } from './presentation/custom-artist-images.controller';
 import { CustomAlbumCoversController } from './presentation/custom-album-covers.controller';
+import { RadioFaviconsController } from './presentation/radio-favicons.controller';
 import {
   CreateUserUseCase,
   ListUsersUseCase,
@@ -38,6 +39,9 @@ import { UploadCustomAlbumCoverUseCase } from './infrastructure/use-cases/upload
 import { ListCustomAlbumCoversUseCase } from './infrastructure/use-cases/list-custom-album-covers';
 import { DeleteCustomAlbumCoverUseCase } from './infrastructure/use-cases/delete-custom-album-cover';
 import { ApplyCustomAlbumCoverUseCase } from './infrastructure/use-cases/apply-custom-album-cover';
+import { UploadRadioFaviconUseCase } from './infrastructure/use-cases/upload-radio-favicon';
+import { DeleteRadioFaviconUseCase } from './infrastructure/use-cases/delete-radio-favicon';
+import { RadioFaviconFetchService } from '@features/radio/domain/services/radio-favicon-fetch.service';
 import {
   LibraryStatsService,
   StorageBreakdownService,
@@ -75,6 +79,7 @@ import {
     ArtistBannersManagementController,
     CustomArtistImagesController,
     CustomAlbumCoversController,
+    RadioFaviconsController,
   ],
   providers: [
     { provide: LIBRARY_STATS_PROVIDER, useClass: LibraryStatsService },
@@ -107,6 +112,9 @@ import {
     ListCustomAlbumCoversUseCase,
     DeleteCustomAlbumCoverUseCase,
     ApplyCustomAlbumCoverUseCase,
+    UploadRadioFaviconUseCase,
+    DeleteRadioFaviconUseCase,
+    RadioFaviconFetchService,
   ],
 })
 export class AdminModule {}

@@ -45,6 +45,32 @@ export const radioStations = pgTable(
   ],
 );
 
+// ============================================
+// RadioStationImage - Custom favicons (global, admin-managed)
+// Keyed by stationUuid for Radio Browser stations
+// ============================================
+export const radioStationImages = pgTable(
+  'radio_station_images',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    stationUuid: varchar('station_uuid', { length: 255 }).notNull().unique(),
+    filePath: varchar('file_path', { length: 512 }).notNull(),
+    fileName: varchar('file_name', { length: 255 }).notNull(),
+    fileSize: integer('file_size').default(0).notNull(),
+    mimeType: varchar('mime_type', { length: 50 }).notNull(),
+    source: varchar('image_source', { length: 50 }).notNull().default('manual'),
+    uploadedBy: uuid('uploaded_by'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('radio_station_images_station_uuid_idx').on(table.stationUuid),
+    index('radio_station_images_source_idx').on(table.source),
+  ],
+);
+
 // Type exports
 export type RadioStation = typeof radioStations.$inferSelect;
 export type NewRadioStation = typeof radioStations.$inferInsert;
+export type RadioStationImage = typeof radioStationImages.$inferSelect;
+export type NewRadioStationImage = typeof radioStationImages.$inferInsert;

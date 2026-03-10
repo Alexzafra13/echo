@@ -1,8 +1,10 @@
-import { Heart, Radio, Music } from 'lucide-react';
+import { Heart, Radio, Music, ImagePlus, Trash2, Wand2 } from 'lucide-react';
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import type { RadioBrowserStation } from '../../types';
 import type { RadioStation } from '@features/player/types';
 import type { RadioMetadata } from '../../hooks/useRadioMetadata';
+import { useAuthStore } from '@shared/store';
+import { useUploadRadioFavicon, useDeleteRadioFavicon, useAutoFetchRadioFavicon } from '../../hooks/useRadioFavicon';
 import styles from './RadioStationCard.module.css';
 
 interface RadioStationCardProps {
@@ -23,7 +25,14 @@ export const RadioStationCard = memo(function RadioStationCard({
   onToggleFavorite,
 }: RadioStationCardProps) {
   const metadataTextRef = useRef<HTMLSpanElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [shouldAnimate, setShouldAnimate] = useState(false);
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.isAdmin ?? false;
+
+  const uploadMutation = useUploadRadioFavicon();
+  const deleteMutation = useDeleteRadioFavicon();
+  const autoFetchMutation = useAutoFetchRadioFavicon();
 
   const handleCardClick = useCallback(() => {
     onPlay?.();
@@ -37,10 +46,22 @@ export const RadioStationCard = memo(function RadioStationCard({
   // Compatible con RadioBrowserStation y RadioStation
   const name = station.name;
   const favicon = 'favicon' in station ? station.favicon : null;
+  const customFaviconUrl = 'customFaviconUrl' in station ? (station as RadioStation).customFaviconUrl : null;
   const country = 'country' in station ? station.country : null;
   const tags = 'tags' in station ? station.tags : null;
   const codec = 'codec' in station ? station.codec : null;
   const bitrate = 'bitrate' in station ? station.bitrate : null;
+  const homepage = 'homepage' in station ? station.homepage : null;
+
+  // Get the station UUID (works for both types)
+  const stationUuid = 'stationuuid' in station
+    ? (station as RadioBrowserStation).stationuuid
+    : 'stationUuid' in station
+      ? (station as RadioStation).stationUuid
+      : null;
+
+  // Priority: customFaviconUrl > favicon
+  const displayFavicon = customFaviconUrl || favicon;
 
   const genreTags = tags && typeof tags === 'string' && tags.trim()
     ? tags.split(',').slice(0, 2).join(', ')
@@ -57,6 +78,39 @@ export const RadioStationCard = memo(function RadioStationCard({
     }
   }, [currentMetadata?.title]);
 
+  const handleUploadClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !stationUuid) return;
+
+    uploadMutation.mutate({ stationUuid, file });
+
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, [stationUuid, uploadMutation]);
+
+  const handleDeleteFavicon = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!stationUuid) return;
+    deleteMutation.mutate(stationUuid);
+  }, [stationUuid, deleteMutation]);
+
+  const handleAutoFetch = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!stationUuid) return;
+    autoFetchMutation.mutate({
+      stationUuid,
+      name,
+      homepage: homepage || undefined,
+    });
+  }, [stationUuid, name, homepage, autoFetchMutation]);
+
+  const isLoading = uploadMutation.isPending || deleteMutation.isPending || autoFetchMutation.isPending;
+
   return (
     <article
       className={`${styles.radioCard} ${isPlaying ? styles['radioCard--playing'] : ''}`}
@@ -66,9 +120,9 @@ export const RadioStationCard = memo(function RadioStationCard({
         <div className={styles.radioCard__fallback}>
           <Radio size={32} />
         </div>
-        {favicon && (
+        {displayFavicon && (
           <img
-            src={favicon}
+            src={displayFavicon}
             alt={name}
             loading="lazy"
             className={styles.radioCard__cover}
@@ -89,7 +143,49 @@ export const RadioStationCard = memo(function RadioStationCard({
               <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
             </button>
           )}
+          {isAdmin && stationUuid && (
+            <div className={styles.radioCard__adminActions}>
+              <button
+                className={styles.radioCard__adminButton}
+                onClick={handleUploadClick}
+                disabled={isLoading}
+                aria-label="Upload custom favicon"
+                title="Upload custom favicon"
+              >
+                <ImagePlus size={14} />
+              </button>
+              {!displayFavicon && (
+                <button
+                  className={styles.radioCard__adminButton}
+                  onClick={handleAutoFetch}
+                  disabled={isLoading}
+                  aria-label="Auto-fetch favicon"
+                  title="Auto-fetch from web"
+                >
+                  <Wand2 size={14} />
+                </button>
+              )}
+              {customFaviconUrl && (
+                <button
+                  className={`${styles.radioCard__adminButton} ${styles['radioCard__adminButton--danger']}`}
+                  onClick={handleDeleteFavicon}
+                  disabled={isLoading}
+                  aria-label="Remove custom favicon"
+                  title="Remove custom favicon"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+          )}
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
       </div>
       <div className={styles.radioCard__info}>
         <h3 className={styles.radioCard__title}>{name}</h3>
