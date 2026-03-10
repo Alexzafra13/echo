@@ -29,7 +29,7 @@ export class RadioFaviconFetchService {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
-    private readonly imageService: ImageService,
+    private readonly imageService: ImageService
   ) {}
 
   /**
@@ -39,7 +39,7 @@ export class RadioFaviconFetchService {
   async fetchAndSave(
     stationUuid: string,
     stationName: string,
-    homepage?: string,
+    homepage?: string
   ): Promise<FetchFaviconResult> {
     // Check if we already have a custom image for this station
     const existing = await this.drizzle.db
@@ -99,24 +99,21 @@ export class RadioFaviconFetchService {
 
     // Save to storage
     try {
-      const extension = mimeType === 'image/png' ? 'png'
-        : mimeType === 'image/webp' ? 'webp'
-        : 'jpg';
+      const extension =
+        mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
 
       const filePath = await this.storage.getRadioFaviconPath(stationUuid, extension);
       await this.storage.saveImage(filePath, imageBuffer);
 
       // Save to database
-      await this.drizzle.db
-        .insert(radioStationImages)
-        .values({
-          stationUuid,
-          filePath,
-          fileName: `favicon.${extension}`,
-          fileSize: imageBuffer.length,
-          mimeType,
-          source,
-        });
+      await this.drizzle.db.insert(radioStationImages).values({
+        stationUuid,
+        filePath,
+        fileName: `favicon.${extension}`,
+        fileSize: imageBuffer.length,
+        mimeType,
+        source,
+      });
 
       this.imageService.invalidateRadioFaviconCache(stationUuid);
 
@@ -139,7 +136,7 @@ export class RadioFaviconFetchService {
    * Try to get apple-touch-icon from a homepage URL
    */
   private async tryAppleTouchIcon(
-    homepage: string,
+    homepage: string
   ): Promise<{ buffer: Buffer; mimeType: string } | null> {
     try {
       const url = new URL(homepage);
@@ -238,7 +235,7 @@ export class RadioFaviconFetchService {
    * Try Google Favicon API (128px)
    */
   private async tryGoogleFavicon(
-    homepage: string,
+    homepage: string
   ): Promise<{ buffer: Buffer; mimeType: string } | null> {
     try {
       const url = new URL(homepage);
@@ -263,9 +260,11 @@ export class RadioFaviconFetchService {
 
       return {
         buffer,
-        mimeType: contentType.includes('png') ? 'image/png'
-          : contentType.includes('jpeg') || contentType.includes('jpg') ? 'image/jpeg'
-          : 'image/png',
+        mimeType: contentType.includes('png')
+          ? 'image/png'
+          : contentType.includes('jpeg') || contentType.includes('jpg')
+            ? 'image/jpeg'
+            : 'image/png',
       };
     } catch {
       return null;
@@ -276,7 +275,7 @@ export class RadioFaviconFetchService {
    * Try Wikipedia API to find station logo
    */
   private async tryWikipedia(
-    stationName: string,
+    stationName: string
   ): Promise<{ buffer: Buffer; mimeType: string } | null> {
     try {
       // Search Wikipedia for the station
@@ -289,12 +288,15 @@ export class RadioFaviconFetchService {
 
       if (!response.ok) return null;
 
-      const data = await response.json() as {
+      const data = (await response.json()) as {
         query?: {
-          pages?: Record<string, {
-            title?: string;
-            thumbnail?: { source: string; width: number; height: number };
-          }>;
+          pages?: Record<
+            string,
+            {
+              title?: string;
+              thumbnail?: { source: string; width: number; height: number };
+            }
+          >;
         };
       };
 
@@ -304,9 +306,12 @@ export class RadioFaviconFetchService {
       for (const page of Object.values(data.query.pages)) {
         if (page.thumbnail?.source) {
           // Verify it's somewhat relevant (title should contain part of station name)
-          const nameWords = stationName.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+          const nameWords = stationName
+            .toLowerCase()
+            .split(/\s+/)
+            .filter((w) => w.length > 2);
           const titleLower = (page.title || '').toLowerCase();
-          const hasMatch = nameWords.some(word => titleLower.includes(word));
+          const hasMatch = nameWords.some((word) => titleLower.includes(word));
 
           if (!hasMatch) continue;
 
@@ -322,9 +327,11 @@ export class RadioFaviconFetchService {
               const contentType = imgResponse.headers.get('content-type') || 'image/jpeg';
               return {
                 buffer,
-                mimeType: contentType.includes('png') ? 'image/png'
-                  : contentType.includes('webp') ? 'image/webp'
-                  : 'image/jpeg',
+                mimeType: contentType.includes('png')
+                  ? 'image/png'
+                  : contentType.includes('webp')
+                    ? 'image/webp'
+                    : 'image/jpeg',
               };
             }
           }
@@ -341,23 +348,21 @@ export class RadioFaviconFetchService {
    * Batch fetch favicons for multiple stations
    */
   async batchFetch(
-    stations: Array<{ stationUuid: string; name: string; homepage?: string }>,
+    stations: Array<{ stationUuid: string; name: string; homepage?: string }>
   ): Promise<{ fetched: number; total: number }> {
     let fetched = 0;
 
     for (const station of stations) {
       try {
-        const result = await this.fetchAndSave(
-          station.stationUuid,
-          station.name,
-          station.homepage,
-        );
+        const result = await this.fetchAndSave(station.stationUuid, station.name, station.homepage);
         if (result.success) fetched++;
 
         // Small delay between requests to be polite
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       } catch (error) {
-        this.logger.warn(`Failed to fetch favicon for ${station.name}: ${(error as Error).message}`);
+        this.logger.warn(
+          `Failed to fetch favicon for ${station.name}: ${(error as Error).message}`
+        );
       }
     }
 

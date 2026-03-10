@@ -3,7 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 import { RadioFaviconsController } from './radio-favicons.controller';
 import { UploadRadioFaviconUseCase } from '../infrastructure/use-cases/upload-radio-favicon';
 import { DeleteRadioFaviconUseCase } from '../infrastructure/use-cases/delete-radio-favicon';
-import { RadioFaviconFetchService } from '@features/radio/domain/services/radio-favicon-fetch.service';
+import { RadioFaviconFetchService } from '@features/radio/infrastructure/services/radio-favicon-fetch.service';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';
@@ -41,12 +41,14 @@ describe('RadioFaviconsController', () => {
   });
 
   describe('upload', () => {
-    const createMockRequest = (options: {
-      fileData?: Buffer;
-      mimetype?: string;
-      filename?: string;
-      hasFile?: boolean;
-    } = {}) => {
+    const createMockRequest = (
+      options: {
+        fileData?: Buffer;
+        mimetype?: string;
+        filename?: string;
+        hasFile?: boolean;
+      } = {}
+    ) => {
       const {
         fileData = Buffer.from('test-image-data'),
         mimetype = 'image/png',
@@ -62,7 +64,7 @@ describe('RadioFaviconsController', () => {
                 filename,
                 toBuffer: jest.fn().mockResolvedValue(fileData),
               }
-            : null,
+            : null
         ),
         user: { id: 'admin-123' },
       } as any;
@@ -93,26 +95,20 @@ describe('RadioFaviconsController', () => {
     it('debería lanzar error si no hay archivo', async () => {
       const request = createMockRequest({ hasFile: false });
 
-      await expect(
-        controller.upload('station-1', request),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.upload('station-1', request)).rejects.toThrow(BadRequestException);
     });
 
     it('debería lanzar error si el archivo excede 10MB', async () => {
       const largeBuffer = Buffer.alloc(11 * 1024 * 1024); // 11MB
       const request = createMockRequest({ fileData: largeBuffer });
 
-      await expect(
-        controller.upload('station-1', request),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.upload('station-1', request)).rejects.toThrow(BadRequestException);
     });
 
     it('debería lanzar error si el tipo MIME no es válido', async () => {
       const request = createMockRequest({ mimetype: 'image/gif' });
 
-      await expect(
-        controller.upload('station-1', request),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.upload('station-1', request)).rejects.toThrow(BadRequestException);
     });
 
     it('debería aceptar image/jpeg', async () => {
@@ -148,7 +144,11 @@ describe('RadioFaviconsController', () => {
 
   describe('autoFetch', () => {
     it('debería hacer auto-fetch con nombre y homepage', async () => {
-      const fetchResult = { success: true, source: 'apple-touch-icon', url: '/api/images/radio/s1/favicon' };
+      const fetchResult = {
+        success: true,
+        source: 'apple-touch-icon',
+        url: '/api/images/radio/s1/favicon',
+      };
       mockFetchService.fetchAndSave.mockResolvedValue(fetchResult);
 
       const result = await controller.autoFetch('station-1', 'Radio ABC', 'https://radioabc.com');
@@ -157,12 +157,16 @@ describe('RadioFaviconsController', () => {
       expect(mockFetchService.fetchAndSave).toHaveBeenCalledWith(
         'station-1',
         'Radio ABC',
-        'https://radioabc.com',
+        'https://radioabc.com'
       );
     });
 
     it('debería hacer auto-fetch sin homepage', async () => {
-      const fetchResult = { success: true, source: 'wikipedia', url: '/api/images/radio/s1/favicon' };
+      const fetchResult = {
+        success: true,
+        source: 'wikipedia',
+        url: '/api/images/radio/s1/favicon',
+      };
       mockFetchService.fetchAndSave.mockResolvedValue(fetchResult);
 
       const result = await controller.autoFetch('station-1', 'Radio ABC');
@@ -171,14 +175,12 @@ describe('RadioFaviconsController', () => {
       expect(mockFetchService.fetchAndSave).toHaveBeenCalledWith(
         'station-1',
         'Radio ABC',
-        undefined,
+        undefined
       );
     });
 
     it('debería lanzar error si no se proporciona nombre', async () => {
-      await expect(
-        controller.autoFetch('station-1', ''),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.autoFetch('station-1', '')).rejects.toThrow(BadRequestException);
     });
   });
 });

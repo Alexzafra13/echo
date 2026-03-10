@@ -41,7 +41,7 @@ import { DeleteCustomAlbumCoverUseCase } from './infrastructure/use-cases/delete
 import { ApplyCustomAlbumCoverUseCase } from './infrastructure/use-cases/apply-custom-album-cover';
 import { UploadRadioFaviconUseCase } from './infrastructure/use-cases/upload-radio-favicon';
 import { DeleteRadioFaviconUseCase } from './infrastructure/use-cases/delete-radio-favicon';
-import { RadioFaviconFetchService } from '@features/radio/domain/services/radio-favicon-fetch.service';
+import { RadioFaviconFetchService } from '@features/radio/infrastructure/services/radio-favicon-fetch.service';
 import {
   LibraryStatsService,
   StorageBreakdownService,
