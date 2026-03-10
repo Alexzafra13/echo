@@ -58,7 +58,7 @@ test.describe('Reproductor de Audio', () => {
 
     if (albumCount > 0) {
       await albumLinks.first().click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForURL(/\/albums\/|\/album\//, { timeout: 15000 });
 
       // Debe navegar a la página de detalle del álbum
       expect(page.url()).toMatch(/\/albums\/|\/album\//);
