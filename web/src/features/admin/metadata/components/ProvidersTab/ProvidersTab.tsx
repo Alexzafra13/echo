@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Radio, Globe, Search, BookOpen } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { useNotification } from '@shared/hooks';
 import {
@@ -216,7 +216,60 @@ export function ProvidersTab() {
         </div>
       </div>
 
-      {/* Info Box */}
+      {/* Radio Favicon Sources */}
+      <div className={styles.radioFaviconSection}>
+        <div className={styles.radioFaviconHeader}>
+          <Radio size={20} />
+          <div>
+            <h3 className={styles.sectionTitle}>Favicons de Radio</h3>
+            <p className={styles.sectionDescription}>
+              Los iconos de las emisoras se obtienen automaticamente de estas fuentes (sin configuracion necesaria)
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.radioSourcesList}>
+          <div className={styles.radioSource}>
+            <div className={styles.radioSourceIcon}>
+              <Globe size={16} />
+            </div>
+            <div className={styles.radioSourceInfo}>
+              <span className={styles.radioSourceName}>Apple Touch Icon</span>
+              <span className={styles.radioSourceDesc}>
+                Icono estandar que las webs publican para dispositivos Apple (ej. /apple-touch-icon.png)
+              </span>
+            </div>
+            <span className={styles.radioSourcePriority}>Prioridad 1</span>
+          </div>
+
+          <div className={styles.radioSource}>
+            <div className={styles.radioSourceIcon}>
+              <Search size={16} />
+            </div>
+            <div className={styles.radioSourceInfo}>
+              <span className={styles.radioSourceName}>Google Favicon</span>
+              <span className={styles.radioSourceDesc}>
+                Servicio publico de Google que devuelve el favicon de cualquier dominio
+              </span>
+            </div>
+            <span className={styles.radioSourcePriority}>Prioridad 2</span>
+          </div>
+
+          <div className={styles.radioSource}>
+            <div className={styles.radioSourceIcon}>
+              <BookOpen size={16} />
+            </div>
+            <div className={styles.radioSourceInfo}>
+              <span className={styles.radioSourceName}>Wikipedia</span>
+              <span className={styles.radioSourceDesc}>
+                Busca el logo de la emisora en su articulo de Wikipedia (API publica)
+              </span>
+            </div>
+            <span className={styles.radioSourcePriority}>Prioridad 3</span>
+          </div>
+        </div>
+      </div>
+
       {/* Notification */}
       {notification && (
         <InlineNotification
