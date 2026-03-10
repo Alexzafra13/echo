@@ -129,7 +129,7 @@ describe('RadioFaviconFetchService', () => {
           ok: true,
           headers: { 'content-type': 'image/png' },
           arrayBuffer: tinyBuffer,
-        }),
+        })
       );
 
       const result = await service.fetchAndSave('uuid', 'Station Name', 'https://station.com');
@@ -149,7 +149,7 @@ describe('RadioFaviconFetchService', () => {
           ok: true,
           headers: { 'content-type': 'image/png' },
           arrayBuffer: imageBuffer,
-        }),
+        })
       );
 
       const result = await service.fetchAndSave('uuid', 'Station Name', 'https://station.com');
@@ -174,7 +174,7 @@ describe('RadioFaviconFetchService', () => {
             ok: true,
             headers: { 'content-type': 'image/png' },
             arrayBuffer: imageBuffer,
-          }),
+          })
         );
 
       const result = await service.fetchAndSave('uuid', 'Station Name', 'https://station.com');
@@ -196,12 +196,13 @@ describe('RadioFaviconFetchService', () => {
         .mockRejectedValueOnce(new Error('404')) // /apple-touch-icon-180x180.png
         .mockRejectedValueOnce(new Error('404')) // /apple-touch-icon-152x152.png
         .mockRejectedValueOnce(new Error('404')) // HTML parse attempt
-        .mockResolvedValueOnce(                  // Google Favicon API
+        .mockResolvedValueOnce(
+          // Google Favicon API
           createMockResponse({
             ok: true,
             headers: { 'content-type': 'image/png' },
             arrayBuffer: imageBuffer,
-          }),
+          })
         );
 
       const result = await service.fetchAndSave('uuid', 'Station Name', 'https://station.com');
@@ -220,12 +221,13 @@ describe('RadioFaviconFetchService', () => {
         .mockRejectedValueOnce(new Error('404'))
         .mockRejectedValueOnce(new Error('404'))
         .mockRejectedValueOnce(new Error('404'))
-        .mockResolvedValueOnce( // Google returns small placeholder
+        .mockResolvedValueOnce(
+          // Google returns small placeholder
           createMockResponse({
             ok: true,
             headers: { 'content-type': 'image/png' },
             arrayBuffer: tinyBuffer,
-          }),
+          })
         )
         .mockRejectedValueOnce(new Error('Wikipedia fail')); // Wikipedia also fails
 
@@ -247,10 +249,12 @@ describe('RadioFaviconFetchService', () => {
         .mockRejectedValueOnce(new Error('404'))
         .mockRejectedValueOnce(new Error('404'))
         .mockRejectedValueOnce(new Error('404'))
-        .mockResolvedValueOnce( // Google returns not ok
-          createMockResponse({ ok: false }),
+        .mockResolvedValueOnce(
+          // Google returns not ok
+          createMockResponse({ ok: false })
         )
-        .mockResolvedValueOnce( // Wikipedia search API
+        .mockResolvedValueOnce(
+          // Wikipedia search API
           createMockResponse({
             ok: true,
             json: {
@@ -267,14 +271,15 @@ describe('RadioFaviconFetchService', () => {
                 },
               },
             },
-          }),
+          })
         )
-        .mockResolvedValueOnce( // Download the thumbnail
+        .mockResolvedValueOnce(
+          // Download the thumbnail
           createMockResponse({
             ok: true,
             headers: { 'content-type': 'image/png' },
             arrayBuffer: imageBuffer,
-          }),
+          })
         );
 
       const result = await service.fetchAndSave('uuid', 'Station Name', 'https://station.com');
@@ -289,7 +294,8 @@ describe('RadioFaviconFetchService', () => {
 
       // Without homepage, goes straight to Wikipedia
       mockFetchWithTimeout
-        .mockResolvedValueOnce( // Wikipedia search API
+        .mockResolvedValueOnce(
+          // Wikipedia search API
           createMockResponse({
             ok: true,
             json: {
@@ -306,14 +312,15 @@ describe('RadioFaviconFetchService', () => {
                 },
               },
             },
-          }),
+          })
         )
-        .mockResolvedValueOnce( // Download thumbnail
+        .mockResolvedValueOnce(
+          // Download thumbnail
           createMockResponse({
             ok: true,
             headers: { 'content-type': 'image/png' },
             arrayBuffer: imageBuffer,
-          }),
+          })
         );
 
       const result = await service.fetchAndSave('uuid', 'Station Name');
@@ -323,26 +330,25 @@ describe('RadioFaviconFetchService', () => {
     });
 
     it('debería ignorar resultados de Wikipedia sin coincidencia en el nombre', async () => {
-      mockFetchWithTimeout
-        .mockResolvedValueOnce(
-          createMockResponse({
-            ok: true,
-            json: {
-              query: {
-                pages: {
-                  '789': {
-                    title: 'Completely Unrelated Page',
-                    thumbnail: {
-                      source: 'https://upload.wikimedia.org/unrelated.png',
-                      width: 300,
-                      height: 300,
-                    },
+      mockFetchWithTimeout.mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          json: {
+            query: {
+              pages: {
+                '789': {
+                  title: 'Completely Unrelated Page',
+                  thumbnail: {
+                    source: 'https://upload.wikimedia.org/unrelated.png',
+                    width: 300,
+                    height: 300,
                   },
                 },
               },
             },
-          }),
-        );
+          },
+        })
+      );
 
       const result = await service.fetchAndSave('uuid', 'Station Name');
 
@@ -360,7 +366,7 @@ describe('RadioFaviconFetchService', () => {
           ok: true,
           headers: { 'content-type': 'image/png' },
           arrayBuffer: imageBuffer,
-        }),
+        })
       );
 
       const result = await service.fetchAndSave('my-uuid', 'Station', 'https://station.com');
@@ -377,7 +383,7 @@ describe('RadioFaviconFetchService', () => {
           ok: true,
           headers: { 'content-type': 'image/png' },
           arrayBuffer: imageBuffer,
-        }),
+        })
       );
       mockStorage.saveImage.mockRejectedValueOnce(new Error('Disk full'));
 
@@ -398,7 +404,7 @@ describe('RadioFaviconFetchService', () => {
           ok: true,
           headers: { 'content-type': 'image/png' },
           arrayBuffer: imageBuffer,
-        }),
+        })
       );
 
       const stations = [
@@ -413,8 +419,7 @@ describe('RadioFaviconFetchService', () => {
     });
 
     it('debería continuar si una estación falla', async () => {
-      mockFetchWithTimeout
-        .mockRejectedValue(new Error('Network error'));
+      mockFetchWithTimeout.mockRejectedValue(new Error('Network error'));
 
       const stations = [
         { stationUuid: 'uuid-1', name: 'Station 1' },

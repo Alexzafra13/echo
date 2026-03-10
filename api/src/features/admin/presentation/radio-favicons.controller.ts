@@ -26,7 +26,7 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { UploadRadioFaviconUseCase } from '../infrastructure/use-cases/upload-radio-favicon';
 import { DeleteRadioFaviconUseCase } from '../infrastructure/use-cases/delete-radio-favicon';
-import { RadioFaviconFetchService } from '@features/radio/domain/services/radio-favicon-fetch.service';
+import { RadioFaviconFetchService } from '@features/radio/infrastructure/services/radio-favicon-fetch.service';
 
 @ApiTags('Admin - Radio Favicons')
 @ApiBearerAuth()
@@ -36,7 +36,7 @@ export class RadioFaviconsController {
   constructor(
     private readonly uploadFavicon: UploadRadioFaviconUseCase,
     private readonly deleteFavicon: DeleteRadioFaviconUseCase,
-    private readonly faviconFetch: RadioFaviconFetchService,
+    private readonly faviconFetch: RadioFaviconFetchService
   ) {}
 
   @Post(':stationUuid/upload')
@@ -44,7 +44,8 @@ export class RadioFaviconsController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Upload custom favicon for radio station',
-    description: 'Upload a custom favicon image for a radio station (admin only, global for all users)',
+    description:
+      'Upload a custom favicon image for a radio station (admin only, global for all users)',
   })
   @ApiParam({ name: 'stationUuid', description: 'Radio Browser station UUID' })
   @ApiBody({
@@ -65,7 +66,7 @@ export class RadioFaviconsController {
   async upload(
     @Param('stationUuid') stationUuid: string,
     @Req()
-    request: FastifyRequest & { file: () => Promise<MultipartFile> } & { user: { id: string } },
+    request: FastifyRequest & { file: () => Promise<MultipartFile> } & { user: { id: string } }
   ) {
     const data = await request.file();
 
@@ -83,7 +84,7 @@ export class RadioFaviconsController {
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedMimeTypes.includes(data.mimetype)) {
       throw new BadRequestException(
-        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`,
+        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`
       );
     }
 
@@ -116,14 +117,15 @@ export class RadioFaviconsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Auto-fetch favicon from external sources',
-    description: 'Try to automatically find and download a favicon from apple-touch-icon, Google Favicon API, or Wikipedia',
+    description:
+      'Try to automatically find and download a favicon from apple-touch-icon, Google Favicon API, or Wikipedia',
   })
   @ApiParam({ name: 'stationUuid', description: 'Radio Browser station UUID' })
   @ApiResponse({ status: 200, description: 'Auto-fetch result' })
   async autoFetch(
     @Param('stationUuid') stationUuid: string,
     @Query('name') name: string,
-    @Query('homepage') homepage?: string,
+    @Query('homepage') homepage?: string
   ) {
     if (!name) {
       throw new BadRequestException('Station name is required (query param: name)');
