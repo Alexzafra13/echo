@@ -5,6 +5,7 @@ import {
   Delete,
   Param,
   Query,
+  Body,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -132,5 +133,58 @@ export class RadioFaviconsController {
     }
 
     return await this.faviconFetch.fetchAndSave(stationUuid, name, homepage);
+  }
+
+  @Post(':stationUuid/previews')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Fetch favicon previews from all sources',
+    description:
+      'Fetch favicon images from all available sources (apple-touch-icon, Google, Wikipedia) and return them as base64 previews for the admin to choose',
+  })
+  @ApiParam({ name: 'stationUuid', description: 'Radio Browser station UUID' })
+  @ApiResponse({ status: 200, description: 'Preview images from all sources' })
+  async fetchPreviews(
+    @Param('stationUuid') _stationUuid: string,
+    @Query('name') name: string,
+    @Query('homepage') homepage?: string
+  ) {
+    if (!name) {
+      throw new BadRequestException('Station name is required (query param: name)');
+    }
+
+    return await this.faviconFetch.fetchPreviews(name, homepage);
+  }
+
+  @Post(':stationUuid/save-preview')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Save a selected preview image as the station favicon',
+    description: 'Save a previously fetched preview image (base64 data URL) as the station favicon',
+  })
+  @ApiParam({ name: 'stationUuid', description: 'Radio Browser station UUID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        dataUrl: { type: 'string', description: 'Base64 data URL of the selected image' },
+        source: {
+          type: 'string',
+          description: 'Source identifier (apple-touch-icon, google-favicon, wikipedia)',
+        },
+      },
+      required: ['dataUrl', 'source'],
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Favicon saved successfully' })
+  async savePreview(
+    @Param('stationUuid') stationUuid: string,
+    @Body() body: { dataUrl: string; source: string }
+  ) {
+    if (!body.dataUrl || !body.source) {
+      throw new BadRequestException('dataUrl and source are required');
+    }
+
+    return await this.faviconFetch.saveFromDataUrl(stationUuid, body.dataUrl, body.source);
   }
 }

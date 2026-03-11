@@ -119,7 +119,8 @@ export function AudioPlayer() {
   }, [currentTrack, currentRadioStation, isMiniMode, preference, isMobile]);
 
   const colorSourceUrl = useMemo(() => {
-    if (isRadioMode) return currentRadioStation?.customFaviconUrl || currentRadioStation?.favicon || undefined;
+    if (isRadioMode)
+      return currentRadioStation?.customFaviconUrl || currentRadioStation?.favicon || undefined;
     if (currentTrack) {
       const rawUrl =
         currentTrack.album?.cover ||
@@ -128,7 +129,12 @@ export function AudioPlayer() {
       return rawUrl ? getCoverUrl(rawUrl) : undefined;
     }
     return undefined;
-  }, [isRadioMode, currentRadioStation?.favicon, currentTrack]);
+  }, [
+    isRadioMode,
+    currentRadioStation?.customFaviconUrl,
+    currentRadioStation?.favicon,
+    currentTrack,
+  ]);
   const dominantColor = useDominantColor(colorSourceUrl, '0, 0, 0');
 
   const SWIPE_THRESHOLD = 60;
