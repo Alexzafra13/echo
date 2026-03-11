@@ -74,11 +74,12 @@ export const radioFaviconsApi = {
   savePreview: async (
     stationUuid: string,
     dataUrl: string,
-    source: string
+    source: string,
+    stationName?: string
   ): Promise<AutoFetchRadioFaviconResponse> => {
     const { data } = await apiClient.post<AutoFetchRadioFaviconResponse>(
       `/admin/radio/favicons/${stationUuid}/save-preview`,
-      { dataUrl, source }
+      { dataUrl, source, stationName }
     );
     return data;
   },

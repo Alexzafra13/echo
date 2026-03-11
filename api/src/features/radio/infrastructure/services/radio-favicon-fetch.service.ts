@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { radioStationImages } from '@infrastructure/database/schema';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
+import { EnrichmentLogService } from '@features/external-metadata/application/services/enrichment-log.service';
 import { fetchWithTimeout } from '@shared/utils';
 
 export interface FetchFaviconResult {
@@ -40,7 +41,8 @@ export class RadioFaviconFetchService {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
-    private readonly imageService: ImageService
+    private readonly imageService: ImageService,
+    private readonly enrichmentLog: EnrichmentLogService
   ) {}
 
   /**
@@ -94,8 +96,10 @@ export class RadioFaviconFetchService {
   async saveFromDataUrl(
     stationUuid: string,
     dataUrl: string,
-    source: string
+    source: string,
+    stationName?: string
   ): Promise<FetchFaviconResult> {
+    const startTime = Date.now();
     try {
       // Parse data URL
       const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
@@ -106,7 +110,23 @@ export class RadioFaviconFetchService {
       const mimeType = match[1];
       const imageBuffer = Buffer.from(match[2], 'base64');
 
-      return this.saveImageBuffer(stationUuid, imageBuffer, mimeType, source);
+      const result = await this.saveImageBuffer(stationUuid, imageBuffer, mimeType, source);
+      const processingTime = Date.now() - startTime;
+
+      if (result.success && stationName) {
+        this.enrichmentLog.logSuccess(
+          stationUuid,
+          'radio',
+          stationName,
+          source,
+          'favicon',
+          ['favicon'],
+          processingTime,
+          result.url
+        );
+      }
+
+      return result;
     } catch (error) {
       this.logger.error(`Failed to save favicon from data URL: ${(error as Error).message}`);
       return { success: false };
@@ -197,6 +217,8 @@ export class RadioFaviconFetchService {
     stationName: string,
     homepage?: string
   ): Promise<FetchFaviconResult> {
+    const startTime = Date.now();
+
     // Try sources in priority order
     let imageBuffer: Buffer | null = null;
     let mimeType = 'image/png';
@@ -232,7 +254,18 @@ export class RadioFaviconFetchService {
       }
     }
 
+    const processingTime = Date.now() - startTime;
+
     if (!imageBuffer) {
+      this.enrichmentLog.logError(
+        stationUuid,
+        'radio',
+        stationName,
+        'auto-fetch',
+        'favicon',
+        'No image found from any source',
+        processingTime
+      );
       return { success: false };
     }
 
@@ -242,7 +275,32 @@ export class RadioFaviconFetchService {
       return { success: false };
     }
 
-    return this.saveImageBuffer(stationUuid, imageBuffer, mimeType, source);
+    const result = await this.saveImageBuffer(stationUuid, imageBuffer, mimeType, source);
+
+    if (result.success) {
+      this.enrichmentLog.logSuccess(
+        stationUuid,
+        'radio',
+        stationName,
+        source,
+        'favicon',
+        ['favicon'],
+        processingTime,
+        result.url
+      );
+    } else {
+      this.enrichmentLog.logError(
+        stationUuid,
+        'radio',
+        stationName,
+        source,
+        'favicon',
+        'Failed to save image',
+        processingTime
+      );
+    }
+
+    return result;
   }
 
   /**

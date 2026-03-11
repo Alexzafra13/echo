@@ -138,7 +138,7 @@ export const RadioStationCard = memo(function RadioStationCard({
     (preview: FaviconPreview) => {
       if (!stationUuid) return;
       savePreviewMutation.mutate(
-        { stationUuid, dataUrl: preview.dataUrl, source: preview.source },
+        { stationUuid, dataUrl: preview.dataUrl, source: preview.source, stationName: name },
         {
           onSuccess: () => {
             setIsPreviewModalOpen(false);

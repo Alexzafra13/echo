@@ -1,11 +1,11 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { enrichmentLogs } from '@infrastructure/database/schema';
 
 export interface EnrichmentLogData {
   entityId: string;
-  entityType: 'artist' | 'album';
+  entityType: 'artist' | 'album' | 'radio';
   entityName: string;
   provider: string;
   metadataType: string;
@@ -22,29 +22,29 @@ export interface EnrichmentLogData {
  */
 @Injectable()
 export class EnrichmentLogService {
-  constructor(@InjectPinoLogger(EnrichmentLogService.name)
+  constructor(
+    @InjectPinoLogger(EnrichmentLogService.name)
     private readonly logger: PinoLogger,
-    private readonly drizzle: DrizzleService) {}
+    private readonly drizzle: DrizzleService
+  ) {}
 
   /**
    * Create an enrichment log entry
    */
   async log(data: EnrichmentLogData): Promise<void> {
     try {
-      await this.drizzle.db
-        .insert(enrichmentLogs)
-        .values({
-          entityId: data.entityId,
-          entityType: data.entityType,
-          entityName: data.entityName,
-          provider: data.provider,
-          metadataType: data.metadataType,
-          status: data.status,
-          fieldsUpdated: data.fieldsUpdated,
-          errorMessage: data.errorMessage,
-          previewUrl: data.previewUrl,
-          processingTime: data.processingTime,
-        });
+      await this.drizzle.db.insert(enrichmentLogs).values({
+        entityId: data.entityId,
+        entityType: data.entityType,
+        entityName: data.entityName,
+        provider: data.provider,
+        metadataType: data.metadataType,
+        status: data.status,
+        fieldsUpdated: data.fieldsUpdated,
+        errorMessage: data.errorMessage,
+        previewUrl: data.previewUrl,
+        processingTime: data.processingTime,
+      });
     } catch (error) {
       // Don't throw - logging failure shouldn't break the enrichment process
       this.logger.error(`Failed to create enrichment log: ${(error as Error).message}`);
@@ -56,13 +56,13 @@ export class EnrichmentLogService {
    */
   async logSuccess(
     entityId: string,
-    entityType: 'artist' | 'album',
+    entityType: 'artist' | 'album' | 'radio',
     entityName: string,
     provider: string,
     metadataType: string,
     fieldsUpdated: string[],
     processingTime?: number,
-    previewUrl?: string,
+    previewUrl?: string
   ): Promise<void> {
     await this.log({
       entityId,
@@ -82,12 +82,12 @@ export class EnrichmentLogService {
    */
   async logPartial(
     entityId: string,
-    entityType: 'artist' | 'album',
+    entityType: 'artist' | 'album' | 'radio',
     entityName: string,
     provider: string,
     metadataType: string,
     errorMessage: string,
-    processingTime?: number,
+    processingTime?: number
   ): Promise<void> {
     await this.log({
       entityId,
@@ -107,12 +107,12 @@ export class EnrichmentLogService {
    */
   async logError(
     entityId: string,
-    entityType: 'artist' | 'album',
+    entityType: 'artist' | 'album' | 'radio',
     entityName: string,
     provider: string,
     metadataType: string,
     errorMessage: string,
-    processingTime?: number,
+    processingTime?: number
   ): Promise<void> {
     await this.log({
       entityId,

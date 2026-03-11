@@ -65,11 +65,13 @@ export function useSaveFaviconPreview() {
       stationUuid,
       dataUrl,
       source,
+      stationName,
     }: {
       stationUuid: string;
       dataUrl: string;
       source: string;
-    }) => radioFaviconsApi.savePreview(stationUuid, dataUrl, source),
+      stationName?: string;
+    }) => radioFaviconsApi.savePreview(stationUuid, dataUrl, source, stationName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['radio'] });
     },

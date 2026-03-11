@@ -4,6 +4,7 @@ import { RadioFaviconFetchService } from './radio-favicon-fetch.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
+import { EnrichmentLogService } from '@features/external-metadata/application/services/enrichment-log.service';
 import { createMockPinoLogger, MockPinoLogger } from '@shared/testing/mock.types';
 
 // Mock fetchWithTimeout
@@ -97,6 +98,10 @@ describe('RadioFaviconFetchService', () => {
         { provide: DrizzleService, useValue: mockDrizzle },
         { provide: StorageService, useValue: mockStorage },
         { provide: ImageService, useValue: mockImageService },
+        {
+          provide: EnrichmentLogService,
+          useValue: { logSuccess: jest.fn(), logError: jest.fn() },
+        },
       ],
     }).compile();
 
