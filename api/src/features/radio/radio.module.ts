@@ -6,8 +6,10 @@ import { DeleteFavoriteStationUseCase } from './domain/use-cases/delete-favorite
 import { SearchStationsUseCase } from './domain/use-cases/search-stations/search-stations.use-case';
 import { DrizzleRadioStationRepository } from './infrastructure/persistence/radio-station.repository';
 import { RadioBrowserApiService } from './infrastructure/services/radio-browser-api.service';
+import { RadioFaviconFetchService } from './infrastructure/services/radio-favicon-fetch.service';
 import { IcyMetadataService } from './domain/services/icy-metadata.service';
 import { RADIO_STATION_REPOSITORY, RADIO_BROWSER_API_CLIENT } from './domain/ports';
+import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 
 /**
  * RadioModule - Módulo de gestión de radio
@@ -30,7 +32,7 @@ import { RADIO_STATION_REPOSITORY, RADIO_BROWSER_API_CLIENT } from './domain/por
  */
 
 @Module({
-  imports: [],
+  imports: [ExternalMetadataModule],
   controllers: [RadioController],
   providers: [
     // Use Cases
@@ -39,8 +41,9 @@ import { RADIO_STATION_REPOSITORY, RADIO_BROWSER_API_CLIENT } from './domain/por
     DeleteFavoriteStationUseCase,
     SearchStationsUseCase,
 
-    // Services (domain)
+    // Services
     IcyMetadataService,
+    RadioFaviconFetchService,
 
     // Repositories
     DrizzleRadioStationRepository,
