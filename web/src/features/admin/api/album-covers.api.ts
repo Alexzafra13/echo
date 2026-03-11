@@ -38,6 +38,7 @@ export const albumCoversApi = {
   async searchCovers(albumId: string): Promise<SearchAlbumCoversResponse> {
     const response = await apiClient.get<SearchAlbumCoversResponse>(
       `/admin/metadata/album/${albumId}/covers/search`,
+      { timeout: 60000 }
     );
     return response.data;
   },
@@ -46,6 +47,7 @@ export const albumCoversApi = {
     const response = await apiClient.post<ApplyAlbumCoverResponse>(
       '/admin/metadata/album/covers/apply',
       request,
+      { timeout: 60000 }
     );
     return response.data;
   },

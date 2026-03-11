@@ -52,7 +52,9 @@ export interface DeleteCustomCoverResponse {
   message: string;
 }
 
-async function uploadCustomCover(request: UploadCustomCoverRequest): Promise<UploadCustomCoverResponse> {
+async function uploadCustomCover(
+  request: UploadCustomCoverRequest
+): Promise<UploadCustomCoverResponse> {
   const formData = new FormData();
   formData.append('file', request.file);
 
@@ -63,6 +65,7 @@ async function uploadCustomCover(request: UploadCustomCoverRequest): Promise<Upl
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 60000,
     }
   );
 
@@ -76,14 +79,20 @@ async function listCustomCovers(albumId: string): Promise<ListCustomCoversRespon
   return response.data;
 }
 
-async function applyCustomCover(request: ApplyCustomCoverRequest): Promise<ApplyCustomCoverResponse> {
+async function applyCustomCover(
+  request: ApplyCustomCoverRequest
+): Promise<ApplyCustomCoverResponse> {
   const response = await apiClient.post<ApplyCustomCoverResponse>(
-    `/admin/metadata/album/custom-covers/${request.albumId}/apply/${request.customCoverId}`
+    `/admin/metadata/album/custom-covers/${request.albumId}/apply/${request.customCoverId}`,
+    undefined,
+    { timeout: 60000 }
   );
   return response.data;
 }
 
-async function deleteCustomCover(request: DeleteCustomCoverRequest): Promise<DeleteCustomCoverResponse> {
+async function deleteCustomCover(
+  request: DeleteCustomCoverRequest
+): Promise<DeleteCustomCoverResponse> {
   const response = await apiClient.delete<DeleteCustomCoverResponse>(
     `/admin/metadata/album/custom-covers/${request.albumId}/${request.customCoverId}`
   );

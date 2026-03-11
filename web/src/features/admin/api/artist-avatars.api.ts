@@ -101,6 +101,7 @@ export const artistAvatarsApi = {
   async searchAvatars(artistId: string): Promise<SearchArtistAvatarsResponse> {
     const response = await apiClient.get<SearchArtistAvatarsResponse>(
       `/admin/metadata/artist/${artistId}/avatars/search`,
+      { timeout: 60000 }
     );
     return response.data;
   },
@@ -109,16 +110,17 @@ export const artistAvatarsApi = {
     const response = await apiClient.post<ApplyArtistAvatarResponse>(
       '/admin/metadata/artist/avatars/apply',
       request,
+      { timeout: 60000 }
     );
     return response.data;
   },
 
   async updateBackgroundPosition(
-    request: UpdateBackgroundPositionRequest,
+    request: UpdateBackgroundPositionRequest
   ): Promise<UpdateBackgroundPositionResponse> {
     const response = await apiClient.patch<UpdateBackgroundPositionResponse>(
       '/admin/metadata/artist/background-position',
-      request,
+      request
     );
     return response.data;
   },
@@ -135,28 +137,29 @@ export const artistAvatarsApi = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      },
+        timeout: 60000,
+      }
     );
     return response.data;
   },
 
   async listCustomImages(artistId: string): Promise<ListCustomImagesResponse> {
     const response = await apiClient.get<ListCustomImagesResponse>(
-      `/admin/metadata/artist/custom-images/${artistId}`,
+      `/admin/metadata/artist/custom-images/${artistId}`
     );
     return response.data;
   },
 
   async applyCustomImage(request: ApplyCustomImageRequest): Promise<ApplyCustomImageResponse> {
     const response = await apiClient.post<ApplyCustomImageResponse>(
-      `/admin/metadata/artist/custom-images/${request.artistId}/apply/${request.customImageId}`,
+      `/admin/metadata/artist/custom-images/${request.artistId}/apply/${request.customImageId}`
     );
     return response.data;
   },
 
   async deleteCustomImage(request: DeleteCustomImageRequest): Promise<DeleteCustomImageResponse> {
     const response = await apiClient.delete<DeleteCustomImageResponse>(
-      `/admin/metadata/artist/custom-images/${request.artistId}/${request.customImageId}`,
+      `/admin/metadata/artist/custom-images/${request.artistId}/${request.customImageId}`
     );
     return response.data;
   },
