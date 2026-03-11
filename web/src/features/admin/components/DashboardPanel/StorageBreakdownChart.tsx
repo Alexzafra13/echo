@@ -7,6 +7,7 @@ interface StorageBreakdown {
   music: number;
   metadata: number;
   avatars: number;
+  radioFavicons: number;
   total: number;
 }
 
@@ -18,6 +19,7 @@ const COLORS: Record<string, string> = {
   music: '#6366f1',
   metadata: '#10b981',
   avatars: '#f59e0b',
+  radioFavicons: '#ec4899',
 };
 
 /**
@@ -29,7 +31,12 @@ export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
   // Note: "metadata" = artist/album images from external providers
   // Note: "avatars" = user profile pictures (not artist images)
   const allData = [
-    { name: 'Música', key: 'music', value: data.music, percentage: ((data.music / data.total) * 100).toFixed(1) },
+    {
+      name: 'Música',
+      key: 'music',
+      value: data.music,
+      percentage: ((data.music / data.total) * 100).toFixed(1),
+    },
     {
       name: 'Imágenes (Artistas/Álbumes)',
       key: 'metadata',
@@ -42,8 +49,14 @@ export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
       value: data.avatars,
       percentage: ((data.avatars / data.total) * 100).toFixed(1),
     },
+    {
+      name: 'Favicons de Radio',
+      key: 'radioFavicons',
+      value: data.radioFavicons,
+      percentage: ((data.radioFavicons / data.total) * 100).toFixed(1),
+    },
   ];
-  const chartData = allData.filter(d => d.value > 0);
+  const chartData = allData.filter((d) => d.value > 0);
 
   return (
     <div className={styles.container}>
