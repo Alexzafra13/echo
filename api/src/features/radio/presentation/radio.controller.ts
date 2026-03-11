@@ -74,6 +74,22 @@ export class RadioController {
     return map;
   }
 
+  /**
+   * Enrich Radio Browser stations with custom favicon URLs
+   */
+  private async enrichWithCustomFavicons<T extends { stationuuid: string; favicon: string }>(
+    stations: T[]
+  ): Promise<(T & { customFaviconUrl?: string })[]> {
+    const uuids = stations.map((s) => s.stationuuid);
+    const faviconMap = await this.getCustomFaviconMap(uuids);
+    if (faviconMap.size === 0) return stations;
+
+    return stations.map((station) => {
+      const customUrl = faviconMap.get(station.stationuuid);
+      return customUrl ? { ...station, customFaviconUrl: customUrl } : station;
+    });
+  }
+
   @Get('search')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -83,7 +99,7 @@ export class RadioController {
   @ApiResponse({ status: 200, description: 'Emisoras encontradas' })
   async searchStations(@Query() query: SearchStationsDto) {
     const stations = await this.searchStationsUseCase.execute(query);
-    return stations;
+    return this.enrichWithCustomFavicons(stations);
   }
 
   @Get('top-voted')
@@ -95,7 +111,7 @@ export class RadioController {
   async getTopVoted(@Query('limit') limit?: number) {
     const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 200);
     const stations = await this.searchStationsUseCase.getTopVoted(safeLimit);
-    return stations;
+    return this.enrichWithCustomFavicons(stations);
   }
 
   @Get('popular')
@@ -107,7 +123,7 @@ export class RadioController {
   async getPopular(@Query('limit') limit?: number) {
     const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 200);
     const stations = await this.searchStationsUseCase.getPopular(safeLimit);
-    return stations;
+    return this.enrichWithCustomFavicons(stations);
   }
 
   @Get('by-country/:code')
@@ -119,7 +135,7 @@ export class RadioController {
   async getByCountry(@Param('code') code: string, @Query('limit') limit?: number) {
     const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
     const stations = await this.searchStationsUseCase.getByCountry(code, safeLimit);
-    return stations;
+    return this.enrichWithCustomFavicons(stations);
   }
 
   @Get('by-tag/:tag')
@@ -131,7 +147,7 @@ export class RadioController {
   async getByTag(@Param('tag') tag: string, @Query('limit') limit?: number) {
     const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
     const stations = await this.searchStationsUseCase.getByTag(tag, safeLimit);
-    return stations;
+    return this.enrichWithCustomFavicons(stations);
   }
 
   @Get('tags')
