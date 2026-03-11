@@ -27,6 +27,7 @@ import { GetUserFavoritesUseCase } from '../domain/use-cases/get-user-favorites/
 import { DeleteFavoriteStationUseCase } from '../domain/use-cases/delete-favorite-station/delete-favorite-station.use-case';
 import { SearchStationsUseCase } from '../domain/use-cases/search-stations/search-stations.use-case';
 import { IcyMetadataService, RadioMetadata } from '../domain/services/icy-metadata.service';
+import { RadioFaviconFetchService } from '../infrastructure/services/radio-favicon-fetch.service';
 import { RadioStationResponseDto } from './dto/radio-station-response.dto';
 import { SearchStationsDto } from './dto/search-stations.dto';
 import { CreateCustomStationDto } from './dto/create-custom-station.dto';
@@ -48,6 +49,7 @@ export class RadioController {
     private readonly searchStationsUseCase: SearchStationsUseCase,
     private readonly icyMetadataService: IcyMetadataService,
     private readonly drizzle: DrizzleService,
+    private readonly faviconFetch: RadioFaviconFetchService
   ) {}
 
   /**
@@ -165,7 +167,7 @@ export class RadioController {
 
     // Enrich with custom favicon URLs
     const stationUuids = stations
-      .map(s => s.stationUuid)
+      .map((s) => s.stationUuid)
       .filter((uuid): uuid is string => !!uuid);
     const customFaviconMap = await this.getCustomFaviconMap(stationUuids);
 
@@ -191,6 +193,13 @@ export class RadioController {
       ? await this.getCustomFaviconMap([station.stationUuid])
       : new Map();
     const customUrl = station.stationUuid ? customFaviconMap.get(station.stationUuid) : undefined;
+
+    // Auto-fetch favicon in background if none exists
+    if (station.stationUuid && !customUrl) {
+      this.faviconFetch
+        .fetchAndSave(station.stationUuid, station.name, dto.homepage)
+        .catch(() => {});
+    }
 
     return RadioStationResponseDto.fromDomain(station, customUrl);
   }
