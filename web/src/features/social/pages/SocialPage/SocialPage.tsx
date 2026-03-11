@@ -1,11 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { Users, Search, X, UserPlus, CheckCircle, Share2, Globe, Music } from 'lucide-react';
+import { Users, Search, X, UserPlus, CheckCircle, Headphones, Activity } from 'lucide-react';
 import { useDocumentTitle } from '@shared/hooks';
+import { useDominantColor } from '@shared/hooks/useDominantColor';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
+import { useAuthStore } from '@shared/store';
 import {
   useSocialOverview,
   useSendFriendRequest,
@@ -33,6 +35,14 @@ export default function SocialPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const currentUser = useAuthStore((s) => s.user);
+
+  const avatarUrl = useMemo(
+    () => currentUser ? getUserAvatarUrl(currentUser.id, currentUser.hasAvatar) : null,
+    [currentUser]
+  );
+  const dominantColor = useDominantColor(avatarUrl);
 
   // Debounce search query to avoid firing a request on every keystroke
   useEffect(() => {
@@ -106,9 +116,6 @@ export default function SocialPage() {
   const pendingReceived = overview?.pendingRequests?.received?.length || 0;
   const activities = overview?.recentActivity || [];
 
-  // Show discovery section when content is sparse
-  const isSparse = friends.length < 5 && activities.length < 5;
-
   // Search component for Header
   const headerSearch = (
     <div className={styles.headerSearch}>
@@ -181,32 +188,50 @@ export default function SocialPage() {
         <Header customSearch={headerSearch} />
 
         <div className={styles.socialPage__content}>
-          {/* Compact Hero */}
-          <div className={styles.hero}>
-            <div className={styles.hero__glow} />
-            <div className={styles.hero__inner}>
-              <div className={styles.hero__text}>
-                <h1 className={styles.hero__title}>Social</h1>
-                <p className={styles.hero__subtitle}>
-                  Conecta con tus amigos y descubre qué están escuchando
-                </p>
-              </div>
-              <div className={styles.hero__badges}>
-                <span className={styles.hero__badge}>
-                  <Users size={13} />
-                  {friends.length} amigo{friends.length !== 1 ? 's' : ''}
+          {/* Profile Hero */}
+          <div
+            className={styles.profileHero}
+            style={{ '--hero-color': dominantColor } as React.CSSProperties}
+          >
+            <div className={styles.profileHero__glow} />
+            <div className={styles.profileHero__fade} />
+            <div className={styles.profileHero__inner}>
+              <img
+                src={avatarUrl || ''}
+                alt={currentUser?.username || ''}
+                className={styles.profileHero__avatar}
+                onClick={() => currentUser && handleUserClick(currentUser.id)}
+                onError={handleAvatarError}
+              />
+              <div className={styles.profileHero__info}>
+                <h1 className={styles.profileHero__name}>
+                  {currentUser?.name || currentUser?.username}
+                </h1>
+                <span className={styles.profileHero__username}>
+                  @{currentUser?.username}
                 </span>
-                {actuallyListening.length > 0 && (
-                  <span className={`${styles.hero__badge} ${styles['hero__badge--live']}`}>
-                    <span className={styles.hero__liveDot} />
-                    {actuallyListening.length} en vivo
+                <div className={styles.profileHero__stats}>
+                  <span className={styles.profileHero__stat}>
+                    <Users size={14} />
+                    <strong>{friends.length}</strong> amigo{friends.length !== 1 ? 's' : ''}
                   </span>
-                )}
-                {pendingReceived > 0 && (
-                  <span className={`${styles.hero__badge} ${styles['hero__badge--pending']}`}>
-                    {pendingReceived} pendiente{pendingReceived !== 1 ? 's' : ''}
+                  {actuallyListening.length > 0 && (
+                    <span className={`${styles.profileHero__stat} ${styles['profileHero__stat--live']}`}>
+                      <Headphones size={14} />
+                      <strong>{actuallyListening.length}</strong> escuchando
+                    </span>
+                  )}
+                  {pendingReceived > 0 && (
+                    <span className={`${styles.profileHero__stat} ${styles['profileHero__stat--pending']}`}>
+                      <UserPlus size={14} />
+                      <strong>{pendingReceived}</strong> pendiente{pendingReceived !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  <span className={styles.profileHero__stat}>
+                    <Activity size={14} />
+                    <strong>{activities.length}</strong> actividad{activities.length !== 1 ? 'es' : ''}
                   </span>
-                )}
+                </div>
               </div>
             </div>
           </div>
@@ -253,73 +278,6 @@ export default function SocialPage() {
                   />
                 </div>
               </div>
-
-              {/* Discovery Cards - shown when content is sparse */}
-              {isSparse && (
-                <div className={styles.discovery}>
-                  <h3 className={styles.discovery__title}>Haz crecer tu comunidad</h3>
-                  <div className={styles.discovery__grid}>
-                    <button
-                      className={styles.discoveryCard}
-                      onClick={() => {
-                        const searchInput = document.querySelector(`.${styles.headerSearch__input}`) as HTMLInputElement;
-                        if (searchInput) searchInput.focus();
-                      }}
-                    >
-                      <div className={`${styles.discoveryCard__icon} ${styles['discoveryCard__icon--search']}`}>
-                        <UserPlus size={22} />
-                      </div>
-                      <div className={styles.discoveryCard__content}>
-                        <span className={styles.discoveryCard__heading}>Encuentra amigos</span>
-                        <span className={styles.discoveryCard__desc}>Busca por nombre o usuario</span>
-                      </div>
-                    </button>
-
-                    <button
-                      className={styles.discoveryCard}
-                      onClick={() => setLocation('/playlists')}
-                    >
-                      <div className={`${styles.discoveryCard__icon} ${styles['discoveryCard__icon--playlist']}`}>
-                        <Music size={22} />
-                      </div>
-                      <div className={styles.discoveryCard__content}>
-                        <span className={styles.discoveryCard__heading}>Comparte una playlist</span>
-                        <span className={styles.discoveryCard__desc}>Hazla pública para tus amigos</span>
-                      </div>
-                    </button>
-
-                    <button
-                      className={styles.discoveryCard}
-                      onClick={() => setLocation('/settings/profile')}
-                    >
-                      <div className={`${styles.discoveryCard__icon} ${styles['discoveryCard__icon--profile']}`}>
-                        <Globe size={22} />
-                      </div>
-                      <div className={styles.discoveryCard__content}>
-                        <span className={styles.discoveryCard__heading}>Perfil público</span>
-                        <span className={styles.discoveryCard__desc}>Actívalo para que te descubran</span>
-                      </div>
-                    </button>
-
-                    <button
-                      className={styles.discoveryCard}
-                      onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({ title: 'Echo Music', url: window.location.origin });
-                        }
-                      }}
-                    >
-                      <div className={`${styles.discoveryCard__icon} ${styles['discoveryCard__icon--share']}`}>
-                        <Share2 size={22} />
-                      </div>
-                      <div className={styles.discoveryCard__content}>
-                        <span className={styles.discoveryCard__heading}>Invita a alguien</span>
-                        <span className={styles.discoveryCard__desc}>Comparte Echo con amigos</span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>

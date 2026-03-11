@@ -10,11 +10,11 @@ export type Locale = 'es' | 'en';
 const translations = {
   es: {
     now: 'ahora',
-    minutesAgo: (n: number) => `hace ${n}m`,
+    minutesAgo: (n: number) => `hace ${n} min`,
     hoursAgo: (n: number) => `hace ${n}h`,
     daysAgo: (n: number) => `hace ${n}d`,
-    weeksAgo: (n: number) => `hace ${n}sem`,
-    monthsAgo: (n: number) => `hace ${n}mes`,
+    weeksAgo: (n: number) => `hace ${n} sem`,
+    monthsAgo: (n: number) => `hace ${n} ${n === 1 ? 'mes' : 'meses'}`,
   },
   en: {
     now: 'now',

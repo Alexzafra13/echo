@@ -55,7 +55,9 @@
       "Bash(pnpm --dir api start:dev)",
       "Bash(pnpm start:dev)",
       "Bash(pnpm dev)",
-      "Bash(curl -s http://localhost:3000)"
+      "Bash(curl -s http://localhost:3000)",
+      "WebSearch",
+      "Bash(npx tsc:*)"
     ]
   }
 }

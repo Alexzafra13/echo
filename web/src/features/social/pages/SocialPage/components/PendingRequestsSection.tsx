@@ -30,9 +30,9 @@ export const PendingRequestsSection = memo(function PendingRequestsSection({
       {received.length > 0 && (
         <section className={`${styles.sideSection} ${styles['sideSection--urgent']}`}>
           <h2 className={styles.sideSection__title}>
-            <div className={`${styles.sideSection__titleIcon} ${styles['sideSection__titleIcon--pending']}`}>
+            <span className={`${styles.sideSection__titleIcon} ${styles['sideSection__titleIcon--pending']}`}>
               <Clock size={16} />
-            </div>
+            </span>
             Solicitudes
             <span className={styles.sideSection__badge}>
               {received.length}
@@ -85,9 +85,9 @@ export const PendingRequestsSection = memo(function PendingRequestsSection({
       {sent.length > 0 && (
         <section className={styles.sideSection}>
           <h2 className={styles.sideSection__title}>
-            <div className={styles.sideSection__titleIcon}>
+            <span className={styles.sideSection__titleIcon}>
               <Send size={16} />
-            </div>
+            </span>
             Enviadas
             <span className={styles.sideSection__countSmall}>
               {sent.length}

@@ -54,9 +54,9 @@ export const ActivityFeed = memo(function ActivityFeed({ activities, onUserClick
   return (
     <section className={styles.feedSection}>
       <h2 className={styles.feedSection__title}>
-        <div className={styles.feedSection__titleIcon}>
-          <Activity size={18} />
-        </div>
+        <span className={styles.feedSection__titleIcon}>
+          <Activity size={16} />
+        </span>
         Actividad reciente
       </h2>
       {activities.length > 0 ? (
@@ -66,10 +66,12 @@ export const ActivityFeed = memo(function ActivityFeed({ activities, onUserClick
               <div className={styles.activityList__divider}>
                 <span>{group.label}</span>
               </div>
-              {group.items.map((activity) => (
-                <div key={activity.id} className={styles.activityItem}>
-                  {/* Left side: Avatar + Content */}
-                  <div className={styles.activityItem__left}>
+              {group.items.map((activity) => {
+                const isFriendActivity = activity.actionType === 'became_friends' && activity.secondUser;
+
+                return (
+                  <div key={activity.id} className={`${styles.activityItem} ${isFriendActivity ? styles['activityItem--friend'] : ''}`}>
+                    {/* Avatar */}
                     <div
                       className={styles.activityItem__avatarWrapper}
                       onClick={() => onUserClick(activity.user.id)}
@@ -86,8 +88,9 @@ export const ActivityFeed = memo(function ActivityFeed({ activities, onUserClick
                         {getActionIcon(activity.actionType)}
                       </span>
                     </div>
+
+                    {/* Content */}
                     <div className={styles.activityItem__content}>
-                      {/* Line 1: User + action text */}
                       <div className={styles.activityItem__actionLine}>
                         <span
                           className={styles.activityItem__userLink}
@@ -97,30 +100,20 @@ export const ActivityFeed = memo(function ActivityFeed({ activities, onUserClick
                         </span>
                         {' '}
                         {getActionText(activity.actionType)}
-                        {/* For became_friends, show friend inline */}
-                        {activity.actionType === 'became_friends' && activity.secondUser && (
+                        {isFriendActivity && (
                           <>
                             {' '}
                             <span
                               className={styles.activityItem__friendLink}
                               onClick={() => onUserClick(activity.secondUser!.id)}
                             >
-                              <img
-                                src={activity.secondUser.avatarUrl || getUserAvatarUrl(activity.secondUser.id, false)}
-                                alt={activity.secondUser.username}
-                                className={styles.activityItem__inlineAvatar}
-                                loading="lazy"
-                                decoding="async"
-                                onError={handleAvatarError}
-                              />
-                              <span>{activity.secondUser.name || activity.secondUser.username}</span>
+                              {activity.secondUser!.name || activity.secondUser!.username}
                             </span>
                           </>
                         )}
                       </div>
 
-                      {/* Line 2: Target name (for non-friend activities) */}
-                      {activity.actionType !== 'became_friends' && (
+                      {!isFriendActivity && activity.targetName && (
                         <span
                           className={styles.activityItem__targetLink}
                           onClick={() => {
@@ -132,54 +125,67 @@ export const ActivityFeed = memo(function ActivityFeed({ activities, onUserClick
                         </span>
                       )}
 
-                      {/* Line 3: Timestamp */}
                       <span className={styles.activityItem__time}>
                         {formatTimeAgo(activity.createdAt)}
                       </span>
                     </div>
-                  </div>
 
-                  {/* Right side: Cover (for non-friend activities) */}
-                  {activity.actionType !== 'became_friends' && (
-                    <div
-                      className={styles.activityItem__coverWrapper}
-                      onClick={() => {
-                        const url = getTargetUrl(activity.targetType, activity.targetId, activity.targetAlbumId);
-                        if (url) onTargetClick(url);
-                      }}
-                    >
-                      {activity.targetAlbumIds && activity.targetAlbumIds.length > 0 ? (
-                        <span className={`${styles.activityItem__cover} ${styles.activityItem__mosaic} ${
-                          activity.targetAlbumIds.length === 1 ? styles['activityItem__mosaic--single'] :
-                          activity.targetAlbumIds.length === 2 ? styles['activityItem__mosaic--2'] :
-                          activity.targetAlbumIds.length === 3 ? styles['activityItem__mosaic--3'] :
-                          styles['activityItem__mosaic--4']
-                        }`}>
-                          {activity.targetAlbumIds.slice(0, 4).map((albumId) => (
-                            <img
-                              key={albumId}
-                              src={`/api/albums/${albumId}/cover`}
-                              alt=""
-                              className={styles.activityItem__mosaicImg}
-                              loading="lazy"
-                              decoding="async"
-                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                            />
-                          ))}
-                        </span>
-                      ) : activity.targetCoverUrl ? (
+                    {/* Right side: cover art or friend icon */}
+                    {isFriendActivity ? (
+                      <div
+                        className={styles.activityItem__friendBadge}
+                        onClick={() => onUserClick(activity.secondUser!.id)}
+                      >
                         <img
-                          src={activity.targetCoverUrl}
-                          alt={activity.targetName}
-                          className={styles.activityItem__cover}
+                          src={activity.secondUser!.avatarUrl || getUserAvatarUrl(activity.secondUser!.id, false)}
+                          alt={activity.secondUser!.username}
+                          className={styles.activityItem__friendAvatar}
                           loading="lazy"
                           decoding="async"
+                          onError={handleAvatarError}
                         />
-                      ) : null}
-                    </div>
-                  )}
-                </div>
-              ))}
+                      </div>
+                    ) : (
+                      <div
+                        className={styles.activityItem__coverWrapper}
+                        onClick={() => {
+                          const url = getTargetUrl(activity.targetType, activity.targetId, activity.targetAlbumId);
+                          if (url) onTargetClick(url);
+                        }}
+                      >
+                        {activity.targetAlbumIds && activity.targetAlbumIds.length > 0 ? (
+                          <span className={`${styles.activityItem__cover} ${styles.activityItem__mosaic} ${
+                            activity.targetAlbumIds.length === 1 ? styles['activityItem__mosaic--single'] :
+                            activity.targetAlbumIds.length === 2 ? styles['activityItem__mosaic--2'] :
+                            activity.targetAlbumIds.length === 3 ? styles['activityItem__mosaic--3'] :
+                            styles['activityItem__mosaic--4']
+                          }`}>
+                            {activity.targetAlbumIds.slice(0, 4).map((albumId) => (
+                              <img
+                                key={albumId}
+                                src={`/api/albums/${albumId}/cover`}
+                                alt=""
+                                className={styles.activityItem__mosaicImg}
+                                loading="lazy"
+                                decoding="async"
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                              />
+                            ))}
+                          </span>
+                        ) : activity.targetCoverUrl ? (
+                          <img
+                            src={activity.targetCoverUrl}
+                            alt={activity.targetName}
+                            className={styles.activityItem__cover}
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>

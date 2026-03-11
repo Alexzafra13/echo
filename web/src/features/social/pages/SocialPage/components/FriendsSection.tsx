@@ -16,10 +16,10 @@ export const FriendsSection = memo(function FriendsSection({ friends, listeningU
   return (
     <section className={styles.sideSection}>
       <h2 className={styles.sideSection__title}>
-        <div className={styles.sideSection__titleIcon}>
+        <span className={styles.sideSection__titleIcon}>
           <Users size={16} />
-        </div>
-        Mis amigos
+        </span>
+        Amigos
         <span className={styles.sideSection__count}>
           {friends.length}
         </span>
