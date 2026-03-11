@@ -19,11 +19,13 @@ describe('RadioFaviconFetchService', () => {
     db: {
       select: jest.Mock;
       insert: jest.Mock;
+      update: jest.Mock;
     };
   };
   let mockStorage: {
     getRadioFaviconPath: jest.Mock;
     saveImage: jest.Mock;
+    deleteImage: jest.Mock;
   };
   let mockImageService: {
     invalidateRadioFaviconCache: jest.Mock;
@@ -65,16 +67,23 @@ describe('RadioFaviconFetchService', () => {
       returning: jest.fn().mockResolvedValue([{ id: 'new-id' }]),
     };
 
+    const mockUpdateResult = {
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockResolvedValue(undefined),
+    };
+
     mockDrizzle = {
       db: {
         select: jest.fn().mockReturnValue(mockSelectResult),
         insert: jest.fn().mockReturnValue(mockInsertResult),
+        update: jest.fn().mockReturnValue(mockUpdateResult),
       },
     };
 
     mockStorage = {
       getRadioFaviconPath: jest.fn().mockResolvedValue('/data/uploads/radio/uuid/favicon.png'),
       saveImage: jest.fn().mockResolvedValue(undefined),
+      deleteImage: jest.fn().mockResolvedValue(undefined),
     };
 
     mockImageService = {
@@ -99,18 +108,30 @@ describe('RadioFaviconFetchService', () => {
   });
 
   describe('fetchAndSave', () => {
-    it('debería retornar false si ya existe un favicon custom', async () => {
+    it('debería sobreescribir un favicon existente al encontrar uno nuevo', async () => {
+      const imageBuffer = new ArrayBuffer(2048);
+      new Uint8Array(imageBuffer).fill(1);
+
+      // saveImageBuffer does its own select to check for existing
       const mockSelectResult = {
         from: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue([{ id: 'existing-id' }]),
+        limit: jest.fn().mockResolvedValue([{ id: 'existing-id', filePath: '/old/path.png' }]),
       };
       mockDrizzle.db.select.mockReturnValue(mockSelectResult);
 
+      mockFetchWithTimeout.mockResolvedValue(
+        createMockResponse({
+          ok: true,
+          headers: { 'content-type': 'image/png' },
+          arrayBuffer: imageBuffer,
+        })
+      );
+
       const result = await service.fetchAndSave('uuid', 'Station Name', 'https://station.com');
 
-      expect(result.success).toBe(false);
-      expect(mockFetchWithTimeout).not.toHaveBeenCalled();
+      expect(result.success).toBe(true);
+      expect(mockStorage.saveImage).toHaveBeenCalled();
     });
 
     it('debería retornar false si ninguna fuente devuelve imagen', async () => {
