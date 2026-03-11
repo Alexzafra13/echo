@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { X, Check, Loader, AlertCircle, Cloud, Upload } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@shared/components/ui';
@@ -34,6 +34,15 @@ export function ArtistAvatarSelectorModal({
   const [providerFilter, setProviderFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>(defaultType || '');
   const [applyError, setApplyError] = useState<string | null>(null);
+  const [brokenUrls, setBrokenUrls] = useState<Set<string>>(new Set());
+
+  const handleImageError = useCallback((url: string) => {
+    setBrokenUrls(prev => {
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
+  }, []);
 
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useSearchArtistAvatars(artistId);
@@ -225,24 +234,24 @@ export function ArtistAvatarSelectorModal({
                     key={`${avatar.provider}-${avatar.type}-${index}`}
                     className={`${styles.avatarCard} ${
                       selectedAvatar === avatar ? styles.avatarCardSelected : ''
-                    }`}
-                    onClick={() => setSelectedAvatar(avatar)}
+                    } ${brokenUrls.has(avatar.url) ? styles.avatarCardBroken : ''}`}
+                    onClick={() => !brokenUrls.has(avatar.url) && setSelectedAvatar(avatar)}
                   >
-                    {selectedAvatar === avatar && (
+                    {selectedAvatar === avatar && !brokenUrls.has(avatar.url) && (
                       <div className={styles.selectedBadge}>
                         <Check size={20} />
                       </div>
                     )}
-                    <div className={styles.imageWrapper}>
-                      <img
-                        src={avatar.thumbnailUrl || avatar.url}
-                        alt={`${avatar.provider} ${avatar.type}`}
-                        className={styles.image}
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.src = '/images/avatar-default.svg';
-                        }}
-                      />
+                    <div className={`${styles.imageWrapper} ${brokenUrls.has(avatar.url) ? styles.imageUnavailable : ''}`}>
+                      {!brokenUrls.has(avatar.url) && (
+                        <img
+                          src={avatar.thumbnailUrl || avatar.url}
+                          alt={`${avatar.provider} ${avatar.type}`}
+                          className={styles.image}
+                          loading="lazy"
+                          onError={() => handleImageError(avatar.url)}
+                        />
+                      )}
                     </div>
                     <div className={styles.avatarInfo}>
                       {avatar.type && (

@@ -85,6 +85,7 @@ export class DeleteCustomArtistImageUseCase {
         .set({
           [typeConfig.localPathField]: null,
           [typeConfig.localUpdatedField]: null,
+          updatedAt: new Date(),
         })
         .where(eq(artists.id, input.artistId));
 

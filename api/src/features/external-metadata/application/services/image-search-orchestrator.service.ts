@@ -295,6 +295,7 @@ export class ImageSearchOrchestratorService {
       this.addImageIfNew(images, seenUrls, {
         provider: agent.name,
         url,
+        thumbnailUrl: this.getFanartPreviewUrl(url),
         type: 'profile',
         ...FANART_DIMENSIONS.artistThumb,
       });
@@ -305,6 +306,7 @@ export class ImageSearchOrchestratorService {
       this.addImageIfNew(images, seenUrls, {
         provider: agent.name,
         url,
+        thumbnailUrl: this.getFanartPreviewUrl(url),
         type: 'background',
         ...FANART_DIMENSIONS.background,
       });
@@ -315,6 +317,7 @@ export class ImageSearchOrchestratorService {
       this.addImageIfNew(images, seenUrls, {
         provider: agent.name,
         url,
+        thumbnailUrl: this.getFanartPreviewUrl(url),
         type: 'banner',
         ...FANART_DIMENSIONS.banner,
       });
@@ -325,6 +328,7 @@ export class ImageSearchOrchestratorService {
       this.addImageIfNew(images, seenUrls, {
         provider: agent.name,
         url,
+        thumbnailUrl: this.getFanartPreviewUrl(url),
         type: 'logo',
         ...FANART_DIMENSIONS.logo,
       });
@@ -450,6 +454,7 @@ export class ImageSearchOrchestratorService {
       this.addImageIfNew(covers, seenUrls, {
         provider: agent.name,
         url,
+        thumbnailUrl: this.getFanartPreviewUrl(url),
         type: 'cover',
         size: '1000x1000 (est.)',
         ...FANART_DIMENSIONS.albumCover,
@@ -480,6 +485,14 @@ export class ImageSearchOrchestratorService {
       height: option.height,
       size: option.size,
     });
+  }
+
+  /**
+   * Get Fanart.tv preview URL (smaller thumbnail version)
+   * Fanart.tv serves thumbnails by replacing /fanart/ with /preview/ in the URL path
+   */
+  private getFanartPreviewUrl(url: string): string {
+    return url.replace('/fanart/', '/preview/');
   }
 
   /**

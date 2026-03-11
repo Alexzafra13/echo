@@ -91,6 +91,7 @@ export class ApplyCustomArtistImageUseCase {
         [typeConfig.externalPathField]: null,
         [typeConfig.externalSourceField]: null,
         [typeConfig.externalUpdatedField]: null,
+        updatedAt: new Date(),
       };
 
       await tx.update(artists).set(updateData).where(eq(artists.id, input.artistId));

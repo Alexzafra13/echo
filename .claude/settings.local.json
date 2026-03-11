@@ -57,7 +57,19 @@
       "Bash(pnpm dev)",
       "Bash(curl -s http://localhost:3000)",
       "WebSearch",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(find /c/Users/alex/Desktop/ec/echo/web/src/features/home -type f -name *.ts -o -name *.tsx)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/images/artists/5ce2a60b-228c-4726-9334-4640463a13b6/profile)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/api/images/artists/5ce2a60b-228c-4726-9334-4640463a13b6/profile)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/images/artists/ac2cfd1c-35a5-4422-a229-ffa88736180d/profile)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/images/artists/ac2cfd1c-35a5-4422-a229-ffa88736180d/background)",
+      "Bash(grep -r api/images/artists /c/Users/alex/Desktop/ec/echo --include=*.ts --include=*.tsx)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -r @Controller /c/Users/alex/Desktop/ec/echo/api/src --include=*.ts)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://assets.fanart.tv/fanart/avril-lavigne-4dd00da9d12d9.jpg\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://assets.fanart.tv/fanart/avril-lavigne-4f82dc97c5b88.jpg\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{size_download}\" \"https://assets.fanart.tv/fanart/lavigne-avril-4fd484fbde26d.jpg/preview\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{size_download}\" \"https://assets.fanart.tv/preview/lavigne-avril-4fd484fbde26d.jpg\")"
     ]
   }
 }

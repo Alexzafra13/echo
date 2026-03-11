@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { eq } from 'drizzle-orm';
-import { artists } from '@infrastructure/database/schema';
+import { eq, and } from 'drizzle-orm';
+import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
@@ -70,7 +70,14 @@ export class ApplyArtistAvatarUseCase {
       await this.imageDownload.downloadAndSave(input.avatarUrl, imagePath);
       this.logger.info(`Downloaded image to: ${imagePath}`);
     } catch (error) {
-      this.logger.error(`Failed to download image: ${(error as Error).message}`);
+      const errMsg = (error as Error).message;
+      this.logger.error(`Failed to download image: ${errMsg}`);
+      // Provide user-friendly error for dead external URLs
+      if (errMsg.includes('404') || errMsg.includes('Not Found')) {
+        throw new NotFoundException(
+          `La imagen ya no está disponible en el proveedor (${input.provider}). Selecciona otra imagen.`
+        );
+      }
       throw error;
     }
 
@@ -78,6 +85,7 @@ export class ApplyArtistAvatarUseCase {
       [typeConfig.externalPathField]: filename,
       [typeConfig.externalSourceField]: input.provider,
       [typeConfig.externalUpdatedField]: new Date(),
+      updatedAt: new Date(),
     };
 
     if (input.replaceLocal !== false) {
@@ -92,6 +100,18 @@ export class ApplyArtistAvatarUseCase {
       `Updating artist ${input.artistId} with ${input.type} data:`,
       JSON.stringify(updateData, null, 2)
     );
+
+    // Deactivate any active custom images of the same type (external takes over)
+    await this.drizzle.db
+      .update(customArtistImages)
+      .set({ isActive: false })
+      .where(
+        and(
+          eq(customArtistImages.artistId, input.artistId),
+          eq(customArtistImages.imageType, input.type),
+          eq(customArtistImages.isActive, true)
+        )
+      );
 
     await this.drizzle.db.update(artists).set(updateData).where(eq(artists.id, input.artistId));
 

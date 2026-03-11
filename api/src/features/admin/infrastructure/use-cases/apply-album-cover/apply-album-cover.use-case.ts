@@ -78,7 +78,14 @@ export class ApplyAlbumCoverUseCase {
     } catch (error) {
       await safeDeleteFile(tempPath, 'temp file cleanup');
 
-      this.logger.error(`Failed to download or process cover: ${(error as Error).message}`);
+      const errMsg = (error as Error).message;
+      this.logger.error(`Failed to download or process cover: ${errMsg}`);
+      // Provide user-friendly error for dead external URLs
+      if (errMsg.includes('404') || errMsg.includes('Not Found')) {
+        throw new NotFoundException(
+          `La imagen ya no está disponible en el proveedor (${input.provider}). Selecciona otra imagen.`
+        );
+      }
       throw error;
     }
 
