@@ -1,11 +1,11 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../storage.service';
 import { eq, or, isNotNull, count, sum } from 'drizzle-orm';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { artists, albums } from '@infrastructure/database/schema';
+import { artists, albums, radioStationImages } from '@infrastructure/database/schema';
 
 /**
  * Storage statistics
@@ -14,6 +14,8 @@ export interface StorageStats {
   totalSize: number;
   artistsWithMetadata: number;
   albumsWithCovers: number;
+  radioFavicons: number;
+  radioFaviconSize: number;
   totalFiles: number;
   orphanedFiles: number;
   avgSizePerArtist: number;
@@ -37,7 +39,7 @@ export class StorageStatsService {
     @InjectPinoLogger(StorageStatsService.name)
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
-    private readonly storage: StorageService,
+    private readonly storage: StorageService
   ) {}
 
   /**
@@ -54,8 +56,8 @@ export class StorageStatsService {
             isNotNull(artists.externalProfilePath),
             isNotNull(artists.externalBackgroundPath),
             isNotNull(artists.externalBannerPath),
-            isNotNull(artists.externalLogoPath),
-          ),
+            isNotNull(artists.externalLogoPath)
+          )
         );
       const artistsWithMetadata = artistsCountResult[0]?.count || 0;
 
@@ -66,26 +68,40 @@ export class StorageStatsService {
         .where(isNotNull(albums.externalCoverPath));
       const albumsWithCovers = albumsCountResult[0]?.count || 0;
 
+      // Count radio station favicons
+      const [radioCountResult, radioSizeResult] = await Promise.all([
+        this.drizzle.db.select({ count: count() }).from(radioStationImages),
+        this.drizzle.db.select({ sum: sum(radioStationImages.fileSize) }).from(radioStationImages),
+      ]);
+      const radioFavicons = radioCountResult[0]?.count || 0;
+      const radioFaviconSize = Number(radioSizeResult[0]?.sum || 0);
+
       // Calculate total size
       const sizeSumResult = await this.drizzle.db
         .select({ sum: sum(artists.metadataStorageSize) })
         .from(artists)
         .where(isNotNull(artists.metadataStorageSize));
 
-      const totalSize = Number(sizeSumResult[0]?.sum || 0);
+      const totalSize = Number(sizeSumResult[0]?.sum || 0) + radioFaviconSize;
 
       // Count files on disk
       const basePath = await this.storage.getStoragePath();
-      const totalFiles = await this.countFilesInDirectory(path.join(basePath, 'artists'));
+      const dataPath = basePath.replace(/\/metadata$/, '');
+      const [artistFiles, radioFiles] = await Promise.all([
+        this.countFilesInDirectory(path.join(basePath, 'artists')),
+        this.countFilesInDirectory(path.join(dataPath, 'uploads', 'radio')),
+      ]);
+      const totalFiles = artistFiles + radioFiles;
 
       // Calculate average
-      const avgSizePerArtist =
-        artistsWithMetadata > 0 ? totalSize / artistsWithMetadata : 0;
+      const avgSizePerArtist = artistsWithMetadata > 0 ? totalSize / artistsWithMetadata : 0;
 
       return {
         totalSize,
         artistsWithMetadata,
         albumsWithCovers,
+        radioFavicons,
+        radioFaviconSize,
         totalFiles,
         orphanedFiles: 0, // Calculated in cleanup
         avgSizePerArtist,
@@ -93,7 +109,7 @@ export class StorageStatsService {
     } catch (error) {
       this.logger.error(
         `Failed to get storage stats: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
       throw error;
     }
@@ -123,8 +139,8 @@ export class StorageStatsService {
             isNotNull(artists.externalProfilePath),
             isNotNull(artists.externalBackgroundPath),
             isNotNull(artists.externalBannerPath),
-            isNotNull(artists.externalLogoPath),
-          ),
+            isNotNull(artists.externalLogoPath)
+          )
         );
 
       for (const artist of artistsWithMetadata) {
@@ -151,7 +167,7 @@ export class StorageStatsService {
     } catch (error) {
       this.logger.error(
         `Failed to recalculate storage sizes: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
       result.errors.push((error as Error).message);
       return result;
@@ -177,15 +193,18 @@ export class StorageStatsService {
       // Verify album covers
       await this.verifyAlbumCovers(result);
 
+      // Verify radio favicons
+      await this.verifyRadioFavicons(result);
+
       this.logger.info(
-        `Integrity check completed: ${result.totalChecked} files checked, ${result.missing.length} missing`,
+        `Integrity check completed: ${result.totalChecked} files checked, ${result.missing.length} missing`
       );
 
       return result;
     } catch (error) {
       this.logger.error(
         `Failed to verify integrity: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
       result.errors.push((error as Error).message);
       return result;
@@ -212,8 +231,8 @@ export class StorageStatsService {
           isNotNull(artists.externalProfilePath),
           isNotNull(artists.externalBackgroundPath),
           isNotNull(artists.externalBannerPath),
-          isNotNull(artists.externalLogoPath),
-        ),
+          isNotNull(artists.externalLogoPath)
+        )
       );
 
     for (const artist of artistsWithPaths) {
@@ -253,6 +272,24 @@ export class StorageStatsService {
         await fs.access(album.externalCoverPath);
       } catch {
         result.missing.push(`Album ${album.name}: ${album.externalCoverPath}`);
+      }
+    }
+  }
+
+  private async verifyRadioFavicons(result: IntegrityResult): Promise<void> {
+    const favicons = await this.drizzle.db
+      .select({
+        stationUuid: radioStationImages.stationUuid,
+        filePath: radioStationImages.filePath,
+      })
+      .from(radioStationImages);
+
+    for (const favicon of favicons) {
+      result.totalChecked++;
+      try {
+        await fs.access(favicon.filePath);
+      } catch {
+        result.missing.push(`Radio ${favicon.stationUuid}: ${favicon.filePath}`);
       }
     }
   }

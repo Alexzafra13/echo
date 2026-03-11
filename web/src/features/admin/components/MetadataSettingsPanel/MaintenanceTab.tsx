@@ -64,6 +64,8 @@ export function MaintenanceTab() {
         totalFiles: response.data.totalFiles || 0,
         artistImages: response.data.artistsWithMetadata || 0,
         albumImages: response.data.albumsWithCovers || 0,
+        radioFavicons: response.data.radioFavicons || 0,
+        radioFaviconSize: response.data.radioFaviconSize || 0,
         orphanedFiles: response.data.orphanedFiles || 0,
       };
 
@@ -202,7 +204,8 @@ export function MaintenanceTab() {
               <div className={styles.actionInfo}>
                 <h4 className={styles.actionTitle}>Limpiar Archivos Huérfanos</h4>
                 <p className={styles.actionDescription}>
-                  Elimina archivos de metadata que no están asociados a ningún artista o álbum
+                  Elimina archivos de metadata y favicons de radio huérfanos que no están asociados
+                  a ninguna entidad
                 </p>
               </div>
             </div>
@@ -244,7 +247,8 @@ export function MaintenanceTab() {
               <div className={styles.actionInfo}>
                 <h4 className={styles.actionTitle}>Generar Nombres de Ordenamiento</h4>
                 <p className={styles.actionDescription}>
-                  Genera orderAlbumName y orderArtistName para álbumes existentes (necesario para orden alfabético)
+                  Genera orderAlbumName y orderArtistName para álbumes existentes (necesario para
+                  orden alfabético)
                 </p>
               </div>
             </div>
@@ -303,9 +307,7 @@ export function MaintenanceTab() {
                   <strong>{populateResult.artistsUpdated}</strong> artistas actualizados
                 </span>
                 <span className={styles.resultDivider}>•</span>
-                <span>
-                  {(populateResult.duration / 1000).toFixed(2)}s
-                </span>
+                <span>{(populateResult.duration / 1000).toFixed(2)}s</span>
               </div>
             </div>
           </div>
@@ -316,8 +318,12 @@ export function MaintenanceTab() {
           <div className={styles.resultBox} style={{ borderColor: '#ef4444' }}>
             <AlertCircle size={20} style={{ color: '#ef4444' }} />
             <div className={styles.resultContent}>
-              <p className={styles.resultTitle} style={{ color: '#ef4444' }}>Error al generar nombres</p>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{populateError}</p>
+              <p className={styles.resultTitle} style={{ color: '#ef4444' }}>
+                Error al generar nombres
+              </p>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                {populateError}
+              </p>
             </div>
           </div>
         )}
@@ -339,12 +345,10 @@ export function MaintenanceTab() {
       {/* Info Box */}
       <CollapsibleInfo title="Sobre la limpieza">
         <p>
-          La limpieza eliminará archivos que no están referenciados en la base de datos.
-          Se recomienda ejecutarla periódicamente para liberar espacio en disco.
+          La limpieza eliminará archivos que no están referenciados en la base de datos. Se
+          recomienda ejecutarla periódicamente para liberar espacio en disco.
         </p>
-        <p>
-          El caché se reconstruirá automáticamente cuando sea necesario.
-        </p>
+        <p>El caché se reconstruirá automáticamente cuando sea necesario.</p>
       </CollapsibleInfo>
 
       {/* Modals */}

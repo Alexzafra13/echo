@@ -1,4 +1,4 @@
-import { HardDrive, CheckCircle, AlertCircle } from 'lucide-react';
+import { HardDrive, CheckCircle, AlertCircle, Radio } from 'lucide-react';
 import { formatBytes } from '@shared/utils/format';
 import styles from './MaintenanceTab.module.css';
 
@@ -7,6 +7,8 @@ export interface StorageStats {
   totalFiles: number;
   artistImages: number;
   albumImages: number;
+  radioFavicons: number;
+  radioFaviconSize: number;
   orphanedFiles: number;
 }
 
@@ -54,6 +56,29 @@ export function StorageStatsGrid({ stats }: StorageStatsGridProps) {
         <div className={styles.statContent}>
           <p className={styles.statLabel}>Imágenes de Álbumes</p>
           <p className={styles.statValue}>{stats.albumImages}</p>
+        </div>
+      </div>
+
+      <div className={styles.statCard}>
+        <div className={styles.statIcon}>
+          <Radio size={24} />
+        </div>
+        <div className={styles.statContent}>
+          <p className={styles.statLabel}>Favicons de Radio</p>
+          <p className={styles.statValue}>
+            {stats.radioFavicons}
+            {stats.radioFaviconSize > 0 && (
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--text-secondary)',
+                  marginLeft: '0.5rem',
+                }}
+              >
+                ({formatBytes(stats.radioFaviconSize)})
+              </span>
+            )}
+          </p>
         </div>
       </div>
 
