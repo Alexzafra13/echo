@@ -58,7 +58,7 @@ export interface DeleteCustomImageResponse {
 export const customArtistImagesApi = {
   async listImages(artistId: string): Promise<ListCustomImagesResponse> {
     const response = await apiClient.get<ListCustomImagesResponse>(
-      `/admin/metadata/artist/custom-images/${artistId}`,
+      `/admin/metadata/artist/custom-images/${artistId}`
     );
     return response.data;
   },
@@ -75,21 +75,22 @@ export const customArtistImagesApi = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      },
+        timeout: 60000,
+      }
     );
     return response.data;
   },
 
   async applyImage(request: ApplyCustomImageRequest): Promise<ApplyCustomImageResponse> {
     const response = await apiClient.post<ApplyCustomImageResponse>(
-      `/admin/metadata/artist/custom-images/${request.artistId}/apply/${request.customImageId}`,
+      `/admin/metadata/artist/custom-images/${request.artistId}/apply/${request.customImageId}`
     );
     return response.data;
   },
 
   async deleteImage(request: DeleteCustomImageRequest): Promise<DeleteCustomImageResponse> {
     const response = await apiClient.delete<DeleteCustomImageResponse>(
-      `/admin/metadata/artist/custom-images/${request.artistId}/${request.customImageId}`,
+      `/admin/metadata/artist/custom-images/${request.artistId}/${request.customImageId}`
     );
     return response.data;
   },

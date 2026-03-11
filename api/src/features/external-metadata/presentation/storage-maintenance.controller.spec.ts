@@ -67,6 +67,8 @@ describe('StorageMaintenanceController', () => {
         totalSize: 1073741824, // 1GB in bytes
         artistsWithMetadata: 100,
         albumsWithCovers: 500,
+        radioFavicons: 10,
+        radioFaviconSize: 5242880,
         totalFiles: 1000,
         orphanedFiles: 5,
         avgSizePerArtist: 10737418, // ~10MB
