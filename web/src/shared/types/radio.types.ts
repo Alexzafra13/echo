@@ -86,6 +86,7 @@ export interface RadioBrowserStation {
   geo_lat: number | null;
   geo_long: number | null;
   has_extended_info: boolean;
+  customFaviconUrl?: string;
 }
 
 /**
@@ -103,7 +104,24 @@ export interface SearchStationsParams {
   bitrateMin?: number;
   bitrateMax?: number;
   hasGeoInfo?: boolean;
-  order?: 'name' | 'url' | 'homepage' | 'favicon' | 'tags' | 'country' | 'state' | 'language' | 'votes' | 'codec' | 'bitrate' | 'lastcheckok' | 'lastchecktime' | 'clicktimestamp' | 'clickcount' | 'clicktrend' | 'random';
+  order?:
+    | 'name'
+    | 'url'
+    | 'homepage'
+    | 'favicon'
+    | 'tags'
+    | 'country'
+    | 'state'
+    | 'language'
+    | 'votes'
+    | 'codec'
+    | 'bitrate'
+    | 'lastcheckok'
+    | 'lastchecktime'
+    | 'clicktimestamp'
+    | 'clickcount'
+    | 'clicktrend'
+    | 'random';
   reverse?: boolean;
   offset?: number;
   limit?: number;

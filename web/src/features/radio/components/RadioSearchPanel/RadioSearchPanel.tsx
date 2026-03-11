@@ -18,7 +18,7 @@ export function RadioSearchPanel({
   isLoading,
   query,
   onResultSelect,
-  onClose
+  onClose,
 }: RadioSearchPanelProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -70,9 +70,7 @@ export function RadioSearchPanel({
           ) : groupedResults && groupedResults.all.length > 0 ? (
             <div className={styles.searchPanel__results}>
               <div className={styles.searchPanel__header}>
-                <h3 className={styles.searchPanel__title}>
-                  Resultados para &quot;{query}&quot;
-                </h3>
+                <h3 className={styles.searchPanel__title}>Resultados para &quot;{query}&quot;</h3>
                 <span className={styles.searchPanel__count}>
                   {groupedResults.all.length} emisoras encontradas
                 </span>
@@ -89,9 +87,9 @@ export function RadioSearchPanel({
                       <div className={styles.searchPanel__itemFallback}>
                         <Radio size={20} />
                       </div>
-                      {station.favicon && (
+                      {(station.customFaviconUrl || station.favicon) && (
                         <img
-                          src={station.favicon}
+                          src={station.customFaviconUrl || station.favicon}
                           alt={station.name}
                           className={styles.searchPanel__itemImage}
                           onError={(e) => {
@@ -113,9 +111,7 @@ export function RadioSearchPanel({
             </div>
           ) : (
             <div className={styles.searchPanel__empty}>
-              <p className={styles.searchPanel__emptyTitle}>
-                No se encontraron emisoras
-              </p>
+              <p className={styles.searchPanel__emptyTitle}>No se encontraron emisoras</p>
               <p className={styles.searchPanel__emptyText}>
                 Intenta buscar por nombre, país o género
               </p>
