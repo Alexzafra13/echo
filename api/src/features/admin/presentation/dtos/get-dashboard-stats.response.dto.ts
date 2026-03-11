@@ -40,6 +40,9 @@ class StorageBreakdownDto {
   @ApiProperty({ example: 50000000, description: 'Avatar storage in bytes' })
   avatars!: number;
 
+  @ApiProperty({ example: 15000000, description: 'Radio favicon storage in bytes' })
+  radioFavicons!: number;
+
   @ApiProperty({ example: 5350000000, description: 'Total storage in bytes' })
   total!: number;
 }
@@ -174,7 +177,10 @@ class ActiveAlertsDto {
   @ApiProperty({ example: false, description: 'Storage warning flag' })
   storageWarning!: boolean;
 
-  @ApiProperty({ required: false, description: 'Detailed storage information when warning is active' })
+  @ApiProperty({
+    required: false,
+    description: 'Detailed storage information when warning is active',
+  })
   storageDetails?: StorageDetailsDto;
 
   @ApiProperty({ example: 0, description: 'Number of recent scan errors' })

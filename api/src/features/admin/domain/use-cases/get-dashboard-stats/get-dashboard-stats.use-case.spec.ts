@@ -49,7 +49,8 @@ describe('GetDashboardStatsUseCase', () => {
     music: 4000000000,
     metadata: 500000000,
     avatars: 10000000,
-    total: 4510000000,
+    radioFavicons: 5000000,
+    total: 4515000000,
   };
 
   const systemHealthData = {

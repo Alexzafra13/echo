@@ -16,6 +16,7 @@ export interface StorageBreakdown {
   music: number;
   metadata: number;
   avatars: number;
+  radioFavicons: number;
   total: number;
 }
 

@@ -26,6 +26,7 @@ interface DashboardStats {
     music: number;
     metadata: number;
     avatars: number;
+    radioFavicons: number;
     total: number;
   };
   systemHealth: {
@@ -110,7 +111,11 @@ interface DashboardPanelProps {
  */
 export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
   const queryClient = useQueryClient();
-  const { data: stats, isLoading, error } = useQuery<DashboardStats>({
+  const {
+    data: stats,
+    isLoading,
+    error,
+  } = useQuery<DashboardStats>({
     queryKey: ['admin', 'dashboard', 'stats'],
     queryFn: async () => {
       const response = await apiClient.get('/admin/dashboard/stats');
@@ -162,7 +167,7 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
             <p className={styles.subtitle}>Vista general del sistema</p>
           </div>
         </div>
-{/* Refresh happens automatically via staleTime */}
+        {/* Refresh happens automatically via staleTime */}
       </div>
 
       {/* Stats Grid */}
@@ -225,21 +230,15 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
           <div className={styles.activityStats}>
             <div className={styles.activityStat}>
               <span className={styles.activityLabel}>Total</span>
-              <span className={styles.activityValue}>
-                {stats.activityStats.totalUsers}
-              </span>
+              <span className={styles.activityValue}>{stats.activityStats.totalUsers}</span>
             </div>
             <div className={styles.activityStat}>
               <span className={styles.activityLabel}>Últimas 24h</span>
-              <span className={styles.activityValue}>
-                {stats.activityStats.activeUsersLast24h}
-              </span>
+              <span className={styles.activityValue}>{stats.activityStats.activeUsersLast24h}</span>
             </div>
             <div className={styles.activityStat}>
               <span className={styles.activityLabel}>Últimos 7d</span>
-              <span className={styles.activityValue}>
-                {stats.activityStats.activeUsersLast7d}
-              </span>
+              <span className={styles.activityValue}>{stats.activityStats.activeUsersLast7d}</span>
             </div>
           </div>
         </div>
@@ -254,9 +253,7 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
             <div className={styles.enrichmentPeriod}>
               <span className={styles.periodLabel}>Hoy</span>
               <div className={styles.periodStats}>
-                <span className={styles.periodValue}>
-                  {stats.enrichmentStats.today.total}
-                </span>
+                <span className={styles.periodValue}>{stats.enrichmentStats.today.total}</span>
                 <div className={styles.periodDetails}>
                   <span className={styles.successCount}>
                     <TrendingUp size={14} />
@@ -274,9 +271,7 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
             <div className={styles.enrichmentPeriod}>
               <span className={styles.periodLabel}>7 días</span>
               <div className={styles.periodStats}>
-                <span className={styles.periodValue}>
-                  {stats.enrichmentStats.week.total}
-                </span>
+                <span className={styles.periodValue}>{stats.enrichmentStats.week.total}</span>
                 <div className={styles.periodDetails}>
                   <span className={styles.successCount}>
                     <TrendingUp size={14} />
@@ -305,26 +300,25 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
               <div className={styles.scanStat}>
                 <span className={styles.scanLabel}>Estado</span>
                 <span className={styles.scanValue}>
-                  {{ completed: 'Completado', running: 'En curso', error: 'Error', pending: 'Pendiente' }[stats.scanStats.lastScan.status] || stats.scanStats.lastScan.status}
+                  {{
+                    completed: 'Completado',
+                    running: 'En curso',
+                    error: 'Error',
+                    pending: 'Pendiente',
+                  }[stats.scanStats.lastScan.status] || stats.scanStats.lastScan.status}
                 </span>
               </div>
               <div className={styles.scanStat}>
                 <span className={styles.scanLabel}>Agregados</span>
-                <span className={styles.scanValue}>
-                  {stats.scanStats.lastScan.tracksAdded}
-                </span>
+                <span className={styles.scanValue}>{stats.scanStats.lastScan.tracksAdded}</span>
               </div>
               <div className={styles.scanStat}>
                 <span className={styles.scanLabel}>Actualizados</span>
-                <span className={styles.scanValue}>
-                  {stats.scanStats.lastScan.tracksUpdated}
-                </span>
+                <span className={styles.scanValue}>{stats.scanStats.lastScan.tracksUpdated}</span>
               </div>
               <div className={styles.scanStat}>
                 <span className={styles.scanLabel}>Eliminados</span>
-                <span className={styles.scanValue}>
-                  {stats.scanStats.lastScan.tracksDeleted}
-                </span>
+                <span className={styles.scanValue}>{stats.scanStats.lastScan.tracksDeleted}</span>
               </div>
             </div>
           ) : (
