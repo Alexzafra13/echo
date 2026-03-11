@@ -89,7 +89,7 @@ export function RadioSearchPanel({
                       </div>
                       {(station.customFaviconUrl || station.favicon) && (
                         <img
-                          src={station.customFaviconUrl || station.favicon}
+                          src={station.customFaviconUrl || station.favicon || undefined}
                           alt={station.name}
                           className={styles.searchPanel__itemImage}
                           onError={(e) => {
