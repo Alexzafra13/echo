@@ -8,7 +8,7 @@ export function useUploadRadioFavicon() {
     mutationFn: ({ stationUuid, file }: { stationUuid: string; file: File }) =>
       radioFaviconsApi.uploadFavicon(stationUuid, file),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['radio', 'favorites'] });
+      queryClient.invalidateQueries({ queryKey: ['radio'] });
     },
   });
 }
@@ -17,10 +17,9 @@ export function useDeleteRadioFavicon() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (stationUuid: string) =>
-      radioFaviconsApi.deleteFavicon(stationUuid),
+    mutationFn: (stationUuid: string) => radioFaviconsApi.deleteFavicon(stationUuid),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['radio', 'favorites'] });
+      queryClient.invalidateQueries({ queryKey: ['radio'] });
     },
   });
 }
@@ -39,7 +38,7 @@ export function useAutoFetchRadioFavicon() {
       homepage?: string;
     }) => radioFaviconsApi.autoFetch(stationUuid, name, homepage),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['radio', 'favorites'] });
+      queryClient.invalidateQueries({ queryKey: ['radio'] });
     },
   });
 }
