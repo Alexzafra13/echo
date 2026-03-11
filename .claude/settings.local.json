@@ -46,7 +46,16 @@
       "Bash(findstr nul)",
       "Bash(python3 -c \"import os; os.remove\\(''\\\\\\\\?\\\\C:\\\\Users\\\\alex\\\\Desktop\\\\ec\\\\echo\\\\nul''\\)\")",
       "Bash(python -c \"import os; os.remove\\(''\\\\\\\\?\\\\C:\\\\Users\\\\alex\\\\Desktop\\\\ec\\\\echo\\\\nul''\\)\")",
-      "Bash(node -e \"const fs = require\\(''fs''\\); fs.unlinkSync\\(''\\\\\\\\\\\\\\\\?\\\\\\\\C:\\\\\\\\Users\\\\\\\\alex\\\\\\\\Desktop\\\\\\\\ec\\\\\\\\echo\\\\\\\\nul''\\)\")"
+      "Bash(node -e \"const fs = require\\(''fs''\\); fs.unlinkSync\\(''\\\\\\\\\\\\\\\\?\\\\\\\\C:\\\\\\\\Users\\\\\\\\alex\\\\\\\\Desktop\\\\\\\\ec\\\\\\\\echo\\\\\\\\nul''\\)\")",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":3000\")",
+      "Bash(findstr \"LISTENING\")",
+      "Bash(pnpm --dir api dev)",
+      "Bash(command -v pnpm)",
+      "Bash(pnpm --dir api start:dev)",
+      "Bash(pnpm start:dev)",
+      "Bash(pnpm dev)",
+      "Bash(curl -s http://localhost:3000)"
     ]
   }
 }

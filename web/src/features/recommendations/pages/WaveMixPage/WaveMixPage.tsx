@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { Waves, RefreshCw, Sparkles, Search, X, Calendar } from 'lucide-react';
+import { Waves, RefreshCw, Sparkles, Search, X, Calendar, Music } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
@@ -39,6 +39,27 @@ export function WaveMixPage() {
     handleRefresh,
     handlePlaylistClick,
   } = useWaveMixPlaylists();
+
+  // Collect ALL unique album cover URLs split into two rows for the animated mosaic
+  // No artificial limit — use every unique album across all playlist types
+  const heroCoverRows = useMemo(() => {
+    const albumIds = new Set<string>();
+    const urls: string[] = [];
+    const allPlaylists = [...dailyPlaylists, ...artistPlaylists, ...genrePlaylists];
+    for (const playlist of allPlaylists) {
+      for (const scoredTrack of playlist.tracks || []) {
+        const albumId = scoredTrack.track?.albumId;
+        if (albumId && !albumIds.has(albumId)) {
+          albumIds.add(albumId);
+          urls.push(`/api/albums/${albumId}/cover`);
+        }
+      }
+    }
+    // Need at least 8 covers (4 per row) for a decent mosaic
+    if (urls.length < 8) return { row1: [], row2: [] };
+    const mid = Math.ceil(urls.length / 2);
+    return { row1: urls.slice(0, mid), row2: urls.slice(mid) };
+  }, [dailyPlaylists, artistPlaylists, genrePlaylists]);
 
   const { itemsPerPage: gridItems, columns } = useGridDimensions({
     maxRows: 2,
@@ -89,21 +110,74 @@ export function WaveMixPage() {
 
         <div className={styles.waveMixPage__content}>
           {/* Hero Section */}
-          <div className={styles.waveMixPage__hero}>
-            <div className={styles.waveMixPage__heroContent}>
-              <h1 className={styles.waveMixPage__heroTitle}>Wave Mix</h1>
-              <p className={styles.waveMixPage__heroDescription}>
-                Recomendaciones personalizadas para {user?.name || user?.username || 'ti'}
-              </p>
-              <Button
-                variant="secondary"
-                onClick={handleRefresh}
-                disabled={isLoading}
-                className={styles.waveMixPage__refreshButton}
-              >
-                <RefreshCw size={18} className={isLoading ? styles.spinning : ''} />
-                {isLoading ? 'Actualizando...' : 'Actualizar'}
-              </Button>
+          <div className={`${styles.hero} ${heroCoverRows.row1.length === 0 ? styles['hero--fallback'] : ''}`}>
+            {/* Animated cover art mosaic — two rows scrolling opposite directions */}
+            {(heroCoverRows.row1.length > 0 || heroCoverRows.row2.length > 0) && (
+              <div className={styles.hero__mosaic}>
+                <div className={styles.hero__row}>
+                  <div className={styles.hero__track} data-direction="left">
+                    {/* Triple for seamless loop — ensures no gaps on wide screens */}
+                    {[...heroCoverRows.row1, ...heroCoverRows.row1, ...heroCoverRows.row1].map((url, i) => (
+                      <img key={i} src={url} alt="" className={styles.hero__coverImg} loading="eager" />
+                    ))}
+                  </div>
+                </div>
+                <div className={styles.hero__row}>
+                  <div className={styles.hero__track} data-direction="right">
+                    {[...heroCoverRows.row2, ...heroCoverRows.row2, ...heroCoverRows.row2].map((url, i) => (
+                      <img key={i} src={url} alt="" className={styles.hero__coverImg} loading="eager" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Fade overlay for text readability */}
+            <div className={styles.hero__fade} />
+
+            {/* Content pinned bottom-left */}
+            <div className={styles.hero__content}>
+              <div className={styles.hero__info}>
+                <h1 className={styles.hero__title}>Wave Mix</h1>
+                <p className={styles.hero__subtitle}>
+                  Tu música, mezclada para{' '}
+                  <span className={styles.hero__username}>
+                    {user?.name || user?.username || 'ti'}
+                  </span>
+                </p>
+              </div>
+
+              <div className={styles.hero__right}>
+                {playlists.length > 0 && (
+                  <div className={styles.hero__stats}>
+                    <div className={styles.hero__stat}>
+                      <Music size={16} />
+                      <span className={styles.hero__statValue}>{playlists.reduce((acc, p) => acc + (p.metadata.totalTracks || 0), 0)}</span>
+                      <span className={styles.hero__statLabel}>canciones</span>
+                    </div>
+                    <div className={styles.hero__statDivider} />
+                    <div className={styles.hero__stat}>
+                      <Sparkles size={16} />
+                      <span className={styles.hero__statValue}>{artistPlaylists.length}</span>
+                      <span className={styles.hero__statLabel}>artistas</span>
+                    </div>
+                    <div className={styles.hero__statDivider} />
+                    <div className={styles.hero__stat}>
+                      <Waves size={16} />
+                      <span className={styles.hero__statValue}>{genrePlaylists.length}</span>
+                      <span className={styles.hero__statLabel}>géneros</span>
+                    </div>
+                  </div>
+                )}
+                <Button
+                  variant="secondary"
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                  className={styles.hero__refreshBtn}
+                >
+                  <RefreshCw size={16} className={isLoading ? styles.spinning : ''} />
+                  {isLoading ? 'Actualizando...' : 'Actualizar'}
+                </Button>
+              </div>
             </div>
           </div>
 

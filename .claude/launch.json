@@ -3,14 +3,14 @@
   "configurations": [
     {
       "name": "web",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "web", "dev"],
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "pnpm", "--dir", "web", "dev"],
       "port": 5173
     },
     {
       "name": "api",
-      "runtimeExecutable": "C:\\Users\\alex\\AppData\\Roaming\\npm\\pnpm.cmd",
-      "runtimeArgs": ["--dir", "api", "start:dev"],
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd api && npx nest start --watch"],
       "port": 3000
     }
   ]
