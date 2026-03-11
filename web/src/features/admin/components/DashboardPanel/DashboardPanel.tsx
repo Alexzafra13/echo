@@ -205,8 +205,8 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
         />
         <StatCard
           title="Almacenamiento"
-          value={formatBytes(stats.libraryStats.totalStorage)}
-          subtitle={`${formatBytes(stats.storageBreakdown.metadata)} metadata`}
+          value={formatBytes(stats.storageBreakdown.total)}
+          subtitle={`${formatBytes(stats.storageBreakdown.music)} música · ${formatBytes(stats.storageBreakdown.metadata + stats.storageBreakdown.avatars + stats.storageBreakdown.radioFavicons)} imágenes`}
           icon="hard-drive"
         />
       </div>

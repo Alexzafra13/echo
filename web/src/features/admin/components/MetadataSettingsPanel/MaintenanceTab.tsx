@@ -64,6 +64,8 @@ export function MaintenanceTab() {
         totalFiles: response.data.totalFiles || 0,
         artistImages: response.data.artistsWithMetadata || 0,
         albumImages: response.data.albumsWithCovers || 0,
+        radioFavicons: response.data.radioFavicons || 0,
+        radioFaviconSize: response.data.radioFaviconSize || 0,
         orphanedFiles: response.data.orphanedFiles || 0,
       };
 
@@ -212,7 +214,8 @@ export function MaintenanceTab() {
               <div className={styles.actionInfo}>
                 <h4 className={styles.actionTitle}>Limpiar Archivos Huérfanos</h4>
                 <p className={styles.actionDescription}>
-                  Elimina archivos de metadata que no están asociados a ningún artista o álbum
+                  Elimina archivos de metadata y favicons de radio huérfanos que no están asociados
+                  a ninguna entidad
                 </p>
               </div>
             </div>

@@ -172,6 +172,7 @@ export class RadioFaviconsController {
           type: 'string',
           description: 'Source identifier (apple-touch-icon, google-favicon, wikipedia)',
         },
+        stationName: { type: 'string', description: 'Station name for enrichment logging' },
       },
       required: ['dataUrl', 'source'],
     },
@@ -179,12 +180,17 @@ export class RadioFaviconsController {
   @ApiResponse({ status: 200, description: 'Favicon saved successfully' })
   async savePreview(
     @Param('stationUuid') stationUuid: string,
-    @Body() body: { dataUrl: string; source: string }
+    @Body() body: { dataUrl: string; source: string; stationName?: string }
   ) {
     if (!body.dataUrl || !body.source) {
       throw new BadRequestException('dataUrl and source are required');
     }
 
-    return await this.faviconFetch.saveFromDataUrl(stationUuid, body.dataUrl, body.source);
+    return await this.faviconFetch.saveFromDataUrl(
+      stationUuid,
+      body.dataUrl,
+      body.source,
+      body.stationName
+    );
   }
 }

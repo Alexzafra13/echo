@@ -149,7 +149,12 @@ export class ActivityStatsService {
       .limit(5);
 
     recentEnrichments.forEach((enrichment) => {
-      const entityTypeLabel = enrichment.entityType === 'album' ? 'Álbum' : 'Artista';
+      const entityTypeLabel =
+        enrichment.entityType === 'album'
+          ? 'Álbum'
+          : enrichment.entityType === 'radio'
+            ? 'Radio'
+            : 'Artista';
       const metadataTypeLabel = this.getMetadataTypeLabel(enrichment.metadataType);
 
       activities.push({
@@ -198,6 +203,7 @@ export class ActivityStatsService {
       cover: 'portada',
       avatar: 'avatar',
       banner: 'banner',
+      favicon: 'favicon',
     };
     return labels[type] || 'metadata';
   }

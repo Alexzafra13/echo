@@ -196,6 +196,7 @@ import { STORAGE_SERVICE, SETTINGS_REPOSITORY } from './domain/ports';
     MbidAutoSearchService,
     MetadataEventsService,
     EnrichmentQueueService,
+    EnrichmentLogService,
     // Agents (for direct use in other modules)
     LastfmAgent,
   ],

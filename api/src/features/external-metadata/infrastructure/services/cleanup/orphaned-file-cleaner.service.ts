@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../storage.service';
@@ -10,6 +10,7 @@ import {
   albums,
   customArtistImages,
   customAlbumCovers,
+  radioStationImages,
 } from '@infrastructure/database/schema';
 
 /**
@@ -33,7 +34,7 @@ export class OrphanedFileCleanerService {
     @InjectPinoLogger(OrphanedFileCleanerService.name)
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
-    private readonly storage: StorageService,
+    private readonly storage: StorageService
   ) {}
 
   /**
@@ -60,7 +61,11 @@ export class OrphanedFileCleanerService {
       const albumCleanup = await this.cleanupAlbumFiles(dryRun);
       this.mergeResults(result, albumCleanup);
 
-      // 3. Clean inactive database records (only in real mode)
+      // 3. Clean orphaned radio favicon files
+      const radioCleanup = await this.cleanupRadioFaviconFiles(dryRun);
+      this.mergeResults(result, radioCleanup);
+
+      // 4. Clean inactive database records (only in real mode)
       if (!dryRun) {
         await this.cleanupInactiveRecords(result);
       }
@@ -69,14 +74,14 @@ export class OrphanedFileCleanerService {
 
       this.logger.info(
         `Orphaned files cleanup completed: ${result.filesRemoved} files removed, ` +
-          `${(result.spaceFree / 1024 / 1024).toFixed(2)} MB freed in ${result.duration}ms`,
+          `${(result.spaceFree / 1024 / 1024).toFixed(2)} MB freed in ${result.duration}ms`
       );
 
       return result;
     } catch (error) {
       this.logger.error(
         `Orphaned files cleanup failed: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
       result.errors.push((error as Error).message);
       result.duration = Date.now() - startTime;
@@ -111,7 +116,7 @@ export class OrphanedFileCleanerService {
             path.join(artistsPath, dirName),
             dryRun,
             result,
-            'artist',
+            'artist'
           );
         }
       }
@@ -120,7 +125,7 @@ export class OrphanedFileCleanerService {
     } catch (error) {
       this.logger.error(
         `Failed to cleanup artist files: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
       result.errors.push((error as Error).message);
       return result;
@@ -154,7 +159,7 @@ export class OrphanedFileCleanerService {
             path.join(albumsPath, dirName),
             dryRun,
             result,
-            'album',
+            'album'
           );
         }
       }
@@ -163,7 +168,52 @@ export class OrphanedFileCleanerService {
     } catch (error) {
       this.logger.error(
         `Failed to cleanup album files: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
+      );
+      result.errors.push((error as Error).message);
+      return result;
+    }
+  }
+
+  /**
+   * Clean orphaned radio favicon files
+   */
+  async cleanupRadioFaviconFiles(dryRun: boolean): Promise<CleanupResult> {
+    const result = this.createEmptyResult();
+
+    try {
+      const dataPath = (await this.storage.getStoragePath()).replace(/\/metadata$/, '');
+      const radioPath = path.join(dataPath, 'uploads', 'radio');
+
+      if (!(await this.directoryExists(radioPath))) {
+        return result;
+      }
+
+      // Get all station UUIDs from radio_station_images table
+      const dbFavicons = await this.drizzle.db
+        .select({ stationUuid: radioStationImages.stationUuid })
+        .from(radioStationImages);
+      const dbStationUuids = new Set(dbFavicons.map((f) => f.stationUuid));
+
+      // List directories in /uploads/radio/
+      const radioDirs = await fs.readdir(radioPath);
+
+      for (const dirName of radioDirs) {
+        if (!dbStationUuids.has(dirName)) {
+          await this.processOrphanedDirectory(
+            path.join(radioPath, dirName),
+            dryRun,
+            result,
+            'radio-favicon'
+          );
+        }
+      }
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        `Failed to cleanup radio favicon files: ${(error as Error).message}`,
+        (error as Error).stack
       );
       result.errors.push((error as Error).message);
       return result;
@@ -204,7 +254,7 @@ export class OrphanedFileCleanerService {
     dirPath: string,
     dryRun: boolean,
     result: CleanupResult,
-    entityType: string,
+    entityType: string
   ): Promise<void> {
     try {
       const size = await this.storage.getStorageSize(dirPath);
@@ -240,7 +290,7 @@ export class OrphanedFileCleanerService {
         .returning();
 
       this.logger.info(
-        `Deleted inactive records: ${deletedArtistImages.length} artist images, ${deletedAlbumCovers.length} album covers`,
+        `Deleted inactive records: ${deletedArtistImages.length} artist images, ${deletedAlbumCovers.length} album covers`
       );
     } catch (error) {
       this.logger.error(`Failed to delete inactive records: ${(error as Error).message}`);
