@@ -3,8 +3,15 @@ import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import type { RadioBrowserStation } from '../../types';
 import type { RadioStation } from '@features/player/types';
 import type { RadioMetadata } from '../../hooks/useRadioMetadata';
+import type { FaviconPreview } from '@features/admin/api/radio-favicons.api';
 import { useAuthStore } from '@shared/store';
-import { useUploadRadioFavicon, useDeleteRadioFavicon, useAutoFetchRadioFavicon } from '../../hooks/useRadioFavicon';
+import {
+  useUploadRadioFavicon,
+  useDeleteRadioFavicon,
+  useFetchFaviconPreviews,
+  useSaveFaviconPreview,
+} from '../../hooks/useRadioFavicon';
+import { FaviconPreviewModal } from '../FaviconPreviewModal';
 import styles from './RadioStationCard.module.css';
 
 interface RadioStationCardProps {
@@ -27,26 +34,32 @@ export const RadioStationCard = memo(function RadioStationCard({
   const metadataTextRef = useRef<HTMLSpanElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [shouldAnimate, setShouldAnimate] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.isAdmin ?? false;
 
   const uploadMutation = useUploadRadioFavicon();
   const deleteMutation = useDeleteRadioFavicon();
-  const autoFetchMutation = useAutoFetchRadioFavicon();
+  const previewsMutation = useFetchFaviconPreviews();
+  const savePreviewMutation = useSaveFaviconPreview();
 
   const handleCardClick = useCallback(() => {
     onPlay?.();
   }, [onPlay]);
 
-  const handleFavoriteClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggleFavorite?.();
-  }, [onToggleFavorite]);
+  const handleFavoriteClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onToggleFavorite?.();
+    },
+    [onToggleFavorite]
+  );
 
   // Compatible con RadioBrowserStation y RadioStation
   const name = station.name;
   const favicon = 'favicon' in station ? station.favicon : null;
-  const customFaviconUrl = 'customFaviconUrl' in station ? (station as RadioStation).customFaviconUrl : null;
+  const customFaviconUrl =
+    'customFaviconUrl' in station ? (station as RadioStation).customFaviconUrl : null;
   const country = 'country' in station ? station.country : null;
   const tags = 'tags' in station ? station.tags : null;
   const codec = 'codec' in station ? station.codec : null;
@@ -54,18 +67,20 @@ export const RadioStationCard = memo(function RadioStationCard({
   const homepage = 'homepage' in station ? station.homepage : null;
 
   // Get the station UUID (works for both types)
-  const stationUuid = 'stationuuid' in station
-    ? (station as RadioBrowserStation).stationuuid
-    : 'stationUuid' in station
-      ? (station as RadioStation).stationUuid
-      : null;
+  const stationUuid =
+    'stationuuid' in station
+      ? (station as RadioBrowserStation).stationuuid
+      : 'stationUuid' in station
+        ? (station as RadioStation).stationUuid
+        : null;
 
   // Priority: customFaviconUrl > favicon
   const displayFavicon = customFaviconUrl || favicon;
 
-  const genreTags = tags && typeof tags === 'string' && tags.trim()
-    ? tags.split(',').slice(0, 2).join(', ')
-    : 'Radio';
+  const genreTags =
+    tags && typeof tags === 'string' && tags.trim()
+      ? tags.split(',').slice(0, 2).join(', ')
+      : 'Radio';
 
   // Anima el texto de metadatos si desborda el contenedor
   useEffect(() => {
@@ -83,136 +98,177 @@ export const RadioStationCard = memo(function RadioStationCard({
     fileInputRef.current?.click();
   }, []);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !stationUuid) return;
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !stationUuid) return;
 
-    uploadMutation.mutate({ stationUuid, file });
+      uploadMutation.mutate({ stationUuid, file });
 
-    // Reset input
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [stationUuid, uploadMutation]);
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    },
+    [stationUuid, uploadMutation]
+  );
 
-  const handleDeleteFavicon = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!stationUuid) return;
-    deleteMutation.mutate(stationUuid);
-  }, [stationUuid, deleteMutation]);
+  const handleDeleteFavicon = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!stationUuid) return;
+      deleteMutation.mutate(stationUuid);
+    },
+    [stationUuid, deleteMutation]
+  );
 
-  const handleAutoFetch = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!stationUuid) return;
-    autoFetchMutation.mutate({
-      stationUuid,
-      name,
-      homepage: homepage || undefined,
-    });
-  }, [stationUuid, name, homepage, autoFetchMutation]);
+  const handleOpenPreviews = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!stationUuid) return;
+      setIsPreviewModalOpen(true);
+      previewsMutation.mutate({
+        stationUuid,
+        name,
+        homepage: homepage || undefined,
+      });
+    },
+    [stationUuid, name, homepage, previewsMutation]
+  );
 
-  const isLoading = uploadMutation.isPending || deleteMutation.isPending || autoFetchMutation.isPending;
+  const handleSelectPreview = useCallback(
+    (preview: FaviconPreview) => {
+      if (!stationUuid) return;
+      savePreviewMutation.mutate(
+        { stationUuid, dataUrl: preview.dataUrl, source: preview.source },
+        {
+          onSuccess: () => {
+            setIsPreviewModalOpen(false);
+          },
+        }
+      );
+    },
+    [stationUuid, savePreviewMutation]
+  );
+
+  const handleClosePreviewModal = useCallback(() => {
+    setIsPreviewModalOpen(false);
+  }, []);
+
+  const isLoading = uploadMutation.isPending || deleteMutation.isPending;
 
   return (
-    <article
-      className={`${styles.radioCard} ${isPlaying ? styles['radioCard--playing'] : ''}`}
-      onClick={handleCardClick}
-    >
-      <div className={styles.radioCard__coverContainer}>
-        <div className={styles.radioCard__fallback}>
-          <Radio size={32} />
-        </div>
-        {displayFavicon && (
-          <img
-            src={displayFavicon}
-            alt={name}
-            loading="lazy"
-            className={styles.radioCard__cover}
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        )}
-        <div className={styles.radioCard__overlay}>
-          {onToggleFavorite && (
-            <button
-              className={`${styles.radioCard__favoriteButton} ${
-                isFavorite ? styles['radioCard__favoriteButton--active'] : ''
-              }`}
-              onClick={handleFavoriteClick}
-              aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-            >
-              <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
-            </button>
+    <>
+      <article
+        className={`${styles.radioCard} ${isPlaying ? styles['radioCard--playing'] : ''}`}
+        onClick={handleCardClick}
+      >
+        <div className={styles.radioCard__coverContainer}>
+          <div className={styles.radioCard__fallback}>
+            <Radio size={32} />
+          </div>
+          {displayFavicon && (
+            <img
+              src={displayFavicon}
+              alt={name}
+              loading="lazy"
+              className={styles.radioCard__cover}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
           )}
-          {isAdmin && stationUuid && (
-            <div className={styles.radioCard__adminActions}>
+          <div className={styles.radioCard__overlay}>
+            {onToggleFavorite && (
               <button
-                className={styles.radioCard__adminButton}
-                onClick={handleUploadClick}
-                disabled={isLoading}
-                aria-label="Upload custom favicon"
-                title="Upload custom favicon"
+                className={`${styles.radioCard__favoriteButton} ${
+                  isFavorite ? styles['radioCard__favoriteButton--active'] : ''
+                }`}
+                onClick={handleFavoriteClick}
+                aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               >
-                <ImagePlus size={14} />
+                <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
               </button>
-              {!displayFavicon && (
+            )}
+            {isAdmin && stationUuid && (
+              <div className={styles.radioCard__adminActions}>
                 <button
                   className={styles.radioCard__adminButton}
-                  onClick={handleAutoFetch}
+                  onClick={handleUploadClick}
                   disabled={isLoading}
-                  aria-label="Auto-fetch favicon"
-                  title="Auto-fetch from web"
+                  aria-label="Upload custom favicon"
+                  title="Subir imagen personalizada"
+                >
+                  <ImagePlus size={14} />
+                </button>
+                <button
+                  className={styles.radioCard__adminButton}
+                  onClick={handleOpenPreviews}
+                  disabled={isLoading}
+                  aria-label="Buscar imagen en la web"
+                  title="Buscar imagen en la web"
                 >
                   <Wand2 size={14} />
                 </button>
-              )}
-              {customFaviconUrl && (
-                <button
-                  className={`${styles.radioCard__adminButton} ${styles['radioCard__adminButton--danger']}`}
-                  onClick={handleDeleteFavicon}
-                  disabled={isLoading}
-                  aria-label="Remove custom favicon"
-                  title="Remove custom favicon"
-                >
-                  <Trash2 size={14} />
-                </button>
-              )}
-            </div>
+                {customFaviconUrl && (
+                  <button
+                    className={`${styles.radioCard__adminButton} ${styles['radioCard__adminButton--danger']}`}
+                    onClick={handleDeleteFavicon}
+                    disabled={isLoading}
+                    aria-label="Remove custom favicon"
+                    title="Eliminar imagen personalizada"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+        </div>
+        <div className={styles.radioCard__info}>
+          <h3 className={styles.radioCard__title}>{name}</h3>
+          <p className={styles.radioCard__meta}>
+            {country && <span>{country}</span>}
+            {country && genreTags && <span className={styles.radioCard__separator}>•</span>}
+            {genreTags && <span>{genreTags}</span>}
+          </p>
+          {(codec || bitrate) && (
+            <p className={styles.radioCard__quality}>
+              {codec && <span>{codec.toUpperCase()}</span>}
+              {codec && bitrate && <span className={styles.radioCard__separator}>•</span>}
+              {bitrate && <span>{bitrate} kbps</span>}
+            </p>
+          )}
+          {isPlaying && currentMetadata?.title && (
+            <p className={styles.radioCard__nowPlaying}>
+              <span
+                ref={metadataTextRef}
+                className={`${styles.radioCard__nowPlayingText} ${shouldAnimate ? styles['radioCard__nowPlayingText--animate'] : ''}`}
+              >
+                <Music size={12} />
+                {currentMetadata.title}
+              </span>
+            </p>
           )}
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
+      </article>
+
+      {isPreviewModalOpen && (
+        <FaviconPreviewModal
+          isOpen={isPreviewModalOpen}
+          onClose={handleClosePreviewModal}
+          stationName={name}
+          previews={previewsMutation.data?.previews ?? []}
+          isLoading={previewsMutation.isPending}
+          isSaving={savePreviewMutation.isPending}
+          onSelect={handleSelectPreview}
         />
-      </div>
-      <div className={styles.radioCard__info}>
-        <h3 className={styles.radioCard__title}>{name}</h3>
-        <p className={styles.radioCard__meta}>
-          {country && <span>{country}</span>}
-          {country && genreTags && <span className={styles.radioCard__separator}>•</span>}
-          {genreTags && <span>{genreTags}</span>}
-        </p>
-        {(codec || bitrate) && (
-          <p className={styles.radioCard__quality}>
-            {codec && <span>{codec.toUpperCase()}</span>}
-            {codec && bitrate && <span className={styles.radioCard__separator}>•</span>}
-            {bitrate && <span>{bitrate} kbps</span>}
-          </p>
-        )}
-        {isPlaying && currentMetadata?.title && (
-          <p className={styles.radioCard__nowPlaying}>
-            <span
-              ref={metadataTextRef}
-              className={`${styles.radioCard__nowPlayingText} ${shouldAnimate ? styles['radioCard__nowPlayingText--animate'] : ''}`}
-            >
-              <Music size={12} />
-              {currentMetadata.title}
-            </span>
-          </p>
-        )}
-      </div>
-    </article>
+      )}
+    </>
   );
 });

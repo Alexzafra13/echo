@@ -6,3 +6,4 @@ export * from './CountrySelectButton';
 export * from './CountrySelectModal';
 export * from './FilterTabs';
 export * from './GenreSelectModal';
+export * from './FaviconPreviewModal';

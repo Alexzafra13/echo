@@ -42,3 +42,36 @@ export function useAutoFetchRadioFavicon() {
     },
   });
 }
+
+export function useFetchFaviconPreviews() {
+  return useMutation({
+    mutationFn: ({
+      stationUuid,
+      name,
+      homepage,
+    }: {
+      stationUuid: string;
+      name: string;
+      homepage?: string;
+    }) => radioFaviconsApi.fetchPreviews(stationUuid, name, homepage),
+  });
+}
+
+export function useSaveFaviconPreview() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      stationUuid,
+      dataUrl,
+      source,
+    }: {
+      stationUuid: string;
+      dataUrl: string;
+      source: string;
+    }) => radioFaviconsApi.savePreview(stationUuid, dataUrl, source),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['radio'] });
+    },
+  });
+}

@@ -164,6 +164,7 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
                 urlResolved: station.url_resolved,
                 homepage: station.homepage,
                 favicon: station.favicon,
+                customFaviconUrl: station.customFaviconUrl,
                 country: station.country,
                 countryCode: station.countrycode,
                 state: station.state,

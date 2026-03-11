@@ -13,6 +13,17 @@ export interface FetchFaviconResult {
   url?: string;
 }
 
+export interface FaviconPreview {
+  source: string;
+  mimeType: string;
+  size: number;
+  dataUrl: string;
+}
+
+export interface FetchPreviewsResult {
+  previews: FaviconPreview[];
+}
+
 /**
  * RadioFaviconFetchService
  * Automatically fetches favicon images from external sources:
@@ -33,6 +44,151 @@ export class RadioFaviconFetchService {
   ) {}
 
   /**
+   * Fetch previews from all available sources without saving.
+   * Returns all found images as base64 data URLs for the admin to choose.
+   */
+  async fetchPreviews(stationName: string, homepage?: string): Promise<FetchPreviewsResult> {
+    const previews: FaviconPreview[] = [];
+
+    // Fetch all sources in parallel
+    const [appleTouchResult, googleResult, wikipediaResult] = await Promise.all([
+      homepage ? this.tryAppleTouchIcon(homepage) : Promise.resolve(null),
+      homepage ? this.tryGoogleFavicon(homepage) : Promise.resolve(null),
+      this.tryWikipedia(stationName),
+    ]);
+
+    if (appleTouchResult && appleTouchResult.buffer.length >= 500) {
+      previews.push({
+        source: 'apple-touch-icon',
+        mimeType: appleTouchResult.mimeType,
+        size: appleTouchResult.buffer.length,
+        dataUrl: `data:${appleTouchResult.mimeType};base64,${appleTouchResult.buffer.toString('base64')}`,
+      });
+    }
+
+    if (googleResult && googleResult.buffer.length >= 500) {
+      previews.push({
+        source: 'google-favicon',
+        mimeType: googleResult.mimeType,
+        size: googleResult.buffer.length,
+        dataUrl: `data:${googleResult.mimeType};base64,${googleResult.buffer.toString('base64')}`,
+      });
+    }
+
+    if (wikipediaResult && wikipediaResult.buffer.length >= 1000) {
+      previews.push({
+        source: 'wikipedia',
+        mimeType: wikipediaResult.mimeType,
+        size: wikipediaResult.buffer.length,
+        dataUrl: `data:${wikipediaResult.mimeType};base64,${wikipediaResult.buffer.toString('base64')}`,
+      });
+    }
+
+    return { previews };
+  }
+
+  /**
+   * Save a favicon from a base64 data URL (chosen from previews).
+   * Overwrites any existing custom favicon.
+   */
+  async saveFromDataUrl(
+    stationUuid: string,
+    dataUrl: string,
+    source: string
+  ): Promise<FetchFaviconResult> {
+    try {
+      // Parse data URL
+      const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) {
+        return { success: false };
+      }
+
+      const mimeType = match[1];
+      const imageBuffer = Buffer.from(match[2], 'base64');
+
+      return this.saveImageBuffer(stationUuid, imageBuffer, mimeType, source);
+    } catch (error) {
+      this.logger.error(`Failed to save favicon from data URL: ${(error as Error).message}`);
+      return { success: false };
+    }
+  }
+
+  /**
+   * Save an image buffer as the favicon for a station.
+   * Handles upsert (overwrite if existing).
+   */
+  private async saveImageBuffer(
+    stationUuid: string,
+    imageBuffer: Buffer,
+    mimeType: string,
+    source: string
+  ): Promise<FetchFaviconResult> {
+    try {
+      const extension =
+        mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+
+      const filePath = await this.storage.getRadioFaviconPath(stationUuid, extension);
+
+      // Check for existing record
+      const existing = await this.drizzle.db
+        .select({ id: radioStationImages.id, filePath: radioStationImages.filePath })
+        .from(radioStationImages)
+        .where(eq(radioStationImages.stationUuid, stationUuid))
+        .limit(1);
+
+      // Delete old file if exists
+      if (existing[0]) {
+        try {
+          await this.storage.deleteImage(existing[0].filePath);
+        } catch {
+          // Ignore delete errors
+        }
+      }
+
+      await this.storage.saveImage(filePath, imageBuffer);
+
+      // Upsert database record
+      if (existing[0]) {
+        await this.drizzle.db
+          .update(radioStationImages)
+          .set({
+            filePath,
+            fileName: `favicon.${extension}`,
+            fileSize: imageBuffer.length,
+            mimeType,
+            source,
+            updatedAt: new Date(),
+          })
+          .where(eq(radioStationImages.id, existing[0].id));
+      } else {
+        await this.drizzle.db.insert(radioStationImages).values({
+          stationUuid,
+          filePath,
+          fileName: `favicon.${extension}`,
+          fileSize: imageBuffer.length,
+          mimeType,
+          source,
+        });
+      }
+
+      this.imageService.invalidateRadioFaviconCache(stationUuid);
+
+      this.logger.info(
+        `Saved favicon for station ${stationUuid} from ${source} (${imageBuffer.length} bytes)`
+      );
+
+      return {
+        success: true,
+        source,
+        url: `/api/images/radio/${stationUuid}/favicon`,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to save favicon: ${(error as Error).message}`);
+      return { success: false };
+    }
+  }
+
+  /**
    * Try to auto-fetch a favicon for a station from external sources.
    * Returns true if a favicon was successfully fetched and saved.
    */
@@ -41,17 +197,6 @@ export class RadioFaviconFetchService {
     stationName: string,
     homepage?: string
   ): Promise<FetchFaviconResult> {
-    // Check if we already have a custom image for this station
-    const existing = await this.drizzle.db
-      .select({ id: radioStationImages.id })
-      .from(radioStationImages)
-      .where(eq(radioStationImages.stationUuid, stationUuid))
-      .limit(1);
-
-    if (existing[0]) {
-      return { success: false };
-    }
-
     // Try sources in priority order
     let imageBuffer: Buffer | null = null;
     let mimeType = 'image/png';
@@ -97,39 +242,7 @@ export class RadioFaviconFetchService {
       return { success: false };
     }
 
-    // Save to storage
-    try {
-      const extension =
-        mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
-
-      const filePath = await this.storage.getRadioFaviconPath(stationUuid, extension);
-      await this.storage.saveImage(filePath, imageBuffer);
-
-      // Save to database
-      await this.drizzle.db.insert(radioStationImages).values({
-        stationUuid,
-        filePath,
-        fileName: `favicon.${extension}`,
-        fileSize: imageBuffer.length,
-        mimeType,
-        source,
-      });
-
-      this.imageService.invalidateRadioFaviconCache(stationUuid);
-
-      this.logger.info(
-        `Auto-fetched favicon for "${stationName}" from ${source} (${imageBuffer.length} bytes)`
-      );
-
-      return {
-        success: true,
-        source,
-        url: `/api/images/radio/${stationUuid}/favicon`,
-      };
-    } catch (error) {
-      this.logger.error(`Failed to save auto-fetched favicon: ${(error as Error).message}`);
-      return { success: false };
-    }
+    return this.saveImageBuffer(stationUuid, imageBuffer, mimeType, source);
   }
 
   /**
