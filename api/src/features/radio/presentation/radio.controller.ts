@@ -210,11 +210,21 @@ export class RadioController {
       : new Map();
     const customUrl = station.stationUuid ? customFaviconMap.get(station.stationUuid) : undefined;
 
-    // Auto-fetch favicon in background if none exists
+    // Auto-fetch favicon if none exists (await so the response includes it)
     if (station.stationUuid && !customUrl) {
-      this.faviconFetch
-        .fetchAndSave(station.stationUuid, station.name, dto.homepage)
-        .catch(() => {});
+      try {
+        const result = await this.faviconFetch.fetchAndSave(
+          station.stationUuid,
+          station.name,
+          dto.homepage
+        );
+        if (result.success) {
+          const newMap = await this.getCustomFaviconMap([station.stationUuid]);
+          return RadioStationResponseDto.fromDomain(station, newMap.get(station.stationUuid));
+        }
+      } catch {
+        // Ignore fetch errors, return without custom favicon
+      }
     }
 
     return RadioStationResponseDto.fromDomain(station, customUrl);
