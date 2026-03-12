@@ -18,6 +18,7 @@ import {
   FileText,
   Copy,
   Check,
+  Settings,
 } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
@@ -93,9 +94,20 @@ export function LogsPanel() {
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [retentionDays, setRetentionDays] = useState<number>(30);
+  const [isSavingRetention, setIsSavingRetention] = useState(false);
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<string | null>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const cleanupTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => () => clearTimeout(copyTimerRef.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(copyTimerRef.current);
+      clearTimeout(cleanupTimerRef.current);
+    },
+    []
+  );
 
   const loadLogs = useCallback(async () => {
     try {
@@ -128,10 +140,55 @@ export function LogsPanel() {
     }
   }, [limit, offset, selectedLevel, selectedCategory]);
 
-  // Cargar logs al montar
+  // Cargar logs y retención al montar
   useEffect(() => {
     loadLogs();
   }, [loadLogs]);
+
+  useEffect(() => {
+    apiClient
+      .get<{ retentionDays: number }>('/logs/retention')
+      .then((res) => setRetentionDays(res.data.retentionDays))
+      .catch(() => {});
+  }, []);
+
+  const handleRetentionChange = async (days: number) => {
+    setRetentionDays(days);
+    setIsSavingRetention(true);
+    try {
+      await apiClient.put('/admin/settings/logs.retention_days', {
+        value: String(days),
+        category: 'logs',
+        type: 'number',
+        description: 'Días de retención de logs del sistema y enriquecimiento',
+      });
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Error al guardar retención'));
+    } finally {
+      setIsSavingRetention(false);
+    }
+  };
+
+  const handleCleanup = async () => {
+    setIsCleaningUp(true);
+    setCleanupResult(null);
+    try {
+      const res = await apiClient.post<{ deletedCount: number; retentionDays: number }>(
+        '/logs/cleanup'
+      );
+      const count = res.data.deletedCount;
+      setCleanupResult(
+        count > 0 ? `${count} logs eliminados` : 'No hay logs antiguos para eliminar'
+      );
+      clearTimeout(cleanupTimerRef.current);
+      cleanupTimerRef.current = setTimeout(() => setCleanupResult(null), 5000);
+      if (count > 0) loadLogs();
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Error al ejecutar limpieza'));
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
 
   const toggleLogDetails = (logId: string) => {
     setExpandedLog(expandedLog === logId ? null : logId);
@@ -208,6 +265,39 @@ export function LogsPanel() {
       {/* Header */}
       <div className={styles.header}>
         <h2 className={styles.title}>Logs del Sistema</h2>
+      </div>
+
+      {/* Retention & Cleanup */}
+      <div className={styles.retentionBar}>
+        <div className={styles.retentionLeft}>
+          <Settings size={16} />
+          <span className={styles.retentionLabel}>Retención:</span>
+          <select
+            value={retentionDays}
+            onChange={(e) => handleRetentionChange(Number(e.target.value))}
+            className={styles.retentionSelect}
+            disabled={isSavingRetention}
+          >
+            <option value={7}>7 días</option>
+            <option value={14}>14 días</option>
+            <option value={30}>30 días</option>
+            <option value={60}>60 días</option>
+            <option value={90}>90 días</option>
+          </select>
+          {isSavingRetention && <span className={styles.savingIndicator}>Guardando...</span>}
+        </div>
+        <div className={styles.retentionRight}>
+          {cleanupResult && (
+            <span className={styles.cleanupResult}>
+              <Check size={14} />
+              {cleanupResult}
+            </span>
+          )}
+          <Button onClick={handleCleanup} disabled={isCleaningUp} variant="ghost" size="sm">
+            <Trash2 size={14} className={isCleaningUp ? styles.spinning : ''} />
+            {isCleaningUp ? 'Limpiando...' : 'Limpiar ahora'}
+          </Button>
+        </div>
       </div>
 
       {/* Error notification */}

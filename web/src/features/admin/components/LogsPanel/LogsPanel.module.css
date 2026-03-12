@@ -34,6 +34,83 @@
   gap: 12px;
 }
 
+/* Retention & Cleanup Bar */
+.retentionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: 12px;
+}
+
+.retentionLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 13px;
+}
+
+.retentionLabel {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary, #6b7280);
+}
+
+.retentionSelect {
+  padding: 6px 10px;
+  background: var(--black-40);
+  border: 1px solid var(--white-15);
+  border-radius: 8px;
+  color: var(--color-text-primary, #ffffff);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.retentionSelect option {
+  background: #1a1a1a;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.retentionSelect:hover {
+  border-color: var(--white-25);
+}
+
+.retentionSelect:focus {
+  outline: none;
+  border-color: var(--color-primary, #ed6842);
+  box-shadow: 0 0 0 2px rgba(237, 104, 66, 0.15);
+}
+
+.savingIndicator {
+  font-size: 12px;
+  color: var(--color-primary, #ed6842);
+  font-weight: 500;
+}
+
+.retentionRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cleanupResult {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #10b981;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease;
+}
+
 /* Filters */
 .filters {
   display: flex;
@@ -144,7 +221,9 @@
   border: 1px solid var(--white-06);
   border-radius: 12px;
   padding: 16px 18px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
   position: relative;
   overflow: hidden;
 }
@@ -438,6 +517,16 @@
     margin-left: 0;
   }
 
+  .retentionBar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .retentionRight {
+    justify-content: space-between;
+  }
+
   .expandIndicator {
     position: absolute;
     top: 16px;
@@ -464,6 +553,17 @@
 
 :root[data-theme='light'] .filters {
   background: linear-gradient(135deg, var(--white-60) 0%, var(--white-40) 100%);
+}
+
+:root[data-theme='light'] .retentionBar {
+  background: var(--white-60);
+  border-color: var(--black-08);
+}
+
+:root[data-theme='light'] .retentionSelect {
+  background: var(--white-80);
+  border-color: var(--black-12);
+  color: var(--text-primary);
 }
 
 :root[data-theme='light'] .select {
