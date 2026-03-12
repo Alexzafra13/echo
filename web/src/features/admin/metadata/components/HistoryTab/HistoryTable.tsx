@@ -90,6 +90,11 @@ export function HistoryTable({ logs, onRowClick }: HistoryTableProps) {
                           src={branding.logoPath}
                           alt={branding.name}
                           className={styles.providerTableLogo}
+                          style={
+                            branding.statsLogoHeight
+                              ? { height: branding.statsLogoHeight }
+                              : undefined
+                          }
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             const fallback = e.currentTarget.nextElementSibling as HTMLElement;

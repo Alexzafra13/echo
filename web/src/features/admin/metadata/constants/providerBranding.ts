@@ -87,7 +87,7 @@ export const PROVIDER_BRANDING: Record<string, ProviderBranding> = {
     brandColorRgb: '162, 170, 173',
     websiteUrl: 'https://developer.apple.com',
     requiresApiKey: false,
-    statsLogoHeight: 24,
+    statsLogoHeight: 32,
   },
   'google-favicon': {
     id: 'google-favicon',
@@ -98,7 +98,7 @@ export const PROVIDER_BRANDING: Record<string, ProviderBranding> = {
     brandColorRgb: '66, 133, 244',
     websiteUrl: 'https://www.google.com',
     requiresApiKey: false,
-    statsLogoHeight: 24,
+    statsLogoHeight: 32,
   },
 };
 
