@@ -7,17 +7,20 @@ import { RadioFaviconFetchService } from '@features/radio/infrastructure/service
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 
 describe('RadioFaviconsController', () => {
   let controller: RadioFaviconsController;
   let mockUploadUseCase: MockUseCase;
   let mockDeleteUseCase: MockUseCase;
   let mockFetchService: { fetchAndSave: jest.Mock };
+  let mockDrizzleService: { db: any };
 
   beforeEach(async () => {
     mockUploadUseCase = createMockUseCase();
     mockDeleteUseCase = createMockUseCase();
     mockFetchService = { fetchAndSave: jest.fn() };
+    mockDrizzleService = { db: {} };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RadioFaviconsController],
@@ -25,6 +28,7 @@ describe('RadioFaviconsController', () => {
         { provide: UploadRadioFaviconUseCase, useValue: mockUploadUseCase },
         { provide: DeleteRadioFaviconUseCase, useValue: mockDeleteUseCase },
         { provide: RadioFaviconFetchService, useValue: mockFetchService },
+        { provide: DrizzleService, useValue: mockDrizzleService },
       ],
     })
       .overrideGuard(JwtAuthGuard)
