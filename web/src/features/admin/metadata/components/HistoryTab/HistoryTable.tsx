@@ -4,25 +4,25 @@
  * Table displaying enrichment log entries
  */
 
-import { formatDate, getStatusBadge, getEntityIcon, buildImageUrl } from './historyUtils';
+import { formatDate, getStatusBadge, buildImageUrl } from './historyUtils';
 import { getProviderBranding } from '../../constants/providerBranding';
 import styles from './HistoryTab.module.css';
 
 /** Map display names to branding keys */
 const PROVIDER_KEY_MAP: Record<string, string> = {
   'last.fm': 'lastfm',
-  'lastfm': 'lastfm',
+  lastfm: 'lastfm',
   'fanart.tv': 'fanart',
-  'fanart': 'fanart',
-  'musicbrainz': 'musicbrainz',
+  fanart: 'fanart',
+  musicbrainz: 'musicbrainz',
   'cover art archive': 'coverartarchive',
-  'coverartarchive': 'coverartarchive',
-  'coverart': 'coverartarchive',
-  'wikipedia': 'wikipedia',
+  coverartarchive: 'coverartarchive',
+  coverart: 'coverartarchive',
+  wikipedia: 'wikipedia',
   'apple-touch-icon': 'apple-touch-icon',
   'google-favicon': 'google-favicon',
   'auto-fetch': 'auto-fetch',
-  'manual': 'manual',
+  manual: 'manual',
 };
 
 function getProviderLogo(name: string) {
@@ -79,10 +79,7 @@ export function HistoryTable({ logs, onRowClick }: HistoryTableProps) {
               >
                 <td>{formatDate(log.createdAt)}</td>
                 <td>
-                  <div className={styles.entityCell}>
-                    {getEntityIcon(log.entityType)}
-                    <span>{log.entityName}</span>
-                  </div>
+                  <span>{log.entityName}</span>
                 </td>
                 <td>
                   {(() => {
@@ -93,7 +90,6 @@ export function HistoryTable({ logs, onRowClick }: HistoryTableProps) {
                           src={branding.logoPath}
                           alt={branding.name}
                           className={styles.providerTableLogo}
-                          style={branding.statsLogoHeight ? { height: branding.statsLogoHeight } : undefined}
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             const fallback = e.currentTarget.nextElementSibling as HTMLElement;
