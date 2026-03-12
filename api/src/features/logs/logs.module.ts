@@ -1,7 +1,8 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, forwardRef } from '@nestjs/common';
 import { LogService } from './application/log.service';
 import { LogCleanupService } from './application/log-cleanup.service';
 import { LogsController } from './presentation/logs.controller';
+import { ExternalMetadataModule } from '../external-metadata/external-metadata.module';
 
 /**
  * LogsModule
@@ -15,6 +16,7 @@ import { LogsController } from './presentation/logs.controller';
  */
 @Global()
 @Module({
+  imports: [forwardRef(() => ExternalMetadataModule)],
   controllers: [LogsController],
   providers: [LogService, LogCleanupService],
   exports: [LogService],
