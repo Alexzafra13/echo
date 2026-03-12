@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Cron } from '@nestjs/schedule';
 import { lte } from 'drizzle-orm';
@@ -23,6 +23,7 @@ export class LogCleanupService {
     private readonly logger: PinoLogger,
     private readonly logService: LogService,
     private readonly drizzle: DrizzleService,
+    @Inject(forwardRef(() => SettingsService))
     private readonly settingsService: SettingsService
   ) {}
 
