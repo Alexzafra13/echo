@@ -413,7 +413,7 @@ describe('MaintenanceTab', () => {
         expect(screen.getByText('Limpiar Archivos Huérfanos')).toBeInTheDocument();
         expect(
           screen.getByText(
-            'Elimina archivos de metadata que no están asociados a ningún artista o álbum'
+            'Elimina archivos de metadata y favicons de radio huérfanos que no están asociados a ninguna entidad'
           )
         ).toBeInTheDocument();
       });
@@ -531,7 +531,11 @@ describe('MaintenanceTab', () => {
       await waitFor(() => {
         const confirmButton = screen
           .getAllByRole('button')
-          .find((btn) => btn.textContent === 'Ejecutar Limpieza' && btn.closest('[data-testid="confirm-dialog"]'));
+          .find(
+            (btn) =>
+              btn.textContent === 'Ejecutar Limpieza' &&
+              btn.closest('[data-testid="confirm-dialog"]')
+          );
         if (confirmButton) fireEvent.click(confirmButton);
       });
 
@@ -566,7 +570,11 @@ describe('MaintenanceTab', () => {
       await waitFor(() => {
         const confirmButton = screen
           .getAllByRole('button')
-          .find((btn) => btn.textContent === 'Ejecutar Limpieza' && btn.closest('[data-testid="confirm-dialog"]'));
+          .find(
+            (btn) =>
+              btn.textContent === 'Ejecutar Limpieza' &&
+              btn.closest('[data-testid="confirm-dialog"]')
+          );
         if (confirmButton) fireEvent.click(confirmButton);
       });
 
@@ -591,7 +599,11 @@ describe('MaintenanceTab', () => {
       await waitFor(() => {
         const confirmButton = screen
           .getAllByRole('button')
-          .find((btn) => btn.textContent === 'Ejecutar Limpieza' && btn.closest('[data-testid="confirm-dialog"]'));
+          .find(
+            (btn) =>
+              btn.textContent === 'Ejecutar Limpieza' &&
+              btn.closest('[data-testid="confirm-dialog"]')
+          );
         if (confirmButton) fireEvent.click(confirmButton);
       });
 
@@ -613,7 +625,11 @@ describe('MaintenanceTab', () => {
       await waitFor(() => {
         const confirmButton = screen
           .getAllByRole('button')
-          .find((btn) => btn.textContent === 'Ejecutar Limpieza' && btn.closest('[data-testid="confirm-dialog"]'));
+          .find(
+            (btn) =>
+              btn.textContent === 'Ejecutar Limpieza' &&
+              btn.closest('[data-testid="confirm-dialog"]')
+          );
         if (confirmButton) fireEvent.click(confirmButton);
       });
 
@@ -680,7 +696,10 @@ describe('MaintenanceTab', () => {
 
       const confirmButton = screen
         .getAllByRole('button')
-        .find((btn) => btn.textContent === 'Limpiar Caché' && btn.closest('[data-testid="confirm-dialog"]'));
+        .find(
+          (btn) =>
+            btn.textContent === 'Limpiar Caché' && btn.closest('[data-testid="confirm-dialog"]')
+        );
       if (confirmButton) fireEvent.click(confirmButton);
 
       await waitFor(() => {
@@ -702,7 +721,10 @@ describe('MaintenanceTab', () => {
       await waitFor(() => {
         const confirmButton = screen
           .getAllByRole('button')
-          .find((btn) => btn.textContent === 'Limpiar Caché' && btn.closest('[data-testid="confirm-dialog"]'));
+          .find(
+            (btn) =>
+              btn.textContent === 'Limpiar Caché' && btn.closest('[data-testid="confirm-dialog"]')
+          );
         if (confirmButton) fireEvent.click(confirmButton);
       });
 
@@ -896,7 +918,11 @@ describe('MaintenanceTab', () => {
       await waitFor(() => {
         const confirmButton = screen
           .getAllByRole('button')
-          .find((btn) => btn.textContent === 'Ejecutar Limpieza' && btn.closest('[data-testid="confirm-dialog"]'));
+          .find(
+            (btn) =>
+              btn.textContent === 'Ejecutar Limpieza' &&
+              btn.closest('[data-testid="confirm-dialog"]')
+          );
         if (confirmButton) fireEvent.click(confirmButton);
       });
 
@@ -928,7 +954,10 @@ describe('MaintenanceTab', () => {
       await waitFor(() => {
         const confirmButton = screen
           .getAllByRole('button')
-          .find((btn) => btn.textContent === 'Limpiar Caché' && btn.closest('[data-testid="confirm-dialog"]'));
+          .find(
+            (btn) =>
+              btn.textContent === 'Limpiar Caché' && btn.closest('[data-testid="confirm-dialog"]')
+          );
         if (confirmButton) fireEvent.click(confirmButton);
       });
 
@@ -1025,7 +1054,10 @@ describe('MaintenanceTab', () => {
       await waitFor(() => {
         const confirmButton = screen
           .getAllByRole('button')
-          .find((btn) => btn.textContent === 'Limpiar Caché' && btn.closest('[data-testid="confirm-dialog"]'));
+          .find(
+            (btn) =>
+              btn.textContent === 'Limpiar Caché' && btn.closest('[data-testid="confirm-dialog"]')
+          );
         if (confirmButton) fireEvent.click(confirmButton);
       });
 
