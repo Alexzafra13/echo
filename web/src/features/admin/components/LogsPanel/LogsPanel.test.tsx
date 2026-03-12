@@ -4,7 +4,11 @@ import { LogsPanel } from './LogsPanel';
 
 // Mock UI components
 vi.mock('@shared/components/ui', () => ({
-  Button: ({ children, onClick, disabled }: {
+  Button: ({
+    children,
+    onClick,
+    disabled,
+  }: {
     children: React.ReactNode;
     onClick?: () => void;
     disabled?: boolean;
@@ -13,7 +17,11 @@ vi.mock('@shared/components/ui', () => ({
       {children}
     </button>
   ),
-  InlineNotification: ({ type, message, onDismiss }: {
+  InlineNotification: ({
+    type,
+    message,
+    onDismiss,
+  }: {
     type: string;
     message: string;
     onDismiss?: () => void;
@@ -27,9 +35,13 @@ vi.mock('@shared/components/ui', () => ({
 
 // Mock API client
 const mockGet = vi.fn();
+const mockPut = vi.fn();
+const mockPost = vi.fn();
 vi.mock('@shared/services/api', () => ({
   apiClient: {
     get: (...args: unknown[]) => mockGet(...args),
+    put: (...args: unknown[]) => mockPut(...args),
+    post: (...args: unknown[]) => mockPost(...args),
   },
 }));
 
@@ -89,19 +101,31 @@ const mockLogs = [
 describe('LogsPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGet.mockResolvedValue({
-      data: {
-        logs: mockLogs,
-        total: 25,
-        limit: 10,
-        offset: 0,
-      },
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/logs/retention') {
+        return Promise.resolve({ data: { retentionDays: 30 } });
+      }
+      return Promise.resolve({
+        data: {
+          logs: mockLogs,
+          total: 25,
+          limit: 10,
+          offset: 0,
+        },
+      });
     });
+    mockPut.mockResolvedValue({ data: { success: true } });
+    mockPost.mockResolvedValue({ data: { deletedCount: 0, retentionDays: 30 } });
   });
 
   describe('Loading State', () => {
     it('should show loading state initially', () => {
-      mockGet.mockReturnValue(new Promise(() => {})); // Never resolves
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/logs/retention') {
+          return Promise.resolve({ data: { retentionDays: 30 } });
+        }
+        return new Promise(() => {}); // Never resolves
+      });
 
       render(<LogsPanel />);
 
@@ -165,7 +189,7 @@ describe('LogsPanel', () => {
         expect(screen.getByText('Logs del Sistema')).toBeInTheDocument();
       });
 
-      const levelSelect = screen.getAllByRole('combobox')[0];
+      const levelSelect = screen.getAllByRole('combobox')[1];
       fireEvent.change(levelSelect, { target: { value: 'error' } });
 
       await waitFor(() => {
@@ -182,7 +206,7 @@ describe('LogsPanel', () => {
         expect(screen.getByText('Logs del Sistema')).toBeInTheDocument();
       });
 
-      const categorySelect = screen.getAllByRole('combobox')[1];
+      const categorySelect = screen.getAllByRole('combobox')[2];
       fireEvent.change(categorySelect, { target: { value: 'scanner' } });
 
       await waitFor(() => {
@@ -365,13 +389,13 @@ describe('LogsPanel', () => {
 
   describe('Empty State', () => {
     it('should show empty state when no logs', async () => {
-      mockGet.mockResolvedValue({
-        data: {
-          logs: [],
-          total: 0,
-          limit: 10,
-          offset: 0,
-        },
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/logs/retention') {
+          return Promise.resolve({ data: { retentionDays: 30 } });
+        }
+        return Promise.resolve({
+          data: { logs: [], total: 0, limit: 10, offset: 0 },
+        });
       });
 
       render(<LogsPanel />);
@@ -382,13 +406,13 @@ describe('LogsPanel', () => {
     });
 
     it('should show hint text in empty state', async () => {
-      mockGet.mockResolvedValue({
-        data: {
-          logs: [],
-          total: 0,
-          limit: 10,
-          offset: 0,
-        },
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/logs/retention') {
+          return Promise.resolve({ data: { retentionDays: 30 } });
+        }
+        return Promise.resolve({
+          data: { logs: [], total: 0, limit: 10, offset: 0 },
+        });
       });
 
       render(<LogsPanel />);
@@ -401,7 +425,12 @@ describe('LogsPanel', () => {
 
   describe('Error Handling', () => {
     it('should show error notification on API error', async () => {
-      mockGet.mockRejectedValue(new Error('Network error'));
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/logs/retention') {
+          return Promise.resolve({ data: { retentionDays: 30 } });
+        }
+        return Promise.reject(new Error('Network error'));
+      });
 
       render(<LogsPanel />);
 
@@ -412,10 +441,19 @@ describe('LogsPanel', () => {
     });
 
     it('should dismiss error notification', async () => {
-      mockGet.mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValue({
+      let logsCallCount = 0;
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/logs/retention') {
+          return Promise.resolve({ data: { retentionDays: 30 } });
+        }
+        logsCallCount++;
+        if (logsCallCount === 1) {
+          return Promise.reject(new Error('Network error'));
+        }
+        return Promise.resolve({
           data: { logs: mockLogs, total: 25, limit: 10, offset: 0 },
         });
+      });
 
       render(<LogsPanel />);
 
