@@ -19,6 +19,10 @@ const PROVIDER_KEY_MAP: Record<string, string> = {
   'coverartarchive': 'coverartarchive',
   'coverart': 'coverartarchive',
   'wikipedia': 'wikipedia',
+  'apple-touch-icon': 'apple-touch-icon',
+  'google-favicon': 'google-favicon',
+  'auto-fetch': 'auto-fetch',
+  'manual': 'manual',
 };
 
 function getProviderLogo(name: string) {

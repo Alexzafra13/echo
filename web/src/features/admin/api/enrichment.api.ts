@@ -3,7 +3,7 @@ import { apiClient } from '@shared/services/api';
 export interface EnrichmentLog {
   id: string;
   entityId: string;
-  entityType: 'artist' | 'album';
+  entityType: 'artist' | 'album' | 'radio';
   entityName: string;
   provider: string;
   metadataType: string;
@@ -24,7 +24,7 @@ export interface ListEnrichmentLogsResponse {
 export interface ListEnrichmentLogsFilters {
   skip?: number;
   take?: number;
-  entityType?: 'artist' | 'album';
+  entityType?: 'artist' | 'album' | 'radio';
   provider?: string;
   status?: 'success' | 'partial' | 'error';
   entityId?: string;

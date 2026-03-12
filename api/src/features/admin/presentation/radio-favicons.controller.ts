@@ -25,6 +25,9 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { radioStationImages, radioStations } from '@infrastructure/database/schema';
+import { eq, count, sum, sql, desc } from 'drizzle-orm';
 import { UploadRadioFaviconUseCase } from '../infrastructure/use-cases/upload-radio-favicon';
 import { DeleteRadioFaviconUseCase } from '../infrastructure/use-cases/delete-radio-favicon';
 import { RadioFaviconFetchService } from '@features/radio/infrastructure/services/radio-favicon-fetch.service';
@@ -37,8 +40,86 @@ export class RadioFaviconsController {
   constructor(
     private readonly uploadFavicon: UploadRadioFaviconUseCase,
     private readonly deleteFavicon: DeleteRadioFaviconUseCase,
-    private readonly faviconFetch: RadioFaviconFetchService
+    private readonly faviconFetch: RadioFaviconFetchService,
+    private readonly drizzle: DrizzleService
   ) {}
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'List all downloaded favicons with stats',
+    description:
+      'Returns stats by source and a list of all downloaded radio favicons with metadata',
+  })
+  @ApiResponse({ status: 200, description: 'Favicon stats and list' })
+  async listFavicons() {
+    // Stats by source
+    const bySource = await this.drizzle.db
+      .select({
+        source: radioStationImages.source,
+        count: count(),
+        totalSize: sum(radioStationImages.fileSize),
+      })
+      .from(radioStationImages)
+      .groupBy(radioStationImages.source);
+
+    const sourceStats = bySource.map((row) => ({
+      source: row.source,
+      count: row.count,
+      totalSize: Number(row.totalSize || 0),
+    }));
+
+    const totalCount = sourceStats.reduce((acc, s) => acc + s.count, 0);
+    const totalSize = sourceStats.reduce((acc, s) => acc + s.totalSize, 0);
+
+    // List of favicons with station name (from favorites table)
+    const favicons = await this.drizzle.db
+      .select({
+        id: radioStationImages.id,
+        stationUuid: radioStationImages.stationUuid,
+        fileName: radioStationImages.fileName,
+        fileSize: radioStationImages.fileSize,
+        mimeType: radioStationImages.mimeType,
+        source: radioStationImages.source,
+        createdAt: radioStationImages.createdAt,
+        updatedAt: radioStationImages.updatedAt,
+      })
+      .from(radioStationImages)
+      .orderBy(desc(radioStationImages.createdAt));
+
+    // Try to resolve station names from favorites table
+    const stationUuids = favicons.map((f) => f.stationUuid);
+    const stationNames = new Map<string, string>();
+
+    if (stationUuids.length > 0) {
+      const stations = await this.drizzle.db
+        .selectDistinctOn([radioStations.stationUuid], {
+          stationUuid: radioStations.stationUuid,
+          name: radioStations.name,
+        })
+        .from(radioStations)
+        .where(sql`${radioStations.stationUuid} = ANY(${stationUuids})`);
+
+      for (const s of stations) {
+        if (s.stationUuid) {
+          stationNames.set(s.stationUuid, s.name);
+        }
+      }
+    }
+
+    const faviconList = favicons.map((f) => ({
+      ...f,
+      stationName: stationNames.get(f.stationUuid) || null,
+      url: `/api/images/radio/${f.stationUuid}/favicon`,
+    }));
+
+    return {
+      totalCount,
+      totalSize,
+      bySource: sourceStats,
+      favicons: faviconList,
+    };
+  }
 
   @Post(':stationUuid/upload')
   @HttpCode(HttpStatus.OK)

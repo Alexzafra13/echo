@@ -279,6 +279,52 @@ export class OrphanedFileCleanerService {
 
   private async cleanupInactiveRecords(result: CleanupResult): Promise<void> {
     try {
+      // Fetch inactive records first to delete their physical files
+      const inactiveArtistImages = await this.drizzle.db
+        .select({
+          id: customArtistImages.id,
+          artistId: customArtistImages.artistId,
+          filePath: customArtistImages.filePath,
+        })
+        .from(customArtistImages)
+        .where(eq(customArtistImages.isActive, false));
+
+      for (const img of inactiveArtistImages) {
+        try {
+          const basePath = await this.storage.getArtistMetadataPath(img.artistId);
+          const fullPath = path.join(basePath, img.filePath);
+          const stat = await fs.stat(fullPath);
+          await fs.unlink(fullPath);
+          result.filesRemoved++;
+          result.spaceFree += stat.size;
+        } catch {
+          // File might not exist — safe to ignore
+        }
+      }
+
+      const inactiveAlbumCovers = await this.drizzle.db
+        .select({
+          id: customAlbumCovers.id,
+          albumId: customAlbumCovers.albumId,
+          filePath: customAlbumCovers.filePath,
+        })
+        .from(customAlbumCovers)
+        .where(eq(customAlbumCovers.isActive, false));
+
+      for (const cover of inactiveAlbumCovers) {
+        try {
+          const basePath = await this.storage.getAlbumMetadataPath(cover.albumId);
+          const fullPath = path.join(basePath, cover.filePath);
+          const stat = await fs.stat(fullPath);
+          await fs.unlink(fullPath);
+          result.filesRemoved++;
+          result.spaceFree += stat.size;
+        } catch {
+          // File might not exist — safe to ignore
+        }
+      }
+
+      // Now delete the DB records
       const deletedArtistImages = await this.drizzle.db
         .delete(customArtistImages)
         .where(eq(customArtistImages.isActive, false))
@@ -290,7 +336,7 @@ export class OrphanedFileCleanerService {
         .returning();
 
       this.logger.info(
-        `Deleted inactive records: ${deletedArtistImages.length} artist images, ${deletedAlbumCovers.length} album covers`
+        `Deleted inactive records: ${deletedArtistImages.length} artist images (files), ${deletedAlbumCovers.length} album covers (files)`
       );
     } catch (error) {
       this.logger.error(`Failed to delete inactive records: ${(error as Error).message}`);

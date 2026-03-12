@@ -4,7 +4,7 @@
  * Utility functions for enrichment history display
  */
 
-import { CheckCircle, AlertCircle, XCircle, Music, Disc } from 'lucide-react';
+import { CheckCircle, AlertCircle, XCircle, Music, Disc, Radio } from 'lucide-react';
 import { formatDateCompact } from '@shared/utils/date.utils';
 import styles from './HistoryTab.module.css';
 
@@ -43,7 +43,9 @@ export function getStatusBadge(status: string) {
  * Get entity icon
  */
 export function getEntityIcon(type: string) {
-  return type === 'artist' ? <Music size={16} /> : <Disc size={16} />;
+  if (type === 'artist') return <Music size={16} />;
+  if (type === 'radio') return <Radio size={16} />;
+  return <Disc size={16} />;
 }
 
 /**
@@ -75,6 +77,8 @@ export function buildImageUrl(log: {
       return `/api/images/albums/${log.entityId || log.id}/cover`;
     } else if (log.entityType === 'artist') {
       return `/api/images/artists/${log.entityId || log.id}/profile`;
+    } else if (log.entityType === 'radio') {
+      return `/api/images/radio/${log.entityId || log.id}/favicon`;
     }
   }
 

@@ -32,7 +32,7 @@ export class EnrichmentHistoryController {
   @ApiQuery({
     name: 'entityType',
     required: false,
-    enum: ['artist', 'album'],
+    enum: ['artist', 'album', 'radio'],
   })
   @ApiQuery({ name: 'provider', required: false, type: String })
   @ApiQuery({

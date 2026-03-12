@@ -78,6 +78,28 @@ export const PROVIDER_BRANDING: Record<string, ProviderBranding> = {
     requiresApiKey: false,
     statsLogoHeight: 40,
   },
+  'apple-touch-icon': {
+    id: 'apple-touch-icon',
+    name: 'Apple Touch Icon',
+    description: 'Favicons de alta calidad desde sitios web de emisoras',
+    logoPath: '/images/providers/apple.svg',
+    brandColor: '#A2AAAD',
+    brandColorRgb: '162, 170, 173',
+    websiteUrl: 'https://developer.apple.com',
+    requiresApiKey: false,
+    statsLogoHeight: 24,
+  },
+  'google-favicon': {
+    id: 'google-favicon',
+    name: 'Google Favicon',
+    description: 'Favicons indexados por Google desde URLs de emisoras',
+    logoPath: '/images/providers/google-icon-logo.svg',
+    brandColor: '#4285F4',
+    brandColorRgb: '66, 133, 244',
+    websiteUrl: 'https://www.google.com',
+    requiresApiKey: false,
+    statsLogoHeight: 24,
+  },
 };
 
 /** Get branding by provider key, with fallback */

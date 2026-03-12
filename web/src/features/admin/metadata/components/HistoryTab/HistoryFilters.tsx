@@ -7,10 +7,10 @@
 import styles from './HistoryTab.module.css';
 
 export interface HistoryFiltersProps {
-  entityType?: 'artist' | 'album';
+  entityType?: 'artist' | 'album' | 'radio';
   status?: 'success' | 'partial' | 'error';
   provider?: string;
-  onEntityTypeChange: (entityType: 'artist' | 'album' | undefined) => void;
+  onEntityTypeChange: (entityType: 'artist' | 'album' | 'radio' | undefined) => void;
   onStatusChange: (status: 'success' | 'partial' | 'error' | undefined) => void;
   onProviderChange: (provider: string | undefined) => void;
 }
@@ -33,12 +33,13 @@ export function HistoryFilters({
         value={entityType || ''}
         onChange={(e) => {
           const value = e.target.value;
-          onEntityTypeChange(value ? (value as 'artist' | 'album') : undefined);
+          onEntityTypeChange(value ? (value as 'artist' | 'album' | 'radio') : undefined);
         }}
       >
         <option value="">Todos los tipos</option>
         <option value="artist">Artistas</option>
         <option value="album">Álbumes</option>
+        <option value="radio">Radio</option>
       </select>
 
       <select

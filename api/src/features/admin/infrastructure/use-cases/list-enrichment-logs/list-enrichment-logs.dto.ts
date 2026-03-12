@@ -2,7 +2,7 @@ export interface ListEnrichmentLogsInput {
   skip?: number;
   take?: number;
   // Filters
-  entityType?: 'artist' | 'album';
+  entityType?: 'artist' | 'album' | 'radio';
   provider?: string;
   status?: 'success' | 'partial' | 'error';
   entityId?: string;

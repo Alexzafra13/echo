@@ -69,7 +69,9 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://assets.fanart.tv/fanart/avril-lavigne-4dd00da9d12d9.jpg\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://assets.fanart.tv/fanart/avril-lavigne-4f82dc97c5b88.jpg\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code} %{size_download}\" \"https://assets.fanart.tv/fanart/lavigne-avril-4fd484fbde26d.jpg/preview\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code} %{size_download}\" \"https://assets.fanart.tv/preview/lavigne-avril-4fd484fbde26d.jpg\")"
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{size_download}\" \"https://assets.fanart.tv/preview/lavigne-avril-4fd484fbde26d.jpg\")",
+      "Bash(timeout 30 npx --prefix api tsc --noEmit --pretty)",
+      "Bash(tasklist)"
     ]
   }
 }

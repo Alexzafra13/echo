@@ -15,8 +15,8 @@ export class ListEnrichmentLogsRequestDto {
   take?: number;
 
   @IsOptional()
-  @IsIn(['artist', 'album'])
-  entityType?: 'artist' | 'album';
+  @IsIn(['artist', 'album', 'radio'])
+  entityType?: 'artist' | 'album' | 'radio';
 
   @IsOptional()
   provider?: string;

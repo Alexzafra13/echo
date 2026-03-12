@@ -24,7 +24,38 @@ export interface FetchPreviewsResponse {
   previews: FaviconPreview[];
 }
 
+export interface FaviconSourceStats {
+  source: string;
+  count: number;
+  totalSize: number;
+}
+
+export interface FaviconListItem {
+  id: string;
+  stationUuid: string;
+  stationName: string | null;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  source: string;
+  url: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FaviconStatsResponse {
+  totalCount: number;
+  totalSize: number;
+  bySource: FaviconSourceStats[];
+  favicons: FaviconListItem[];
+}
+
 export const radioFaviconsApi = {
+  getStats: async (): Promise<FaviconStatsResponse> => {
+    const { data } = await apiClient.get<FaviconStatsResponse>('/admin/radio/favicons');
+    return data;
+  },
+
   uploadFavicon: async (stationUuid: string, file: File): Promise<UploadRadioFaviconResponse> => {
     const formData = new FormData();
     formData.append('file', file);
