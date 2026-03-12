@@ -1,12 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LogsController } from './logs.controller';
 import { LogService, LogLevel, LogCategory } from '../application/log.service';
+import { LogCleanupService } from '../application/log-cleanup.service';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 
 describe('LogsController', () => {
   let controller: LogsController;
   let mockLogService: jest.Mocked<LogService>;
+  let mockLogCleanupService: { triggerCleanup: jest.Mock; getRetentionDays: jest.Mock };
 
   beforeEach(async () => {
     mockLogService = {
@@ -20,12 +22,21 @@ describe('LogsController', () => {
       cleanupOldLogs: jest.fn(),
     } as unknown as jest.Mocked<LogService>;
 
+    mockLogCleanupService = {
+      triggerCleanup: jest.fn().mockResolvedValue(0),
+      getRetentionDays: jest.fn().mockResolvedValue(30),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [LogsController],
       providers: [
         {
           provide: LogService,
           useValue: mockLogService,
+        },
+        {
+          provide: LogCleanupService,
+          useValue: mockLogCleanupService,
         },
       ],
     })
@@ -462,6 +473,34 @@ describe('LogsController', () => {
       enumValues.forEach((level) => {
         expect(result.levels).toContain(level);
       });
+    });
+  });
+
+  describe('POST /logs/cleanup - triggerCleanup', () => {
+    it('debería ejecutar limpieza y retornar resultado', async () => {
+      // Arrange
+      mockLogCleanupService.triggerCleanup.mockResolvedValue(42);
+      mockLogCleanupService.getRetentionDays.mockResolvedValue(30);
+
+      // Act
+      const result = await controller.triggerCleanup();
+
+      // Assert
+      expect(result).toEqual({ deletedCount: 42, retentionDays: 30 });
+      expect(mockLogCleanupService.triggerCleanup).toHaveBeenCalled();
+    });
+  });
+
+  describe('GET /logs/retention - getRetention', () => {
+    it('debería retornar los días de retención configurados', async () => {
+      // Arrange
+      mockLogCleanupService.getRetentionDays.mockResolvedValue(60);
+
+      // Act
+      const result = await controller.getRetention();
+
+      // Assert
+      expect(result).toEqual({ retentionDays: 60 });
     });
   });
 });

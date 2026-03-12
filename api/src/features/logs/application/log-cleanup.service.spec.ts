@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LogCleanupService } from './log-cleanup.service';
 import { LogService, LogCategory } from './log.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 
 describe('LogCleanupService', () => {
   let service: LogCleanupService;
@@ -9,6 +10,7 @@ describe('LogCleanupService', () => {
   let mockLogService: jest.Mocked<LogService>;
   let mockDrizzleService: { db: any };
   let mockDeleteReturning: jest.Mock;
+  let mockSettingsService: { getNumber: jest.Mock };
 
   beforeEach(async () => {
     mockLogger = {
@@ -33,6 +35,10 @@ describe('LogCleanupService', () => {
       },
     };
 
+    mockSettingsService = {
+      getNumber: jest.fn().mockResolvedValue(30),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LogCleanupService,
@@ -48,10 +54,29 @@ describe('LogCleanupService', () => {
           provide: DrizzleService,
           useValue: mockDrizzleService,
         },
+        {
+          provide: SettingsService,
+          useValue: mockSettingsService,
+        },
       ],
     }).compile();
 
     service = module.get<LogCleanupService>(LogCleanupService);
+  });
+
+  describe('getRetentionDays', () => {
+    it('debería retornar el valor configurado en settings', async () => {
+      mockSettingsService.getNumber.mockResolvedValue(60);
+      const result = await service.getRetentionDays();
+      expect(result).toBe(60);
+      expect(mockSettingsService.getNumber).toHaveBeenCalledWith('logs.retention_days', 30);
+    });
+
+    it('debería retornar mínimo 1 día aunque settings devuelva 0', async () => {
+      mockSettingsService.getNumber.mockResolvedValue(0);
+      const result = await service.getRetentionDays();
+      expect(result).toBe(1);
+    });
   });
 
   describe('handleCleanup', () => {
@@ -73,6 +98,23 @@ describe('LogCleanupService', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({ deletedCount: 150, enrichmentDeleted: 2, retentionDays: 30 }),
         'Log cleanup completed'
+      );
+    });
+
+    it('debería usar retención personalizada desde settings', async () => {
+      // Arrange
+      mockSettingsService.getNumber.mockResolvedValue(14);
+      mockLogService.cleanupOldLogs.mockResolvedValue(50);
+      mockDeleteReturning.mockResolvedValue([]);
+
+      // Act
+      await service.handleCleanup();
+
+      // Assert
+      expect(mockLogService.cleanupOldLogs).toHaveBeenCalledWith(14);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ retentionDays: 14 }),
+        'Starting scheduled log cleanup'
       );
     });
 
@@ -121,7 +163,7 @@ describe('LogCleanupService', () => {
   });
 
   describe('triggerCleanup', () => {
-    it('debería permitir limpieza manual con retención por defecto', async () => {
+    it('debería permitir limpieza manual con retención desde settings', async () => {
       // Arrange
       mockLogService.cleanupOldLogs.mockResolvedValue(50);
       mockDeleteReturning.mockResolvedValue([{ id: 1 }, { id: 2 }, { id: 3 }]);

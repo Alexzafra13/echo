@@ -1,21 +1,9 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { Controller, Get, Post, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { LogService, LogLevel, LogCategory } from '../application/log.service';
+import { LogCleanupService } from '../application/log-cleanup.service';
 
 // Solo admins pueden ver logs del sistema
 @ApiTags('logs')
@@ -23,7 +11,10 @@ import { LogService, LogLevel, LogCategory } from '../application/log.service';
 @UseGuards(JwtAuthGuard, AdminGuard)
 @ApiBearerAuth()
 export class LogsController {
-  constructor(private readonly logService: LogService) {}
+  constructor(
+    private readonly logService: LogService,
+    private readonly logCleanupService: LogCleanupService
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -123,7 +114,7 @@ export class LogsController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('limit') limitStr?: string,
-    @Query('offset') offsetStr?: string,
+    @Query('offset') offsetStr?: string
   ) {
     const limit = limitStr ? parseInt(limitStr, 10) : 100;
     const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
@@ -144,8 +135,7 @@ export class LogsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Obtener estadísticas de logs',
-    description:
-      'Retorna estadísticas agregadas de logs (contadores por nivel, categoría, etc.)',
+    description: 'Retorna estadísticas agregadas de logs (contadores por nivel, categoría, etc.)',
   })
   @ApiQuery({
     name: 'startDate',
@@ -177,10 +167,7 @@ export class LogsController {
       },
     },
   })
-  async getStats(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
+  async getStats(@Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
     return await this.logService.getLogStats({
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
@@ -235,5 +222,49 @@ export class LogsController {
     return {
       levels: Object.values(LogLevel),
     };
+  }
+
+  @Post('cleanup')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Ejecutar limpieza manual de logs',
+    description:
+      'Elimina logs antiguos según el período de retención configurado. Solo para administradores.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Limpieza ejecutada exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        deletedCount: { type: 'number' },
+        retentionDays: { type: 'number' },
+      },
+    },
+  })
+  async triggerCleanup() {
+    const retentionDays = await this.logCleanupService.getRetentionDays();
+    const deletedCount = await this.logCleanupService.triggerCleanup();
+    return { deletedCount, retentionDays };
+  }
+
+  @Get('retention')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener período de retención de logs',
+    description: 'Retorna los días de retención configurados actualmente.',
+  })
+  @ApiResponse({
+    status: 200,
+    schema: {
+      type: 'object',
+      properties: {
+        retentionDays: { type: 'number' },
+      },
+    },
+  })
+  async getRetention() {
+    const retentionDays = await this.logCleanupService.getRetentionDays();
+    return { retentionDays };
   }
 }
