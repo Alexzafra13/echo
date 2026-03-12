@@ -2,33 +2,11 @@
  * History Table Component
  *
  * Table displaying enrichment log entries
+ * Uses card layout on mobile for better responsive behavior
  */
 
 import { formatDate, getStatusBadge, buildImageUrl } from './historyUtils';
-import { getProviderBranding } from '../../constants/providerBranding';
 import styles from './HistoryTab.module.css';
-
-/** Map display names to branding keys */
-const PROVIDER_KEY_MAP: Record<string, string> = {
-  'last.fm': 'lastfm',
-  lastfm: 'lastfm',
-  'fanart.tv': 'fanart',
-  fanart: 'fanart',
-  musicbrainz: 'musicbrainz',
-  'cover art archive': 'coverartarchive',
-  coverartarchive: 'coverartarchive',
-  coverart: 'coverartarchive',
-  wikipedia: 'wikipedia',
-  'apple-touch-icon': 'apple-touch-icon',
-  'google-favicon': 'google-favicon',
-  'auto-fetch': 'auto-fetch',
-  manual: 'manual',
-};
-
-function getProviderLogo(name: string) {
-  const key = PROVIDER_KEY_MAP[name.toLowerCase()] || name.toLowerCase();
-  return getProviderBranding(key);
-}
 
 export interface EnrichmentLog {
   id: string;
@@ -53,73 +31,74 @@ export interface HistoryTableProps {
  */
 export function HistoryTable({ logs, onRowClick }: HistoryTableProps) {
   return (
-    <div className={styles.tableContainer}>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Entidad</th>
-            <th>Proveedor</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th>Tiempo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {logs.map((log) => {
-            const imageUrl = buildImageUrl(log);
-            return (
-              <tr
-                key={log.id}
-                className={imageUrl ? styles.clickableRow : ''}
-                onClick={() => {
-                  if (imageUrl) onRowClick(imageUrl);
-                }}
-                title={imageUrl ? 'Clic para ver imagen' : ''}
-              >
-                <td>{formatDate(log.createdAt)}</td>
-                <td>
-                  <span>{log.entityName}</span>
-                </td>
-                <td>
-                  {(() => {
-                    const branding = getProviderLogo(log.provider);
-                    if (branding) {
-                      return (
-                        <img
-                          src={branding.logoPath}
-                          alt={branding.name}
-                          className={styles.providerTableLogo}
-                          style={
-                            branding.statsLogoHeight
-                              ? { height: branding.statsLogoHeight }
-                              : undefined
-                          }
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = '';
-                          }}
-                        />
-                      );
-                    }
-                    return null;
-                  })()}
-                  <span
-                    className={styles.providerBadge}
-                    style={getProviderLogo(log.provider) ? { display: 'none' } : undefined}
-                  >
-                    {log.provider}
-                  </span>
-                </td>
-                <td>{log.metadataType}</td>
-                <td>{getStatusBadge(log.status)}</td>
-                <td>{log.processingTime ? `${log.processingTime}ms` : '-'}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <>
+      {/* Desktop table */}
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Entidad</th>
+              <th>Proveedor</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Tiempo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.map((log) => {
+              const imageUrl = buildImageUrl(log);
+              return (
+                <tr
+                  key={log.id}
+                  className={imageUrl ? styles.clickableRow : ''}
+                  onClick={() => {
+                    if (imageUrl) onRowClick(imageUrl);
+                  }}
+                  title={imageUrl ? 'Clic para ver imagen' : ''}
+                >
+                  <td>{formatDate(log.createdAt)}</td>
+                  <td>
+                    <span>{log.entityName}</span>
+                  </td>
+                  <td>
+                    <span className={styles.providerBadge}>{log.provider}</span>
+                  </td>
+                  <td>{log.metadataType}</td>
+                  <td>{getStatusBadge(log.status)}</td>
+                  <td>{log.processingTime ? `${log.processingTime}ms` : '-'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile card list */}
+      <div className={styles.cardList}>
+        {logs.map((log) => {
+          const imageUrl = buildImageUrl(log);
+          return (
+            <div
+              key={log.id}
+              className={`${styles.card} ${imageUrl ? styles.clickableRow : ''}`}
+              onClick={() => {
+                if (imageUrl) onRowClick(imageUrl);
+              }}
+            >
+              <div className={styles.cardHeader}>
+                <span className={styles.cardEntity}>{log.entityName}</span>
+                {getStatusBadge(log.status)}
+              </div>
+              <div className={styles.cardDetails}>
+                <span className={styles.providerBadge}>{log.provider}</span>
+                <span className={styles.cardMeta}>{log.metadataType}</span>
+                <span className={styles.cardDate}>{formatDate(log.createdAt)}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }
