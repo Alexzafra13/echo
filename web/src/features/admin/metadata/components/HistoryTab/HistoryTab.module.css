@@ -376,11 +376,47 @@
   font-weight: 500;
 }
 
-.providerTableLogo {
-  height: 18px;
-  width: auto;
-  max-width: 140px;
-  display: block;
+/* Mobile card list - hidden on desktop */
+.cardList {
+  display: none;
+}
+
+.card {
+  padding: 14px;
+  background: linear-gradient(135deg, var(--white-03) 0%, transparent 100%);
+  border: 1px solid var(--white-08);
+  border-radius: 12px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.cardEntity {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.cardDetails {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cardMeta {
+  font-size: 12px;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+.cardDate {
+  font-size: 11px;
+  color: var(--color-text-tertiary, #6b7280);
+  margin-left: auto;
 }
 
 /* Badges */
@@ -569,13 +605,15 @@
     justify-content: center;
   }
 
-  .table {
-    font-size: 13px;
+  /* Hide table, show card list on mobile */
+  .tableContainer {
+    display: none;
   }
 
-  .table th,
-  .table td {
-    padding: 12px 14px;
+  .cardList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
   .statCard {

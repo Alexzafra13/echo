@@ -5,8 +5,7 @@
  */
 
 import { useState } from 'react';
-import { Clock, RefreshCw } from 'lucide-react';
-import { Button } from '@shared/components/ui';
+import { Clock } from 'lucide-react';
 import { useEnrichmentLogs, useEnrichmentStats } from '../../../hooks/useEnrichmentHistory';
 import { ListEnrichmentLogsFilters } from '../../../api/enrichment.api';
 import { StatsSection } from './StatsSection';
@@ -31,11 +30,7 @@ export function HistoryTab() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Queries
-  const {
-    data: logsData,
-    isLoading: logsLoading,
-    refetch: refetchLogs,
-  } = useEnrichmentLogs(filters);
+  const { data: logsData, isLoading: logsLoading } = useEnrichmentLogs(filters);
   const { data: statsData, isLoading: statsLoading } = useEnrichmentStats(statsPeriod);
 
   const logs = logsData?.logs || [];
@@ -60,11 +55,7 @@ export function HistoryTab() {
       {/* Statistics Section - Always show when data available (keeps previous data during refetch) */}
       {statsData && (
         <div style={{ opacity: statsLoading ? 0.7 : 1, transition: 'opacity 0.2s ease' }}>
-          <StatsSection
-            stats={statsData}
-            period={statsPeriod}
-            onPeriodChange={setStatsPeriod}
-          />
+          <StatsSection stats={statsData} period={statsPeriod} onPeriodChange={setStatsPeriod} />
           <ProviderStatsGrid providers={statsData.byProvider} />
         </div>
       )}
@@ -78,15 +69,6 @@ export function HistoryTab() {
               {total > 0 ? `${total} registros totales` : 'No hay registros'}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => refetchLogs()}
-            loading={logsLoading}
-            leftIcon={<RefreshCw size={16} />}
-          >
-            Actualizar
-          </Button>
         </div>
 
         {/* Filters */}
