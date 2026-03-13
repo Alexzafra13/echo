@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { notificationsApi, type PersistentNotification, type NotificationType, type NotificationPreference } from '../api/notifications.api';
+import {
+  notificationsApi,
+  type PersistentNotification,
+  type NotificationType,
+  type NotificationPreference,
+} from '../api/notifications.api';
 
 // ============================================
 // Query Keys
@@ -69,16 +74,13 @@ export function useMarkAsRead() {
           if (!old) return old;
           return {
             ...old,
-            notifications: old.notifications.map((n) =>
-              n.id === id ? { ...n, isRead: true } : n,
-            ),
+            notifications: old.notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
           };
-        },
+        }
       );
 
-      queryClient.setQueryData<{ count: number }>(
-        notificationKeys.unreadCount,
-        (old) => old ? { count: Math.max(0, old.count - 1) } : old,
+      queryClient.setQueryData<{ count: number }>(notificationKeys.unreadCount, (old) =>
+        old ? { count: Math.max(0, old.count - 1) } : old
       );
     },
     onSettled: () => {
@@ -104,13 +106,10 @@ export function useMarkAllAsRead() {
             ...old,
             notifications: old.notifications.map((n) => ({ ...n, isRead: true })),
           };
-        },
+        }
       );
 
-      queryClient.setQueryData<{ count: number }>(
-        notificationKeys.unreadCount,
-        { count: 0 },
-      );
+      queryClient.setQueryData<{ count: number }>(notificationKeys.unreadCount, { count: 0 });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
@@ -140,13 +139,10 @@ export function useUpdatePreference() {
     onMutate: async ({ type, enabled }) => {
       await queryClient.cancelQueries({ queryKey: notificationKeys.preferences });
 
-      queryClient.setQueryData<NotificationPreference[]>(
-        notificationKeys.preferences,
-        (old) => {
-          if (!old) return old;
-          return old.map((p) => (p.type === type ? { ...p, enabled } : p));
-        },
-      );
+      queryClient.setQueryData<NotificationPreference[]>(notificationKeys.preferences, (old) => {
+        if (!old) return old;
+        return old.map((p) => (p.type === type ? { ...p, enabled } : p));
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.preferences });
