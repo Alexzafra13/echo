@@ -13,6 +13,7 @@ import {
   Moon,
   Monitor,
   Database,
+  Bell,
 } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
@@ -21,6 +22,11 @@ import { useTheme, useDocumentTitle } from '@shared/hooks';
 import { useHomePreferences, useUpdateHomePreferences } from '../../hooks';
 import { useLibraryAnalysisSettings } from '../../hooks/useLibraryAnalysisSettings';
 import { usePlayer } from '@features/player';
+import {
+  useNotificationPreferences,
+  useUpdatePreference,
+} from '@features/notifications';
+import type { NotificationType } from '@features/notifications';
 import type { HomeSectionConfig, HomeSectionId } from '../../services';
 import styles from './SettingsPage.module.css';
 
@@ -66,6 +72,10 @@ export function SettingsPage() {
     setDjEnabled,
     isLoading: isLoadingAnalysis,
   } = useLibraryAnalysisSettings();
+
+  // Notification preferences
+  const { data: notifPreferences, isLoading: isLoadingNotifPrefs } = useNotificationPreferences();
+  const updatePreference = useUpdatePreference();
 
   // Local state for home sections
   const [homeSections, setHomeSections] = useState<HomeSectionConfig[]>([]);
@@ -462,6 +472,61 @@ export function SettingsPage() {
                         aria-label="Reproducción automática"
                       />
                     </div>
+                  </div>
+                </div>
+
+                {/* Notifications Preferences Card */}
+                <div className={styles.settingsPage__card}>
+                  <div className={styles.settingsPage__cardHeader}>
+                    <h2>
+                      <Bell size={20} />
+                      Notificaciones
+                    </h2>
+                  </div>
+
+                  <div className={styles.settingsPage__cardBody}>
+                    {isLoadingNotifPrefs ? (
+                      <div className={styles.settingsPage__toggleItem}>
+                        <div className={styles.settingsPage__toggleInfo}>
+                          <p className={styles.settingsPage__toggleDescription}>
+                            Cargando preferencias...
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      (
+                        [
+                          { type: 'friend_request_received' as NotificationType, label: 'Solicitudes de amistad', desc: 'Cuando alguien te envía una solicitud de amistad' },
+                          { type: 'friend_request_accepted' as NotificationType, label: 'Amistad aceptada', desc: 'Cuando aceptan tu solicitud de amistad' },
+                          { type: 'scan_completed' as NotificationType, label: 'Escaneo completado', desc: 'Cuando finaliza un escaneo de la biblioteca' },
+                          { type: 'enrichment_completed' as NotificationType, label: 'Enriquecimiento completado', desc: 'Cuando finaliza el enriquecimiento de metadatos' },
+                          { type: 'new_content' as NotificationType, label: 'Nuevo contenido', desc: 'Cuando se añade contenido nuevo a la biblioteca' },
+                        ] as const
+                      ).map((item) => {
+                        const pref = notifPreferences?.find((p) => p.type === item.type);
+                        const isEnabled = pref ? pref.enabled : true; // Default enabled
+
+                        return (
+                          <div key={item.type} className={styles.settingsPage__toggleItem}>
+                            <div className={styles.settingsPage__toggleInfo}>
+                              <span className={styles.settingsPage__toggleLabel}>
+                                {item.label}
+                              </span>
+                              <p className={styles.settingsPage__toggleDescription}>
+                                {item.desc}
+                              </p>
+                            </div>
+                            <Switch
+                              checked={isEnabled}
+                              onChange={(checked) =>
+                                updatePreference.mutate({ type: item.type, enabled: checked })
+                              }
+                              aria-label={item.label}
+                            />
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </>

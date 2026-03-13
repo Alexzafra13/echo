@@ -5,7 +5,7 @@
  * Uses card layout on mobile for better responsive behavior
  */
 
-import { formatDate, getStatusBadge, buildImageUrl } from './historyUtils';
+import { formatDate, getStatusBadge, buildImageUrl, getProviderDisplay } from './historyUtils';
 import styles from './HistoryTab.module.css';
 
 export interface EnrichmentLog {
@@ -62,7 +62,7 @@ export function HistoryTable({ logs, onRowClick }: HistoryTableProps) {
                     <span>{log.entityName}</span>
                   </td>
                   <td>
-                    <span className={styles.providerBadge}>{log.provider}</span>
+                    {getProviderDisplay(log.provider)}
                   </td>
                   <td>{log.metadataType}</td>
                   <td>{getStatusBadge(log.status)}</td>
@@ -91,7 +91,7 @@ export function HistoryTable({ logs, onRowClick }: HistoryTableProps) {
                 {getStatusBadge(log.status)}
               </div>
               <div className={styles.cardDetails}>
-                <span className={styles.providerBadge}>{log.provider}</span>
+                {getProviderDisplay(log.provider)}
                 <span className={styles.cardMeta}>{log.metadataType}</span>
                 <span className={styles.cardDate}>{formatDate(log.createdAt)}</span>
               </div>

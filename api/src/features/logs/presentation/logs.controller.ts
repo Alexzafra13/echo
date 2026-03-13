@@ -248,6 +248,28 @@ export class LogsController {
     return { deletedCount, retentionDays };
   }
 
+  @Post('cleanup/all')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Eliminar TODOS los logs',
+    description:
+      'Elimina todos los logs del sistema y de enriquecimiento. Acción irreversible. Solo para administradores.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Todos los logs eliminados',
+    schema: {
+      type: 'object',
+      properties: {
+        deletedCount: { type: 'number' },
+      },
+    },
+  })
+  async deleteAllLogs() {
+    const deletedCount = await this.logCleanupService.deleteAllLogs();
+    return { deletedCount };
+  }
+
   @Get('retention')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

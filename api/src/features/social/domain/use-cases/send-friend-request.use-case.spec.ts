@@ -2,10 +2,14 @@ import { SendFriendRequestUseCase } from './send-friend-request.use-case';
 import { ISocialRepository } from '../ports';
 import { ValidationError, ConflictError } from '@shared/errors';
 import { Friendship } from '../entities/friendship.entity';
+import { NotificationsService } from '@features/notifications/application/notifications.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 
 describe('SendFriendRequestUseCase', () => {
   let useCase: SendFriendRequestUseCase;
   let mockSocialRepo: jest.Mocked<ISocialRepository>;
+  let mockNotificationsService: jest.Mocked<NotificationsService>;
+  let mockDrizzleService: jest.Mocked<DrizzleService>;
 
   const now = new Date();
 
@@ -25,7 +29,23 @@ describe('SendFriendRequestUseCase', () => {
       acceptFriendRequest: jest.fn(),
     } as unknown as jest.Mocked<ISocialRepository>;
 
-    useCase = new SendFriendRequestUseCase(mockSocialRepo);
+    mockNotificationsService = {
+      notify: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<NotificationsService>;
+
+    mockDrizzleService = {
+      db: {
+        select: jest.fn().mockReturnValue({
+          from: jest.fn().mockReturnValue({
+            where: jest.fn().mockReturnValue({
+              then: jest.fn().mockImplementation((cb) => cb([{ name: 'Test User', username: 'testuser' }])),
+            }),
+          }),
+        }),
+      },
+    } as unknown as jest.Mocked<DrizzleService>;
+
+    useCase = new SendFriendRequestUseCase(mockSocialRepo, mockNotificationsService, mockDrizzleService);
   });
 
   describe('execute', () => {

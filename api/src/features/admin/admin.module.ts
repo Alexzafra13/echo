@@ -25,6 +25,7 @@ import {
 } from './domain/use-cases';
 import { ListEnrichmentLogsUseCase } from './infrastructure/use-cases/list-enrichment-logs';
 import { GetEnrichmentStatsUseCase } from './infrastructure/use-cases/get-enrichment-stats';
+import { BackfillEnrichmentLogsUseCase } from './infrastructure/use-cases/backfill-enrichment-logs';
 import { SearchAlbumCoversUseCase } from './infrastructure/use-cases/search-album-covers';
 import { ApplyAlbumCoverUseCase } from './infrastructure/use-cases/apply-album-cover';
 import { SearchArtistAvatarsUseCase } from './infrastructure/use-cases/search-artist-avatars';
@@ -97,6 +98,7 @@ import {
     PermanentlyDeleteUserUseCase,
     ListEnrichmentLogsUseCase,
     GetEnrichmentStatsUseCase,
+    BackfillEnrichmentLogsUseCase,
     GetDashboardStatsUseCase,
     SearchAlbumCoversUseCase,
     ApplyAlbumCoverUseCase,

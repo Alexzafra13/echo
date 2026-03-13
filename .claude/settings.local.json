@@ -71,7 +71,19 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code} %{size_download}\" \"https://assets.fanart.tv/fanart/lavigne-avril-4fd484fbde26d.jpg/preview\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code} %{size_download}\" \"https://assets.fanart.tv/preview/lavigne-avril-4fd484fbde26d.jpg\")",
       "Bash(timeout 30 npx --prefix api tsc --noEmit --pretty)",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "Bash(find /c/Users/alex/Desktop/ec/echo/api -name *entity* -o -name *migration*)",
+      "Bash(find /c/Users/alex/Desktop/ec/echo/web/src -path \"*hooks*\" -name \"*scanner\\\\|*dj*\")",
+      "Bash(find /c/Users/alex/Desktop/ec/echo -type f -name useMetadataEnrichment.ts -o -name *enrichment*hook*)",
+      "Bash(xargs head:*)",
+      "Bash(npx drizzle-kit:*)",
+      "Bash(python3 -c \"import sys,json; j=json.load\\(sys.stdin\\); [print\\(f''''{e[\"\"idx\"\"]}: {e[\"\"tag\"\"]} -> parent: {e.get\\(\"\"parent\"\"\\)}''''\\) for e in j[''''entries''''][-5:]]\")",
+      "Bash(ls /c/Users/alex/Desktop/ec/echo/api/drizzle/*.sql)",
+      "Bash(node scripts/run-migrations.js)",
+      "Bash(DATABASE_URL=\"postgresql://music_user:music_password@localhost:5432/music_db?schema=public\" node scripts/run-migrations.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/notifications/unread-count)",
+      "Bash(grep -E \"\\\\.ts$\")",
+      "Bash(DATABASE_URL=\"postgresql://music_user:music_password@localhost:5432/music_db?schema=public\" node -e \":*)"
     ]
   }
 }

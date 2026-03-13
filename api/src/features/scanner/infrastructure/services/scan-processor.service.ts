@@ -9,6 +9,7 @@ import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
+import { NotificationsService } from '@features/notifications/application/notifications.service';
 import { generateUuid } from '@shared/utils';
 import { TrackProcessingService, ScanProgressTracker, LibraryCleanupService } from './scanning';
 import * as path from 'path';
@@ -75,6 +76,7 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly trackProcessing: TrackProcessingService,
     private readonly libraryCleanup: LibraryCleanupService,
     private readonly postScanTasks: PostScanTasksService,
+    private readonly notificationsService: NotificationsService,
     @InjectPinoLogger(ScanProcessorService.name)
     private readonly logger: PinoLogger
   ) {}
@@ -405,7 +407,7 @@ export class ScanProcessorService implements OnModuleInit {
         }),
       });
 
-      // Emit: completed
+      // Emit: completed (real-time WebSocket)
       this.scannerGateway.emitCompleted({
         scanId,
         totalFiles: tracker.totalFiles,
@@ -418,6 +420,17 @@ export class ScanProcessorService implements OnModuleInit {
         duration,
         timestamp: new Date().toISOString(),
       });
+
+      // Persistent notification for all users
+      const summary = `${tracker.tracksCreated} tracks añadidos, ${tracker.albumsCreated} álbumes, ${tracker.artistsCreated} artistas`;
+      this.notificationsService.notifyAll(
+        'scan_completed',
+        'Escaneo completado',
+        tracker.errors > 0
+          ? `${summary} (${tracker.errors} errores)`
+          : summary,
+        { scanId, duration, totalFiles: tracker.totalFiles, tracksCreated: tracker.tracksCreated, albumsCreated: tracker.albumsCreated, artistsCreated: tracker.artistsCreated, errors: tracker.errors },
+      ).catch(() => {});
 
       this.logger.info(
         `✅ Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted} ⏭️${tracker.tracksSkipped} saltados`

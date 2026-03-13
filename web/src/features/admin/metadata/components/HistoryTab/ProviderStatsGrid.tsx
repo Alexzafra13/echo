@@ -30,6 +30,10 @@ const PROVIDER_KEY_MAP: Record<string, string> = {
   'coverartarchive': 'coverartarchive',
   'coverart': 'coverartarchive',
   'wikipedia': 'wikipedia',
+  'google-favicon': 'google-favicon',
+  'google favicon': 'google-favicon',
+  'apple-touch-icon': 'apple-touch-icon',
+  'apple touch icon': 'apple-touch-icon',
 };
 
 function getBrandingForProvider(name: string) {

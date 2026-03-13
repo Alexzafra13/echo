@@ -104,4 +104,25 @@ export class LogCleanupService {
     const enrichmentDeleted = await this.cleanupEnrichmentLogs(retention);
     return systemDeleted + enrichmentDeleted;
   }
+
+  /**
+   * Delete ALL logs (system + enrichment)
+   */
+  async deleteAllLogs(): Promise<number> {
+    this.logger.info('Delete ALL logs triggered');
+    const systemDeleted = await this.logService.deleteAllLogs();
+    const enrichmentDeleted = await this.deleteAllEnrichmentLogs();
+    return systemDeleted + enrichmentDeleted;
+  }
+
+  /**
+   * Delete ALL enrichment logs
+   */
+  private async deleteAllEnrichmentLogs(): Promise<number> {
+    const result = await this.drizzle.db
+      .delete(enrichmentLogs)
+      .returning({ id: enrichmentLogs.id });
+
+    return result.length;
+  }
 }

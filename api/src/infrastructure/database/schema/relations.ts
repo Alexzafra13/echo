@@ -13,6 +13,7 @@ import { players, transcodings } from './player';
 import { radioStations } from './radio';
 import { shares, bookmarks } from './shares';
 import { friendships } from './social';
+import { notifications, notificationPreferences } from './notifications';
 import { djAnalysis } from './dj';
 
 // ============================================
@@ -33,6 +34,9 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   sentFriendRequests: many(friendships, { relationName: 'requester' }),
   // Social: friendships where user is the addressee
   receivedFriendRequests: many(friendships, { relationName: 'addressee' }),
+  // Notifications
+  notifications: many(notifications),
+  notificationPreferences: many(notificationPreferences),
 }));
 
 export const streamTokensRelations = relations(streamTokens, ({ one }) => ({
@@ -319,5 +323,22 @@ export const djAnalysisRelations = relations(djAnalysis, ({ one }) => ({
   track: one(tracks, {
     fields: [djAnalysis.trackId],
     references: [tracks.id],
+  }),
+}));
+
+// ============================================
+// Notification Relations
+// ============================================
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
+
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [notificationPreferences.userId],
+    references: [users.id],
   }),
 }));

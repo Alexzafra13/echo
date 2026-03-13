@@ -253,6 +253,177 @@
   flex: 1;
 }
 
+.historyHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deleteAllButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.deleteAllButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.deleteAllButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deleteConfirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+}
+
+.deleteConfirmText {
+  font-size: 12px;
+  color: #ef4444;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.deleteConfirmYes,
+.deleteConfirmNo {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.deleteConfirmYes {
+  background: #ef4444;
+  color: #fff;
+}
+
+.deleteConfirmYes:hover {
+  background: #dc2626;
+}
+
+.deleteConfirmNo {
+  background: var(--white-08);
+  color: var(--color-text-secondary, #9ca3af);
+}
+
+.deleteConfirmNo:hover {
+  background: var(--white-12);
+}
+
+/* Retention & Cleanup Bar */
+.retentionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--white-04, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--white-08, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+}
+
+.retentionLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary, #9ca3af);
+  font-size: 13px;
+}
+
+.retentionLabel {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.retentionSelect {
+  padding: 4px 8px;
+  background: var(--white-08, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--white-12, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  color: var(--color-text-primary, #fff);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.retentionSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.savingIndicator {
+  font-size: 11px;
+  color: var(--color-accent, #f97316);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.retentionRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cleanupResult {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #22c55e;
+  white-space: nowrap;
+}
+
+.cleanupButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--white-12, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  color: var(--color-text-secondary, #9ca3af);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cleanupButton:hover {
+  background: var(--white-08, rgba(255, 255, 255, 0.08));
+  border-color: var(--white-16, rgba(255, 255, 255, 0.16));
+  color: var(--color-text-primary, #fff);
+}
+
+.cleanupButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .historyTitle {
   font-size: 18px;
   font-weight: 600;
@@ -366,6 +537,7 @@
 .providerBadge {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   padding: 5px 10px;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
   border: 1px solid var(--info-30);
@@ -374,6 +546,12 @@
   color: var(--color-info);
   text-transform: capitalize;
   font-weight: 500;
+}
+
+.providerBadgeLogo {
+  height: 16px;
+  width: auto;
+  object-fit: contain;
 }
 
 /* Mobile card list - hidden on desktop */

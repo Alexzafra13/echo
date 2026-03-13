@@ -4,6 +4,7 @@ import { WebSocketModule } from '@infrastructure/websocket';
 import { AlbumsModule } from '@features/albums/albums.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 import { DjModule } from '@features/dj';
+import { NotificationsModule } from '@features/notifications/notifications.module';
 
 import { ScannerController } from './presentation/controller/scanner.controller';
 import { ScannerGateway } from './infrastructure/gateways/scanner.gateway';
@@ -43,6 +44,7 @@ import { CoverArtService } from '@shared/services';
     forwardRef(() => AlbumsModule),
     ExternalMetadataModule,
     forwardRef(() => DjModule),
+    NotificationsModule,
   ],
   controllers: [ScannerController],
   providers: [
