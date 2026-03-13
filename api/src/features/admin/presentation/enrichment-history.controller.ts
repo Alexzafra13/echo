@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Delete, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Query,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
@@ -29,7 +38,7 @@ export class EnrichmentHistoryController {
     private readonly getEnrichmentStatsUseCase: GetEnrichmentStatsUseCase,
     private readonly backfillEnrichmentLogsUseCase: BackfillEnrichmentLogsUseCase,
     private readonly drizzle: DrizzleService,
-    private readonly settingsService: SettingsService,
+    private readonly settingsService: SettingsService
   ) {}
 
   @Get('history')
@@ -158,7 +167,7 @@ export class EnrichmentHistoryController {
   async getRetention() {
     const days = await this.settingsService.getNumber(
       ENRICHMENT_RETENTION_KEY,
-      DEFAULT_ENRICHMENT_RETENTION_DAYS,
+      DEFAULT_ENRICHMENT_RETENTION_DAYS
     );
     return { retentionDays: Math.max(1, days) };
   }
@@ -182,7 +191,7 @@ export class EnrichmentHistoryController {
   async cleanupOldLogs() {
     const retentionDays = await this.settingsService.getNumber(
       ENRICHMENT_RETENTION_KEY,
-      DEFAULT_ENRICHMENT_RETENTION_DAYS,
+      DEFAULT_ENRICHMENT_RETENTION_DAYS
     );
     const days = Math.max(1, retentionDays);
 
@@ -201,7 +210,8 @@ export class EnrichmentHistoryController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Eliminar todos los logs de enriquecimiento',
-    description: 'Elimina todos los registros del historial de enriquecimiento. Acción irreversible.',
+    description:
+      'Elimina todos los registros del historial de enriquecimiento. Acción irreversible.',
   })
   @ApiResponse({
     status: 200,
