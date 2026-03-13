@@ -44,18 +44,13 @@ export const notificationsApi = {
     take?: number;
     unreadOnly?: boolean;
   }): Promise<ListNotificationsResponse> {
-    const response = await apiClient.get<ListNotificationsResponse>(
-      '/notifications',
-      { params },
-    );
+    const response = await apiClient.get<ListNotificationsResponse>('/notifications', { params });
     return response.data;
   },
 
   /** Get unread count */
   async getUnreadCount(): Promise<{ count: number }> {
-    const response = await apiClient.get<{ count: number }>(
-      '/notifications/unread-count',
-    );
+    const response = await apiClient.get<{ count: number }>('/notifications/unread-count');
     return response.data;
   },
 

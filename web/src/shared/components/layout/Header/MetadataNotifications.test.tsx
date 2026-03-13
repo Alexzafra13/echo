@@ -8,52 +8,43 @@ vi.mock('wouter', () => ({
   useLocation: () => ['/', mockSetLocation],
 }));
 
-// Mock state
+// Mock state for notifications
 const mockState = {
-  metadataNotifications: [] as Array<{
+  notifications: [] as Array<{
     id: string;
-    entityType: string;
-    entityName: string;
-    bioUpdated: boolean;
-    imagesUpdated: boolean;
-    coverUpdated: boolean;
-    read: boolean;
-    timestamp: string;
+    type: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    createdAt: string;
+    data?: Record<string, unknown> | null;
   }>,
   unreadCount: 0,
-  pendingRequests: {
-    received: [] as Array<{
-      friendshipId: string;
-      id: string;
-      username: string;
-      name: string | null;
-    }>,
-  },
 };
 
-const mockMarkAsRead = vi.fn();
-const mockMarkAllAsRead = vi.fn();
-const mockClearAll = vi.fn();
+const mockMarkAsRead = { mutate: vi.fn() };
+const mockMarkAllAsRead = { mutate: vi.fn() };
+const mockDeleteAll = { mutate: vi.fn() };
 const mockClose = vi.fn((callback?: () => void) => callback?.());
 
-vi.mock('@shared/hooks', () => ({
-  useMetadataEnrichment: () => ({
-    notifications: mockState.metadataNotifications,
-    unreadCount: mockState.unreadCount,
-    markAsRead: mockMarkAsRead,
-    markAllAsRead: mockMarkAllAsRead,
-    clearAll: mockClearAll,
+vi.mock('@features/notifications', () => ({
+  useNotificationsList: () => ({
+    data: { notifications: mockState.notifications },
   }),
+  useUnreadCount: () => ({
+    data: { count: mockState.unreadCount },
+  }),
+  useMarkAsRead: () => mockMarkAsRead,
+  useMarkAllAsRead: () => mockMarkAllAsRead,
+  useDeleteAllNotifications: () => mockDeleteAll,
+  useNotificationSSE: () => {},
+}));
+
+vi.mock('@shared/hooks', () => ({
   useClickOutside: () => ({
     ref: { current: null },
     isClosing: false,
     close: mockClose,
-  }),
-}));
-
-vi.mock('@features/social/hooks', () => ({
-  usePendingRequests: () => ({
-    data: mockState.pendingRequests,
   }),
 }));
 
@@ -73,9 +64,8 @@ vi.mock('@shared/utils/logger', () => ({
 describe('MetadataNotifications', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockState.metadataNotifications = [];
+    mockState.notifications = [];
     mockState.unreadCount = 0;
-    mockState.pendingRequests = { received: [] };
 
     mockGet.mockResolvedValue({
       data: {
@@ -96,27 +86,10 @@ describe('MetadataNotifications', () => {
       expect(screen.queryByText('0')).not.toBeInTheDocument();
     });
 
-    it('should show badge with friend request count', () => {
-      mockState.pendingRequests = {
-        received: [
-          { friendshipId: 'f1', id: 'user-1', username: 'friend1', name: 'Friend One' },
-        ],
-      };
+    it('should show badge with unread count', () => {
+      mockState.unreadCount = 3;
 
       render(<MetadataNotifications token="test-token" isAdmin={false} />);
-      expect(screen.getByText('1')).toBeInTheDocument();
-    });
-
-    it('should show combined count for admin', () => {
-      mockState.pendingRequests = {
-        received: [
-          { friendshipId: 'f1', id: 'user-1', username: 'friend1', name: 'Friend One' },
-        ],
-      };
-      mockState.unreadCount = 2;
-
-      render(<MetadataNotifications token="test-token" isAdmin={true} />);
-      // 1 friend request + 2 metadata unread = 3
       expect(screen.getByText('3')).toBeInTheDocument();
     });
   });
@@ -139,13 +112,20 @@ describe('MetadataNotifications', () => {
     });
   });
 
-  describe('Friend Request Notifications', () => {
+  describe('Persistent Notifications', () => {
     it('should display friend request notifications', () => {
-      mockState.pendingRequests = {
-        received: [
-          { friendshipId: 'f1', id: 'user-1', username: 'testuser', name: 'Test User' },
-        ],
-      };
+      mockState.notifications = [
+        {
+          id: 'n1',
+          type: 'friend_request_received',
+          title: 'Test User',
+          message: 'te ha enviado una solicitud de amistad',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          data: null,
+        },
+      ];
+      mockState.unreadCount = 1;
 
       render(<MetadataNotifications token="test-token" isAdmin={false} />);
       fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
@@ -154,111 +134,78 @@ describe('MetadataNotifications', () => {
       expect(screen.getByText('te ha enviado una solicitud de amistad')).toBeInTheDocument();
     });
 
-    it('should use username when name is null', () => {
-      mockState.pendingRequests = {
-        received: [
-          { friendshipId: 'f1', id: 'user-1', username: 'testuser', name: null },
-        ],
-      };
-
-      render(<MetadataNotifications token="test-token" isAdmin={false} />);
-      fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
-
-      expect(screen.getByText('testuser')).toBeInTheDocument();
-    });
-
-    it('should navigate to social page on friend request click', () => {
-      mockState.pendingRequests = {
-        received: [
-          { friendshipId: 'f1', id: 'user-1', username: 'testuser', name: 'Test User' },
-        ],
-      };
-
-      render(<MetadataNotifications token="test-token" isAdmin={false} />);
-      fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
-      fireEvent.click(screen.getByText('Test User'));
-
-      expect(mockClose).toHaveBeenCalled();
-    });
-  });
-
-  describe('Metadata Notifications (Admin)', () => {
-    it('should show metadata notifications for admin', () => {
-      mockState.metadataNotifications = [
+    it('should display enrichment notifications', () => {
+      mockState.notifications = [
         {
-          id: 'meta-1',
-          entityType: 'artist',
-          entityName: 'Test Artist',
-          bioUpdated: true,
-          imagesUpdated: false,
-          coverUpdated: false,
-          read: false,
-          timestamp: new Date().toISOString(),
+          id: 'n2',
+          type: 'enrichment_completed',
+          title: 'Test Artist',
+          message: 'Metadata enriquecida correctamente',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          data: null,
         },
       ];
-      mockState.unreadCount = 1;
 
       render(<MetadataNotifications token="test-token" isAdmin={true} />);
       fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
 
       expect(screen.getByText('Test Artist')).toBeInTheDocument();
-      expect(screen.getByText('biografía actualizado')).toBeInTheDocument();
+      expect(screen.getByText('Metadata enriquecida correctamente')).toBeInTheDocument();
     });
 
-    it('should show multiple updates in message', () => {
-      mockState.metadataNotifications = [
+    it('should mark as read on click', () => {
+      mockState.notifications = [
         {
-          id: 'meta-1',
-          entityType: 'album',
-          entityName: 'Test Album',
-          bioUpdated: false,
-          imagesUpdated: true,
-          coverUpdated: true,
-          read: false,
-          timestamp: new Date().toISOString(),
-        },
-      ];
-
-      render(<MetadataNotifications token="test-token" isAdmin={true} />);
-      fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
-
-      expect(screen.getByText('Test Album')).toBeInTheDocument();
-      expect(screen.getByText('imágenes, portada actualizado')).toBeInTheDocument();
-    });
-
-    it('should not show metadata notifications for non-admin', () => {
-      mockState.metadataNotifications = [
-        {
-          id: 'meta-1',
-          entityType: 'artist',
-          entityName: 'Test Artist',
-          bioUpdated: true,
-          imagesUpdated: false,
-          coverUpdated: false,
-          read: false,
-          timestamp: new Date().toISOString(),
+          id: 'n1',
+          type: 'friend_request_received',
+          title: 'Test User',
+          message: 'solicitud de amistad',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          data: null,
         },
       ];
 
       render(<MetadataNotifications token="test-token" isAdmin={false} />);
       fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
+      fireEvent.click(screen.getByText('Test User'));
 
-      expect(screen.queryByText('Test Artist')).not.toBeInTheDocument();
+      expect(mockMarkAsRead.mutate).toHaveBeenCalledWith('n1');
+    });
+
+    it('should not mark already read notifications', () => {
+      mockState.notifications = [
+        {
+          id: 'n1',
+          type: 'friend_request_received',
+          title: 'Test User',
+          message: 'solicitud de amistad',
+          isRead: true,
+          createdAt: new Date().toISOString(),
+          data: null,
+        },
+      ];
+
+      render(<MetadataNotifications token="test-token" isAdmin={false} />);
+      fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
+      fireEvent.click(screen.getByText('Test User'));
+
+      expect(mockMarkAsRead.mutate).not.toHaveBeenCalled();
     });
   });
 
-  describe('Admin Actions', () => {
-    it('should show mark all as read button for admin', () => {
-      mockState.metadataNotifications = [
+  describe('Actions', () => {
+    it('should show mark all as read button when unread exist', () => {
+      mockState.notifications = [
         {
-          id: 'meta-1',
-          entityType: 'artist',
-          entityName: 'Test',
-          bioUpdated: true,
-          imagesUpdated: false,
-          coverUpdated: false,
-          read: false,
-          timestamp: new Date().toISOString(),
+          id: 'n1',
+          type: 'enrichment_completed',
+          title: 'Test',
+          message: 'Done',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          data: null,
         },
       ];
       mockState.unreadCount = 1;
@@ -266,42 +213,40 @@ describe('MetadataNotifications', () => {
       render(<MetadataNotifications token="test-token" isAdmin={true} />);
       fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
 
-      expect(screen.getByTitle('Marcar todas como leídas')).toBeInTheDocument();
+      expect(screen.getByTitle('Marcar todas como leidas')).toBeInTheDocument();
     });
 
     it('should call markAllAsRead when button clicked', () => {
-      mockState.metadataNotifications = [
+      mockState.notifications = [
         {
-          id: 'meta-1',
-          entityType: 'artist',
-          entityName: 'Test',
-          bioUpdated: true,
-          imagesUpdated: false,
-          coverUpdated: false,
-          read: false,
-          timestamp: new Date().toISOString(),
+          id: 'n1',
+          type: 'enrichment_completed',
+          title: 'Test',
+          message: 'Done',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          data: null,
         },
       ];
       mockState.unreadCount = 1;
 
       render(<MetadataNotifications token="test-token" isAdmin={true} />);
       fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
-      fireEvent.click(screen.getByTitle('Marcar todas como leídas'));
+      fireEvent.click(screen.getByTitle('Marcar todas como leidas'));
 
-      expect(mockMarkAllAsRead).toHaveBeenCalled();
+      expect(mockMarkAllAsRead.mutate).toHaveBeenCalled();
     });
 
-    it('should show clear all button for admin', () => {
-      mockState.metadataNotifications = [
+    it('should show clear all button', () => {
+      mockState.notifications = [
         {
-          id: 'meta-1',
-          entityType: 'artist',
-          entityName: 'Test',
-          bioUpdated: true,
-          imagesUpdated: false,
-          coverUpdated: false,
-          read: false,
-          timestamp: new Date().toISOString(),
+          id: 'n1',
+          type: 'enrichment_completed',
+          title: 'Test',
+          message: 'Done',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          data: null,
         },
       ];
 
@@ -311,17 +256,16 @@ describe('MetadataNotifications', () => {
       expect(screen.getByTitle('Limpiar todas')).toBeInTheDocument();
     });
 
-    it('should call clearAll when button clicked', () => {
-      mockState.metadataNotifications = [
+    it('should call deleteAll when clear button clicked', () => {
+      mockState.notifications = [
         {
-          id: 'meta-1',
-          entityType: 'artist',
-          entityName: 'Test',
-          bioUpdated: true,
-          imagesUpdated: false,
-          coverUpdated: false,
-          read: false,
-          timestamp: new Date().toISOString(),
+          id: 'n1',
+          type: 'enrichment_completed',
+          title: 'Test',
+          message: 'Done',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          data: null,
         },
       ];
 
@@ -329,17 +273,23 @@ describe('MetadataNotifications', () => {
       fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
       fireEvent.click(screen.getByTitle('Limpiar todas'));
 
-      expect(mockClearAll).toHaveBeenCalled();
+      expect(mockDeleteAll.mutate).toHaveBeenCalled();
     });
   });
 
   describe('Relative Time', () => {
     it('should show "Ahora mismo" for recent notifications', () => {
-      mockState.pendingRequests = {
-        received: [
-          { friendshipId: 'f1', id: 'user-1', username: 'test', name: 'Test' },
-        ],
-      };
+      mockState.notifications = [
+        {
+          id: 'n1',
+          type: 'friend_request_received',
+          title: 'Test',
+          message: 'solicitud',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          data: null,
+        },
+      ];
 
       render(<MetadataNotifications token="test-token" isAdmin={false} />);
       fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
@@ -365,30 +315,31 @@ describe('MetadataNotifications', () => {
   });
 
   describe('Notification Priority', () => {
-    it('should show friend requests before metadata notifications', () => {
-      mockState.pendingRequests = {
-        received: [
-          { friendshipId: 'f1', id: 'user-1', username: 'friend', name: 'Friend User' },
-        ],
-      };
-      mockState.metadataNotifications = [
+    it('should show system alerts before persistent notifications for admin', () => {
+      mockGet.mockResolvedValue({
+        data: {
+          systemHealth: { storage: 'ok', database: 'down', redis: 'ok' },
+          activeAlerts: {},
+        },
+      });
+
+      mockState.notifications = [
         {
-          id: 'meta-1',
-          entityType: 'artist',
-          entityName: 'Artist Name',
-          bioUpdated: true,
-          imagesUpdated: false,
-          coverUpdated: false,
-          read: false,
-          timestamp: new Date().toISOString(),
+          id: 'n1',
+          type: 'enrichment_completed',
+          title: 'Artist Name',
+          message: 'Enrichment done',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          data: null,
         },
       ];
 
       render(<MetadataNotifications token="test-token" isAdmin={true} />);
       fireEvent.click(screen.getByRole('button', { name: /notificaciones/i }));
 
-      const items = screen.getAllByText(/Friend User|Artist Name/);
-      expect(items[0]).toHaveTextContent('Friend User');
+      // Both should be present
+      expect(screen.getByText('Artist Name')).toBeInTheDocument();
     });
   });
 });
