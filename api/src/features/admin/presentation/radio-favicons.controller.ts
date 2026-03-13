@@ -27,7 +27,7 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { radioStationImages, radioStations } from '@infrastructure/database/schema';
-import { eq, count, sum, sql, desc } from 'drizzle-orm';
+import { eq, count, sum, sql, desc, inArray } from 'drizzle-orm';
 import { UploadRadioFaviconUseCase } from '../infrastructure/use-cases/upload-radio-favicon';
 import { DeleteRadioFaviconUseCase } from '../infrastructure/use-cases/delete-radio-favicon';
 import { RadioFaviconFetchService } from '@features/radio/infrastructure/services/radio-favicon-fetch.service';
@@ -98,7 +98,7 @@ export class RadioFaviconsController {
           name: radioStations.name,
         })
         .from(radioStations)
-        .where(sql`${radioStations.stationUuid} = ANY(${stationUuids})`);
+        .where(inArray(radioStations.stationUuid, stationUuids));
 
       for (const s of stations) {
         if (s.stationUuid) {

@@ -65,6 +65,10 @@ export function HistoryFilters({
         <option value="lastfm">Last.fm</option>
         <option value="fanart">Fanart.tv</option>
         <option value="musicbrainz">MusicBrainz</option>
+        <option value="coverartarchive">Cover Art Archive</option>
+        <option value="wikipedia">Wikipedia</option>
+        <option value="google-favicon">Google Favicon</option>
+        <option value="apple-touch-icon">Apple Touch Icon</option>
       </select>
     </div>
   );

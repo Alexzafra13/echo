@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Subject, Observable } from 'rxjs';
+import { NotificationsService } from '@features/notifications/application/notifications.service';
 
 export interface MetadataSSEEvent {
   event: string;
@@ -21,6 +22,8 @@ export class MetadataEventsService {
   constructor(
     @InjectPinoLogger(MetadataEventsService.name)
     private readonly logger: PinoLogger,
+    @Optional() @Inject(NotificationsService)
+    private readonly notificationsService?: NotificationsService,
   ) {}
 
   /**
@@ -118,6 +121,18 @@ export class MetadataEventsService {
       `Batch enrichment completed: ${data.successful}/${data.total} successful ` +
         `(${data.failed} failed) in ${data.duration}ms`,
     );
+
+    // Persistent notification for admins
+    const typeLabel = data.entityType === 'artist' ? 'artistas' : 'álbumes';
+    const msg = data.failed > 0
+      ? `${data.successful}/${data.total} ${typeLabel} enriquecidos (${data.failed} errores)`
+      : `${data.successful} ${typeLabel} enriquecidos correctamente`;
+    this.notificationsService?.notifyAdmins(
+      'enrichment_completed',
+      `Enriquecimiento de ${typeLabel} completado`,
+      msg,
+      { entityType: data.entityType, total: data.total, successful: data.successful, failed: data.failed, duration: data.duration },
+    ).catch(() => {});
   }
 
   emitArtistImagesUpdated(data: {

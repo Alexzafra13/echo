@@ -10,13 +10,23 @@ import {
   Database,
   HardDrive,
   UserPlus,
+  UserCheck,
   FileX,
+  Radio,
+  Settings,
 } from 'lucide-react';
-import { useMetadataEnrichment, useClickOutside } from '@shared/hooks';
-import { usePendingRequests } from '@features/social/hooks';
+import { useClickOutside } from '@shared/hooks';
 import { apiClient } from '@shared/services/api';
-import type { EnrichmentNotification } from '@shared/hooks';
 import { logger } from '@shared/utils/logger';
+import {
+  useNotificationsList,
+  useUnreadCount,
+  useMarkAsRead,
+  useMarkAllAsRead,
+  useDeleteAllNotifications,
+  useNotificationSSE,
+} from '@features/notifications';
+import type { PersistentNotification } from '@features/notifications';
 import styles from './MetadataNotifications.module.css';
 
 interface MetadataNotificationsProps {
@@ -33,30 +43,18 @@ interface SystemAlert {
   link?: string;
 }
 
-interface FriendRequestNotification {
-  id: string;
-  type: 'friend_request';
-  friendshipId: string;
-  userId: string;
-  username: string;
-  name: string | null;
-  timestamp: string;
-}
-
-type NotificationItem = EnrichmentNotification | SystemAlert | FriendRequestNotification;
-
 /**
  * MetadataNotifications Component
- * Muestra notificaciones:
- * - Para todos: solicitudes de amistad
- * - Solo admin: alertas del sistema + enriquecimiento de metadatos
+ * Persistent notification bell with dropdown.
+ * Uses DB-backed notifications + real-time SSE updates.
+ * System alerts (health checks) remain as transient polling.
  */
 export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsProps) {
   const [, setLocation] = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>([]);
 
-  // Use hook for click outside and scroll close
+  // Click outside to close
   const {
     ref: dropdownRef,
     isClosing,
@@ -67,173 +65,145 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     scrollCloseDelay: 0,
   });
 
-  // Metadata enrichment notifications (admin only)
-  const {
-    notifications: metadataNotifications,
-    unreadCount: metadataUnreadCount,
-    markAsRead,
-    markAllAsRead,
-    clearAll,
-  } = useMetadataEnrichment(token, isAdmin);
+  // Persistent notifications from DB
+  const { data: notificationsData } = useNotificationsList({ take: 30 });
+  const { data: unreadData } = useUnreadCount();
+  const markAsRead = useMarkAsRead();
+  const markAllAsRead = useMarkAllAsRead();
+  const deleteAll = useDeleteAllNotifications();
 
-  // Friend request notifications (all users)
-  const { data: pendingRequests } = usePendingRequests();
+  // SSE for real-time updates (invalidates React Query caches)
+  useNotificationSSE();
 
-  // Convert pending requests to notifications
-  const friendRequestNotifications: FriendRequestNotification[] =
-    pendingRequests?.received.map((request) => ({
-      id: `friend-request-${request.friendshipId}`,
-      type: 'friend_request' as const,
-      friendshipId: request.friendshipId,
-      userId: request.id,
-      username: request.username,
-      name: request.name,
-      timestamp: request.friendsSince || new Date().toISOString(),
-    })) || [];
+  const notifications = notificationsData?.notifications || [];
+  const unreadCount = unreadData?.count || 0;
 
-  // Fetch alertas críticas del sistema (admin only)
-  const fetchSystemAlerts = async () => {
-    if (!token || !isAdmin) return;
-
-    try {
-      const response = await apiClient.get('/admin/dashboard/health');
-      const data = response.data;
-      const alerts: SystemAlert[] = [];
-
-      // Solo storage CRÍTICO (>90%)
-      if (data.systemHealth?.storage === 'critical' && data.activeAlerts?.storageDetails) {
-        alerts.push({
-          id: 'storage-critical',
-          type: 'error',
-          category: 'storage',
-          message: `Almacenamiento crítico: ${data.activeAlerts.storageDetails.percentUsed}% usado`,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Database/Redis down (crítico)
-      if (data.systemHealth?.database === 'down') {
-        alerts.push({
-          id: 'db-down',
-          type: 'error',
-          category: 'database',
-          message: 'Base de datos no disponible',
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      if (data.systemHealth?.redis === 'down') {
-        alerts.push({
-          id: 'redis-down',
-          type: 'error',
-          category: 'database',
-          message: 'Redis no disponible',
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Muchos errores de escaneo (>20 errores)
-      if (data.activeAlerts?.scanErrors && data.activeAlerts.scanErrors > 20) {
-        alerts.push({
-          id: 'scan-errors',
-          type: 'warning',
-          category: 'scanner',
-          message: `${data.activeAlerts.scanErrors} errores de escaneo críticos`,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Archivos desaparecidos
-      if (data.activeAlerts?.missingFiles && data.activeAlerts.missingFiles > 0) {
-        alerts.push({
-          id: 'missing-files',
-          type: 'warning',
-          category: 'missing',
-          message: `${data.activeAlerts.missingFiles} archivo${data.activeAlerts.missingFiles > 1 ? 's' : ''} desaparecido${data.activeAlerts.missingFiles > 1 ? 's' : ''}`,
-          timestamp: new Date().toISOString(),
-          link: '/admin?tab=maintenance',
-        });
-      }
-
-      setSystemAlerts(alerts);
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        logger.error('Error fetching system alerts:', error);
-      }
-    }
-  };
-
-  // Fetch inicial y polling cada 60 segundos (admin only)
+  // Fetch system health alerts (admin only, transient)
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || !token) return;
+
+    const fetchSystemAlerts = async () => {
+      try {
+        const response = await apiClient.get('/admin/dashboard/health');
+        const data = response.data;
+        const alerts: SystemAlert[] = [];
+
+        if (data.systemHealth?.storage === 'critical' && data.activeAlerts?.storageDetails) {
+          alerts.push({
+            id: 'storage-critical',
+            type: 'error',
+            category: 'storage',
+            message: `Almacenamiento critico: ${data.activeAlerts.storageDetails.percentUsed}% usado`,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        if (data.systemHealth?.database === 'down') {
+          alerts.push({
+            id: 'db-down',
+            type: 'error',
+            category: 'database',
+            message: 'Base de datos no disponible',
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        if (data.systemHealth?.redis === 'down') {
+          alerts.push({
+            id: 'redis-down',
+            type: 'error',
+            category: 'database',
+            message: 'Redis no disponible',
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        if (data.activeAlerts?.scanErrors && data.activeAlerts.scanErrors > 20) {
+          alerts.push({
+            id: 'scan-errors',
+            type: 'warning',
+            category: 'scanner',
+            message: `${data.activeAlerts.scanErrors} errores de escaneo`,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        if (data.activeAlerts?.missingFiles && data.activeAlerts.missingFiles > 0) {
+          alerts.push({
+            id: 'missing-files',
+            type: 'warning',
+            category: 'missing',
+            message: `${data.activeAlerts.missingFiles} archivo${data.activeAlerts.missingFiles > 1 ? 's' : ''} desaparecido${data.activeAlerts.missingFiles > 1 ? 's' : ''}`,
+            timestamp: new Date().toISOString(),
+            link: '/admin?tab=maintenance',
+          });
+        }
+
+        setSystemAlerts(alerts);
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          logger.error('Error fetching system alerts:', error);
+        }
+      }
+    };
 
     fetchSystemAlerts();
-    const interval = setInterval(fetchSystemAlerts, 60000); // 60s
-
+    const interval = setInterval(fetchSystemAlerts, 60000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, isAdmin]);
 
-  /**
-   * Obtener ícono según el tipo
-   */
-  const getIcon = (item: NotificationItem) => {
-    if ('type' in item && item.type === 'friend_request') {
-      return <UserPlus size={16} />;
-    }
-    if ('entityType' in item) {
-      return item.entityType === 'artist' ? <Music size={16} /> : <Disc size={16} />;
-    }
+  // ============================================
+  // Helpers
+  // ============================================
+
+  const getIcon = (item: PersistentNotification | SystemAlert) => {
     if ('category' in item) {
+      // System alert
       switch (item.category) {
-        case 'storage':
-          return <HardDrive size={16} />;
-        case 'database':
-          return <Database size={16} />;
-        case 'scanner':
-          return <AlertTriangle size={16} />;
-        case 'missing':
-          return <FileX size={16} />;
-        default:
-          return <AlertTriangle size={16} />;
+        case 'storage': return <HardDrive size={16} />;
+        case 'database': return <Database size={16} />;
+        case 'scanner': return <AlertTriangle size={16} />;
+        case 'missing': return <FileX size={16} />;
+        default: return <AlertTriangle size={16} />;
       }
     }
-    return <Bell size={16} />;
+
+    // Persistent notification
+    switch (item.type) {
+      case 'friend_request_received': return <UserPlus size={16} />;
+      case 'friend_request_accepted': return <UserCheck size={16} />;
+      case 'scan_completed': return <Radio size={16} />;
+      case 'enrichment_completed': return <Music size={16} />;
+      case 'system_alert': return <AlertTriangle size={16} />;
+      case 'new_content': return <Disc size={16} />;
+      default: return <Bell size={16} />;
+    }
   };
 
-  /**
-   * Obtener título y mensaje según el tipo de notificación
-   */
-  const getNotificationInfo = (item: NotificationItem) => {
-    if ('type' in item && item.type === 'friend_request') {
-      return {
-        title: item.name || item.username,
-        message: 'te ha enviado una solicitud de amistad',
-      };
-    }
-    if ('entityType' in item) {
-      const updates: string[] = [];
-      if (item.bioUpdated) updates.push('biografía');
-      if (item.imagesUpdated) updates.push('imágenes');
-      if (item.coverUpdated) updates.push('portada');
+  const getItemClasses = (item: PersistentNotification | SystemAlert) => {
+    const classes = [styles.notifications__item];
 
-      return {
-        title: item.entityName,
-        message: `${updates.length > 0 ? updates.join(', ') : 'metadata'} actualizado`,
-      };
-    }
     if ('category' in item) {
-      return {
-        title: item.category.toUpperCase(),
-        message: item.message,
-      };
+      // System alert
+      if (item.type === 'error') classes.push(styles['notifications__item--error']);
+      return classes.join(' ');
     }
-    return { title: '', message: '' };
+
+    // Persistent notification
+    if (!item.isRead) classes.push(styles['notifications__item--unread']);
+    if (item.type === 'friend_request_received') classes.push(styles['notifications__item--friendRequest']);
+
+    return classes.join(' ');
   };
 
-  /**
-   * Formatear timestamp relativo
-   */
+  const getIconClasses = (item: PersistentNotification | SystemAlert) => {
+    const classes = [styles.notifications__itemIcon];
+    if (!('category' in item) && item.type === 'friend_request_received') {
+      classes.push(styles['notifications__itemIcon--friendRequest']);
+    }
+    return classes.join(' ');
+  };
+
   const getRelativeTime = (timestamp: string): string => {
     const now = new Date();
     const time = new Date(timestamp);
@@ -250,41 +220,46 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     return `Hace ${diffDays}d`;
   };
 
-  /**
-   * Manejar click en notificación
-   */
-  const handleNotificationClick = (item: NotificationItem) => {
-    if ('type' in item && item.type === 'friend_request') {
-      // Navigate to social page
-      close(() => setLocation('/social'));
-    } else if ('link' in item && item.link) {
-      // Navigate to linked page (e.g., missing files)
+  const handleItemClick = (item: PersistentNotification | SystemAlert) => {
+    if ('category' in item && 'link' in item && item.link) {
       const link = item.link;
       close(() => setLocation(link));
-    } else if ('entityType' in item && 'read' in item && !item.read) {
-      markAsRead(item.id);
+      return;
+    }
+
+    if (!('category' in item)) {
+      // Mark as read on click
+      if (!item.isRead) {
+        markAsRead.mutate(item.id);
+      }
+
+      // Navigate based on type
+      if (item.type === 'friend_request_received' || item.type === 'friend_request_accepted') {
+        close(() => setLocation('/social'));
+      } else if (item.type === 'scan_completed') {
+        close(() => setLocation('/admin?tab=scanner'));
+      } else if (item.type === 'enrichment_completed') {
+        close(() => setLocation('/admin/metadata'));
+      }
     }
   };
 
-  /**
-   * Cerrar notificaciones con animación y limpiar
-   */
+  const handleMarkAllRead = () => {
+    markAllAsRead.mutate();
+  };
+
   const handleClearAll = () => {
-    clearAll();
+    deleteAll.mutate();
     close();
   };
 
-  // Combinar notificaciones: solicitudes de amistad primero, luego alertas del sistema, luego metadata
-  const allNotifications: NotificationItem[] = [
-    ...friendRequestNotifications,
+  // Combine: system alerts (transient) first, then persistent notifications
+  const allItems: (PersistentNotification | SystemAlert)[] = [
     ...(isAdmin ? systemAlerts : []),
-    ...(isAdmin ? metadataNotifications : []),
+    ...notifications,
   ];
 
-  // Contar total de notificaciones importantes
-  const friendRequestCount = friendRequestNotifications.length;
-  const adminNotificationCount = isAdmin ? systemAlerts.length + metadataUnreadCount : 0;
-  const totalCount = friendRequestCount + adminNotificationCount;
+  const totalBadge = systemAlerts.length + unreadCount;
 
   return (
     <div className={styles.notifications} ref={dropdownRef}>
@@ -298,11 +273,11 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
             setShowNotifications(true);
           }
         }}
-        aria-label={`Notificaciones (${totalCount})`}
-        title={`${totalCount} notificaciones`}
+        aria-label={`Notificaciones (${totalBadge})`}
+        title={`${totalBadge} notificaciones`}
       >
         <Bell size={20} />
-        {totalCount > 0 && <span className={styles.notifications__badge}>{totalCount}</span>}
+        {totalBadge > 0 && <span className={styles.notifications__badge}>{totalBadge}</span>}
       </button>
 
       {/* Dropdown */}
@@ -313,13 +288,13 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
           {/* Header */}
           <div className={styles.notifications__header}>
             <h3 className={styles.notifications__title}>Notificaciones</h3>
-            {allNotifications.length > 0 && isAdmin && (
+            {allItems.length > 0 && (
               <div className={styles.notifications__actions}>
-                {metadataUnreadCount > 0 && (
+                {unreadCount > 0 && (
                   <button
                     className={styles.notifications__action}
-                    onClick={markAllAsRead}
-                    title="Marcar todas como leídas"
+                    onClick={handleMarkAllRead}
+                    title="Marcar todas como leidas"
                   >
                     <Check size={16} />
                   </button>
@@ -331,55 +306,56 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
                 >
                   <X size={16} />
                 </button>
+                <button
+                  className={styles.notifications__action}
+                  onClick={() => {
+                    close(() => setLocation('/settings?tab=notifications'));
+                  }}
+                  title="Preferencias"
+                >
+                  <Settings size={16} />
+                </button>
               </div>
             )}
           </div>
 
-          {/* Lista de notificaciones */}
+          {/* Notification list */}
           <div className={styles.notifications__list}>
-            {allNotifications.length === 0 ? (
+            {allItems.length === 0 ? (
               <div className={styles.notifications__empty}>
                 <Bell size={32} className={styles.notifications__emptyIcon} />
                 <p className={styles.notifications__emptyText}>No hay notificaciones</p>
               </div>
             ) : (
-              allNotifications.map((item) => {
-                const info = getNotificationInfo(item);
-                const isFriendRequest = 'type' in item && item.type === 'friend_request';
+              allItems.map((item) => {
                 const isSystemAlert = 'category' in item;
-                const isUnread = 'read' in item ? !item.read : true;
+                const isUnread = isSystemAlert || ('isRead' in item && !item.isRead);
 
                 return (
                   <div
                     key={item.id}
-                    className={`${styles.notifications__item} ${
-                      isUnread ? styles['notifications__item--unread'] : ''
-                    } ${
-                      isSystemAlert && 'type' in item && item.type === 'error'
-                        ? styles['notifications__item--error']
-                        : ''
-                    } ${isFriendRequest ? styles['notifications__item--friendRequest'] : ''}`}
-                    onClick={() => handleNotificationClick(item)}
+                    className={getItemClasses(item)}
+                    onClick={() => handleItemClick(item)}
                   >
                     {/* Icon */}
-                    <div
-                      className={`${styles.notifications__itemIcon} ${
-                        isFriendRequest ? styles['notifications__itemIcon--friendRequest'] : ''
-                      }`}
-                    >
+                    <div className={getIconClasses(item)}>
                       {getIcon(item)}
                     </div>
 
                     {/* Content */}
                     <div className={styles.notifications__itemContent}>
-                      <p className={styles.notifications__itemTitle}>{info.title}</p>
-                      <p className={styles.notifications__itemMessage}>{info.message}</p>
+                      <p className={styles.notifications__itemTitle}>
+                        {isSystemAlert ? item.category.toUpperCase() : item.title}
+                      </p>
+                      <p className={styles.notifications__itemMessage}>
+                        {item.message}
+                      </p>
                       <p className={styles.notifications__itemTime}>
-                        {getRelativeTime(item.timestamp)}
+                        {getRelativeTime(isSystemAlert ? item.timestamp : item.createdAt)}
                       </p>
                     </div>
 
-                    {/* Unread indicator */}
+                    {/* Unread dot */}
                     {isUnread && <div className={styles.notifications__itemUnreadDot} />}
                   </div>
                 );

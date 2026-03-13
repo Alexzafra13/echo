@@ -101,6 +101,23 @@
   gap: 12px;
 }
 
+.deleteConfirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+}
+
+.deleteConfirmText {
+  font-size: 12px;
+  color: #ef4444;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .cleanupResult {
   display: flex;
   align-items: center;

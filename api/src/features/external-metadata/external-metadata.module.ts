@@ -2,6 +2,7 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ConfigModule } from '@nestjs/config';
 import { QueueModule } from '@infrastructure/queue/queue.module';
+import { NotificationsModule } from '@features/notifications/notifications.module';
 
 // Domain
 // (Interfaces and entities are imported as needed, no providers for them)
@@ -110,6 +111,7 @@ import { STORAGE_SERVICE, SETTINGS_REPOSITORY } from './domain/ports';
   imports: [
     ConfigModule,
     QueueModule, // For BullMQ enrichment queue
+    NotificationsModule,
   ],
   providers: [
     // Core services

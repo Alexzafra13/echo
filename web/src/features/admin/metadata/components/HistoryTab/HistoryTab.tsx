@@ -4,10 +4,11 @@
  * Container for enrichment history with clean architecture
  */
 
-import { useState } from 'react';
-import { Clock } from 'lucide-react';
-import { useEnrichmentLogs, useEnrichmentStats } from '../../../hooks/useEnrichmentHistory';
-import { ListEnrichmentLogsFilters } from '../../../api/enrichment.api';
+import { useState, useEffect, useRef } from 'react';
+import { Clock, Trash2, Settings, Check } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEnrichmentLogs, useEnrichmentStats, useEnrichmentBackfill } from '../../../hooks/useEnrichmentHistory';
+import { enrichmentApi, ListEnrichmentLogsFilters } from '../../../api/enrichment.api';
 import { StatsSection } from './StatsSection';
 import { ProviderStatsGrid } from './ProviderStatsGrid';
 import { HistoryFilters } from './HistoryFilters';
@@ -29,14 +30,46 @@ export function HistoryTab() {
   const [statsPeriod, setStatsPeriod] = useState<'today' | 'week' | 'month' | 'all'>('week');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+  // Retention & cleanup state
+  const [retentionDays, setRetentionDays] = useState<number>(30);
+  const [isSavingRetention, setIsSavingRetention] = useState(false);
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<string | null>(null);
+  const cleanupTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const queryClient = useQueryClient();
+
   // Queries
   const { data: logsData, isLoading: logsLoading } = useEnrichmentLogs(filters);
   const { data: statsData, isLoading: statsLoading } = useEnrichmentStats(statsPeriod);
+
+  // Auto-backfill if artist/album logs are missing
+  useEnrichmentBackfill(statsData);
 
   const logs = logsData?.logs || [];
   const total = logsData?.total || 0;
   const pageSize = filters.take || 10;
   const totalPages = Math.ceil(total / pageSize);
+
+  // Load retention setting
+  useEffect(() => {
+    enrichmentApi.getRetention()
+      .then((res) => setRetentionDays(res.retentionDays))
+      .catch(() => {});
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(
+    () => () => { clearTimeout(cleanupTimerRef.current); },
+    [],
+  );
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['enrichmentLogs'] });
+    queryClient.invalidateQueries({ queryKey: ['enrichmentStats'] });
+  };
 
   // Handlers
   const handleFilterChange = (newFilters: Partial<ListEnrichmentLogsFilters>) => {
@@ -48,6 +81,57 @@ export function HistoryTab() {
     const skip = (page - 1) * pageSize;
     setFilters({ ...filters, skip });
     setCurrentPage(page);
+  };
+
+  const handleRetentionChange = async (days: number) => {
+    setRetentionDays(days);
+    setIsSavingRetention(true);
+    try {
+      await enrichmentApi.saveRetention(days);
+    } catch {
+      // silently fail
+    } finally {
+      setIsSavingRetention(false);
+    }
+  };
+
+  const handleCleanup = async () => {
+    setIsCleaningUp(true);
+    setCleanupResult(null);
+    try {
+      const res = await enrichmentApi.cleanupOldLogs();
+      const count = res.deletedCount;
+      setCleanupResult(
+        count > 0 ? `${count} logs eliminados` : 'No hay logs antiguos para eliminar',
+      );
+      clearTimeout(cleanupTimerRef.current);
+      cleanupTimerRef.current = setTimeout(() => setCleanupResult(null), 5000);
+      if (count > 0) invalidateAll();
+    } catch {
+      // silently fail
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    setShowDeleteConfirm(false);
+    setIsDeleting(true);
+    setCleanupResult(null);
+    try {
+      const res = await enrichmentApi.deleteAllLogs();
+      const count = res.deletedCount;
+      setCleanupResult(
+        count > 0 ? `${count} logs eliminados (todos)` : 'No hay logs para eliminar',
+      );
+      clearTimeout(cleanupTimerRef.current);
+      cleanupTimerRef.current = setTimeout(() => setCleanupResult(null), 5000);
+      invalidateAll();
+    } catch {
+      // silently fail
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -68,6 +152,63 @@ export function HistoryTab() {
             <p className={styles.historyDescription}>
               {total > 0 ? `${total} registros totales` : 'No hay registros'}
             </p>
+          </div>
+        </div>
+
+        {/* Retention & Cleanup Bar */}
+        <div className={styles.retentionBar}>
+          <div className={styles.retentionLeft}>
+            <Settings size={14} />
+            <span className={styles.retentionLabel}>Retención:</span>
+            <select
+              value={retentionDays}
+              onChange={(e) => handleRetentionChange(Number(e.target.value))}
+              className={styles.retentionSelect}
+              disabled={isSavingRetention}
+            >
+              <option value={7}>7 días</option>
+              <option value={14}>14 días</option>
+              <option value={30}>30 días</option>
+              <option value={60}>60 días</option>
+              <option value={90}>90 días</option>
+            </select>
+            {isSavingRetention && <span className={styles.savingIndicator}>Guardando...</span>}
+          </div>
+          <div className={styles.retentionRight}>
+            {cleanupResult && (
+              <span className={styles.cleanupResult}>
+                <Check size={14} />
+                {cleanupResult}
+              </span>
+            )}
+            <button
+              className={styles.cleanupButton}
+              onClick={handleCleanup}
+              disabled={isCleaningUp || isDeleting}
+            >
+              <Trash2 size={14} />
+              {isCleaningUp ? 'Limpiando...' : 'Limpiar antiguos'}
+            </button>
+            {!showDeleteConfirm ? (
+              <button
+                className={styles.deleteAllButton}
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isCleaningUp || isDeleting}
+              >
+                <Trash2 size={14} />
+                {isDeleting ? 'Eliminando...' : 'Eliminar todos'}
+              </button>
+            ) : (
+              <div className={styles.deleteConfirm}>
+                <span className={styles.deleteConfirmText}>¿Seguro?</span>
+                <button className={styles.deleteConfirmYes} onClick={handleDeleteAll}>
+                  Sí, eliminar
+                </button>
+                <button className={styles.deleteConfirmNo} onClick={() => setShowDeleteConfirm(false)}>
+                  Cancelar
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

@@ -6,7 +6,25 @@
 
 import { CheckCircle, AlertCircle, XCircle, Music, Disc, Radio } from 'lucide-react';
 import { formatDateCompact } from '@shared/utils/date.utils';
+import { getProviderBranding } from '../../constants/providerBranding';
 import styles from './HistoryTab.module.css';
+
+/** Map raw provider names to branding keys */
+const PROVIDER_KEY_MAP: Record<string, string> = {
+  'last.fm': 'lastfm',
+  'lastfm': 'lastfm',
+  'fanart.tv': 'fanart',
+  'fanart': 'fanart',
+  'musicbrainz': 'musicbrainz',
+  'cover art archive': 'coverartarchive',
+  'coverartarchive': 'coverartarchive',
+  'coverart': 'coverartarchive',
+  'wikipedia': 'wikipedia',
+  'google-favicon': 'google-favicon',
+  'google favicon': 'google-favicon',
+  'apple-touch-icon': 'apple-touch-icon',
+  'apple touch icon': 'apple-touch-icon',
+};
 
 // Re-export formatDate using the compact format for backward compatibility
 export const formatDate = formatDateCompact;
@@ -84,4 +102,32 @@ export function buildImageUrl(log: {
 
   // Default: treat as relative API path
   return `/api${value.startsWith('/') ? value : '/' + value}`;
+}
+
+/**
+ * Get provider display with logo and name
+ */
+export function getProviderDisplay(provider: string) {
+  const key = PROVIDER_KEY_MAP[provider.toLowerCase()] || provider.toLowerCase();
+  const branding = getProviderBranding(key);
+
+  if (branding) {
+    return (
+      <span className={styles.providerBadge}>
+        <img
+          src={branding.logoPath}
+          alt={branding.name}
+          className={styles.providerBadgeLogo}
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+            if (fallback) fallback.style.display = '';
+          }}
+        />
+        <span style={{ display: 'none' }}>{branding.name}</span>
+      </span>
+    );
+  }
+
+  return <span className={styles.providerBadge}>{provider}</span>;
 }

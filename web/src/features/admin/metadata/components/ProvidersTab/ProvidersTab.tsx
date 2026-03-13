@@ -6,41 +6,25 @@
  */
 
 import { useState, useEffect } from 'react';
-import { AlertCircle, Radio, Upload } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { AlertCircle } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { useNotification } from '@shared/hooks';
-import { formatBytes } from '@shared/utils/format';
 import {
   useMetadataSettings,
   useUpdateMetadataSettings,
   useValidateApiKey,
 } from '../../hooks';
-import { radioFaviconsApi } from '@features/admin/api/radio-favicons.api';
 import { ProviderCard } from './ProviderCard';
 import { AutoEnrichToggle } from './AutoEnrichToggle';
 import { PROVIDER_BRANDING } from '../../constants/providerBranding';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './ProvidersTab.module.css';
 
-const SOURCE_LABELS: Record<string, string> = {
-  'apple-touch-icon': 'Apple Touch Icon',
-  'google-favicon': 'Google Favicon',
-  'wikipedia': 'Wikipedia',
-  'manual': 'Subida manual',
-};
-
 export function ProvidersTab() {
   // React Query hooks
   const { data: settings, isLoading, error } = useMetadataSettings();
   const updateSettings = useUpdateMetadataSettings();
   const validateApiKey = useValidateApiKey();
-
-  const { data: faviconStats } = useQuery({
-    queryKey: ['admin', 'radio', 'favicon-stats'],
-    queryFn: () => radioFaviconsApi.getStats(),
-    staleTime: 60_000,
-  });
 
   // Local form state
   const [lastfmKey, setLastfmKey] = useState('');
@@ -232,63 +216,6 @@ export function ProvidersTab() {
         </div>
       </div>
 
-      {/* Radio Favicon Sources */}
-      <div className={styles.radioFaviconSection}>
-        <div className={styles.radioFaviconHeader}>
-          <Radio size={20} />
-          <div>
-            <h3 className={styles.sectionTitle}>Favicons de Radio</h3>
-            <p className={styles.sectionDescription}>
-              Los iconos de las emisoras se obtienen automaticamente de estas fuentes (sin configuracion necesaria)
-            </p>
-          </div>
-        </div>
-
-        {faviconStats && faviconStats.totalCount > 0 && (
-          <div className={styles.radioFaviconStats}>
-            <div className={styles.radioFaviconStatItem}>
-              <span className={styles.radioFaviconStatLabel}>Total</span>
-              <span className={styles.radioFaviconStatValue}>{faviconStats.totalCount}</span>
-            </div>
-            <div className={styles.radioFaviconStatItem}>
-              <span className={styles.radioFaviconStatLabel}>Tamaño</span>
-              <span className={styles.radioFaviconStatValue}>{formatBytes(faviconStats.totalSize)}</span>
-            </div>
-          </div>
-        )}
-
-        <div className={styles.radioSourcesList}>
-          {[
-            { key: 'apple-touch-icon', logo: PROVIDER_BRANDING['apple-touch-icon']?.logoPath, fallbackIcon: null, desc: 'Icono estandar que las webs publican para dispositivos Apple (ej. /apple-touch-icon.png)', priority: 1 },
-            { key: 'google-favicon', logo: PROVIDER_BRANDING['google-favicon']?.logoPath, fallbackIcon: null, desc: 'Servicio publico de Google que devuelve el favicon de cualquier dominio', priority: 2 },
-            { key: 'wikipedia', logo: PROVIDER_BRANDING.wikipedia?.logoPath, fallbackIcon: null, desc: 'Busca el logo de la emisora en su articulo de Wikipedia (API publica)', priority: 3 },
-            { key: 'manual', logo: null, fallbackIcon: <Upload size={16} />, desc: 'Favicons subidos manualmente por el administrador', priority: 4 },
-          ].map((source) => {
-            const stat = faviconStats?.bySource.find((s) => s.source === source.key);
-            return (
-              <div key={source.key} className={styles.radioSource}>
-                <div className={styles.radioSourceIcon}>
-                  {source.logo ? (
-                    <img src={source.logo} alt={SOURCE_LABELS[source.key]} className={styles.radioSourceLogo} />
-                  ) : (
-                    source.fallbackIcon
-                  )}
-                </div>
-                <div className={styles.radioSourceInfo}>
-                  <span className={styles.radioSourceName}>{SOURCE_LABELS[source.key]}</span>
-                  <span className={styles.radioSourceDesc}>{source.desc}</span>
-                </div>
-                {stat && stat.count > 0 && (
-                  <span className={styles.radioSourceCount}>
-                    {stat.count} ({formatBytes(stat.totalSize)})
-                  </span>
-                )}
-                <span className={styles.radioSourcePriority}>Prioridad {source.priority}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Notification */}
       {notification && (

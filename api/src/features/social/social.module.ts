@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { SecuritySecretsService } from '@config/security-secrets.service';
+import { NotificationsModule } from '@features/notifications/notifications.module';
 import { SOCIAL_REPOSITORY } from './domain/ports';
 import { DrizzleSocialRepository } from './infrastructure/persistence/social.repository';
 import {
@@ -31,6 +32,7 @@ import { SocialController } from './presentation/controller/social.controller';
       }),
       inject: [SecuritySecretsService],
     }),
+    NotificationsModule,
   ],
   controllers: [SocialController],
   providers: [

@@ -97,6 +97,8 @@ export function LogsPanel() {
   const [retentionDays, setRetentionDays] = useState<number>(30);
   const [isSavingRetention, setIsSavingRetention] = useState(false);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [cleanupResult, setCleanupResult] = useState<string | null>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const cleanupTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -158,9 +160,6 @@ export function LogsPanel() {
     try {
       await apiClient.put('/admin/settings/logs.retention_days', {
         value: String(days),
-        category: 'logs',
-        type: 'number',
-        description: 'Días de retención de logs del sistema y enriquecimiento',
       });
     } catch (err) {
       setError(getApiErrorMessage(err, 'Error al guardar retención'));
@@ -187,6 +186,26 @@ export function LogsPanel() {
       setError(getApiErrorMessage(err, 'Error al ejecutar limpieza'));
     } finally {
       setIsCleaningUp(false);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    setShowDeleteConfirm(false);
+    setIsDeletingAll(true);
+    setCleanupResult(null);
+    try {
+      const res = await apiClient.post<{ deletedCount: number }>('/logs/cleanup/all');
+      const count = res.data.deletedCount;
+      setCleanupResult(
+        count > 0 ? `${count} logs eliminados (todos)` : 'No hay logs para eliminar'
+      );
+      clearTimeout(cleanupTimerRef.current);
+      cleanupTimerRef.current = setTimeout(() => setCleanupResult(null), 5000);
+      if (count > 0) loadLogs();
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Error al eliminar todos los logs'));
+    } finally {
+      setIsDeletingAll(false);
     }
   };
 
@@ -293,10 +312,32 @@ export function LogsPanel() {
               {cleanupResult}
             </span>
           )}
-          <Button onClick={handleCleanup} disabled={isCleaningUp} variant="ghost" size="sm">
+          <Button onClick={handleCleanup} disabled={isCleaningUp || isDeletingAll} variant="ghost" size="sm">
             <Trash2 size={14} className={isCleaningUp ? styles.spinning : ''} />
-            {isCleaningUp ? 'Limpiando...' : 'Limpiar ahora'}
+            {isCleaningUp ? 'Limpiando...' : 'Limpiar antiguos'}
           </Button>
+          {!showDeleteConfirm ? (
+            <Button
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isCleaningUp || isDeletingAll}
+              variant="ghost"
+              size="sm"
+              style={{ color: '#ef4444' }}
+            >
+              <Trash2 size={14} className={isDeletingAll ? styles.spinning : ''} />
+              {isDeletingAll ? 'Eliminando...' : 'Eliminar todos'}
+            </Button>
+          ) : (
+            <div className={styles.deleteConfirm}>
+              <span className={styles.deleteConfirmText}>¿Seguro?</span>
+              <Button onClick={handleDeleteAll} variant="ghost" size="sm" style={{ color: '#ef4444' }}>
+                Sí, eliminar
+              </Button>
+              <Button onClick={() => setShowDeleteConfirm(false)} variant="ghost" size="sm">
+                Cancelar
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

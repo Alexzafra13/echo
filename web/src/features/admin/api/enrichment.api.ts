@@ -80,4 +80,38 @@ export const enrichmentApi = {
     );
     return response.data;
   },
+
+  async backfillLogs(): Promise<{ created: number; artists: number; albums: number }> {
+    const response = await apiClient.post<{ created: number; artists: number; albums: number }>(
+      '/admin/metadata/enrichment/backfill',
+    );
+    return response.data;
+  },
+
+  async getRetention(): Promise<{ retentionDays: number }> {
+    const response = await apiClient.get<{ retentionDays: number }>(
+      '/admin/metadata/enrichment/retention',
+    );
+    return response.data;
+  },
+
+  async saveRetention(days: number): Promise<void> {
+    await apiClient.put('/admin/settings/enrichment_logs.retention_days', {
+      value: String(days),
+    });
+  },
+
+  async cleanupOldLogs(): Promise<{ deletedCount: number; retentionDays: number }> {
+    const response = await apiClient.post<{ deletedCount: number; retentionDays: number }>(
+      '/admin/metadata/enrichment/cleanup',
+    );
+    return response.data;
+  },
+
+  async deleteAllLogs(): Promise<{ deletedCount: number }> {
+    const response = await apiClient.delete<{ deletedCount: number }>(
+      '/admin/metadata/enrichment/history',
+    );
+    return response.data;
+  },
 };
