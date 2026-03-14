@@ -2,21 +2,8 @@ import { ListMusic } from 'lucide-react';
 import { PlaylistCover } from '@features/recommendations/components';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
+import type { AutoPlaylist } from '@shared/services/recommendations.service';
 import styles from '../ArtistDetailPage.module.css';
-
-interface AutoPlaylist {
-  id: string;
-  name: string;
-  type: 'wave-mix' | 'artist' | 'genre' | 'mood';
-  coverColor?: string;
-  coverImageUrl?: string;
-  metadata: {
-    artistId?: string;
-    artistName?: string;
-  };
-  tracks: { trackId?: string; track?: Record<string, unknown> }[];
-  [key: string]: unknown;
-}
 
 interface UserPlaylist {
   id: string;

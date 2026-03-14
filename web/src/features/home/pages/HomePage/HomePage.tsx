@@ -269,7 +269,7 @@ export default function HomePage() {
       return { artistMixPlaylists: [], genreMixPlaylists: [] };
     }
 
-    const { waveMix, artistPlaylists, genrePlaylists } = categorizeAutoPlaylists(autoPlaylists);
+    const { artistPlaylists, genrePlaylists } = categorizeAutoPlaylists(autoPlaylists);
 
     // Artist Mix: artist playlists only (Wave Mix excluded)
     const artistMix = [];

@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState, useEffect, useRef } from 'react';
 import { Music } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
@@ -16,6 +16,34 @@ interface QueueListProps {
  */
 export const QueueList = memo(function QueueList({ onClose }: QueueListProps) {
   const { queue, currentTrack, play } = usePlayer();
+  const [closing, setClosing] = useState(false);
+  const closingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const handleClose = useCallback(() => {
+    if (closingTimer.current) return; // Prevent double-close
+    setClosing(true);
+    closingTimer.current = setTimeout(() => {
+      onClose();
+    }, 200); // Match animation duration
+  }, [onClose]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (closingTimer.current) clearTimeout(closingTimer.current);
+    };
+  }, []);
+
+  // Close on page scroll (ignore scroll inside the queue list itself)
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      if (listRef.current && listRef.current.contains(e.target as Node)) return;
+      handleClose();
+    };
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, [handleClose]);
 
   const handleTrackClick = useCallback((trackIndex: number) => {
     if (queue[trackIndex]) {
@@ -24,9 +52,11 @@ export const QueueList = memo(function QueueList({ onClose }: QueueListProps) {
     }
   }, [queue, play, onClose]);
 
+  const containerClass = `${styles.queueList} ${closing ? styles['queueList--closing'] : ''}`;
+
   if (queue.length === 0) {
     return (
-      <div className={styles.queueList}>
+      <div className={containerClass} ref={listRef}>
         <div className={styles.queueList__header}>
           <h3 className={styles.queueList__title}>
             <Music size={16} />
@@ -41,7 +71,7 @@ export const QueueList = memo(function QueueList({ onClose }: QueueListProps) {
   }
 
   return (
-    <div className={styles.queueList}>
+    <div className={containerClass} ref={listRef}>
       <div className={styles.queueList__header}>
         <h3 className={styles.queueList__title}>
           <Music size={16} />

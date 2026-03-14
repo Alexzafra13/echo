@@ -38,6 +38,17 @@ export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16, stro
     };
   }, [isOpen]);
 
+  // Close menu on scroll (ignore scroll inside the menu itself)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleScroll = (e: Event) => {
+      if (menuRef.current && menuRef.current.contains(e.target as Node)) return;
+      onClose();
+    };
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, [isOpen, onClose, menuRef]);
+
   const handleOptionClick = (value: PlayerPreference) => {
     setPreference(value);
     onClose();
