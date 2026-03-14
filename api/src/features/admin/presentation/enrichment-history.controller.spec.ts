@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { EnrichmentHistoryController } from './enrichment-history.controller';
 import { ListEnrichmentLogsUseCase } from '../infrastructure/use-cases/list-enrichment-logs';
 import { GetEnrichmentStatsUseCase } from '../infrastructure/use-cases/get-enrichment-stats';
+import { BackfillEnrichmentLogsUseCase } from '../infrastructure/use-cases/backfill-enrichment-logs';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 
@@ -25,6 +28,24 @@ describe('EnrichmentHistoryController', () => {
     execute: jest.fn(),
   };
 
+  const mockBackfillEnrichmentLogsUseCase = {
+    execute: jest.fn(),
+  };
+
+  const mockDrizzleService = {
+    db: {
+      delete: jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnValue({
+          returning: jest.fn().mockResolvedValue([]),
+        }),
+      }),
+    },
+  };
+
+  const mockSettingsService = {
+    getNumber: jest.fn().mockResolvedValue(30),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [EnrichmentHistoryController],
@@ -36,6 +57,18 @@ describe('EnrichmentHistoryController', () => {
         {
           provide: GetEnrichmentStatsUseCase,
           useValue: mockGetEnrichmentStatsUseCase,
+        },
+        {
+          provide: BackfillEnrichmentLogsUseCase,
+          useValue: mockBackfillEnrichmentLogsUseCase,
+        },
+        {
+          provide: DrizzleService,
+          useValue: mockDrizzleService,
+        },
+        {
+          provide: SettingsService,
+          useValue: mockSettingsService,
         },
       ],
     })

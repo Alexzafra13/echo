@@ -160,23 +160,35 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     if ('category' in item) {
       // System alert
       switch (item.category) {
-        case 'storage': return <HardDrive size={16} />;
-        case 'database': return <Database size={16} />;
-        case 'scanner': return <AlertTriangle size={16} />;
-        case 'missing': return <FileX size={16} />;
-        default: return <AlertTriangle size={16} />;
+        case 'storage':
+          return <HardDrive size={16} />;
+        case 'database':
+          return <Database size={16} />;
+        case 'scanner':
+          return <AlertTriangle size={16} />;
+        case 'missing':
+          return <FileX size={16} />;
+        default:
+          return <AlertTriangle size={16} />;
       }
     }
 
     // Persistent notification
     switch (item.type) {
-      case 'friend_request_received': return <UserPlus size={16} />;
-      case 'friend_request_accepted': return <UserCheck size={16} />;
-      case 'scan_completed': return <Radio size={16} />;
-      case 'enrichment_completed': return <Music size={16} />;
-      case 'system_alert': return <AlertTriangle size={16} />;
-      case 'new_content': return <Disc size={16} />;
-      default: return <Bell size={16} />;
+      case 'friend_request_received':
+        return <UserPlus size={16} />;
+      case 'friend_request_accepted':
+        return <UserCheck size={16} />;
+      case 'scan_completed':
+        return <Radio size={16} />;
+      case 'enrichment_completed':
+        return <Music size={16} />;
+      case 'system_alert':
+        return <AlertTriangle size={16} />;
+      case 'new_content':
+        return <Disc size={16} />;
+      default:
+        return <Bell size={16} />;
     }
   };
 
@@ -191,7 +203,8 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
 
     // Persistent notification
     if (!item.isRead) classes.push(styles['notifications__item--unread']);
-    if (item.type === 'friend_request_received') classes.push(styles['notifications__item--friendRequest']);
+    if (item.type === 'friend_request_received')
+      classes.push(styles['notifications__item--friendRequest']);
 
     return classes.join(' ');
   };
@@ -338,18 +351,14 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
                     onClick={() => handleItemClick(item)}
                   >
                     {/* Icon */}
-                    <div className={getIconClasses(item)}>
-                      {getIcon(item)}
-                    </div>
+                    <div className={getIconClasses(item)}>{getIcon(item)}</div>
 
                     {/* Content */}
                     <div className={styles.notifications__itemContent}>
                       <p className={styles.notifications__itemTitle}>
                         {isSystemAlert ? item.category.toUpperCase() : item.title}
                       </p>
-                      <p className={styles.notifications__itemMessage}>
-                        {item.message}
-                      </p>
+                      <p className={styles.notifications__itemMessage}>{item.message}</p>
                       <p className={styles.notifications__itemTime}>
                         {getRelativeTime(isSystemAlert ? item.timestamp : item.createdAt)}
                       </p>

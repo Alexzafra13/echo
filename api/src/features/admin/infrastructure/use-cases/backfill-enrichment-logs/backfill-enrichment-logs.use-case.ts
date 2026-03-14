@@ -16,7 +16,7 @@ export class BackfillEnrichmentLogsUseCase {
   constructor(
     @InjectPinoLogger(BackfillEnrichmentLogsUseCase.name)
     private readonly logger: PinoLogger,
-    private readonly drizzle: DrizzleService,
+    private readonly drizzle: DrizzleService
   ) {}
 
   async execute(): Promise<{ created: number; artists: number; albums: number }> {
@@ -84,7 +84,8 @@ export class BackfillEnrichmentLogsUseCase {
           status: 'success',
           fieldsUpdated: fields,
           previewUrl: `/api/images/artists/${artist.id}/profile`,
-          createdAt: artist.externalProfileUpdatedAt || artist.externalProfileUpdatedAt || new Date(),
+          createdAt:
+            artist.externalProfileUpdatedAt || artist.externalProfileUpdatedAt || new Date(),
         });
         artistCount++;
       }
@@ -121,10 +122,7 @@ export class BackfillEnrichmentLogsUseCase {
     }
 
     const total = artistCount + albumCount;
-    this.logger.info(
-      { artistCount, albumCount, total },
-      'Backfill enrichment logs completed',
-    );
+    this.logger.info({ artistCount, albumCount, total }, 'Backfill enrichment logs completed');
 
     return { created: total, artists: artistCount, albums: albumCount };
   }
@@ -134,7 +132,7 @@ export class BackfillEnrichmentLogsUseCase {
       .select({ id: enrichmentLogs.id })
       .from(enrichmentLogs)
       .where(
-        sql`${enrichmentLogs.entityId} = ${entityId} AND ${enrichmentLogs.metadataType} = ${metadataType}`,
+        sql`${enrichmentLogs.entityId} = ${entityId} AND ${enrichmentLogs.metadataType} = ${metadataType}`
       )
       .limit(1);
     return result.length > 0;
