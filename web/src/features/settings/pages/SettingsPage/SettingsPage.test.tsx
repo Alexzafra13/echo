@@ -81,6 +81,11 @@ vi.mock('@features/player', () => ({
   usePlayer: () => mockPlayerState,
 }));
 
+vi.mock('@features/notifications', () => ({
+  useNotificationPreferences: () => ({ data: [], isLoading: false }),
+  useUpdatePreference: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 describe('SettingsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();

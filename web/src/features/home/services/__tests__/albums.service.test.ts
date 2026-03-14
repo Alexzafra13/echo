@@ -213,7 +213,7 @@ describe('albumsService', () => {
         { id: 'track-1', title: 'Track 1', duration: 180 },
         { id: 'track-2', title: 'Track 2', duration: 200 },
       ];
-      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockTracks });
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: mockTracks } });
 
       const result = await albumsService.getAlbumTracks('album-1');
 
@@ -223,7 +223,7 @@ describe('albumsService', () => {
     });
 
     it('should handle album with no tracks', async () => {
-      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: [] });
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [] } });
 
       const result = await albumsService.getAlbumTracks('album-empty');
 
