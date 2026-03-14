@@ -294,11 +294,24 @@
 }
 
 :root[data-theme='light'] .sidebar__navItem--active {
-  color: var(--color-primary-600, #e04d28);
+  color: #c2410c; /* Orange 700 — más oscuro, mejor contraste en light */
+  background: linear-gradient(135deg, rgba(194, 65, 12, 0.14) 0%, rgba(194, 65, 12, 0.06) 100%);
+  border-color: rgba(194, 65, 12, 0.18);
+  box-shadow: 0 2px 12px rgba(194, 65, 12, 0.10);
+}
+
+:root[data-theme='light'] .sidebar__navItem--active::before {
+  background: #c2410c;
+  box-shadow: 0 0 10px rgba(194, 65, 12, 0.4);
+}
+
+:root[data-theme='light'] .sidebar__navItem--active:hover {
+  background: linear-gradient(135deg, rgba(194, 65, 12, 0.18) 0%, rgba(194, 65, 12, 0.10) 100%);
+  color: #b83a0e; /* Entre Orange 700 y 600 — más intenso sin llegar a marrón */
 }
 
 :root[data-theme='light'] .sidebar__navItem--active .sidebar__navIcon {
-  filter: drop-shadow(0 0 4px rgba(237, 104, 66, 0.3));
+  filter: drop-shadow(0 0 4px rgba(194, 65, 12, 0.25));
 }
 
 :root[data-theme='light'] .sidebar__nav::-webkit-scrollbar-thumb {

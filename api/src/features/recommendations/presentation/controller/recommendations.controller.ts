@@ -51,6 +51,8 @@ interface TrackEnrichmentData {
   duration: number | null | undefined;
   albumId: string | null | undefined;
   artistId: string | null | undefined;
+  suffix: string | null | undefined;
+  bitRate: number | null | undefined;
   rgTrackGain: number | null | undefined;
   rgTrackPeak: number | null | undefined;
   rgAlbumGain: number | null | undefined;
@@ -147,6 +149,8 @@ export class RecommendationsController {
                 duration: track.duration || undefined,
                 albumId: track.albumId || undefined,
                 artistId: track.artistId || undefined,
+                suffix: track.suffix || undefined,
+                bitRate: track.bitRate || undefined,
                 // Audio normalization data (LUFS/ReplayGain)
                 rgTrackGain: track.rgTrackGain,
                 rgTrackPeak: track.rgTrackPeak,
@@ -224,6 +228,8 @@ export class RecommendationsController {
                 duration: track.duration || undefined,
                 albumId: track.albumId || undefined,
                 artistId: track.artistId || undefined,
+                suffix: track.suffix || undefined,
+                bitRate: track.bitRate || undefined,
                 // Audio normalization data (LUFS/ReplayGain)
                 rgTrackGain: track.rgTrackGain,
                 rgTrackPeak: track.rgTrackPeak,
@@ -358,6 +364,8 @@ export class RecommendationsController {
         duration: primitives.duration,
         albumId: primitives.albumId,
         artistId: primitives.artistId,
+        suffix: primitives.suffix,
+        bitRate: primitives.bitRate,
         // Audio normalization data (LUFS/ReplayGain)
         rgTrackGain: primitives.rgTrackGain,
         rgTrackPeak: primitives.rgTrackPeak,
@@ -400,6 +408,8 @@ export class RecommendationsController {
                 duration: track.duration || undefined,
                 albumId: track.albumId || undefined,
                 artistId: track.artistId || undefined,
+                suffix: track.suffix || undefined,
+                bitRate: track.bitRate || undefined,
                 // Audio normalization data (LUFS/ReplayGain)
                 rgTrackGain: track.rgTrackGain,
                 rgTrackPeak: track.rgTrackPeak,

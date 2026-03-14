@@ -4,7 +4,7 @@
  * @returns Formatted time string
  */
 export function formatDuration(seconds: number | undefined): string {
-  if (seconds === undefined || isNaN(seconds) || seconds < 0) {
+  if (seconds === undefined || isNaN(seconds) || !isFinite(seconds) || seconds < 0) {
     return '0:00';
   }
 

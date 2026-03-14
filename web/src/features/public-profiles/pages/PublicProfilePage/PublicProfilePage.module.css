@@ -950,6 +950,107 @@
   }
 }
 
+/* ============================================
+   Light Theme
+   ============================================ */
+
+/* Hero & Avatar */
+:root[data-theme='light'] .publicProfilePage__avatar {
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.15),
+    0 0 0 4px rgba(255, 255, 255, 0.7);
+}
+
+:root[data-theme='light'] .publicProfilePage__avatarPlaceholder {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.10);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Friend Buttons */
+:root[data-theme='light'] .publicProfilePage__friendBtn--secondary {
+  border-color: rgba(0, 0, 0, 0.20);
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .publicProfilePage__friendBtn--secondary:hover {
+  border-color: #1f2937;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme='light'] .publicProfilePage__friendBtn--pending {
+  background: rgba(0, 0, 0, 0.06);
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .publicProfilePage__iconBtn {
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .publicProfilePage__iconBtn:hover {
+  border-color: #1f2937;
+  color: #1f2937;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Tracks */
+:root[data-theme='light'] .publicProfilePage__trackItem {
+  background: #f9fafb;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .publicProfilePage__trackItem:hover {
+  background: #f3f4f6;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme='light'] .publicProfilePage__trackCoverPlaceholder {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+:root[data-theme='light'] .publicProfilePage__trackItemPlaying {
+  background: rgba(237, 104, 66, 0.06);
+  border-color: rgba(237, 104, 66, 0.12);
+}
+
+/* Artist & Album placeholders */
+:root[data-theme='light'] .publicProfilePage__artistPlaceholder {
+  background: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+}
+
+:root[data-theme='light'] .publicProfilePage__artistImage {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme='light'] .publicProfilePage__albumPlaceholder {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+:root[data-theme='light'] .publicProfilePage__albumCover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme='light'] .publicProfilePage__playlistCoverWrapper {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+}
+
+/* Listening Now badge */
+:root[data-theme='light'] .publicProfilePage__listeningNowCover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme='light'] .publicProfilePage__listeningNowCoverPlaceholder {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Private profile */
+:root[data-theme='light'] .publicProfilePage__privateIcon {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 @media (max-width: 480px) {
   .publicProfilePage__content {
     margin-top: -52px;

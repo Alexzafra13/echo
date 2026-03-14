@@ -204,31 +204,87 @@
 }
 
 /* ===== Light Theme ===== */
+:root[data-theme='light'] .select__label {
+  color: #4b5563;
+}
+
 :root[data-theme='light'] .select__trigger {
-  background: var(--white-80);
-  border-color: var(--black-10);
-  color: var(--color-text-primary, #1f2937);
+  background: rgba(156, 163, 175, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(156, 163, 175, 0.35);
+  color: #1f2937;
 }
 
 :root[data-theme='light'] .select__trigger:hover {
-  background: var(--white-95);
-  border-color: var(--black-15);
+  background: rgba(156, 163, 175, 0.3);
+  border-color: rgba(156, 163, 175, 0.45);
+}
+
+:root[data-theme='light'] .select__trigger:focus,
+:root[data-theme='light'] .select__trigger:focus-visible {
+  background: rgba(156, 163, 175, 0.3);
+  border-color: rgba(194, 65, 12, 0.5);
+  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.12);
+}
+
+:root[data-theme='light'] .select__trigger--open {
+  background: rgba(156, 163, 175, 0.3);
+  border-color: rgba(194, 65, 12, 0.5);
+  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.12);
+}
+
+:root[data-theme='light'] .select__icon {
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .select__trigger:hover .select__icon {
+  color: #374151;
+}
+
+:root[data-theme='light'] .select__trigger--open .select__icon,
+:root[data-theme='light'] .select__icon--open {
+  color: #c2410c;
 }
 
 :root[data-theme='light'] .select__dropdown {
-  background: var(--white-98);
-  border-color: var(--black-10);
+  background: rgba(240, 242, 245, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-color: rgba(156, 163, 175, 0.35);
   box-shadow:
-    0 4px 6px -1px var(--black-10),
-    0 10px 20px -5px var(--black-15);
+    0 4px 6px -1px rgba(31, 41, 55, 0.08),
+    0 10px 25px -5px rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme='light'] .select__dropdown::-webkit-scrollbar-thumb {
+  background: rgba(107, 114, 128, 0.3);
+}
+
+:root[data-theme='light'] .select__dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.45);
 }
 
 :root[data-theme='light'] .select__option {
-  color: var(--color-text-secondary, #6b7280);
+  color: #4b5563;
 }
 
 :root[data-theme='light'] .select__option:hover,
 :root[data-theme='light'] .select__option--highlighted {
-  background: var(--black-05);
-  color: var(--color-text-primary, #1f2937);
+  background: rgba(156, 163, 175, 0.2);
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .select__option--selected {
+  color: #c2410c;
+}
+
+:root[data-theme='light'] .select__option--selected:hover,
+:root[data-theme='light'] .select__option--selected.select__option--highlighted {
+  background: rgba(194, 65, 12, 0.1);
+  color: #c2410c;
+}
+
+:root[data-theme='light'] .select__check {
+  color: #c2410c;
 }

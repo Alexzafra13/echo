@@ -193,6 +193,27 @@
   color: var(--color-error);
 }
 
+/* ===== Light Theme ===== */
+:global([data-theme='light']) .tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 10px 25px -3px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+:global([data-theme='light']) .tooltipHeader {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .tooltipDivider {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .tooltipFooter {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
 /* ===== Responsive Design ===== */
 
 /* Mobile */

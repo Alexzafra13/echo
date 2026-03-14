@@ -167,6 +167,8 @@ export function PlaylistDetailPage() {
         albumId: st.track!.albumId,
         artistId: st.track!.artistId,
         duration: st.track!.duration || 0,
+        suffix: st.track!.suffix,
+        bitRate: st.track!.bitRate,
         path: '',
         discNumber: 1,
         compilation: false,
@@ -198,17 +200,17 @@ export function PlaylistDetailPage() {
     return playlist.coverImageUrl || null;
   };
 
-  // For genre/wave-mix playlists: pick a random album cover as background
-  const genreBackgroundUrl = useMemo(() => {
-    if (!playlist || playlist.type === 'artist') return null;
+  // For genre/wave-mix playlists: collect unique album covers for mosaic background
+  const genreBackgroundUrls = useMemo(() => {
+    if (!playlist || playlist.type === 'artist') return [];
     const albumIds = new Set<string>();
     for (const st of playlist.tracks) {
       if (st.track?.albumId) albumIds.add(st.track.albumId);
     }
     const ids = Array.from(albumIds);
-    if (ids.length === 0) return null;
-    const randomId = ids[Math.floor(Math.random() * ids.length)];
-    return `/api/albums/${randomId}/cover`;
+    if (ids.length === 0) return [];
+    // Take up to 4 covers for the mosaic grid
+    return ids.slice(0, 4).map((id) => `/api/albums/${id}/cover`);
   }, [playlist]);
 
   // Extract dominant colors from genre/wave-mix playlist album covers for gradient
@@ -245,8 +247,8 @@ export function PlaylistDetailPage() {
   const tracks = convertToHomeTracks(playlist);
   const totalDuration = tracks.reduce((sum, track) => sum + (track.duration || 0), 0);
   const isArtistPlaylist = playlist.type === 'artist';
-  const hasHeroBackground = isArtistPlaylist || genreBackgroundUrl;
-  const backgroundUrl = isArtistPlaylist ? getBackgroundUrl() : genreBackgroundUrl;
+  const hasHeroBackground = isArtistPlaylist || genreBackgroundUrls.length > 0;
+  const backgroundUrl = isArtistPlaylist ? getBackgroundUrl() : null;
 
   // Get background position from artist data if available
   const backgroundPosition = artist?.backgroundPosition || 'center top';
@@ -268,15 +270,30 @@ export function PlaylistDetailPage() {
           <div
             className={`${styles.playlistDetailPage__hero} ${hasHeroBackground ? styles['playlistDetailPage__hero--withBg'] : ''} ${isArtistPlaylist ? styles['playlistDetailPage__hero--artist'] : ''}`}
           >
-            {/* Background image */}
-            {backgroundUrl && (
+            {/* Background: artist uses single image, genre/wave-mix uses mosaic */}
+            {isArtistPlaylist && backgroundUrl && (
               <div
-                className={`${styles.playlistDetailPage__background} ${!isArtistPlaylist ? styles['playlistDetailPage__background--genre'] : ''}`}
+                className={styles.playlistDetailPage__background}
                 style={{
                   backgroundImage: `url(${backgroundUrl})`,
-                  backgroundPosition: isArtistPlaylist ? backgroundPosition : 'center center',
+                  backgroundPosition: backgroundPosition,
                 }}
               />
+            )}
+            {!isArtistPlaylist && genreBackgroundUrls.length > 0 && (
+              <div className={`${styles.playlistDetailPage__background} ${styles['playlistDetailPage__background--genre']}`}>
+                <div className={`${styles.backgroundMosaic} ${styles[`backgroundMosaic--${Math.min(genreBackgroundUrls.length, 4)}`]}`}>
+                  {genreBackgroundUrls.map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt=""
+                      className={styles.backgroundMosaic__img}
+                      draggable={false}
+                    />
+                  ))}
+                </div>
+              </div>
             )}
 
             <div className={styles.playlistDetailPage__heroContent}>
@@ -298,7 +315,7 @@ export function PlaylistDetailPage() {
                   {playlist.type === 'mood' && 'Playlist de Estado de Ánimo'}
                 </p>
                 <h1 className={styles.playlistName}>{playlist.name}</h1>
-                <p className={styles.playlistDescription}>{playlist.description}</p>
+                <p className={styles.playlistDescription}>Recomendaciones personalizadas basadas en tus gustos musicales</p>
                 <div className={styles.playlistMeta}>
                   <span>{playlist.metadata.totalTracks} canciones</span>
                   <span className={styles.separator}>•</span>

@@ -155,42 +155,16 @@ function getGenreGradient(displayName: string): string {
 }
 
 /**
- * Inline Echo icon (disc/vinyl from sidebar logo) used as a small badge
+ * Echo logo badge used on playlist covers (same logo as sidebar)
  */
 function EchoBadge({ className }: { className?: string }) {
   return (
-    <svg
+    <img
+      src="/images/logos/echo_dark.svg"
+      alt="Echo"
       className={className}
-      viewBox="555 195 305 325"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle cx="706" cy="353" r="146" stroke="white" strokeWidth="8" />
-      <circle cx="706" cy="353" r="59.5" fill="#E04D28" stroke="#E04D28" />
-      <circle cx="706" cy="353" r="25" fill="#1a1a1a" />
-      <path
-        d="M583.029 380.431C578.101 368.222 576.47 353.779 578.339 338.557C580.208 323.335 585.508 307.899 593.709 293.817C601.91 279.735 612.711 267.526 625.009 258.423C637.307 249.318 650.645 243.657 663.661 241.976"
-        stroke="white"
-        strokeWidth="2"
-      />
-      <path
-        d="M827.373 321.122C832.464 333.205 834.275 347.566 832.583 362.762C830.892 377.956 825.76 393.422 817.701 407.585C809.641 421.748 798.949 434.088 786.718 443.358C774.486 452.629 761.168 458.486 748.124 460.373"
-        stroke="white"
-        strokeWidth="2"
-      />
-      <path
-        opacity="0.7"
-        d="M609.083 380.105C598.609 356.682 598.585 331.75 608.975 309.713C619.37 287.665 639.549 269.877 665.997 259.564"
-        stroke="white"
-        strokeWidth="2"
-      />
-      <path
-        opacity="0.7"
-        d="M805.564 336.372C812.936 356.448 811.485 377.154 801.471 395.195C791.449 413.249 773.396 427.645 750.142 436.008"
-        stroke="white"
-        strokeWidth="2"
-      />
-    </svg>
+      draggable={false}
+    />
   );
 }
 

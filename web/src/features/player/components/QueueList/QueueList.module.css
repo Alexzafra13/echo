@@ -177,3 +177,50 @@
   position: relative;
   flex-shrink: 0;
 }
+
+/* ===== Light Theme: QueueList appears over dark backgrounds (player/NowPlaying) ===== */
+:root[data-theme='light'] .queueList {
+  background: rgba(20, 20, 25, 0.98);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .queueList__header {
+  background: rgba(30, 30, 35, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .queueList__title {
+  color: #f3f4f6;
+}
+
+:root[data-theme='light'] .queueList__count {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .queueList__empty {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .queueList__name {
+  color: #f3f4f6;
+}
+
+:root[data-theme='light'] .queueList__meta {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .queueList__trackNumber {
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .queueList__duration {
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .queueList__item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme='light'] .queueList__cover {
+  background: rgba(255, 255, 255, 0.05);
+}

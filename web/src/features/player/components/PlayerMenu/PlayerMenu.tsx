@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef as useReactRef } from 'react';
 import { MoreVertical } from 'lucide-react';
 import { usePlayerSettingsStore, type PlayerPreference } from '../../store';
 import { usePlayer } from '../../context/PlayerContext';
@@ -16,6 +17,26 @@ export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16, stro
   const preference = usePlayerSettingsStore((s) => s.playerPreference);
   const setPreference = usePlayerSettingsStore((s) => s.setPlayerPreference);
   const { crossfade, setCrossfadeEnabled, volumeControlSupported } = usePlayer();
+  const [visible, setVisible] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const closingTimer = useReactRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setVisible(true);
+      setClosing(false);
+    } else if (visible) {
+      // Start close animation
+      setClosing(true);
+      closingTimer.current = setTimeout(() => {
+        setVisible(false);
+        setClosing(false);
+      }, 200); // Match animation duration
+    }
+    return () => {
+      if (closingTimer.current) clearTimeout(closingTimer.current);
+    };
+  }, [isOpen]);
 
   const handleOptionClick = (value: PlayerPreference) => {
     setPreference(value);
@@ -36,8 +57,8 @@ export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16, stro
         <MoreVertical size={size} strokeWidth={strokeWidth} />
       </button>
 
-      {isOpen && (
-        <div className={styles.menuDropdown}>
+      {visible && (
+        <div className={`${styles.menuDropdown} ${closing ? styles['menuDropdown--closing'] : ''}`}>
           <button
             className={`${styles.menuOption} ${preference === 'dynamic' ? styles['menuOption--active'] : ''}`}
             onClick={() => handleOptionClick('dynamic')}

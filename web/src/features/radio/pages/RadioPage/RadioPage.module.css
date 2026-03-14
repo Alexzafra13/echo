@@ -337,3 +337,27 @@
     font-size: var(--text-xs) !important;
   }
 }
+
+/* ===== Light Theme ===== */
+:root[data-theme='light'] .radioPage__pageTitle {
+  color: #111827;
+}
+
+:root[data-theme='light'] .radioPage__pageSubtitle {
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .radioPage__genreButton {
+  background: rgba(156, 163, 175, 0.2);
+  border-color: rgba(156, 163, 175, 0.35);
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .radioPage__genreButton:hover {
+  background: rgba(156, 163, 175, 0.3);
+  border-color: rgba(194, 65, 12, 0.4);
+}
+
+:root[data-theme='light'] .radioPage__genreButtonArrow {
+  color: #6b7280;
+}

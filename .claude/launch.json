@@ -10,7 +10,7 @@
     {
       "name": "api",
       "runtimeExecutable": "cmd",
-      "runtimeArgs": ["/c", "cd api && npx nest start --watch"],
+      "runtimeArgs": ["/c", "pnpm", "--dir", "api", "dev"],
       "port": 3000
     }
   ]

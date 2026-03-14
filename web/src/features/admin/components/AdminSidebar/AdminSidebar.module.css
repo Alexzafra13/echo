@@ -277,6 +277,36 @@
   border-right: 1px solid rgba(75, 85, 99, 0.15);
 }
 
+:root[data-theme='light'] .sidebar__navItem {
+  color: #1f2937; /* Gray 800 - más legible */
+}
+
+:root[data-theme='light'] .sidebar__navItem:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #111827; /* Gray 900 */
+}
+
+:root[data-theme='light'] .sidebar__navItem--active {
+  color: #c2410c; /* Orange 700 */
+  background: linear-gradient(135deg, rgba(194, 65, 12, 0.14) 0%, rgba(194, 65, 12, 0.06) 100%);
+  border-color: rgba(194, 65, 12, 0.18);
+  box-shadow: 0 2px 12px rgba(194, 65, 12, 0.10);
+}
+
+:root[data-theme='light'] .sidebar__navItem--active::before {
+  background: #c2410c;
+  box-shadow: 0 0 10px rgba(194, 65, 12, 0.4);
+}
+
+:root[data-theme='light'] .sidebar__navItem--active:hover {
+  background: linear-gradient(135deg, rgba(194, 65, 12, 0.18) 0%, rgba(194, 65, 12, 0.10) 100%);
+  color: #b83a0e; /* Entre Orange 700 y 600 — más intenso sin llegar a marrón */
+}
+
+:root[data-theme='light'] .sidebar__navItem--active .sidebar__navIcon {
+  filter: drop-shadow(0 0 4px rgba(194, 65, 12, 0.25));
+}
+
 :root[data-theme='light'] .sidebar__nav::-webkit-scrollbar-thumb {
   background: rgba(31, 41, 55, 0.2);
 }

@@ -488,8 +488,30 @@
 
 /* ===== Light Theme Styles ===== */
 :root[data-theme='light'] .albumPage__hero {
-  background: rgba(209, 213, 219, 0.35); /* Light gray with transparency */
+  background: rgba(180, 190, 205, 0.35);
   backdrop-filter: blur(10px);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+  box-shadow: 0 2px 16px rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme='light'] .albumPage__heroType {
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .albumPage__heroTitle {
+  color: #111827;
+}
+
+:root[data-theme='light'] .albumPage__heroArtistButton {
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .albumPage__heroMeta {
+  color: #4b5563;
+}
+
+:root[data-theme='light'] .albumPage__heroDivider {
+  color: #9ca3af;
 }
 
 :root[data-theme='light'] .albumPage__imageModal {

@@ -509,3 +509,50 @@
     font-size: 13px;
   }
 }
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme='light'] .albumsPage__sourceTabs {
+  background: rgba(156, 163, 175, 0.25);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+}
+
+:root[data-theme='light'] .albumsPage__sourceTab {
+  color: #4b5563;
+}
+
+:root[data-theme='light'] .albumsPage__sourceTab:hover {
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .albumsPage__sourceTab--active {
+  color: white;
+}
+
+:root[data-theme='light'] .albumsPage__sourceTab--active:hover {
+  color: white;
+}
+
+:root[data-theme='light'] .albumsPage__serverCount {
+  background: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme='light'] .albumsPage__sourceTab--active .albumsPage__serverCount {
+  background: var(--white-30);
+}
+
+:root[data-theme='light'] .albumsPage__serverInfo {
+  background: rgba(156, 163, 175, 0.15);
+  border-color: rgba(156, 163, 175, 0.3);
+}
+
+:root[data-theme='light'] .albumsPage__serverStats {
+  color: #4b5563;
+}
+
+:root[data-theme='light'] .albumsPage__title {
+  color: #111827;
+}
+
+:root[data-theme='light'] .albumsPage__subtitle {
+  color: #6b7280;
+}

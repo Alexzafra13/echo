@@ -16,6 +16,8 @@ export class TrackDataDto {
   @ApiProperty({ required: false }) duration?: number;
   @ApiProperty({ required: false }) albumId?: string;
   @ApiProperty({ required: false }) artistId?: string;
+  @ApiProperty({ required: false }) suffix?: string;
+  @ApiProperty({ required: false }) bitRate?: number;
 }
 
 export class TrackScoreDto {

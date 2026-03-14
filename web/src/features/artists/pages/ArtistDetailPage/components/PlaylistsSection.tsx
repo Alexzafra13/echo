@@ -1,6 +1,7 @@
 import { ListMusic } from 'lucide-react';
 import { PlaylistCover } from '@features/recommendations/components';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
+import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
 import styles from '../ArtistDetailPage.module.css';
 
 interface AutoPlaylist {
@@ -13,7 +14,8 @@ interface AutoPlaylist {
     artistId?: string;
     artistName?: string;
   };
-  tracks: { trackId?: string }[];
+  tracks: { trackId?: string; track?: Record<string, unknown> }[];
+  [key: string]: unknown;
 }
 
 interface UserPlaylist {
@@ -39,6 +41,11 @@ export function PlaylistsSection({
   userPlaylists,
   onNavigate,
 }: PlaylistsSectionProps) {
+  const handleAutoPlaylistClick = (playlist: AutoPlaylist) => {
+    safeSessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
+    safeSessionStorage.setItem('playlistReturnPath', window.location.pathname);
+    onNavigate(`/wave-mix/${playlist.id}`);
+  };
   if (autoPlaylists.length === 0 && userPlaylists.length === 0) {
     return null;
   }
@@ -55,7 +62,7 @@ export function PlaylistsSection({
           <div
             key={`auto-${playlist.id}`}
             className={styles.artistDetailPage__playlistCard}
-            onClick={() => onNavigate(`/playlists/auto/${playlist.id}`)}
+            onClick={() => handleAutoPlaylistClick(playlist)}
           >
             <div className={styles.artistDetailPage__playlistCover}>
               <PlaylistCover

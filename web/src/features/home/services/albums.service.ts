@@ -72,8 +72,8 @@ export const albumsService = {
    * Get all tracks for a specific album
    */
   getAlbumTracks: async (albumId: string): Promise<Track[]> => {
-    const { data } = await apiClient.get<Track[]>(`/albums/${albumId}/tracks`);
-    return data;
+    const { data } = await apiClient.get<{ data: Track[] }>(`/albums/${albumId}/tracks`);
+    return data.data;
   },
 
   /**

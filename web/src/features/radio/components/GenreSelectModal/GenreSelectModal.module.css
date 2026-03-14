@@ -336,3 +336,94 @@
     font-size: 15px;
   }
 }
+
+/* ===== Light Theme ===== */
+:root[data-theme='light'] .modal__overlay {
+  background: rgba(107, 114, 128, 0.4);
+}
+
+:root[data-theme='light'] .modal__content {
+  background: rgba(240, 242, 245, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-color: rgba(156, 163, 175, 0.3);
+  box-shadow:
+    0 25px 80px rgba(31, 41, 55, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+:root[data-theme='light'] .modal__header {
+  border-bottom-color: rgba(156, 163, 175, 0.25);
+}
+
+:root[data-theme='light'] .modal__title {
+  color: #111827;
+}
+
+:root[data-theme='light'] .modal__closeButton {
+  background: rgba(156, 163, 175, 0.15);
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .modal__closeButton:hover {
+  background: rgba(156, 163, 175, 0.25);
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .modal__search {
+  background: rgba(156, 163, 175, 0.15);
+  border-color: rgba(156, 163, 175, 0.3);
+  color: #4b5563;
+}
+
+:root[data-theme='light'] .modal__search:focus-within {
+  border-color: #c2410c;
+  background: rgba(156, 163, 175, 0.2);
+}
+
+:root[data-theme='light'] .modal__searchInput {
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .modal__searchInput::placeholder {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .modal__searchClear {
+  background: rgba(156, 163, 175, 0.2);
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .modal__searchClear:hover {
+  background: rgba(156, 163, 175, 0.35);
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .modal__empty {
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .genreOption {
+  background: rgba(156, 163, 175, 0.1);
+  border-color: rgba(156, 163, 175, 0.2);
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .genreOption:hover {
+  background: rgba(156, 163, 175, 0.2);
+  border-color: rgba(156, 163, 175, 0.35);
+}
+
+:root[data-theme='light'] .genreOption--selected {
+  background: rgba(194, 65, 12, 0.1);
+  border-color: #c2410c;
+  box-shadow: 0 0 0 1px rgba(194, 65, 12, 0.15);
+}
+
+:root[data-theme='light'] .genreOption--selected:hover {
+  background: rgba(194, 65, 12, 0.15);
+}
+
+:root[data-theme='light'] .genreOption__check {
+  color: #c2410c;
+}

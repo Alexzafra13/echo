@@ -271,13 +271,9 @@ export default function HomePage() {
 
     const { waveMix, artistPlaylists, genrePlaylists } = categorizeAutoPlaylists(autoPlaylists);
 
-    // Artist Mix: Wave Mix (if exists) + artist playlists
+    // Artist Mix: artist playlists only (Wave Mix excluded)
     const artistMix = [];
-    if (waveMix) {
-      artistMix.push(waveMix);
-    }
-    const artistCount = neededAlbums - (waveMix ? 1 : 0);
-    const randomArtists = randomSelect(artistPlaylists, artistCount);
+    const randomArtists = randomSelect(artistPlaylists, neededAlbums);
     artistMix.push(...randomArtists);
 
     // Genre Mix: genre playlists only (same count as albums - 2 rows)

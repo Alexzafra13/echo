@@ -332,6 +332,45 @@
   margin-top: 4px;
 }
 
+/* ===== Light Theme ===== */
+:global([data-theme='light']) .notifications__dropdown {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 10px 25px -3px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+:global([data-theme='light']) .notifications__header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .notifications__item {
+  border-bottom-color: rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme='light']) .notifications__item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:global([data-theme='light']) .notifications__action {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme='light']) .notifications__action:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+:global([data-theme='light']) .notifications__button {
+  background: rgba(209, 213, 219, 0.45);
+  color: #374151;
+}
+
+:global([data-theme='light']) .notifications__button:hover {
+  background: rgba(209, 213, 219, 0.65);
+  color: #111827;
+}
+
 /* Responsive Design */
 
 /* Tablet */

@@ -91,11 +91,13 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 28px;
-  height: 28px;
-  opacity: 0.8;
+  width: 48px;
+  height: auto;
+  opacity: 0.85;
   z-index: 2;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+  object-fit: contain;
+  pointer-events: none;
 }
 
 /* Genre name text - bottom left, Apple Music style */
@@ -114,8 +116,7 @@
 }
 
 .small .logoBadge {
-  width: 22px;
-  height: 22px;
+  width: 36px;
   top: 6px;
   right: 6px;
 }
@@ -128,8 +129,7 @@
 }
 
 .large .logoBadge {
-  width: 34px;
-  height: 34px;
+  width: 56px;
   top: 10px;
   right: 10px;
 }

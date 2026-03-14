@@ -95,8 +95,8 @@
 .artistDetailPage__avatarContainer {
   position: relative;
   flex-shrink: 0;
-  width: 240px;
-  height: 240px;
+  width: 280px;
+  height: 280px;
 }
 
 .artistDetailPage__avatar {
@@ -608,6 +608,38 @@
   background: rgba(229, 231, 235, 0.95);
 }
 
+/* Light theme: top tracks card backgrounds */
+:root[data-theme='light'] .artistDetailPage__topTrack {
+  background: rgba(156, 163, 175, 0.15);
+}
+
+:root[data-theme='light'] .artistDetailPage__topTrack:hover {
+  background: rgba(156, 163, 175, 0.28);
+}
+
+:root[data-theme='light'] .artistDetailPage__topTrackTitle {
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .artistDetailPage__topTrackRank {
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .artistDetailPage__topTrackAlbum,
+:root[data-theme='light'] .artistDetailPage__topTrackMeta,
+:root[data-theme='light'] .artistDetailPage__topTrackDuration {
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .artistDetailPage__topTrackPlays {
+  color: #4b5563;
+}
+
+:root[data-theme='light'] .artistDetailPage__topTrackCoverPlaceholder {
+  background: rgba(156, 163, 175, 0.2);
+  color: #9ca3af;
+}
+
 /* ===== Section Header (shared) ===== */
 .artistDetailPage__sectionHeader {
   display: flex;
@@ -779,6 +811,7 @@
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  padding-top: 6px;
   padding-bottom: var(--space-2);
 }
 

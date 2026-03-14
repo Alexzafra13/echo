@@ -1036,3 +1036,142 @@
     max-width: 350px;
   }
 }
+
+/* ===== Light Theme: NowPlayingView always has dark background, force light text/icons ===== */
+:root[data-theme='light'] .nowPlaying {
+  background: rgb(12, 12, 12);
+}
+
+:root[data-theme='light'] .nowPlaying__headerTitle {
+  color: #f3f4f6;
+}
+
+:root[data-theme='light'] .nowPlaying__closeBtn {
+  color: #f3f4f6;
+}
+
+:root[data-theme='light'] .nowPlaying__closeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .nowPlaying__title {
+  color: #f3f4f6;
+}
+
+:root[data-theme='light'] .nowPlaying__artist {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .nowPlaying__time {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .nowPlaying__progressBar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+:root[data-theme='light'] .nowPlaying__progressFill {
+  background: #f3f4f6;
+}
+
+:root[data-theme='light'] .nowPlaying__progressHandle {
+  background: #f3f4f6;
+}
+
+:root[data-theme='light'] .nowPlaying__controlBtn {
+  color: #f3f4f6;
+}
+
+:root[data-theme='light'] .nowPlaying__controlBtn--small {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .nowPlaying__controlBtn--active {
+  color: var(--color-primary-500);
+}
+
+:root[data-theme='light'] .nowPlaying__playBtn {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+:root[data-theme='light'] .nowPlaying__actionBtn {
+  color: #9ca3af;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .nowPlaying__actionBtn:hover {
+  color: #f3f4f6;
+}
+
+:root[data-theme='light'] .nowPlaying__dragIndicator {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+:root[data-theme='light'] .nowPlaying__headerQueueBtn {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .nowPlaying__headerQueueBtn:hover {
+  color: #f3f4f6;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .nowPlaying__headerQueueBadge {
+  background: rgba(255, 255, 255, 0.8);
+  color: #111827;
+}
+
+/* Queue panel in light mode */
+:root[data-theme='light'] .nowPlaying__queuePanel {
+  background: rgba(20, 20, 20, 0.98);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .nowPlaying__queueHandle {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+:root[data-theme='light'] .nowPlaying__queueTitle {
+  color: #f3f4f6;
+}
+
+:root[data-theme='light'] .nowPlaying__queueClose {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .nowPlaying__queueClose:hover {
+  color: #f3f4f6;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .nowPlaying__queueHeader {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Volume controls in light mode */
+:root[data-theme='light'] .nowPlaying__volumeBtn {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .nowPlaying__volumeBtn:hover {
+  color: #f3f4f6;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .nowPlaying__volumeQueueBtn {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .nowPlaying__volumeQueueBtn:hover {
+  color: #f3f4f6;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .nowPlaying__volumeSlider::-webkit-slider-thumb {
+  background: #f3f4f6;
+}
+
+:root[data-theme='light'] .nowPlaying__volumeSlider::-moz-range-thumb {
+  background: #f3f4f6;
+}
