@@ -80,16 +80,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const isTransitioningRef = useRef(false);
 
   // ========== GAPLESS PRELOAD (mobile PWA background audio continuity) ==========
-  // On mobile PWA, when a track ends and no audio is playing, the OS revokes
-  // audio focus and play() fails with NotAllowedError. Crossfade avoids this
-  // by starting the next track BEFORE the current one ends. For non-crossfade
-  // mode, we preload the next track and start it silently (vol 0) just before
-  // the current track ends, keeping the audio session alive.
+  // Preloads the next track's audio buffer 15s before the current track ends,
+  // so that when the track finishes, play() starts near-instantly from the
+  // already-buffered audio. This avoids overlap (no pre-play before track end)
+  // while still providing fast transitions.
   const preloadedNextRef = useRef<{
     trackId: string;
     nextIndex: number;
     track: Track;
-    prePlayed: boolean;
   } | null>(null);
 
   // ========== AUDIO ELEMENTS ==========
@@ -683,17 +681,17 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         const nextTrack = nextIndex !== -1 ? queue.getTrackAt(nextIndex) : null;
         const preloaded = preloadedNextRef.current;
 
-        if (nextTrack && preloaded && preloaded.trackId === nextTrack.id && preloaded.prePlayed) {
-          // GAPLESS: inactive element is already playing at volume 0.
-          // Just switch and restore volume — no async gap, no play() call.
-          logger.debug('[Player] Gapless transition to:', nextTrack.title);
+        if (nextTrack && preloaded && preloaded.trackId === nextTrack.id) {
+          // PRELOADED: inactive element has the next track buffered and ready.
+          // Start playback immediately for a clean, non-overlapping transition.
+          logger.debug('[Player] Preloaded transition to:', nextTrack.title);
           isTransitioningRef.current = true;
           preloadedNextRef.current = null;
 
           queue.setCurrentIndex(nextIndex);
           setCurrentTrack(nextTrack);
 
-          // Switch: inactive (pre-playing muted) becomes active
+          // Switch: inactive (preloaded) becomes active
           audioElements.switchActiveAudio();
 
           // Unmute and restore proper volume
@@ -703,10 +701,26 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           const vol = normalization.getEffectiveVolume(activeId);
           audioElements.setAudioVolume(activeId, vol);
 
+          // Start playback — track is already buffered from Phase 1 preload
+          // so play() should start near-instantly without async gap.
+          try {
+            await audioElements.playActive(false);
+          } catch (error) {
+            logger.warn('[Player] Preloaded play failed, retrying:', (error as Error).message);
+            try {
+              await audioElements.playActive();
+            } catch (retryError) {
+              logger.error('[Player] Preloaded retry failed:', (retryError as Error).message);
+            }
+          }
+
           // Cleanup old (now inactive)
           audioElements.stopInactive();
 
           isTransitioningRef.current = false;
+          if (audioElements.getActiveAudio()?.paused) {
+            setIsPlaying(false);
+          }
           playTracking.startPlaySession(nextTrack, queueContextRef.current);
         } else {
           // Fallback: normal transition (no preload available)
@@ -778,8 +792,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // ========== GAPLESS PRELOAD HANDLER ==========
   // Ref-based handler for timeupdate events (same pattern as crossfade timing).
-  // Phase 1 (15s before end): pre-fetch stream URL + load on inactive element
-  // Phase 2 (0.5s before end): start playing inactive at volume 0 (keeps audio session alive)
+  // Preloads the next track 15s before end: fetches stream URL and loads on inactive element.
+  // The track is only played when the current one ends (in handleEnded), never before.
   const gaplessPreloadHandlerRef = useRef<() => void>(() => {});
 
   useEffect(() => {
@@ -814,7 +828,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
             trackId: nextTrack.id,
             nextIndex,
             track: nextTrack,
-            prePlayed: false,
           };
           audioElements.loadOnInactive(url);
           const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
@@ -823,27 +836,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         });
       }
 
-      // Phase 2: Silent pre-play 0.5s before end (keeps audio session alive on mobile)
-      const preloaded = preloadedNextRef.current;
-      if (timeRemaining <= 0.5 && preloaded && !preloaded.prePlayed) {
-        const inactiveAudio = audioElements.getInactiveAudio();
-        if (inactiveAudio && inactiveAudio.readyState >= 3) {
-          // Use muted instead of volume=0: on iOS, audio.volume is read-only
-          // so volume=0 is ignored and the pre-play would be audible.
-          inactiveAudio.muted = true;
-          inactiveAudio
-            .play()
-            .then(() => {
-              if (preloadedNextRef.current) {
-                preloadedNextRef.current.prePlayed = true;
-              }
-              logger.debug('[Player] Gapless: silent pre-play started');
-            })
-            .catch(() => {
-              logger.warn('[Player] Gapless: silent pre-play failed');
-            });
-        }
-      }
+      // Note: Phase 2 (silent pre-play before track end) was removed.
+      // On iOS PWA, starting the next track before the current one finishes
+      // caused audible overlap because iOS audio handling can briefly unmute
+      // during play() calls. Instead, we rely on Phase 1 preloading (buffer
+      // is ready) and start the next track in handleEnded for a clean transition.
     };
   }, [
     crossfadeSettings.enabled,
