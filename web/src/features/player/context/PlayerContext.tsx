@@ -124,10 +124,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     const audioB = audioElements.audioRefB.current;
     if (audioA && audioB) {
       normalization.registerAudioElements(audioA, audioB);
+      // Route normalization volume changes through useAudioElements.setAudioVolume
+      // so that on iOS (Web Audio API path), volume goes through GainNode instead
+      // of the read-only audio.volume property.
+      normalization.registerVolumeSetter(audioElements.setAudioVolume);
       // Sync initial volume with normalization hook
       normalization.setUserVolume(userVolumeRef.current);
     }
-  }, [audioElements.audioRefA, audioElements.audioRefB, normalization]);
+  }, [audioElements.audioRefA, audioElements.audioRefB, audioElements.setAudioVolume, normalization]);
 
   // ========== QUEUE MANAGEMENT ==========
   const queue = useQueueManagement();
@@ -897,6 +901,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     isPlaying,
     getActiveAudio: audioElements.getActiveAudio,
     setIsPlaying,
+    // Resume AudioContext when returning to foreground (iOS may suspend it in background)
+    onForeground: audioElements.ensureAudioContextResumed,
   });
 
   // ========== SOCIAL "LISTENING NOW" SYNC ==========

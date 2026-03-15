@@ -37,6 +37,10 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   // resetting the per-element volumes that the crossfade animation controls.
   const isCrossfadingRef = useRef(false);
 
+  // Volume setter callback: when registered, used instead of direct audio.volume
+  // assignment. On iOS with Web Audio API, this routes through GainNode.gain.
+  const volumeSetterRef = useRef<((audioId: 'A' | 'B', volume: number) => void) | null>(null);
+
   // Store reference to audio elements for volume adjustment
   const audioElementsRef = useRef<{
     audioA: HTMLAudioElement | null;
@@ -60,6 +64,17 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   );
 
   /**
+   * Register a volume setter callback that replaces direct audio.volume assignment.
+   * On iOS with Web Audio API, this routes volume changes through GainNode.
+   */
+  const registerVolumeSetter = useCallback(
+    (setter: (audioId: 'A' | 'B', volume: number) => void) => {
+      volumeSetterRef.current = setter;
+    },
+    []
+  );
+
+  /**
    * Update user volume (called when user changes volume slider)
    */
   const setUserVolume = useCallback((volume: number) => {
@@ -78,8 +93,9 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   }, []);
 
   /**
-   * Apply effective volume (userVolume * normalizationGain) to audio elements
-   * Each audio element uses its own gain to support crossfade between tracks with different loudness
+   * Apply effective volume (userVolume * normalizationGain) to audio elements.
+   * Each audio element uses its own gain to support crossfade between tracks with different loudness.
+   * Uses volumeSetter callback when available (iOS Web Audio API path).
    */
   const applyEffectiveVolume = useCallback(() => {
     // During crossfade, the animation loop (requestAnimationFrame) controls
@@ -88,14 +104,18 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     if (isCrossfadingRef.current) return;
 
     const { audioA, audioB, userVolume } = audioElementsRef.current;
+    const setter = volumeSetterRef.current;
 
-    if (audioA) {
-      const effectiveVolumeA = Math.min(1, userVolume * gainARef.current);
-      audioA.volume = effectiveVolumeA;
-    }
-    if (audioB) {
-      const effectiveVolumeB = Math.min(1, userVolume * gainBRef.current);
-      audioB.volume = effectiveVolumeB;
+    const effectiveVolumeA = Math.min(1, userVolume * gainARef.current);
+    const effectiveVolumeB = Math.min(1, userVolume * gainBRef.current);
+
+    if (setter) {
+      // Route through GainNode on iOS (audio.volume is read-only)
+      setter('A', effectiveVolumeA);
+      setter('B', effectiveVolumeB);
+    } else {
+      if (audioA) audioA.volume = effectiveVolumeA;
+      if (audioB) audioB.volume = effectiveVolumeB;
     }
   }, []);
 
@@ -214,23 +234,30 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   );
 
   /**
-   * Apply gain only to a specific audio element (for crossfade)
-   * Does not affect the other audio element's gain
+   * Apply gain only to a specific audio element (for crossfade).
+   * Does not affect the other audio element's gain.
+   * Uses volumeSetter callback when available (iOS Web Audio API path).
    */
   const applyGainToAudio = useCallback(
     (track: Track | null, audioId: 'A' | 'B') => {
       const { gainLinear } = calculateGain(track);
       const { audioA, audioB, userVolume } = audioElementsRef.current;
+      const setter = volumeSetterRef.current;
+      const vol = Math.min(1, userVolume * gainLinear);
 
       if (audioId === 'A') {
         gainARef.current = gainLinear;
-        if (audioA) {
-          audioA.volume = Math.min(1, userVolume * gainLinear);
+        if (setter) {
+          setter('A', vol);
+        } else if (audioA) {
+          audioA.volume = vol;
         }
       } else {
         gainBRef.current = gainLinear;
-        if (audioB) {
-          audioB.volume = Math.min(1, userVolume * gainLinear);
+        if (setter) {
+          setter('B', vol);
+        } else if (audioB) {
+          audioB.volume = vol;
         }
       }
     },
@@ -280,6 +307,7 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     () => ({
       // New volume-based API
       registerAudioElements,
+      registerVolumeSetter,
       setUserVolume,
       applyGain,
       calculateGain,
@@ -299,6 +327,7 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     }),
     [
       registerAudioElements,
+      registerVolumeSetter,
       setUserVolume,
       applyGain,
       calculateGain,

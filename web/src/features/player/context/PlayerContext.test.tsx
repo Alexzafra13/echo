@@ -31,6 +31,7 @@ vi.mock('../hooks/useAudioElements', () => ({
     volumeControlSupported: true,
     initWebAudio: vi.fn(),
     resumeAudioContext: vi.fn(),
+    ensureAudioContextResumed: vi.fn(),
   }),
 }));
 
@@ -101,11 +102,13 @@ vi.mock('../store', () => ({
 vi.mock('../hooks/useAudioNormalization', () => ({
   useAudioNormalization: () => ({
     registerAudioElements: vi.fn(),
+    registerVolumeSetter: vi.fn(),
     setUserVolume: vi.fn(),
     applyGain: vi.fn(),
     applyGainToAudio: vi.fn(),
     getEffectiveVolume: vi.fn().mockReturnValue(0.7),
     swapGains: vi.fn(),
+    setCrossfading: vi.fn(),
   }),
 }));
 
@@ -120,6 +123,7 @@ vi.mock('../hooks/usePlayTracking', () => ({
 vi.mock('../hooks/useCrossfadeLogic', () => ({
   useCrossfadeLogic: () => ({
     isCrossfading: false,
+    isCrossfadingRef: { current: false },
     prepareCrossfade: vi.fn(),
     performCrossfade: vi.fn(),
     clearCrossfade: vi.fn(),
