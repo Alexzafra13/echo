@@ -559,12 +559,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, [handlePlayNext]);
 
   /**
-   * Play next track in queue (crossfade if enabled and currently playing)
+   * Play next track in queue.
+   * Manual skip — never crossfade. Crossfade only triggers automatically
+   * via checkCrossfadeTiming (2s before natural track end).
    */
   const playNext = useCallback(() => {
-    const useCrossfade = crossfadeSettings.enabled && isPlaying;
-    handlePlayNext(useCrossfade);
-  }, [handlePlayNext, crossfadeSettings.enabled, isPlaying]);
+    handlePlayNext(false);
+  }, [handlePlayNext]);
 
   /**
    * Play previous track in queue
@@ -587,10 +588,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     queue.setCurrentIndex(prevIndex);
     const prevTrack = queue.getTrackAt(prevIndex);
     if (prevTrack) {
-      const useCrossfade = crossfadeSettings.enabled && isPlaying;
-      playTrack(prevTrack, useCrossfade);
+      // Manual skip — never crossfade. Crossfade only on natural track endings.
+      playTrack(prevTrack, false);
     }
-  }, [queue, audioElements, playTracking, playTrack, seek, crossfadeSettings.enabled, isPlaying]);
+  }, [queue, audioElements, playTracking, playTrack, seek]);
 
   /**
    * Play a queue of tracks starting at index
@@ -732,9 +733,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           handlePlayNext(false);
         }
       } else {
-        // No more tracks in queue - try autoplay
+        // No more tracks in queue - try autoplay.
+        // No crossfade: the track already ended, nothing to fade from.
+        // (Crossfade only triggers via checkCrossfadeTiming, 2s before end.)
         logger.debug('[Player] No more tracks - trying autoplay');
-        await handlePlayNext(crossfadeSettings.enabled);
+        await handlePlayNext(false);
       }
     };
   }, [
@@ -745,7 +748,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     autoplaySettings.enabled,
     currentTrack,
     radio.isRadioMode,
-    crossfadeSettings.enabled,
     normalization,
   ]);
 
