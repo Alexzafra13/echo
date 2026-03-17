@@ -203,6 +203,8 @@ export function PlaylistCover({
             alt={name}
             onError={() => setImageError(true)}
             className={styles.image}
+            loading="lazy"
+            decoding="async"
           />
           <div className={styles.imageOverlay} />
           {artistName && (
@@ -228,6 +230,8 @@ export function PlaylistCover({
                   alt={name}
                   className={styles.genreOverlay}
                   onError={() => setOverlayError(true)}
+                  loading="lazy"
+                  decoding="async"
                 />
               )}
               <EchoBadge className={styles.logoBadge} />

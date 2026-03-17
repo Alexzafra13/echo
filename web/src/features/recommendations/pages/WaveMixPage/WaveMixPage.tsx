@@ -40,18 +40,22 @@ export function WaveMixPage() {
     handlePlaylistClick,
   } = useWaveMixPlaylists();
 
-  // Collect ALL unique album cover URLs split into two rows for the animated mosaic
-  // No artificial limit — use every unique album across all playlist types
+  // Collect unique album cover URLs split into two rows for the animated mosaic.
+  // Capped at MAX_HERO_COVERS to avoid downloading dozens of full-size images
+  // for tiny ~127px thumbnails in the background mosaic.
   const heroCoverRows = useMemo(() => {
+    const MAX_HERO_COVERS = 40; // 20 per row is plenty for a seamless loop
     const albumIds = new Set<string>();
     const urls: string[] = [];
     const allPlaylists = [...dailyPlaylists, ...artistPlaylists, ...genrePlaylists];
     for (const playlist of allPlaylists) {
+      if (urls.length >= MAX_HERO_COVERS) break;
       for (const scoredTrack of playlist.tracks || []) {
         const albumId = scoredTrack.track?.albumId;
         if (albumId && !albumIds.has(albumId)) {
           albumIds.add(albumId);
           urls.push(`/api/albums/${albumId}/cover`);
+          if (urls.length >= MAX_HERO_COVERS) break;
         }
       }
     }
@@ -116,16 +120,16 @@ export function WaveMixPage() {
               <div className={styles.hero__mosaic}>
                 <div className={styles.hero__row}>
                   <div className={styles.hero__track} data-direction="left">
-                    {/* Triple for seamless loop — ensures no gaps on wide screens */}
-                    {[...heroCoverRows.row1, ...heroCoverRows.row1, ...heroCoverRows.row1].map((url, i) => (
-                      <img key={i} src={url} alt="" className={styles.hero__coverImg} loading="eager" />
+                    {/* Double for seamless loop — 50% translate keeps it gap-free */}
+                    {[...heroCoverRows.row1, ...heroCoverRows.row1].map((url, i) => (
+                      <img key={i} src={url} alt="" className={styles.hero__coverImg} loading="eager" decoding="async" fetchPriority="low" />
                     ))}
                   </div>
                 </div>
                 <div className={styles.hero__row}>
                   <div className={styles.hero__track} data-direction="right">
-                    {[...heroCoverRows.row2, ...heroCoverRows.row2, ...heroCoverRows.row2].map((url, i) => (
-                      <img key={i} src={url} alt="" className={styles.hero__coverImg} loading="eager" />
+                    {[...heroCoverRows.row2, ...heroCoverRows.row2].map((url, i) => (
+                      <img key={i} src={url} alt="" className={styles.hero__coverImg} loading="eager" decoding="async" fetchPriority="low" />
                     ))}
                   </div>
                 </div>
