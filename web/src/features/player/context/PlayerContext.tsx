@@ -287,9 +287,20 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
         normalization.applyGainToAudio(track, inactiveId);
 
-        // Prepare next track on inactive audio
-        logger.debug('[Player] Starting crossfade to:', track.title);
-        crossfade.prepareCrossfade(streamUrl);
+        // Check if gapless preload already buffered this track on the inactive element.
+        // If so, skip the reload — the audio is already loaded and ready to play.
+        // This is critical: without preloading, the 2s crossfade window is consumed
+        // by async getStreamUrl + load + buffer, and the track ends before the
+        // crossfade animation can start (causing an abrupt "jump").
+        const preloaded = preloadedNextRef.current;
+        if (preloaded && preloaded.trackId === track.id) {
+          preloadedNextRef.current = null;
+          logger.debug('[Player] Crossfade using preloaded audio:', track.title);
+        } else {
+          // Not preloaded — load now (slower path, may not finish in time)
+          crossfade.prepareCrossfade(streamUrl);
+          logger.debug('[Player] Starting crossfade to:', track.title);
+        }
 
         // Update track state
         setCurrentTrack(track);
@@ -804,15 +815,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   useEffect(() => {
     gaplessPreloadHandlerRef.current = () => {
-      // Skip if crossfade handles transitions (it has its own preloading).
-      // On iOS (volume not supported), crossfade never triggers so gapless
-      // preloading is always active regardless of crossfade settings.
-      if (
-        (crossfadeSettings.enabled && audioElements.volumeControlSupported) ||
-        radio.isRadioMode ||
-        !isPlaying
-      )
-        return;
+      // Skip in radio mode or when not playing.
+      // Note: gapless preload runs even when crossfade is enabled. It buffers
+      // the next track at 15s before end (Phase 1). When crossfade triggers at
+      // 2s, the audio is already loaded — no async delay, instant crossfade start.
+      // Without this, the 2s crossfade window is consumed by getStreamUrl + load +
+      // buffer, causing the outgoing track to end before the animation starts.
+      if (radio.isRadioMode || !isPlaying) return;
 
       const audio = audioElements.getActiveAudio();
       if (!audio || isNaN(audio.duration) || audio.duration <= 0) return;
@@ -849,7 +858,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // is ready) and start the next track in handleEnded for a clean transition.
     };
   }, [
-    crossfadeSettings.enabled,
     radio.isRadioMode,
     isPlaying,
     queue,
