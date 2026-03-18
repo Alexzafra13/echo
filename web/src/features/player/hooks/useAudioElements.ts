@@ -523,9 +523,14 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
           gainNodeARef.current = gA;
           gainNodeBRef.current = gB;
 
-          // Web Audio API provides volume control even on iOS
-          nativeVolumeSupported = true;
-          logger.debug('[AudioElements] Web Audio API initialized for iOS volume control');
+          // NOTE: We intentionally do NOT set nativeVolumeSupported = true here.
+          // GainNodes provide volume control for normalization and gapless transitions,
+          // but crossfade (which checks volumeControlSupported) must stay disabled on iOS.
+          // On iOS, crossfade via Web Audio is unreliable: playInactive() fails without
+          // a user gesture (autoplay policy), AudioContext suspends in background,
+          // and the ended event gets swallowed when isCrossfadingRef is true.
+          // The gapless preload mechanism provides seamless transitions without these issues.
+          logger.debug('[AudioElements] Web Audio API GainNodes initialized for iOS volume control (crossfade stays disabled)');
         }
       } catch (e) {
         logger.warn('[AudioElements] Web Audio API init failed, crossfade disabled on iOS:', (e as Error).message);

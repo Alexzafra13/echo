@@ -343,7 +343,20 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
         crossfade.clearCrossfade();
         audioElements.stopInactive();
+
+        // Immediately silence and pause the active audio BEFORE loading the new source.
+        // On iOS (Web Audio API pipeline), audio data already in the GainNode can continue
+        // playing briefly after setting a new src. Zeroing the gain and pausing first
+        // prevents any audible overlap between the old and new track.
+        const activeId = audioElements.getActiveAudioId();
+        audioElements.setAudioVolume(activeId, 0);
+        audioElements.pauseActive();
+
         audioElements.loadOnActive(streamUrl);
+
+        // Restore volume for the new track (was zeroed above to prevent overlap)
+        const effectiveVol = normalization.getEffectiveVolume(activeId);
+        audioElements.setAudioVolume(activeId, effectiveVol);
 
         setCurrentTrack(track);
         playTracking.startPlaySession(track, queueContextRef.current);

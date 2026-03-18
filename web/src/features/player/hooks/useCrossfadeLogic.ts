@@ -362,8 +362,10 @@ export function useCrossfadeLogic({
     const currentSettings = settingsRef.current;
 
     // Skip if crossfade is disabled, already crossfading, in radio mode, repeat one,
-    // or volume control is not supported (iOS Safari).
-    // On iOS, audio.volume is read-only so volume-based crossfade is impossible.
+    // or volume control is not supported (iOS Safari where volumeControlSupported=false).
+    // On iOS, crossfade is intentionally disabled even though GainNodes exist:
+    // playInactive() fails without user gesture (autoplay policy), AudioContext can
+    // suspend in PWA background, and the ended event gets swallowed during crossfade.
     // The gapless preloading mechanism provides seamless transitions instead.
     // Use isCrossfadingRef (synchronous) instead of isCrossfading (React state) to prevent
     // race conditions where timeupdate fires before React re-renders with the new state.
