@@ -54,7 +54,7 @@ export function WaveMixPage() {
         const albumId = scoredTrack.track?.albumId;
         if (albumId && !albumIds.has(albumId)) {
           albumIds.add(albumId);
-          urls.push(`/api/albums/${albumId}/cover`);
+          urls.push(`/api/images/albums/${albumId}/cover?size=thumb`);
           if (urls.length >= MAX_HERO_COVERS) break;
         }
       }

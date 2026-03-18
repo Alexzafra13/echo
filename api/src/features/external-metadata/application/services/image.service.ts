@@ -12,6 +12,7 @@ import {
   CachedImageResult,
   ArtistImageService,
   AlbumCoverService,
+  type ImageSize,
 } from './images';
 
 // Re-export types for backwards compatibility
@@ -81,6 +82,14 @@ export class ImageService {
    */
   async getAlbumCover(albumId: string): Promise<ImageResult> {
     return this.albumCoverService.getAlbumCover(albumId);
+  }
+
+  /**
+   * Get album cover resized to a specific preset size (thumb/small/medium).
+   * Falls back to original if resize fails.
+   */
+  async getAlbumCoverResized(albumId: string, size: ImageSize, preferWebP: boolean) {
+    return this.albumCoverService.getAlbumCoverResized(albumId, size, preferWebP);
   }
 
   /**

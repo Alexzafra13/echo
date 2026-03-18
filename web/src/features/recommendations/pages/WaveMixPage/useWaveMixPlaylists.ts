@@ -118,5 +118,5 @@ export function getPlaylistCoverUrl(playlist: AutoPlaylist): string | undefined 
   if (albumIdArray.length === 0) return undefined;
 
   const randomAlbumId = albumIdArray[Math.floor(Math.random() * albumIdArray.length)];
-  return `/api/albums/${randomAlbumId}/cover`;
+  return `/api/images/albums/${randomAlbumId}/cover?size=small`;
 }
