@@ -269,7 +269,7 @@ describe('ImagesController', () => {
 
       const reply = createMockReply();
 
-      const result = await controller.getAlbumCover('album-1', undefined, undefined, reply);
+      const result = await controller.getAlbumCover('album-1', undefined, undefined, undefined, undefined, reply);
 
       expect(result).toBeInstanceOf(StreamableFile);
       expect(reply.header).toHaveBeenCalledWith('Content-Type', 'image/jpeg');
@@ -281,7 +281,7 @@ describe('ImagesController', () => {
 
       const reply = createMockReply();
 
-      const result = await controller.getAlbumCover('album-1', undefined, '"abc123"', reply);
+      const result = await controller.getAlbumCover('album-1', undefined, undefined, '"abc123"', undefined, reply);
 
       expect(result).toBeUndefined();
       expect(reply.status).toHaveBeenCalledWith(304);
@@ -293,7 +293,7 @@ describe('ImagesController', () => {
       const reply = createMockReply();
 
       await expect(
-        controller.getAlbumCover('non-existent', undefined, undefined, reply)
+        controller.getAlbumCover('non-existent', undefined, undefined, undefined, undefined, reply)
       ).rejects.toThrow(NotFoundException);
     });
   });

@@ -10,6 +10,7 @@ import * as path from 'path';
 import { eq, and, desc } from 'drizzle-orm';
 import { albums, customAlbumCovers } from '@infrastructure/database/schema';
 import { ImageCacheService, CachedImageResult } from './image-cache.service';
+import { ImageResizeService, type ImageSize } from './image-resize.service';
 
 /**
  * Service for retrieving album covers
@@ -25,6 +26,7 @@ export class AlbumCoverService {
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
     private readonly cache: ImageCacheService,
+    private readonly resize: ImageResizeService,
     private readonly config: ConfigService
   ) {
     // Same path resolution logic as CoverArtService
@@ -83,6 +85,33 @@ export class AlbumCoverService {
     result = await this.resolveCoverPath(coverPath, source);
     this.cache.set(cacheKey, result);
     return result;
+  }
+
+  /**
+   * Get a resized album cover (thumbnail). Falls back to original if resize fails.
+   */
+  async getAlbumCoverResized(
+    albumId: string,
+    size: ImageSize,
+    preferWebP: boolean
+  ): Promise<CachedImageResult | { filePath: string; mimeType: string; size: number; resized: true }> {
+    // Get original cover first (validates album exists, resolves path)
+    const original = await this.getAlbumCover(albumId);
+
+    // Try to produce a resized version
+    const resized = await this.resize.getResized(
+      original.filePath,
+      albumId,
+      size,
+      preferWebP
+    );
+
+    if (resized) {
+      return { ...resized, resized: true };
+    }
+
+    // Fallback to original if resize fails (e.g. corrupted image)
+    return original;
   }
 
   /**

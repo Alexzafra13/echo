@@ -121,6 +121,12 @@ export class ImagesController {
     description: 'Cache tag for cache busting (MD5 hash of filepath:mtime)',
     example: 'a1b2c3d4',
   })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    enum: ['thumb', 'small', 'medium'],
+    description: 'Resize preset: thumb (200px), small (300px), medium (500px). Omit for original.',
+  })
   @ApiResponse({
     status: 200,
     description: 'Cover image returned successfully',
@@ -131,10 +137,24 @@ export class ImagesController {
   async getAlbumCover(
     @Param('albumId', ParseUUIDPipe) albumId: string,
     @Query('tag') tag: string | undefined,
+    @Query('size') size: 'thumb' | 'small' | 'medium' | undefined,
     @Headers('if-none-match') ifNoneMatch: string | undefined,
+    @Headers('accept') accept: string | undefined,
     @Res({ passthrough: true }) res: FastifyReply
   ): Promise<StreamableFile | void> {
     try {
+      // Resized image path (thumb/small/medium)
+      if (size && ['thumb', 'small', 'medium'].includes(size)) {
+        const preferWebP = !!accept?.includes('image/webp');
+        const resized = await this.imageService.getAlbumCoverResized(albumId, size, preferWebP);
+
+        res.header('Content-Type', resized.mimeType);
+        res.header('Cache-Control', 'public, max-age=31536000, immutable');
+        res.header('Access-Control-Allow-Origin', '*');
+        return new StreamableFile(createReadStream(resized.filePath));
+      }
+
+      // Original image path
       const imageResult = await this.imageService.getAlbumCover(albumId);
 
       const currentETag = `"${imageResult.tag}"`;

@@ -58,6 +58,7 @@ import {
 } from './application/services/artist';
 import {
   ImageCacheService,
+  ImageResizeService,
   ArtistImageService,
   AlbumCoverService,
 } from './application/services/images';
@@ -159,6 +160,7 @@ import { STORAGE_SERVICE, SETTINGS_REPOSITORY } from './domain/ports';
 
     // Image services (SRP extraction)
     ImageCacheService,
+    ImageResizeService,
     ArtistImageService,
     AlbumCoverService,
 
