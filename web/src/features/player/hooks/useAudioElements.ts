@@ -318,7 +318,9 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     (audio: HTMLAudioElement, duration: number = 50, audioId?: 'A' | 'B'): Promise<void> => {
       return new Promise((resolve) => {
         const gainNode = audioId
-          ? (audioId === 'A' ? gainNodeARef.current : gainNodeBRef.current)
+          ? audioId === 'A'
+            ? gainNodeARef.current
+            : gainNodeBRef.current
           : null;
 
         if (!audio || audio.paused) {
@@ -491,53 +493,17 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       nativeVolumeSupported = false;
     }
 
-    // If native volume is not supported (iOS), set up Web Audio API fallback.
-    // Route audio through: HTMLAudioElement → MediaElementSource → GainNode → destination
-    // GainNode.gain provides volume control that audio.volume cannot on iOS.
+    // On iOS Safari, audio.volume is read-only. We do NOT set up Web Audio API
+    // (createMediaElementSource + GainNode) because it permanently reroutes all audio
+    // through the AudioContext. If the AudioContext gets suspended (common in iOS PWA
+    // background, screen off, or tab switch), audio stops completely even though the
+    // progress bar keeps moving. This is worse than losing volume/normalization control.
+    // Instead, we simply mark volumeControlSupported=false, which disables crossfade
+    // and normalization on iOS. Gapless preload still works via plain HTMLAudioElement.
     if (!nativeVolumeSupported) {
-      try {
-        // crossOrigin is required for createMediaElementSource to output audio
-        // (without it, cross-origin sources produce silence through Web Audio).
-        // Same-origin sources work fine regardless. For cross-origin APIs
-        // (custom VITE_API_URL), the server must return CORS headers.
-        audioA.crossOrigin = 'anonymous';
-        audioB.crossOrigin = 'anonymous';
-
-        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        if (AudioCtx) {
-          const ctx = new AudioCtx();
-
-          const srcA = ctx.createMediaElementSource(audioA);
-          const gA = ctx.createGain();
-          gA.gain.value = initialVolume;
-          srcA.connect(gA);
-          gA.connect(ctx.destination);
-
-          const srcB = ctx.createMediaElementSource(audioB);
-          const gB = ctx.createGain();
-          gB.gain.value = initialVolume;
-          srcB.connect(gB);
-          gB.connect(ctx.destination);
-
-          audioContextRef.current = ctx;
-          gainNodeARef.current = gA;
-          gainNodeBRef.current = gB;
-
-          // NOTE: We intentionally do NOT set nativeVolumeSupported = true here.
-          // GainNodes provide volume control for normalization and gapless transitions,
-          // but crossfade (which checks volumeControlSupported) must stay disabled on iOS.
-          // On iOS, crossfade via Web Audio is unreliable: playInactive() fails without
-          // a user gesture (autoplay policy), AudioContext suspends in background,
-          // and the ended event gets swallowed when isCrossfadingRef is true.
-          // The gapless preload mechanism provides seamless transitions without these issues.
-          logger.debug('[AudioElements] Web Audio API GainNodes initialized for iOS volume control (crossfade stays disabled)');
-        }
-      } catch (e) {
-        logger.warn('[AudioElements] Web Audio API init failed, crossfade disabled on iOS:', (e as Error).message);
-        // Remove crossOrigin since Web Audio failed (prevent CORS issues on audio load)
-        audioA.removeAttribute('crossorigin');
-        audioB.removeAttribute('crossorigin');
-      }
+      logger.debug(
+        '[AudioElements] iOS detected: volume control disabled, using plain HTMLAudioElement for reliability'
+      );
     }
 
     volumeControlSupportedRef.current = nativeVolumeSupported;
@@ -650,14 +616,6 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       audioB.pause();
       audioB.src = '';
       audioB.load();
-
-      // Cleanup Web Audio API
-      if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => {});
-        audioContextRef.current = null;
-      }
-      gainNodeARef.current = null;
-      gainNodeBRef.current = null;
 
       audioRefA.current = null;
       audioRefB.current = null;

@@ -118,7 +118,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // Keep BPM ref in sync with current track
 
-
   useEffect(() => {
     const audioA = audioElements.audioRefA.current;
     const audioB = audioElements.audioRefB.current;
@@ -131,7 +130,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Sync initial volume with normalization hook
       normalization.setUserVolume(userVolumeRef.current);
     }
-  }, [audioElements.audioRefA, audioElements.audioRefB, audioElements.setAudioVolume, normalization]);
+  }, [
+    audioElements.audioRefA,
+    audioElements.audioRefB,
+    audioElements.setAudioVolume,
+    normalization,
+  ]);
 
   // ========== QUEUE MANAGEMENT ==========
   const queue = useQueueManagement();
@@ -343,20 +347,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
         crossfade.clearCrossfade();
         audioElements.stopInactive();
-
-        // Immediately silence and pause the active audio BEFORE loading the new source.
-        // On iOS (Web Audio API pipeline), audio data already in the GainNode can continue
-        // playing briefly after setting a new src. Zeroing the gain and pausing first
-        // prevents any audible overlap between the old and new track.
-        const activeId = audioElements.getActiveAudioId();
-        audioElements.setAudioVolume(activeId, 0);
-        audioElements.pauseActive();
-
         audioElements.loadOnActive(streamUrl);
-
-        // Restore volume for the new track (was zeroed above to prevent overlap)
-        const effectiveVol = normalization.getEffectiveVolume(activeId);
-        audioElements.setAudioVolume(activeId, effectiveVol);
 
         setCurrentTrack(track);
         playTracking.startPlaySession(track, queueContextRef.current);
@@ -870,14 +861,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // during play() calls. Instead, we rely on Phase 1 preloading (buffer
       // is ready) and start the next track in handleEnded for a clean transition.
     };
-  }, [
-    radio.isRadioMode,
-    isPlaying,
-    queue,
-    getStreamUrl,
-    audioElements,
-    normalization,
-  ]);
+  }, [radio.isRadioMode, isPlaying, queue, getStreamUrl, audioElements, normalization]);
 
   // Stable timeupdate listener for gapless preloading
   useEffect(() => {
