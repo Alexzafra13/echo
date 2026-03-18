@@ -696,10 +696,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         logger.debug('[Player] Repeat one - replaying current track');
         audioElements.playActive();
       } else if (hasNextTrack) {
-        // Check if the next track was gapless-preloaded and is already pre-playing
+        // On iOS (volumeControlSupported=false), always use the simple path.
+        // iOS requires each HTMLAudioElement to receive its first play() from a
+        // user gesture. Audio B has never been played by a user gesture, so
+        // switching to it in an 'ended' handler (not user-initiated) fails.
+        // The simple path reuses Audio A (already gesture-authorized).
+        const preloaded = audioElements.volumeControlSupported ? preloadedNextRef.current : null;
         const nextIndex = queue.getNextIndex();
         const nextTrack = nextIndex !== -1 ? queue.getTrackAt(nextIndex) : null;
-        const preloaded = preloadedNextRef.current;
 
         if (nextTrack && preloaded && preloaded.trackId === nextTrack.id) {
           // PRELOADED: inactive element has the next track buffered and ready.
@@ -819,13 +823,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   useEffect(() => {
     gaplessPreloadHandlerRef.current = () => {
-      // Skip in radio mode or when not playing.
-      // Note: gapless preload runs even when crossfade is enabled. It buffers
-      // the next track at 15s before end (Phase 1). When crossfade triggers at
-      // 2s, the audio is already loaded — no async delay, instant crossfade start.
-      // Without this, the 2s crossfade window is consumed by getStreamUrl + load +
-      // buffer, causing the outgoing track to end before the animation starts.
-      if (radio.isRadioMode || !isPlaying) return;
+      // Skip in radio mode, when not playing, or on iOS.
+      // On iOS (volumeControlSupported=false), we never use audio element B
+      // because iOS requires each element to receive its first play() from a
+      // user gesture. Preloading on B then switching to it in 'ended' handler fails.
+      // Note: gapless preload runs even when crossfade is enabled on desktop. It buffers
+      // the next track at 15s before end. When crossfade triggers at 2s, the audio is
+      // already loaded — no async delay, instant crossfade start.
+      if (radio.isRadioMode || !isPlaying || !audioElements.volumeControlSupported) return;
 
       const audio = audioElements.getActiveAudio();
       if (!audio || isNaN(audio.duration) || audio.duration <= 0) return;
