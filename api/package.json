@@ -72,7 +72,6 @@
     "probe-image-size": "^7.2.3",
     "reflect-metadata": "~0.2.2",
     "rxjs": "^7.8.2",
-    "sharp": "^0.34.5",
     "socket.io": "^4.8.1"
   },
   "optionalDependencies": {
@@ -92,7 +91,6 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.15.6",
     "@types/probe-image-size": "^7.2.5",
-    "@types/sharp": "^0.31.1",
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
