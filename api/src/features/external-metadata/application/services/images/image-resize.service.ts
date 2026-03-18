@@ -1,14 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
-import sharp from 'sharp';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { existsSync } from 'fs';
 
+const execFileAsync = promisify(execFile);
+
 /**
  * Predefined image sizes for album covers.
- * Each size produces a square image (fit: cover).
+ * Each size produces a square image (crop center).
  */
 export const IMAGE_SIZES = {
   thumb: 200,
@@ -24,6 +27,12 @@ export interface ResizedImageResult {
   size: number;
 }
 
+/**
+ * Image resize service using ffmpeg (already installed in Docker for audio analysis).
+ * No additional dependencies needed — avoids adding ~30-50MB of sharp native binaries.
+ *
+ * Generates and caches resized album covers on disk.
+ */
 @Injectable()
 export class ImageResizeService {
   private readonly thumbsPath: string;
@@ -56,10 +65,10 @@ export class ImageResizeService {
 
   /**
    * Get a resized version of an image. Returns cached thumbnail if available,
-   * otherwise generates and caches it.
+   * otherwise generates and caches it via ffmpeg.
    *
    * @param originalPath - Absolute path to the original image
-   * @param cacheKey - Unique key for this image (e.g. albumId or albumId:tag)
+   * @param cacheKey - Unique key for this image (e.g. albumId)
    * @param size - Target size preset
    * @param preferWebP - Whether to output WebP (smaller) or JPEG
    */
@@ -88,18 +97,22 @@ export class ImageResizeService {
       }
     }
 
-    // Generate thumbnail
+    // Generate thumbnail via ffmpeg
+    // -vf "crop=min(iw,ih):min(iw,ih),scale=NxN" crops to square then scales
     try {
-      const pipeline = sharp(originalPath)
-        .resize(px, px, { fit: 'cover', position: 'centre' });
+      const args = [
+        '-i',
+        originalPath,
+        '-vf',
+        `crop='min(iw,ih)':'min(iw,ih)',scale=${px}:${px}`,
+        '-frames:v',
+        '1',
+        ...(preferWebP ? ['-c:v', 'libwebp', '-quality', '80'] : ['-q:v', '2']),
+        '-y',
+        thumbPath,
+      ];
 
-      if (preferWebP) {
-        pipeline.webp({ quality: 80 });
-      } else {
-        pipeline.jpeg({ quality: 80, mozjpeg: true });
-      }
-
-      await pipeline.toFile(thumbPath);
+      await execFileAsync('ffmpeg', args, { timeout: 10000 });
 
       const stats = await fs.stat(thumbPath);
       this.logger.debug(
@@ -115,6 +128,12 @@ export class ImageResizeService {
       this.logger.warn(
         `Failed to generate thumbnail for ${cacheKey}: ${error instanceof Error ? error.message : error}`
       );
+      // Clean up partial file
+      try {
+        await fs.unlink(thumbPath);
+      } catch {
+        /* ignore */
+      }
       return null;
     }
   }
