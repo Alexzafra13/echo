@@ -10,15 +10,16 @@
  * logic from state management and queue coordination.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useLatestCallback } from '@shared/hooks';
-import { Track, PlayContext } from '../types';
+import { Track } from '../types';
 import { logger } from '@shared/utils/logger';
 import type { AudioElements } from './useAudioElements';
 import type { CrossfadeLogic } from './useCrossfadeLogic';
 import type { PlayTracking } from './usePlayTracking';
 import type { QueueManagement } from './useQueueManagement';
 import type { AutoplaySettings } from '../types';
+import type { PlayerSharedRefs } from './playerSharedRefs';
 
 export interface UseTrackTransitionsParams {
   audioElements: AudioElements;
@@ -31,13 +32,7 @@ export interface UseTrackTransitionsParams {
   currentTrack: Track | null;
   userVolume: number;
   autoplaySettings: AutoplaySettings;
-  isTransitioningRef: React.MutableRefObject<boolean>;
-  preloadedNextRef: React.MutableRefObject<{
-    trackId: string;
-    nextIndex: number;
-    track: Track;
-  } | null>;
-  queueContextRef: React.MutableRefObject<PlayContext | undefined>;
+  sharedRefs: PlayerSharedRefs;
   radio: { isRadioMode: boolean };
   // Callbacks injected from PlayerContext (avoid circular deps)
   handlePlayNext: (useCrossfade: boolean) => Promise<void>;
@@ -55,63 +50,16 @@ export function useTrackTransitions({
   currentTrack,
   userVolume,
   autoplaySettings,
-  isTransitioningRef,
-  preloadedNextRef,
-  queueContextRef,
+  sharedRefs,
   radio,
   handlePlayNext,
   getStreamUrl,
 }: UseTrackTransitionsParams) {
-  // ========== TRACK ENDED HANDLER ==========
-  // useLatestCallback ensures the onEnded callback (registered once in
-  // useAudioElements) always delegates to the latest state without
-  // needing to remove/re-add DOM listeners.
-  const handleEnded = useLatestCallback(async () => {
-    try {
-      // Skip if crossfade is managing the transition (synchronous ref check)
-      if (crossfade.isCrossfadingRef.current) return;
-
-      playTracking.endPlaySession(false);
-
-      const hasNextTrack = queue.hasNext();
-
-      logger.debug('[Player] Track ended - checking next action', {
-        repeatMode: queue.repeatMode,
-        hasNext: hasNextTrack,
-        currentIndex: queue.currentIndex,
-        queueLength: queue.queue.length,
-        autoplayEnabled: autoplaySettings.enabled,
-        artistId: currentTrack?.artistId || 'MISSING',
-        isRadioMode: radio.isRadioMode,
-      });
-
-      if (queue.repeatMode === 'one') {
-        logger.debug('[Player] Repeat one - replaying current track');
-        audioElements.playActive();
-      } else if (hasNextTrack) {
-        await playNextWithPreload();
-      } else {
-        // Queue exhausted — handlePlayNext will try autoplay
-        logger.debug('[Player] No more tracks - trying autoplay');
-        await handlePlayNext(false);
-      }
-    } catch (error) {
-      logger.error(
-        '[Player] Error in ended handler, attempting recovery:',
-        (error as Error).message
-      );
-      try {
-        await handlePlayNext(false);
-      } catch (recoveryError) {
-        logger.error('[Player] Recovery failed:', (recoveryError as Error).message);
-        setIsPlaying(false);
-      }
-    }
-  });
-
+  const { isTransitioningRef, preloadedNextRef, queueContextRef } = sharedRefs;
   /**
    * Play next track using preloaded audio if available, otherwise fall back
    * to the standard handlePlayNext path.
+   * Defined before handleEnded so it's available in handleEnded's closure.
    */
   const playNextWithPreload = useLatestCallback(async () => {
     // On iOS (volumeControlSupported=false), always use the simple path.
@@ -161,11 +109,52 @@ export function useTrackTransitions({
     }
   });
 
-  // Wire handleEnded to the onEnded callback ref that useAudioElements calls
-  const handleEndedRef = useRef<() => void>(() => {});
-  useEffect(() => {
-    handleEndedRef.current = handleEnded;
-  }, [handleEnded]);
+  // ========== TRACK ENDED HANDLER ==========
+  // useLatestCallback ensures the onEnded callback (registered once in
+  // useAudioElements) always delegates to the latest state without
+  // needing to remove/re-add DOM listeners.
+  const handleEnded = useLatestCallback(async () => {
+    try {
+      // Skip if crossfade is managing the transition (synchronous ref check)
+      if (crossfade.isCrossfadingRef.current) return;
+
+      playTracking.endPlaySession(false);
+
+      const hasNextTrack = queue.hasNext();
+
+      logger.debug('[Player] Track ended - checking next action', {
+        repeatMode: queue.repeatMode,
+        hasNext: hasNextTrack,
+        currentIndex: queue.currentIndex,
+        queueLength: queue.queue.length,
+        autoplayEnabled: autoplaySettings.enabled,
+        artistId: currentTrack?.artistId || 'MISSING',
+        isRadioMode: radio.isRadioMode,
+      });
+
+      if (queue.repeatMode === 'one') {
+        logger.debug('[Player] Repeat one - replaying current track');
+        audioElements.playActive();
+      } else if (hasNextTrack) {
+        await playNextWithPreload();
+      } else {
+        // Queue exhausted — handlePlayNext will try autoplay
+        logger.debug('[Player] No more tracks - trying autoplay');
+        await handlePlayNext(false);
+      }
+    } catch (error) {
+      logger.error(
+        '[Player] Error in ended handler, attempting recovery:',
+        (error as Error).message
+      );
+      try {
+        await handlePlayNext(false);
+      } catch (recoveryError) {
+        logger.error('[Player] Recovery failed:', (recoveryError as Error).message);
+        setIsPlaying(false);
+      }
+    }
+  });
 
   // ========== GAPLESS PRELOAD ==========
   // Preloads the next track 15s before end on the inactive audio element.
@@ -221,6 +210,7 @@ export function useTrackTransitions({
   }, [currentTrack, preloadedNextRef]);
 
   return {
-    handleEndedRef,
+    /** Stable reference — safe to call from useAudioElements onEnded */
+    handleEnded,
   };
 }

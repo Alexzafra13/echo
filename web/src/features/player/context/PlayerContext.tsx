@@ -32,6 +32,7 @@ import { useRadioPlayback } from '../hooks/useRadioPlayback';
 import { useAutoplay } from '../hooks/useAutoplay';
 import { useTrackPlayback } from '../hooks/useTrackPlayback';
 import { useTrackTransitions } from '../hooks/useTrackTransitions';
+import type { PlayerSharedRefs } from '../hooks/playerSharedRefs';
 import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
 import { useMediaSession } from '../hooks/useMediaSession';
@@ -66,13 +67,22 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // Refs for cross-hook communication (avoid circular dependencies)
   const playNextRef = useRef<(useCrossfade: boolean) => void>(() => {});
-  const queueContextRef = useRef<PlayContext | undefined>(undefined);
+  const transitionsRef = useRef<() => void>(() => {});
   const isTransitioningRef = useRef(false);
   const preloadedNextRef = useRef<{
     trackId: string;
     nextIndex: number;
     track: Track;
   } | null>(null);
+  const queueContextRef = useRef<PlayContext | undefined>(undefined);
+
+  // Bundle refs into a single object for cleaner hook params.
+  // useMemo([]): the object identity is stable, individual refs are mutable.
+  const sharedRefs: PlayerSharedRefs = useMemo(
+    () => ({ isTransitioningRef, preloadedNextRef, queueContextRef }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   // ========== AUDIO ELEMENTS ==========
   const audioElements = useAudioElements({
@@ -87,9 +97,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       onTimeUpdate: (time) => setCurrentTime(time),
       onDurationChange: (dur) => setDuration(dur),
       onEnded: () => {
-        // Delegate to ref-based handler for latest state.
-        // useAudioElements already filters to active element only.
-        handleEndedRef.current();
+        // Delegate to transitions hook via ref — the callback is captured in
+        // useAudioElements' init effect, so we need ref indirection.
+        transitionsRef.current();
       },
     },
   });
@@ -151,9 +161,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     isPlaying,
     setIsPlaying,
     setCurrentTrack,
-    isTransitioningRef,
-    preloadedNextRef,
-    queueContextRef,
+    sharedRefs,
   });
 
   // ========== QUEUE OPERATIONS ==========
@@ -249,7 +257,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, [handlePlayNext]);
 
   // ========== TRACK TRANSITIONS ==========
-  const { handleEndedRef } = useTrackTransitions({
+  const { handleEnded } = useTrackTransitions({
     audioElements,
     crossfade,
     playTracking,
@@ -260,13 +268,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     currentTrack,
     userVolume,
     autoplaySettings,
-    isTransitioningRef,
-    preloadedNextRef,
-    queueContextRef,
+    sharedRefs,
     radio: { isRadioMode: radio.isRadioMode },
     handlePlayNext,
     getStreamUrl,
   });
+
+  // Wire the stable handleEnded into the ref that onEnded delegates to
+  useEffect(() => {
+    transitionsRef.current = handleEnded;
+  }, [handleEnded]);
 
   // ========== PLAYBACK CONTROLS ==========
 
