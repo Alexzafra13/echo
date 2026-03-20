@@ -268,26 +268,6 @@ describe('useTrackTransitions', () => {
       expect(handlePlayNext).toHaveBeenCalledWith(false);
     });
 
-    it('should skip preloaded path on iOS (volumeControlSupported=false)', async () => {
-      audioElements = createMockAudioElements({ volumeControlSupported: false });
-      const { result } = renderTransitions();
-
-      // Set preloaded AFTER initial render
-      sharedRefs.preloadedNextRef.current = {
-        trackId: 'track-2',
-        nextIndex: 1,
-        track: mockTrack2,
-      };
-
-      await act(async () => {
-        await result.current.handleEnded();
-      });
-
-      // Should NOT use the preloaded path — falls back to handlePlayNext
-      expect(audioElements.switchActiveAudio).not.toHaveBeenCalled();
-      expect(handlePlayNext).toHaveBeenCalledWith(false);
-    });
-
     it('should recover from errors by calling handlePlayNext', async () => {
       // Make switchActiveAudio throw to trigger the error/recovery path
       audioElements = createMockAudioElements({

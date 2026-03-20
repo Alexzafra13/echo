@@ -63,10 +63,9 @@ export function useTrackTransitions({
    * Defined before handleEnded so it's available in handleEnded's closure.
    */
   const playNextWithPreload = useLatestCallback(async () => {
-    // On iOS (volumeControlSupported=false), always use the simple path.
-    // iOS requires each HTMLAudioElement to receive its first play() from a
-    // user gesture — Audio B has never been gesture-authorized.
-    const preloaded = audioElements.volumeControlSupported ? preloadedNextRef.current : null;
+    // Web Audio API enables crossfade on all platforms (including iOS).
+    // Audio B's play() works because AudioContext was resumed on first user gesture.
+    const preloaded = preloadedNextRef.current;
     const nextIndex = queue.getNextIndex();
     const nextTrack = nextIndex !== -1 ? queue.getTrackAt(nextIndex) : null;
 
@@ -79,12 +78,9 @@ export function useTrackTransitions({
       setCurrentTrack(nextTrack);
       audioElements.switchActiveAudio();
 
-      // Unmute and restore user volume
-      const newActive = audioElements.getActiveAudio();
-      if (newActive) {
-        newActive.muted = false;
-        newActive.volume = userVolume;
-      }
+      // Restore user volume via GainNode (works on all platforms)
+      const newActiveId = audioElements.getActiveAudioId();
+      audioElements.setAudioVolume(newActiveId, userVolume);
 
       try {
         await playActiveWithRetry(audioElements, false);
@@ -155,8 +151,8 @@ export function useTrackTransitions({
   // ========== GAPLESS PRELOAD ==========
   // Preloads the next track 15s before end on the inactive audio element.
   const checkGaplessPreload = useLatestCallback(() => {
-    // Skip in radio mode, when not playing, or on iOS
-    if (radio.isRadioMode || !isPlaying || !audioElements.volumeControlSupported) return;
+    // Skip in radio mode or when not playing
+    if (radio.isRadioMode || !isPlaying) return;
 
     const audio = audioElements.getActiveAudio();
     if (!audio || isNaN(audio.duration) || audio.duration <= 0) return;
