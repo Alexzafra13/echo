@@ -52,6 +52,12 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   // On iOS, audio.volume is read-only (always 1.0) because volume is
   // controlled exclusively by hardware buttons. When detected, crossfade
   // and volume control are disabled.
+  // IMPORTANT: This must be state (not just a ref) so that consumers
+  // re-render when the value changes. A ref alone never triggers re-render,
+  // causing iOS to see volumeControlSupported=true (the default) forever
+  // — the crossfade UI stays visible and gapless preload uses audio B
+  // (which fails on iOS without user gesture).
+  const [volumeControlSupportedState, setVolumeControlSupportedState] = useState(true);
   const volumeControlSupportedRef = useRef(true);
 
   /**
@@ -427,6 +433,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     }
 
     volumeControlSupportedRef.current = nativeVolumeSupported;
+    setVolumeControlSupportedState(nativeVolumeSupported);
 
     // Create event handlers
     const createTimeUpdateHandler = (audio: HTMLAudioElement, audioId: 'A' | 'B') => () => {
@@ -553,7 +560,8 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
 
     // Platform capabilities
     // false on iOS Safari where audio.volume is read-only (hardware-controlled)
-    volumeControlSupported: volumeControlSupportedRef.current,
+    // Uses state (not ref) so consumers re-render when detection completes
+    volumeControlSupported: volumeControlSupportedState,
 
     // Getters
     getActiveAudio,
