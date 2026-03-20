@@ -8,9 +8,6 @@ describe('playerSettingsStore', () => {
     store.setCrossfadeEnabled(false);
     store.setCrossfadeDuration(2);
     store.setCrossfadeSmartMode(false);
-    store.setNormalizationEnabled(true);
-    store.setNormalizationTargetLufs(-16);
-    store.setNormalizationPreventClipping(true);
     store.setAutoplayEnabled(true);
   });
 
@@ -27,15 +24,6 @@ describe('playerSettingsStore', () => {
         duration: 2,
         smartMode: false,
         tempoMatch: false,
-      });
-    });
-
-    it('should have correct default normalization settings', () => {
-      const state = usePlayerSettingsStore.getState();
-      expect(state.normalization).toEqual({
-        enabled: true,
-        targetLufs: -16,
-        preventClipping: true,
       });
     });
 
@@ -121,52 +109,6 @@ describe('playerSettingsStore', () => {
     });
   });
 
-  describe('normalization actions', () => {
-    it('should enable normalization', () => {
-      usePlayerSettingsStore.getState().setNormalizationEnabled(false);
-      usePlayerSettingsStore.getState().setNormalizationEnabled(true);
-      expect(usePlayerSettingsStore.getState().normalization.enabled).toBe(true);
-    });
-
-    it('should disable normalization', () => {
-      usePlayerSettingsStore.getState().setNormalizationEnabled(false);
-      expect(usePlayerSettingsStore.getState().normalization.enabled).toBe(false);
-    });
-
-    it('should set target LUFS to -14', () => {
-      usePlayerSettingsStore.getState().setNormalizationTargetLufs(-14);
-      expect(usePlayerSettingsStore.getState().normalization.targetLufs).toBe(-14);
-    });
-
-    it('should set target LUFS to -16', () => {
-      usePlayerSettingsStore.getState().setNormalizationTargetLufs(-14);
-      usePlayerSettingsStore.getState().setNormalizationTargetLufs(-16);
-      expect(usePlayerSettingsStore.getState().normalization.targetLufs).toBe(-16);
-    });
-
-    it('should enable prevent clipping', () => {
-      usePlayerSettingsStore.getState().setNormalizationPreventClipping(false);
-      usePlayerSettingsStore.getState().setNormalizationPreventClipping(true);
-      expect(usePlayerSettingsStore.getState().normalization.preventClipping).toBe(true);
-    });
-
-    it('should disable prevent clipping', () => {
-      usePlayerSettingsStore.getState().setNormalizationPreventClipping(false);
-      expect(usePlayerSettingsStore.getState().normalization.preventClipping).toBe(false);
-    });
-
-    it('should not affect other normalization settings when changing one', () => {
-      usePlayerSettingsStore.getState().setNormalizationTargetLufs(-14);
-
-      usePlayerSettingsStore.getState().setNormalizationPreventClipping(false);
-
-      const state = usePlayerSettingsStore.getState();
-      expect(state.normalization.enabled).toBe(true);
-      expect(state.normalization.targetLufs).toBe(-14);
-      expect(state.normalization.preventClipping).toBe(false);
-    });
-  });
-
   describe('autoplay actions', () => {
     it('should enable autoplay', () => {
       usePlayerSettingsStore.getState().setAutoplayEnabled(false);
@@ -187,17 +129,6 @@ describe('playerSettingsStore', () => {
 
       const state = usePlayerSettingsStore.getState();
       expect(state.playerPreference).toBe('dynamic');
-      expect(state.normalization.enabled).toBe(true);
-      expect(state.autoplay.enabled).toBe(true);
-    });
-
-    it('should not affect other settings groups when changing normalization', () => {
-      usePlayerSettingsStore.getState().setNormalizationEnabled(false);
-      usePlayerSettingsStore.getState().setNormalizationTargetLufs(-14);
-
-      const state = usePlayerSettingsStore.getState();
-      expect(state.playerPreference).toBe('dynamic');
-      expect(state.crossfade.enabled).toBe(false);
       expect(state.autoplay.enabled).toBe(true);
     });
 
@@ -206,7 +137,6 @@ describe('playerSettingsStore', () => {
 
       const state = usePlayerSettingsStore.getState();
       expect(state.crossfade.enabled).toBe(false);
-      expect(state.normalization.enabled).toBe(true);
       expect(state.autoplay.enabled).toBe(true);
     });
   });

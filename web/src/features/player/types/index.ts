@@ -11,12 +11,6 @@ export interface CrossfadeSettings {
   tempoMatch: boolean; // Ajusta gradualmente el BPM de salida al de entrada
 }
 
-export interface NormalizationSettings {
-  enabled: boolean;
-  targetLufs: -14 | -16; // -14 = estilo Spotify, -16 = estilo Apple
-  preventClipping: boolean; // No amplificar más allá del headroom de pico
-}
-
 export interface AutoplaySettings {
   enabled: boolean;
 }
@@ -35,8 +29,6 @@ export interface PlayerState {
   crossfade: CrossfadeSettings;
   isCrossfading: boolean;
   volumeControlSupported: boolean;
-
-  normalization: NormalizationSettings;
 
   currentRadioStation: RadioStation | null;
   isRadioMode: boolean;
