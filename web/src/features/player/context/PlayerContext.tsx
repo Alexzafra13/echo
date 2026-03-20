@@ -103,6 +103,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       },
       onTimeUpdate: (time) => setCurrentTime(time),
       onDurationChange: (dur) => setDuration(dur),
+      onEnded: () => {
+        // Delegate to ref-based handler for latest state (same pattern as
+        // handleEndedRef below). useAudioElements already filters this to
+        // only fire for the active audio element, so no need to check here.
+        handleEndedRef.current();
+      },
     },
   });
 
@@ -592,112 +598,118 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   );
 
   // ========== TRACK ENDED HANDLER ==========
-  // Use ref-based handler to prevent event listener churn during track transitions.
-  // Previously, this effect had 11 dependencies that changed during every track transition,
-  // causing the 'ended' listeners to be rapidly removed and re-added. On mobile browsers,
-  // the 'ended' event could fire in the gap between removal and re-attachment, causing
-  // playback to silently stop after the current track finished.
-  const handleEndedRef = useRef<(event: Event) => void>(() => {});
+  // Use ref-based handler so the onEnded callback (registered once in useAudioElements)
+  // always delegates to the latest state without needing to remove/re-add DOM listeners.
+  // useAudioElements already filters 'ended' events to only fire for the active audio
+  // element, so no event.target check is needed here.
+  const handleEndedRef = useRef<() => void>(() => {});
 
-  // Keep the handler up to date with the latest state and callbacks
+  // Keep the handler up to date with the latest state and callbacks.
+  // Called via onEnded callback in useAudioElements (which already filters
+  // to only fire for the active audio element).
   useEffect(() => {
-    handleEndedRef.current = async (event: Event) => {
-      const endedAudio = event.target as HTMLAudioElement;
-      const activeAudio = audioElements.getActiveAudio();
+    handleEndedRef.current = async () => {
+      try {
+        // Only handle ended if not in crossfade mode.
+        // Use isCrossfadingRef (synchronous) instead of isCrossfading (React state)
+        // to prevent race conditions where the ended event fires before React re-renders.
+        if (crossfade.isCrossfadingRef.current) return;
 
-      // CRITICAL: Ignore ended events from the inactive audio element
-      // This prevents the old track from triggering playNext after a crossfade
-      if (endedAudio !== activeAudio) {
-        logger.debug('[Player] Ignoring ended event from inactive audio element');
-        return;
-      }
+        // Record completed play (not skipped)
+        playTracking.endPlaySession(false);
 
-      // Only handle ended if not in crossfade mode.
-      // Use isCrossfadingRef (synchronous) instead of isCrossfading (React state)
-      // to prevent race conditions where the ended event fires before React re-renders.
-      if (crossfade.isCrossfadingRef.current) return;
+        const hasNextTrack = queue.hasNext();
 
-      // Record completed play (not skipped)
-      playTracking.endPlaySession(false);
+        logger.debug('[Player] Track ended - checking next action', {
+          repeatMode: queue.repeatMode,
+          hasNext: hasNextTrack,
+          currentIndex: queue.currentIndex,
+          queueLength: queue.queue.length,
+          autoplayEnabled: autoplaySettings.enabled,
+          artistId: currentTrack?.artistId || 'MISSING',
+          artistName: currentTrack?.artist || 'MISSING',
+          isRadioMode: radio.isRadioMode,
+        });
 
-      const hasNextTrack = queue.hasNext();
+        if (queue.repeatMode === 'one') {
+          logger.debug('[Player] Repeat one - replaying current track');
+          audioElements.playActive();
+        } else if (hasNextTrack) {
+          // On iOS (volumeControlSupported=false), always use the simple path.
+          // iOS requires each HTMLAudioElement to receive its first play() from a
+          // user gesture. Audio B has never been played by a user gesture, so
+          // switching to it in an 'ended' handler (not user-initiated) fails.
+          // The simple path reuses Audio A (already gesture-authorized).
+          const preloaded = audioElements.volumeControlSupported ? preloadedNextRef.current : null;
+          const nextIndex = queue.getNextIndex();
+          const nextTrack = nextIndex !== -1 ? queue.getTrackAt(nextIndex) : null;
 
-      logger.debug('[Player] Track ended - checking next action', {
-        repeatMode: queue.repeatMode,
-        hasNext: hasNextTrack,
-        currentIndex: queue.currentIndex,
-        queueLength: queue.queue.length,
-        autoplayEnabled: autoplaySettings.enabled,
-        artistId: currentTrack?.artistId || 'MISSING',
-        artistName: currentTrack?.artist || 'MISSING',
-        isRadioMode: radio.isRadioMode,
-      });
+          if (nextTrack && preloaded && preloaded.trackId === nextTrack.id) {
+            // PRELOADED: inactive element has the next track buffered and ready.
+            // Start playback immediately for a clean, non-overlapping transition.
+            logger.debug('[Player] Preloaded transition to:', nextTrack.title);
+            isTransitioningRef.current = true;
+            preloadedNextRef.current = null;
 
-      if (queue.repeatMode === 'one') {
-        logger.debug('[Player] Repeat one - replaying current track');
-        audioElements.playActive();
-      } else if (hasNextTrack) {
-        // On iOS (volumeControlSupported=false), always use the simple path.
-        // iOS requires each HTMLAudioElement to receive its first play() from a
-        // user gesture. Audio B has never been played by a user gesture, so
-        // switching to it in an 'ended' handler (not user-initiated) fails.
-        // The simple path reuses Audio A (already gesture-authorized).
-        const preloaded = audioElements.volumeControlSupported ? preloadedNextRef.current : null;
-        const nextIndex = queue.getNextIndex();
-        const nextTrack = nextIndex !== -1 ? queue.getTrackAt(nextIndex) : null;
+            queue.setCurrentIndex(nextIndex);
+            setCurrentTrack(nextTrack);
 
-        if (nextTrack && preloaded && preloaded.trackId === nextTrack.id) {
-          // PRELOADED: inactive element has the next track buffered and ready.
-          // Start playback immediately for a clean, non-overlapping transition.
-          logger.debug('[Player] Preloaded transition to:', nextTrack.title);
-          isTransitioningRef.current = true;
-          preloadedNextRef.current = null;
+            // Switch: inactive (preloaded) becomes active
+            audioElements.switchActiveAudio();
 
-          queue.setCurrentIndex(nextIndex);
-          setCurrentTrack(nextTrack);
-
-          // Switch: inactive (preloaded) becomes active
-          audioElements.switchActiveAudio();
-
-          // Unmute and restore user volume
-          const newActive = audioElements.getActiveAudio();
-          if (newActive) {
-            newActive.muted = false;
-            newActive.volume = userVolume;
-          }
-
-          // Start playback — track is already buffered from Phase 1 preload
-          // so play() should start near-instantly without async gap.
-          try {
-            await audioElements.playActive(false);
-          } catch (error) {
-            logger.warn('[Player] Preloaded play failed, retrying:', (error as Error).message);
-            try {
-              await audioElements.playActive();
-            } catch (retryError) {
-              logger.error('[Player] Preloaded retry failed:', (retryError as Error).message);
+            // Unmute and restore user volume
+            const newActive = audioElements.getActiveAudio();
+            if (newActive) {
+              newActive.muted = false;
+              newActive.volume = userVolume;
             }
-          }
 
-          // Cleanup old (now inactive)
-          audioElements.stopInactive();
+            // Start playback — track is already buffered from Phase 1 preload
+            // so play() should start near-instantly without async gap.
+            try {
+              await audioElements.playActive(false);
+            } catch (error) {
+              logger.warn('[Player] Preloaded play failed, retrying:', (error as Error).message);
+              try {
+                await audioElements.playActive();
+              } catch (retryError) {
+                logger.error('[Player] Preloaded retry failed:', (retryError as Error).message);
+              }
+            }
 
-          isTransitioningRef.current = false;
-          if (audioElements.getActiveAudio()?.paused) {
-            setIsPlaying(false);
+            // Cleanup old (now inactive)
+            audioElements.stopInactive();
+
+            isTransitioningRef.current = false;
+            if (audioElements.getActiveAudio()?.paused) {
+              setIsPlaying(false);
+            }
+            playTracking.startPlaySession(nextTrack, queueContextRef.current);
+          } else {
+            // Fallback: normal transition (no preload available)
+            logger.debug('[Player] Playing next track in queue');
+            await handlePlayNext(false);
           }
-          playTracking.startPlaySession(nextTrack, queueContextRef.current);
         } else {
-          // Fallback: normal transition (no preload available)
-          logger.debug('[Player] Playing next track in queue');
-          handlePlayNext(false);
+          // No more tracks in queue - try autoplay.
+          // No crossfade: the track already ended, nothing to fade from.
+          // (Crossfade only triggers via checkCrossfadeTiming, 2s before end.)
+          logger.debug('[Player] No more tracks - trying autoplay');
+          await handlePlayNext(false);
         }
-      } else {
-        // No more tracks in queue - try autoplay.
-        // No crossfade: the track already ended, nothing to fade from.
-        // (Crossfade only triggers via checkCrossfadeTiming, 2s before end.)
-        logger.debug('[Player] No more tracks - trying autoplay');
-        await handlePlayNext(false);
+      } catch (error) {
+        // Catch-all: ensure playback doesn't silently stop due to unhandled errors.
+        // Log the error and attempt to play the next track as a last resort.
+        logger.error(
+          '[Player] Error in ended handler, attempting recovery:',
+          (error as Error).message
+        );
+        try {
+          await handlePlayNext(false);
+        } catch (recoveryError) {
+          logger.error('[Player] Recovery failed:', (recoveryError as Error).message);
+          setIsPlaying(false);
+        }
       }
     };
   }, [
@@ -709,27 +721,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     currentTrack,
     radio.isRadioMode,
     userVolume,
+    crossfade.isCrossfadingRef,
   ]);
-
-  // Stable event listeners - only set up once when audio elements are created.
-  // The ref indirection ensures the handler always uses the latest state
-  // without needing to remove/re-add DOM event listeners on every state change.
-  useEffect(() => {
-    const audioA = audioElements.audioRefA.current;
-    const audioB = audioElements.audioRefB.current;
-    if (!audioA || !audioB) return;
-
-    const handleEnded = (event: Event) => {
-      handleEndedRef.current(event);
-    };
-
-    audioA.addEventListener('ended', handleEnded);
-    audioB.addEventListener('ended', handleEnded);
-    return () => {
-      audioA.removeEventListener('ended', handleEnded);
-      audioB.removeEventListener('ended', handleEnded);
-    };
-  }, [audioElements.audioRefA, audioElements.audioRefB]);
 
   // ========== AUTOPLAY PREFETCH ==========
   // Prefetch similar artist tracks when nearing end of queue for instant playback

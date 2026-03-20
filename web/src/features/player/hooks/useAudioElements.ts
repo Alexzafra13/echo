@@ -468,8 +468,21 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       }
     };
 
-    const handleEnded = () => {
-      callbacksRef.current?.onEnded?.();
+    // Only fire onEnded for the ACTIVE audio element.
+    // Without this guard, when the inactive element's old track ends (after a
+    // crossfade or preloaded transition), the spurious 'ended' event could
+    // double-advance the queue. Previously PlayerContext had a separate ended
+    // listener that checked event.target === activeAudio, but that required
+    // maintaining dual listeners which introduced timing fragility.
+    const handleEndedA = () => {
+      if (activeAudioRef.current === 'A') {
+        callbacksRef.current?.onEnded?.();
+      }
+    };
+    const handleEndedB = () => {
+      if (activeAudioRef.current === 'B') {
+        callbacksRef.current?.onEnded?.();
+      }
     };
 
     const handleError = (e: Event) => {
@@ -498,7 +511,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     audioA.addEventListener('loadedmetadata', handleLoadedMetadataA);
     audioA.addEventListener('play', handlePlay);
     audioA.addEventListener('pause', handlePause);
-    audioA.addEventListener('ended', handleEnded);
+    audioA.addEventListener('ended', handleEndedA);
     audioA.addEventListener('error', handleError);
     audioA.addEventListener('waiting', handleWaiting);
     audioA.addEventListener('playing', handlePlaying);
@@ -509,7 +522,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     audioB.addEventListener('loadedmetadata', handleLoadedMetadataB);
     audioB.addEventListener('play', handlePlay);
     audioB.addEventListener('pause', handlePause);
-    audioB.addEventListener('ended', handleEnded);
+    audioB.addEventListener('ended', handleEndedB);
     audioB.addEventListener('error', handleError);
     audioB.addEventListener('waiting', handleWaiting);
     audioB.addEventListener('playing', handlePlaying);
@@ -521,7 +534,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       audioA.removeEventListener('loadedmetadata', handleLoadedMetadataA);
       audioA.removeEventListener('play', handlePlay);
       audioA.removeEventListener('pause', handlePause);
-      audioA.removeEventListener('ended', handleEnded);
+      audioA.removeEventListener('ended', handleEndedA);
       audioA.removeEventListener('error', handleError);
       audioA.removeEventListener('waiting', handleWaiting);
       audioA.removeEventListener('playing', handlePlaying);
@@ -535,7 +548,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       audioB.removeEventListener('loadedmetadata', handleLoadedMetadataB);
       audioB.removeEventListener('play', handlePlay);
       audioB.removeEventListener('pause', handlePause);
-      audioB.removeEventListener('ended', handleEnded);
+      audioB.removeEventListener('ended', handleEndedB);
       audioB.removeEventListener('error', handleError);
       audioB.removeEventListener('waiting', handleWaiting);
       audioB.removeEventListener('playing', handlePlaying);
