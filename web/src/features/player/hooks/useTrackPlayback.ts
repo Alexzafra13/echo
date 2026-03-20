@@ -12,7 +12,7 @@
  */
 
 import { useCallback } from 'react';
-import { Track, PlayContext } from '../types';
+import { Track } from '../types';
 import { useStreamToken } from './useStreamToken';
 import { logger } from '@shared/utils/logger';
 import type { AudioElements } from './useAudioElements';
@@ -20,6 +20,7 @@ import type { CrossfadeLogic } from './useCrossfadeLogic';
 import type { PlayTracking } from './usePlayTracking';
 import type { RadioPlayback } from './useRadioPlayback';
 import type { CrossfadeSettings } from '../types';
+import type { PlayerSharedRefs } from './playerSharedRefs';
 
 export interface UseTrackPlaybackParams {
   audioElements: AudioElements;
@@ -30,13 +31,7 @@ export interface UseTrackPlaybackParams {
   isPlaying: boolean;
   setIsPlaying: (playing: boolean) => void;
   setCurrentTrack: (track: Track | null) => void;
-  isTransitioningRef: React.MutableRefObject<boolean>;
-  preloadedNextRef: React.MutableRefObject<{
-    trackId: string;
-    nextIndex: number;
-    track: Track;
-  } | null>;
-  queueContextRef: React.MutableRefObject<PlayContext | undefined>;
+  sharedRefs: PlayerSharedRefs;
 }
 
 export function useTrackPlayback({
@@ -48,10 +43,9 @@ export function useTrackPlayback({
   isPlaying,
   setIsPlaying,
   setCurrentTrack,
-  isTransitioningRef,
-  preloadedNextRef,
-  queueContextRef,
+  sharedRefs,
 }: UseTrackPlaybackParams) {
+  const { isTransitioningRef, preloadedNextRef, queueContextRef } = sharedRefs;
   const { data: streamTokenData, ensureToken } = useStreamToken();
 
   /**
@@ -133,16 +127,8 @@ export function useTrackPlayback({
 
       playTracking.startPlaySession(track, queueContextRef.current);
     },
-    [
-      audioElements,
-      crossfade,
-      playTracking,
-      setCurrentTrack,
-      setIsPlaying,
-      isTransitioningRef,
-      preloadedNextRef,
-      queueContextRef,
-    ]
+    // Refs are stable — only include callback/object deps
+    [audioElements, crossfade, playTracking, setCurrentTrack, setIsPlaying]
   );
 
   /**
@@ -178,15 +164,7 @@ export function useTrackPlayback({
         }
       }
     },
-    [
-      audioElements,
-      crossfade,
-      playTracking,
-      setCurrentTrack,
-      setIsPlaying,
-      isTransitioningRef,
-      queueContextRef,
-    ]
+    [audioElements, crossfade, playTracking, setCurrentTrack, setIsPlaying]
   );
 
   /**
@@ -232,7 +210,6 @@ export function useTrackPlayback({
       crossfade,
       playCrossfadeTrack,
       playNormalTrack,
-      isTransitioningRef,
     ]
   );
 
