@@ -25,6 +25,14 @@ interface UseAudioElementsOptions {
   callbacks?: AudioElementsCallbacks;
 }
 
+// Minimal silent WAV (1 sample, 44.1kHz, 16-bit mono) for iOS autoplay warmup.
+// iOS Safari requires each HTMLAudioElement to receive a play() call from a user
+// gesture before allowing programmatic play(). We load this on Audio B and briefly
+// play/pause it during the first user-initiated playActive(), so that subsequent
+// crossfade play() calls (from timeupdate handler) succeed without user gesture.
+const SILENT_WAV =
+  'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+
 /**
  * Hook for managing dual audio elements with crossfade support.
  * Uses Web Audio API (AudioContext + GainNode) for volume control,
@@ -45,6 +53,9 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeARef = useRef<GainNode | null>(null);
   const gainNodeBRef = useRef<GainNode | null>(null);
+
+  // iOS autoplay warmup: tracks whether Audio B has been authorized via user gesture
+  const warmupDoneRef = useRef(false);
 
   // Store callbacks in ref to avoid effect re-runs
   const callbacksRef = useRef(callbacks);
@@ -237,11 +248,58 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   );
 
   /**
+   * Warm up the inactive audio element for iOS autoplay authorization.
+   * iOS Safari requires each HTMLAudioElement to receive play() from a user gesture
+   * before allowing programmatic play(). We load a silent WAV and play/pause it
+   * so that crossfade's playInactive() (called from timeupdate, not user gesture) works.
+   *
+   * MUST be called synchronously from a user gesture handler (before any await)
+   * to preserve the user activation context.
+   */
+  const warmUpInactiveAudio = useCallback(() => {
+    const inactive = getInactiveAudio();
+    if (!inactive) return;
+
+    // Ensure gain is 0 so warmup produces no audible output
+    const inactiveId = activeAudioRef.current === 'A' ? 'B' : 'A';
+    const gain = getGainNode(inactiveId);
+    if (gain) gain.gain.value = 0;
+
+    // Load a tiny silent WAV if no real source is loaded yet
+    if (!inactive.src || inactive.src === '' || inactive.src === window.location.href) {
+      inactive.src = SILENT_WAV;
+      inactive.load();
+    }
+
+    // Fire-and-forget: play → pause to grant autoplay authorization.
+    // The play() is synchronous relative to the user gesture, so iOS grants it.
+    // Don't clear src after — that revokes the authorization.
+    inactive
+      .play()
+      .then(() => {
+        inactive.pause();
+        inactive.currentTime = 0;
+        logger.debug('[AudioElements] Inactive audio warmed up for iOS autoplay');
+      })
+      .catch((e) => {
+        logger.debug('[AudioElements] Inactive warmup skipped:', (e as Error).message);
+      });
+  }, [getInactiveAudio, getGainNode]);
+
+  /**
    * Play the active audio element, waiting for buffer if needed.
-   * Resumes AudioContext on first call (iOS requires user gesture).
+   * On first call, also warms up the inactive element for iOS autoplay
+   * and resumes the AudioContext (both require user gesture).
    */
   const playActive = useCallback(
     async (waitForBuffer: boolean = true) => {
+      // Warm up inactive audio BEFORE any await — iOS user gesture context
+      // is lost after the first await, so this must happen synchronously.
+      if (!warmupDoneRef.current) {
+        warmupDoneRef.current = true;
+        warmUpInactiveAudio();
+      }
+
       await ensureAudioContext();
       const audio = getActiveAudio();
       if (audio) {
@@ -256,7 +314,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
         }
       }
     },
-    [getActiveAudio, waitForAudioReady, ensureAudioContext]
+    [getActiveAudio, waitForAudioReady, ensureAudioContext, warmUpInactiveAudio]
   );
 
   /**
@@ -369,6 +427,9 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     }
 
     activeAudioRef.current = 'A';
+    // stopBoth clears src='', which revokes iOS autoplay authorization.
+    // Reset so the next playActive re-warms the inactive element.
+    warmupDoneRef.current = false;
   }, [fadeOutAudio]);
 
   /**
