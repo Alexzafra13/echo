@@ -23,9 +23,6 @@ interface UseCrossfadeLogicParams {
   onCrossfadeComplete?: () => void;
   onCrossfadeTrigger?: () => void; // Called when it's time to start crossfade to next track
   onCrossfadeCleared?: () => void; // Called whenever crossfade state is cleared (completion, cancel, error)
-  // LUFS normalization support
-  getEffectiveVolume?: (audioId: 'A' | 'B') => number;
-  onCrossfadeSwapGains?: () => void; // Called after audio switch to swap gains
   // Platform capability: false on iOS Safari where audio.volume is read-only
   volumeControlSupported?: boolean;
 }
@@ -55,8 +52,6 @@ export function useCrossfadeLogic({
   onCrossfadeComplete,
   onCrossfadeTrigger,
   onCrossfadeCleared,
-  getEffectiveVolume,
-  onCrossfadeSwapGains,
   volumeControlSupported = true,
 }: UseCrossfadeLogicParams) {
   const [isCrossfading, setIsCrossfading] = useState(false);
@@ -76,20 +71,14 @@ export function useCrossfadeLogic({
     onCrossfadeStart,
     onCrossfadeComplete,
     onCrossfadeTrigger,
-    onCrossfadeSwapGains,
     onCrossfadeCleared,
   });
   callbacksRef.current = {
     onCrossfadeStart,
     onCrossfadeComplete,
     onCrossfadeTrigger,
-    onCrossfadeSwapGains,
     onCrossfadeCleared,
   };
-
-  // Store getEffectiveVolume in ref to avoid stale closures
-  const getEffectiveVolumeRef = useRef(getEffectiveVolume);
-  getEffectiveVolumeRef.current = getEffectiveVolume;
 
   // Store volumeControlSupported in ref (same reason as settings - avoid callback cascade)
   const volumeControlSupportedRef = useRef(volumeControlSupported);
@@ -122,8 +111,6 @@ export function useCrossfadeLogic({
     crossfadeStartedRef.current = false;
     isCrossfadingRef.current = false;
     setIsCrossfading(false);
-    // Notify listeners (e.g. normalization) that crossfade is no longer active,
-    // so they can resume normal volume management.
     callbacksRef.current.onCrossfadeCleared?.();
   }, []);
 
@@ -139,204 +126,181 @@ export function useCrossfadeLogic({
    * Uses equal-power curve for smooth audio transitions without crackling
    * Fixed 2-second duration for reliable web playback.
    */
-  const performCrossfade = useCallback(
-    async () => {
-      // If a crossfade animation is already running, cancel it first to prevent
-      // two animation loops fighting over the same audio volumes.
-      // Check crossfadeStartTimeRef (set when animation actually starts) instead of
-      // isCrossfadingRef (set early by onCrossfadeTrigger before performCrossfade is called).
-      if (crossfadeStartTimeRef.current !== null) {
-        logger.warn('[Crossfade] Already crossfading, cancelling previous');
-        clearCrossfade();
-      }
+  const performCrossfade = useCallback(async () => {
+    // If a crossfade animation is already running, cancel it first to prevent
+    // two animation loops fighting over the same audio volumes.
+    // Check crossfadeStartTimeRef (set when animation actually starts) instead of
+    // isCrossfadingRef (set early by onCrossfadeTrigger before performCrossfade is called).
+    if (crossfadeStartTimeRef.current !== null) {
+      logger.warn('[Crossfade] Already crossfading, cancelling previous');
+      clearCrossfade();
+    }
 
-      const activeAudio = audioElements.getActiveAudio();
-      const inactiveAudio = audioElements.getInactiveAudio();
-      const activeId = audioElements.getActiveAudioId();
-      const inactiveId = activeId === 'A' ? 'B' : 'A';
+    const activeAudio = audioElements.getActiveAudio();
+    const inactiveAudio = audioElements.getInactiveAudio();
+    const activeId = audioElements.getActiveAudioId();
+    const inactiveId = activeId === 'A' ? 'B' : 'A';
 
-      if (!activeAudio || !inactiveAudio) {
-        logger.error('[Crossfade] Audio elements not available');
-        return false;
-      }
+    if (!activeAudio || !inactiveAudio) {
+      logger.error('[Crossfade] Audio elements not available');
+      return false;
+    }
 
-      // Get effective volumes for each audio (includes their respective LUFS gains)
-      // If getEffectiveVolume is provided, use separate volumes; otherwise fallback to single volume
-      const getVolumeForAudio = getEffectiveVolumeRef.current;
-      const activeTargetVolume = getVolumeForAudio
-        ? getVolumeForAudio(activeId)
-        : audioElements.volume;
-      const inactiveTargetVolume = getVolumeForAudio
-        ? getVolumeForAudio(inactiveId)
-        : audioElements.volume;
+    const targetVolume = audioElements.volume;
 
-      logger.debug('[Crossfade] Starting crossfade transition', {
-        activeId,
-        inactiveId,
-        activeVolume: activeTargetVolume,
-        inactiveVolume: inactiveTargetVolume,
-      });
-      // Set ref synchronously BEFORE React state to prevent race conditions.
-      // timeupdate events can fire between setIsCrossfading and the next render,
-      // and checkCrossfadeTiming needs to see the updated value immediately.
-      isCrossfadingRef.current = true;
-      setIsCrossfading(true);
-      callbacksRef.current.onCrossfadeStart?.();
+    logger.debug('[Crossfade] Starting crossfade transition', {
+      activeId,
+      inactiveId,
+      volume: targetVolume,
+    });
+    // Set ref synchronously BEFORE React state to prevent race conditions.
+    // timeupdate events can fire between setIsCrossfading and the next render,
+    // and checkCrossfadeTiming needs to see the updated value immediately.
+    isCrossfadingRef.current = true;
+    setIsCrossfading(true);
+    callbacksRef.current.onCrossfadeStart?.();
 
+    try {
+      // Unmute and set volume to 0 for the fade-in start.
+      // loadOnInactive sets muted=true, so we unmute here but at volume 0
+      // to prevent a brief audio flash before the first animateFade frame.
+      audioElements.setAudioVolume(inactiveId, 0);
+      inactiveAudio.muted = false;
+
+      // Start playing the inactive audio (should already have src loaded)
+      // On mobile, playInactive() can fail due to autoplay policy. Retry once.
       try {
-        // Unmute and set volume to 0 for the fade-in start.
-        // loadOnInactive sets muted=true, so we unmute here but at volume 0
-        // to prevent a brief audio flash before the first animateFade frame.
-        audioElements.setAudioVolume(inactiveId, 0);
-        inactiveAudio.muted = false;
+        await audioElements.playInactive();
+      } catch (playError) {
+        logger.warn('[Crossfade] playInactive failed, retrying:', (playError as Error).message);
+        await audioElements.playInactive(false);
+      }
 
-        // Start playing the inactive audio (should already have src loaded)
-        // On mobile, playInactive() can fail due to autoplay policy. Retry once.
-        try {
-          await audioElements.playInactive();
-        } catch (playError) {
-          logger.warn('[Crossfade] playInactive failed, retrying:', (playError as Error).message);
-          await audioElements.playInactive(false);
-        }
-
-        // Hardcoded 2s crossfade for web — simple, reliable transitions.
+      // Hardcoded 2s crossfade for web — simple, reliable transitions.
       // Advanced crossfade options (variable duration, smart mode, tempo match)
       // are reserved for native apps where audio control is more reliable.
       const configuredFadeDuration = 2000; // 2 seconds in ms
 
-        // Cap fade duration to the actual time remaining in the outgoing track.
-        // Critical for smart crossfade: when outroStart is close to track end
-        // (e.g., 2s left), a 10s configured fade would barely reduce the outgoing
-        // volume (100% → ~90%) before the track naturally ends, causing both
-        // tracks to mix at high volume instead of smoothly transitioning.
-        const activeDur = activeAudio.duration;
-        const activeTime = activeAudio.currentTime;
-        const trackRemainingMs =
-          !isNaN(activeDur) && activeDur > activeTime
-            ? (activeDur - activeTime) * 1000
-            : configuredFadeDuration;
-        // Minimum 1s to avoid jarring instant cuts
-        const fadeDuration = Math.max(1000, Math.min(configuredFadeDuration, trackRemainingMs));
+      // Cap fade duration to the actual time remaining in the outgoing track.
+      // Critical for smart crossfade: when outroStart is close to track end
+      // (e.g., 2s left), a 10s configured fade would barely reduce the outgoing
+      // volume (100% → ~90%) before the track naturally ends, causing both
+      // tracks to mix at high volume instead of smoothly transitioning.
+      const activeDur = activeAudio.duration;
+      const activeTime = activeAudio.currentTime;
+      const trackRemainingMs =
+        !isNaN(activeDur) && activeDur > activeTime
+          ? (activeDur - activeTime) * 1000
+          : configuredFadeDuration;
+      // Minimum 1s to avoid jarring instant cuts
+      const fadeDuration = Math.max(1000, Math.min(configuredFadeDuration, trackRemainingMs));
 
-        if (fadeDuration < configuredFadeDuration) {
-          logger.debug('[Crossfade] Fade duration capped to remaining track time', {
-            configured: configuredFadeDuration,
-            effective: fadeDuration,
-            trackRemaining: trackRemainingMs,
-          });
+      if (fadeDuration < configuredFadeDuration) {
+        logger.debug('[Crossfade] Fade duration capped to remaining track time', {
+          configured: configuredFadeDuration,
+          effective: fadeDuration,
+          trackRemaining: trackRemainingMs,
+        });
+      }
+
+      // Use requestAnimationFrame for smoother volume transitions
+      // This avoids the timing issues of setInterval that cause crackling
+      crossfadeStartTimeRef.current = performance.now();
+
+      // Extracted completion logic — called by both rAF animation and backup timeout.
+      // Uses a guard (crossfadeStartTimeRef.current === null) to prevent double-execution.
+      //
+      // Order matters to prevent race conditions:
+      // 1. Set final volumes
+      // 2. Pause old audio (prevents 'ended' event from firing)
+      // 3. Switch active audio (so even if 'ended' fires, it's from "inactive" → ignored)
+      // 4. THEN clear crossfade state (isCrossfading stays true until switch is done)
+      //
+      // Previously, clearCrossfade() was called first (setting isCrossfading=false),
+      // then a 10ms setTimeout did stopActive+switch. During that gap, the old track's
+      // 'ended' event would fire and be processed by handleEnded (since isCrossfading
+      // was false and the old audio was still "active"), triggering handlePlayNext which
+      // killed the new track via stopInactive(). This caused playback to stop after
+      // every crossfade on mobile.
+      //
+      // Also: we pause() the old audio WITHOUT clearing src ('audio.src = ""').
+      // On mobile, clearing src revokes the element's autoplay permission, causing
+      // future play() calls to fail with NotAllowedError. The src is harmlessly
+      // overwritten when loadOnInactive() prepares the next crossfade.
+      const finishCrossfade = (source: string) => {
+        // Guard: if already completed by the other mechanism, bail out
+        if (crossfadeStartTimeRef.current === null) return;
+
+        // Set final volumes
+        audioElements.setAudioVolume(activeId, 0);
+        audioElements.setAudioVolume(inactiveId, audioElements.volume);
+
+        // Pause old audio immediately (prevents 'ended' from firing)
+        const oldAudio = audioElements.getActiveAudio();
+        if (oldAudio) {
+          oldAudio.playbackRate = 1;
+          oldAudio.pause();
+          oldAudio.currentTime = 0;
         }
 
-        // Use requestAnimationFrame for smoother volume transitions
-        // This avoids the timing issues of setInterval that cause crackling
-        crossfadeStartTimeRef.current = performance.now();
+        // Switch active audio BEFORE clearing crossfade state
+        audioElements.switchActiveAudio();
 
-        // Extracted completion logic — called by both rAF animation and backup timeout.
-        // Uses a guard (crossfadeStartTimeRef.current === null) to prevent double-execution.
-        //
-        // Order matters to prevent race conditions:
-        // 1. Set final volumes
-        // 2. Pause old audio (prevents 'ended' event from firing)
-        // 3. Switch active audio (so even if 'ended' fires, it's from "inactive" → ignored)
-        // 4. THEN clear crossfade state (isCrossfading stays true until switch is done)
-        //
-        // Previously, clearCrossfade() was called first (setting isCrossfading=false),
-        // then a 10ms setTimeout did stopActive+switch. During that gap, the old track's
-        // 'ended' event would fire and be processed by handleEnded (since isCrossfading
-        // was false and the old audio was still "active"), triggering handlePlayNext which
-        // killed the new track via stopInactive(). This caused playback to stop after
-        // every crossfade on mobile.
-        //
-        // Also: we pause() the old audio WITHOUT clearing src ('audio.src = ""').
-        // On mobile, clearing src revokes the element's autoplay permission, causing
-        // future play() calls to fail with NotAllowedError. The src is harmlessly
-        // overwritten when loadOnInactive() prepares the next crossfade.
-        const finishCrossfade = (source: string) => {
-          // Guard: if already completed by the other mechanism, bail out
-          if (crossfadeStartTimeRef.current === null) return;
-
-          // Re-read effective volume for the incoming track (in case user changed volume mid-crossfade)
-          const getVolFn = getEffectiveVolumeRef.current;
-          const finalInactiveVolume = getVolFn ? getVolFn(inactiveId) : audioElements.volume;
-
-          // Set final volumes
-          audioElements.setAudioVolume(activeId, 0);
-          audioElements.setAudioVolume(inactiveId, finalInactiveVolume);
-
-          // Pause old audio immediately (prevents 'ended' from firing)
-          const oldAudio = audioElements.getActiveAudio();
-          if (oldAudio) {
-            oldAudio.playbackRate = 1; // Reset tempo match
-            oldAudio.pause();
-            oldAudio.currentTime = 0;
-          }
-
-          // Switch active audio BEFORE clearing crossfade state
-          audioElements.switchActiveAudio();
-          callbacksRef.current.onCrossfadeSwapGains?.();
-
-          // NOW safe to clear crossfade state
-          clearCrossfade();
-
-          logger.debug(
-            '[Crossfade] Crossfade complete via',
-            source,
-            '- switched to:',
-            audioElements.getActiveAudioId()
-          );
-          callbacksRef.current.onCrossfadeComplete?.();
-        };
-
-        const animateFade = (currentTime: number) => {
-          const startTime = crossfadeStartTimeRef.current;
-          if (startTime === null) return;
-
-          const elapsed = currentTime - startTime;
-          const progress = Math.min(1, elapsed / fadeDuration);
-
-          // Use equal-power curve for perceptually smooth fade
-          const { fadeOut, fadeIn } = equalPowerFade(progress);
-
-          // Re-read effective volumes each frame to handle user volume changes mid-crossfade.
-          // If the user moves the volume slider during crossfade, the new volume is reflected
-          // in the next frame rather than being overridden by the captured values.
-          const getVolFn = getEffectiveVolumeRef.current;
-          const activeVol = getVolFn ? getVolFn(activeId) : audioElements.volume;
-          const inactiveVol = getVolFn ? getVolFn(inactiveId) : audioElements.volume;
-
-          // Apply volumes with each track's own effective volume (includes LUFS gain)
-          // Active track fades out from its volume, inactive fades in to its volume
-          audioElements.setAudioVolume(activeId, fadeOut * activeVol);
-          audioElements.setAudioVolume(inactiveId, fadeIn * inactiveVol);
-
-          if (progress < 1) {
-            // Continue animation
-            animationFrameRef.current = requestAnimationFrame(animateFade);
-          } else {
-            finishCrossfade('rAF');
-          }
-        };
-
-        // Start the animation loop
-        animationFrameRef.current = requestAnimationFrame(animateFade);
-
-        // Backup: complete crossfade if rAF is suspended (mobile background/screen off).
-        // requestAnimationFrame callbacks are paused when the page is hidden (documented
-        // browser behavior to save battery), but setTimeout still fires (throttled to ~1s
-        // in background). For a 5-12s crossfade, this ~1s granularity is acceptable.
-        // The finishCrossfade guard prevents double-execution if rAF already completed.
-        crossfadeTimeoutRef.current = window.setTimeout(() => {
-          finishCrossfade('backup-timeout');
-        }, fadeDuration + 500);
-
-        return true;
-      } catch (error) {
-        logger.error('[Crossfade] Failed to perform crossfade:', (error as Error).message);
+        // NOW safe to clear crossfade state
         clearCrossfade();
-        return false;
-      }
-    },
-    [audioElements, clearCrossfade]
-  );
+
+        logger.debug(
+          '[Crossfade] Crossfade complete via',
+          source,
+          '- switched to:',
+          audioElements.getActiveAudioId()
+        );
+        callbacksRef.current.onCrossfadeComplete?.();
+      };
+
+      const animateFade = (currentTime: number) => {
+        const startTime = crossfadeStartTimeRef.current;
+        if (startTime === null) return;
+
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(1, elapsed / fadeDuration);
+
+        // Use equal-power curve for perceptually smooth fade
+        const { fadeOut, fadeIn } = equalPowerFade(progress);
+
+        // Re-read volume each frame to handle user volume changes mid-crossfade
+        const vol = audioElements.volume;
+
+        audioElements.setAudioVolume(activeId, fadeOut * vol);
+        audioElements.setAudioVolume(inactiveId, fadeIn * vol);
+
+        if (progress < 1) {
+          // Continue animation
+          animationFrameRef.current = requestAnimationFrame(animateFade);
+        } else {
+          finishCrossfade('rAF');
+        }
+      };
+
+      // Start the animation loop
+      animationFrameRef.current = requestAnimationFrame(animateFade);
+
+      // Backup: complete crossfade if rAF is suspended (mobile background/screen off).
+      // requestAnimationFrame callbacks are paused when the page is hidden (documented
+      // browser behavior to save battery), but setTimeout still fires (throttled to ~1s
+      // in background). For a 5-12s crossfade, this ~1s granularity is acceptable.
+      // The finishCrossfade guard prevents double-execution if rAF already completed.
+      crossfadeTimeoutRef.current = window.setTimeout(() => {
+        finishCrossfade('backup-timeout');
+      }, fadeDuration + 500);
+
+      return true;
+    } catch (error) {
+      logger.error('[Crossfade] Failed to perform crossfade:', (error as Error).message);
+      clearCrossfade();
+      return false;
+    }
+  }, [audioElements, clearCrossfade]);
 
   /**
    * Prepare inactive audio for crossfade

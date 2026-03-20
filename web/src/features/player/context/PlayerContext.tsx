@@ -24,7 +24,6 @@ import { Track, PlayerContextValue, RadioStation, PlayContext } from '../types';
 import { useStreamToken } from '../hooks/useStreamToken';
 import { usePlayerSettingsStore } from '../store';
 import { useAudioElements } from '../hooks/useAudioElements';
-import { useAudioNormalization } from '../hooks/useAudioNormalization';
 import { usePlayTracking } from '../hooks/usePlayTracking';
 import { useQueueManagement } from '../hooks/useQueueManagement';
 import { useCrossfadeLogic } from '../hooks/useCrossfadeLogic';
@@ -50,7 +49,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // Player settings from Zustand store
   const crossfadeSettings = usePlayerSettingsStore((s) => s.crossfade);
-  const normalizationSettings = usePlayerSettingsStore((s) => s.normalization);
   const autoplaySettings = usePlayerSettingsStore((s) => s.autoplay);
   const setCrossfadeEnabledStore = usePlayerSettingsStore((s) => s.setCrossfadeEnabled);
   const setAutoplayEnabledStore = usePlayerSettingsStore((s) => s.setAutoplayEnabled);
@@ -108,35 +106,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     },
   });
 
-  // ========== AUDIO NORMALIZATION ==========
-  const normalization = useAudioNormalization(normalizationSettings);
-
-  // Register audio elements with normalization hook (for volume-based normalization)
-  // Note: userVolume is accessed via ref to avoid re-running effect on volume changes
-  const userVolumeRef = useRef(userVolume);
-  userVolumeRef.current = userVolume;
-
-  // Keep BPM ref in sync with current track
-
-  useEffect(() => {
-    const audioA = audioElements.audioRefA.current;
-    const audioB = audioElements.audioRefB.current;
-    if (audioA && audioB) {
-      normalization.registerAudioElements(audioA, audioB);
-      // Route normalization volume changes through useAudioElements.setAudioVolume
-      // so that on iOS (Web Audio API path), volume goes through GainNode instead
-      // of the read-only audio.volume property.
-      normalization.registerVolumeSetter(audioElements.setAudioVolume);
-      // Sync initial volume with normalization hook
-      normalization.setUserVolume(userVolumeRef.current);
-    }
-  }, [
-    audioElements.audioRefA,
-    audioElements.audioRefB,
-    audioElements.setAudioVolume,
-    normalization,
-  ]);
-
   // ========== QUEUE MANAGEMENT ==========
   const queue = useQueueManagement();
 
@@ -159,31 +128,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     isRadioMode: radio.isRadioMode,
     repeatMode: queue.repeatMode,
     hasNextTrack: queue.repeatMode === 'all' || queue.currentIndex < queue.queue.length - 1,
-    onCrossfadeStart: () => {
-      // Tell normalization to stop overriding per-element volumes.
-      // From this point, only the crossfade animation controls audio.volume.
-      normalization.setCrossfading(true);
-    },
-    onCrossfadeCleared: () => {
-      // Crossfade ended (completion, cancel, or error) — let normalization
-      // resume normal volume management.
-      normalization.setCrossfading(false);
-    },
     onCrossfadeTrigger: () => {
       // End current play session before crossfade
       playTracking.endPlaySession(false);
       // Mark as crossfading IMMEDIATELY (synchronously) before the async playTrack call.
-      // Without this, there's a gap: onCrossfadeTrigger → handlePlayNext → playTrack →
-      // await getStreamUrl. If the track ends during that await (e.g., user seeked to
-      // the last few seconds), handleEnded fires and sees isCrossfadingRef=false,
-      // double-advancing the queue and playing the wrong track.
       crossfade.isCrossfadingRef.current = true;
       // Trigger next track with crossfade
       playNextRef.current(true);
     },
-    // LUFS normalization support - use separate effective volumes for each audio
-    getEffectiveVolume: normalization.getEffectiveVolume,
-    onCrossfadeSwapGains: normalization.swapGains,
     // Platform capability: false on iOS Safari where audio.volume is read-only
     volumeControlSupported: audioElements.volumeControlSupported,
   });
@@ -286,11 +238,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         // manages its own state via isCrossfadingRef.
         isTransitioningRef.current = false;
 
-        // Crossfade: apply gain ONLY to the inactive audio element
-        // This prevents the current track from jumping in volume
-        const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
-        normalization.applyGainToAudio(track, inactiveId);
-
         // Check if gapless preload already buffered this track on the inactive element.
         // If so, skip the reload — the audio is already loaded and ready to play.
         // This is critical: without preloading, the 2s crossfade window is consumed
@@ -317,7 +264,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           // Crossfade failed - fall back to normal playback so the music doesn't stop
           logger.warn('[Player] Crossfade failed on mobile, falling back to normal playback');
           isTransitioningRef.current = true;
-          normalization.applyGain(track);
           audioElements.stopInactive();
           audioElements.loadOnActive(streamUrl);
 
@@ -341,10 +287,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         // Start new play session with queue context if available
         playTracking.startPlaySession(track, queueContextRef.current);
       } else {
-        // Normal play (no crossfade) - apply gain to both elements
+        // Normal play (no crossfade)
         // isTransitioningRef is already true from the top of playTrack
-        normalization.applyGain(track);
-
         crossfade.clearCrossfade();
         audioElements.stopInactive();
         audioElements.loadOnActive(streamUrl);
@@ -394,7 +338,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       crossfade,
       audioElements,
       playTracking,
-      normalization,
     ]
   );
 
@@ -450,16 +393,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   );
 
   /**
-   * Set volume (applies normalization gain automatically)
+   * Set volume
    */
   const setVolume = useCallback(
     (volume: number) => {
-      // Update user volume state (for slider UI)
       setUserVolumeState(volume);
-      // Update normalization hook's user volume (it will apply effective volume to audio elements)
-      normalization.setUserVolume(volume);
+      audioElements.setVolume(volume);
     },
-    [normalization]
+    [audioElements]
   );
 
   /**
@@ -718,12 +659,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           // Switch: inactive (preloaded) becomes active
           audioElements.switchActiveAudio();
 
-          // Unmute and restore proper volume
+          // Unmute and restore user volume
           const newActive = audioElements.getActiveAudio();
-          if (newActive) newActive.muted = false;
-          const activeId = audioElements.getActiveAudioId();
-          const vol = normalization.getEffectiveVolume(activeId);
-          audioElements.setAudioVolume(activeId, vol);
+          if (newActive) {
+            newActive.muted = false;
+            newActive.volume = userVolume;
+          }
 
           // Start playback — track is already buffered from Phase 1 preload
           // so play() should start near-instantly without async gap.
@@ -767,7 +708,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     autoplaySettings.enabled,
     currentTrack,
     radio.isRadioMode,
-    normalization,
+    userVolume,
   ]);
 
   // Stable event listeners - only set up once when audio elements are created.
@@ -854,8 +795,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
             track: nextTrack,
           };
           audioElements.loadOnInactive(url);
-          const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
-          normalization.applyGainToAudio(nextTrack, inactiveId);
           logger.debug('[Player] Gapless: preloaded next track:', nextTrack.title);
         });
       }
@@ -866,7 +805,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // during play() calls. Instead, we rely on Phase 1 preloading (buffer
       // is ready) and start the next track in handleEnded for a clean transition.
     };
-  }, [radio.isRadioMode, isPlaying, queue, getStreamUrl, audioElements, normalization]);
+  }, [radio.isRadioMode, isPlaying, queue, getStreamUrl, audioElements]);
 
   // Stable timeupdate listener for gapless preloading
   useEffect(() => {
@@ -913,8 +852,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     isPlaying,
     getActiveAudio: audioElements.getActiveAudio,
     setIsPlaying,
-    // Resume AudioContext when returning to foreground (iOS may suspend it in background)
-    onForeground: audioElements.ensureAudioContextResumed,
   });
 
   // ========== SOCIAL "LISTENING NOW" SYNC ==========
@@ -1000,9 +937,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       isCrossfading: crossfade.isCrossfading,
       volumeControlSupported: audioElements.volumeControlSupported,
 
-      // Normalization state
-      normalization: normalizationSettings,
-
       // Radio state
       currentRadioStation: radio.currentStation,
       isRadioMode: radio.isRadioMode,
@@ -1062,7 +996,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       crossfadeSettings,
       crossfade.isCrossfading,
       audioElements.volumeControlSupported,
-      normalizationSettings,
       radio.currentStation,
       radio.isRadioMode,
       radio.metadata,

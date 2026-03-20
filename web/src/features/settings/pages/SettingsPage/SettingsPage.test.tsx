@@ -71,7 +71,6 @@ vi.mock('../../hooks/useLibraryAnalysisSettings', () => ({
 const mockPlayerState = {
   crossfade: { enabled: false, duration: 2, smartMode: false },
   setCrossfadeEnabled: vi.fn(),
-  normalization: { enabled: false, targetLufs: -16 as -14 | -16, preventClipping: true },
   autoplay: { enabled: true },
   setAutoplayEnabled: vi.fn(),
   volumeControlSupported: true,
@@ -104,7 +103,6 @@ describe('SettingsPage', () => {
     mockUpdateHome.isPending = false;
     mockUpdateHome.isSuccess = false;
     mockPlayerState.crossfade = { enabled: false, duration: 5, smartMode: false };
-    mockPlayerState.normalization = { enabled: false, targetLufs: -14, preventClipping: true };
     mockPlayerState.autoplay = { enabled: true };
     mockPlayerState.volumeControlSupported = true;
   });

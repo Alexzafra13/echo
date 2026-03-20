@@ -27,11 +27,9 @@ vi.mock('../hooks/useAudioElements', () => ({
     getActiveAudio: mockGetActiveAudio,
     getInactiveAudio: vi.fn(),
     getCurrentTime: mockGetCurrentTime,
+    setVolume: vi.fn(),
     setAudioVolume: vi.fn(),
     volumeControlSupported: true,
-    initWebAudio: vi.fn(),
-    resumeAudioContext: vi.fn(),
-    ensureAudioContextResumed: vi.fn(),
   }),
 }));
 
@@ -87,29 +85,12 @@ vi.mock('../store', () => ({
   usePlayerSettingsStore: (selector: (state: unknown) => unknown) => {
     const state = {
       crossfade: { enabled: false, duration: 2, smartMode: false },
-      normalization: { enabled: false, targetLufs: -16, preventClipping: true },
       autoplay: { enabled: false },
       setCrossfadeEnabled: vi.fn(),
-      setNormalizationEnabled: vi.fn(),
-      setNormalizationTargetLufs: vi.fn(),
-      setNormalizationPreventClipping: vi.fn(),
       setAutoplayEnabled: vi.fn(),
     };
     return selector(state);
   },
-}));
-
-vi.mock('../hooks/useAudioNormalization', () => ({
-  useAudioNormalization: () => ({
-    registerAudioElements: vi.fn(),
-    registerVolumeSetter: vi.fn(),
-    setUserVolume: vi.fn(),
-    applyGain: vi.fn(),
-    applyGainToAudio: vi.fn(),
-    getEffectiveVolume: vi.fn().mockReturnValue(0.7),
-    swapGains: vi.fn(),
-    setCrossfading: vi.fn(),
-  }),
 }));
 
 vi.mock('../hooks/usePlayTracking', () => ({
@@ -377,9 +358,6 @@ describe('PlayerContext', () => {
       // Crossfade
       expect(playerContext).toHaveProperty('crossfade');
       expect(playerContext).toHaveProperty('isCrossfading');
-
-      // Normalization
-      expect(playerContext).toHaveProperty('normalization');
 
       // Radio
       expect(playerContext).toHaveProperty('currentRadioStation');
