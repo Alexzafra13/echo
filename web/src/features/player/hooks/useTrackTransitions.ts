@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 import { useLatestCallback } from '@shared/hooks';
 import { Track } from '../types';
 import { logger } from '@shared/utils/logger';
+import { playActiveWithRetry } from './playActiveWithRetry';
 import type { AudioElements } from './useAudioElements';
 import type { CrossfadeLogic } from './useCrossfadeLogic';
 import type { PlayTracking } from './usePlayTracking';
@@ -86,14 +87,9 @@ export function useTrackTransitions({
       }
 
       try {
-        await audioElements.playActive(false);
-      } catch (error) {
-        logger.warn('[Player] Preloaded play failed, retrying:', (error as Error).message);
-        try {
-          await audioElements.playActive();
-        } catch (retryError) {
-          logger.error('[Player] Preloaded retry failed:', (retryError as Error).message);
-        }
+        await playActiveWithRetry(audioElements, false);
+      } catch {
+        // playActiveWithRetry already logs errors
       }
 
       audioElements.stopInactive();

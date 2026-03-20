@@ -15,6 +15,7 @@ import { useCallback } from 'react';
 import { Track } from '../types';
 import { useStreamToken } from './useStreamToken';
 import { logger } from '@shared/utils/logger';
+import { playActiveWithRetry } from './playActiveWithRetry';
 import type { AudioElements } from './useAudioElements';
 import type { CrossfadeLogic } from './useCrossfadeLogic';
 import type { PlayTracking } from './usePlayTracking';
@@ -109,14 +110,7 @@ export function useTrackPlayback({
         audioElements.loadOnActive(streamUrl);
 
         try {
-          await audioElements.playActive();
-        } catch (error) {
-          logger.warn('[Player] Fallback play failed, retrying:', (error as Error).message);
-          try {
-            await audioElements.playActive(false);
-          } catch (retryError) {
-            logger.error('[Player] Fallback retry failed:', (retryError as Error).message);
-          }
+          await playActiveWithRetry(audioElements, true);
         } finally {
           isTransitioningRef.current = false;
           if (audioElements.getActiveAudio()?.paused) {
@@ -146,17 +140,7 @@ export function useTrackPlayback({
       playTracking.startPlaySession(track, queueContextRef.current);
 
       try {
-        await audioElements.playActive(false);
-      } catch (error) {
-        logger.warn(
-          '[Player] Immediate play failed, retrying with buffer:',
-          (error as Error).message
-        );
-        try {
-          await audioElements.playActive();
-        } catch (retryError) {
-          logger.error('[Player] Retry failed:', (retryError as Error).message);
-        }
+        await playActiveWithRetry(audioElements, false);
       } finally {
         isTransitioningRef.current = false;
         if (audioElements.getActiveAudio()?.paused) {
