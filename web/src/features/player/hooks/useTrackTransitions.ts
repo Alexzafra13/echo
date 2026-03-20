@@ -151,6 +151,11 @@ export function useTrackTransitions({
   // ========== GAPLESS PRELOAD ==========
   // Preloads the next track 15s before end on the inactive audio element.
   const checkGaplessPreload = useLatestCallback(() => {
+    // Skip during crossfade — the inactive audio element is currently being
+    // used for the crossfade transition. Loading a new track on it would
+    // overwrite the src and reset the gain to 0, killing the crossfade audio.
+    if (crossfade.isCrossfadingRef.current) return;
+
     // Skip in radio mode or when not playing
     if (radio.isRadioMode || !isPlaying) return;
 
@@ -168,7 +173,7 @@ export function useTrackTransitions({
       if (!nextTrack) return;
 
       getStreamUrl(nextTrack).then((url) => {
-        if (!url || preloadedNextRef.current) return;
+        if (!url || preloadedNextRef.current || crossfade.isCrossfadingRef.current) return;
         preloadedNextRef.current = {
           trackId: nextTrack.id,
           nextIndex,

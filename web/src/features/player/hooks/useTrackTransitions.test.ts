@@ -348,6 +348,37 @@ describe('useTrackTransitions', () => {
       expect(getStreamUrl).not.toHaveBeenCalled();
     });
 
+    it('should not preload during crossfade (inactive audio is in use)', () => {
+      const mockAudio = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        currentTime: 178, // 2s remaining — crossfade is active
+        duration: 180,
+        paused: false,
+      } as unknown as HTMLAudioElement;
+
+      audioElements = createMockAudioElements({
+        getActiveAudio: vi.fn().mockReturnValue(mockAudio),
+      });
+      // Simulate crossfade in progress
+      crossfade = createMockCrossfade({ isCrossfadingRef: { current: true } });
+
+      renderTransitions();
+
+      const audioA = audioElements.audioRefA.current!;
+      const timeupdateCall = (audioA.addEventListener as ReturnType<typeof vi.fn>).mock.calls.find(
+        (call: [string, Function]) => call[0] === 'timeupdate'
+      );
+
+      if (timeupdateCall) {
+        timeupdateCall[1]();
+      }
+
+      // Should NOT try to load on inactive — it's being used for crossfade
+      expect(getStreamUrl).not.toHaveBeenCalled();
+      expect(audioElements.loadOnInactive).not.toHaveBeenCalled();
+    });
+
     it('should not preload when repeat mode is "one"', () => {
       const mockAudio = {
         addEventListener: vi.fn(),
