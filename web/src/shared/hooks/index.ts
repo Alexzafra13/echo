@@ -50,3 +50,4 @@ export { useTrackDjAnalysis } from './useTrackDjAnalysis';
 export { useDjProgressListener } from './useDjProgressListener';
 export { useDocumentTitle } from './useDocumentTitle';
 export { useSheetDragToClose } from './useSheetDragToClose';
+export { useLatestCallback } from './useLatestCallback';

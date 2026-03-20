@@ -8,6 +8,8 @@
  * - usePlayTracking: Play session analytics
  * - useCrossfadeLogic: Crossfade transitions
  * - useRadioPlayback: Radio station streaming
+ * - useTrackPlayback: Stream URL + play/crossfade mechanics
+ * - useTrackTransitions: Ended handler + gapless preload
  */
 
 import {
@@ -21,7 +23,6 @@ import {
   ReactNode,
 } from 'react';
 import { Track, PlayerContextValue, RadioStation, PlayContext } from '../types';
-import { useStreamToken } from '../hooks/useStreamToken';
 import { usePlayerSettingsStore } from '../store';
 import { useAudioElements } from '../hooks/useAudioElements';
 import { usePlayTracking } from '../hooks/usePlayTracking';
@@ -29,6 +30,8 @@ import { useQueueManagement } from '../hooks/useQueueManagement';
 import { useCrossfadeLogic } from '../hooks/useCrossfadeLogic';
 import { useRadioPlayback } from '../hooks/useRadioPlayback';
 import { useAutoplay } from '../hooks/useAutoplay';
+import { useTrackPlayback } from '../hooks/useTrackPlayback';
+import { useTrackTransitions } from '../hooks/useTrackTransitions';
 import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
 import { useMediaSession } from '../hooks/useMediaSession';
@@ -44,10 +47,7 @@ interface PlayerProviderProps {
 }
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
-  // ========== EXTERNAL HOOKS ==========
-  const { data: streamTokenData, ensureToken } = useStreamToken();
-
-  // Player settings from Zustand store
+  // ========== SETTINGS ==========
   const crossfadeSettings = usePlayerSettingsStore((s) => s.crossfade);
   const autoplaySettings = usePlayerSettingsStore((s) => s.autoplay);
   const setCrossfadeEnabledStore = usePlayerSettingsStore((s) => s.setCrossfadeEnabled);
@@ -60,28 +60,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
-  const [userVolume, setUserVolumeState] = useState(0.7); // Volumen del usuario (para el slider)
-  const [isAutoplayActive, setIsAutoplayActive] = useState(false); // Indica si estamos reproduciendo desde autoplay
-  const [autoplaySourceArtist, setAutoplaySourceArtist] = useState<string | null>(null); // Artista fuente del autoplay
+  const [userVolume, setUserVolumeState] = useState(0.7);
+  const [isAutoplayActive, setIsAutoplayActive] = useState(false);
+  const [autoplaySourceArtist, setAutoplaySourceArtist] = useState<string | null>(null);
 
-  // Ref for playNext callback to avoid circular dependencies
+  // Refs for cross-hook communication (avoid circular dependencies)
   const playNextRef = useRef<(useCrossfade: boolean) => void>(() => {});
-
-  // Ref to store the play context of the current queue (album, playlist, artist, etc.)
-  // This is passed to startPlaySession so all tracks in a queue inherit the originating context.
   const queueContextRef = useRef<PlayContext | undefined>(undefined);
-
-  // Ref to suppress pause events during track transitions on mobile.
-  // When loading a new track, audio.load() fires a 'pause' event which sets isPlaying=false.
-  // On mobile, this flicker causes MediaSession to report 'paused', which can revoke
-  // the browser's autoplay permission and prevent the next play() from succeeding.
   const isTransitioningRef = useRef(false);
-
-  // ========== GAPLESS PRELOAD (mobile PWA background audio continuity) ==========
-  // Preloads the next track's audio buffer 15s before the current track ends,
-  // so that when the track finishes, play() starts near-instantly from the
-  // already-buffered audio. This avoids overlap (no pre-play before track end)
-  // while still providing fast transitions.
   const preloadedNextRef = useRef<{
     trackId: string;
     nextIndex: number;
@@ -94,15 +80,17 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     callbacks: {
       onPlay: () => setIsPlaying(true),
       onPause: () => {
-        // Suppress pause events during track transitions (mobile autoplay fix).
-        // audio.load() fires 'pause' which would flicker isPlaying and break
-        // the mobile browser's autoplay permission chain.
         if (!isTransitioningRef.current) {
           setIsPlaying(false);
         }
       },
       onTimeUpdate: (time) => setCurrentTime(time),
       onDurationChange: (dur) => setDuration(dur),
+      onEnded: () => {
+        // Delegate to ref-based handler for latest state.
+        // useAudioElements already filters to active element only.
+        handleEndedRef.current();
+      },
     },
   });
 
@@ -117,9 +105,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   });
 
   // ========== RADIO PLAYBACK ==========
-  const radio = useRadioPlayback({
-    audioElements,
-  });
+  const radio = useRadioPlayback({ audioElements });
 
   // ========== CROSSFADE LOGIC ==========
   const crossfade = useCrossfadeLogic({
@@ -129,14 +115,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     repeatMode: queue.repeatMode,
     hasNextTrack: queue.repeatMode === 'all' || queue.currentIndex < queue.queue.length - 1,
     onCrossfadeTrigger: () => {
-      // End current play session before crossfade
       playTracking.endPlaySession(false);
-      // Mark as crossfading IMMEDIATELY (synchronously) before the async playTrack call.
       crossfade.isCrossfadingRef.current = true;
-      // Trigger next track with crossfade
       playNextRef.current(true);
     },
-    // Platform capability: false on iOS Safari where audio.volume is read-only
     volumeControlSupported: audioElements.volumeControlSupported,
   });
 
@@ -147,14 +129,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     isPlaying: isPlaying && radio.isRadioMode,
   });
 
-  // Sync radio metadata to radio state
-  // Note: Only depend on radioMetadata, not the entire radio object (which is recreated each render)
   useEffect(() => {
     radio.setMetadata(radioMetadata);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [radioMetadata]);
 
-  // Update radio signal status based on audio events
   useRadioSignalSync({
     audioRefA: audioElements.audioRefA,
     audioRefB: audioElements.audioRefB,
@@ -163,262 +142,24 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   });
 
   // ========== TRACK PLAYBACK ==========
-
-  /**
-   * Build stream URL for a track
-   * Uses custom streamUrl if available (for federated/remote tracks)
-   * Now async to wait for token if not yet available
-   */
-  const getStreamUrl = useCallback(
-    async (track: Track): Promise<string | null> => {
-      // Try to get token from cache first
-      let token: string | null = streamTokenData?.token ?? null;
-
-      // If no token in cache, wait for it to load
-      if (!token) {
-        logger.debug('[Player] Token not in cache, waiting for it...');
-        token = await ensureToken();
-      }
-
-      if (!token) {
-        logger.error('[Player] Stream token not available after waiting');
-        return null;
-      }
-
-      // If track has a custom stream URL (e.g., federated track), add token to it
-      if (track.streamUrl) {
-        const separator = track.streamUrl.includes('?') ? '&' : '?';
-        return `${track.streamUrl}${separator}token=${token}`;
-      }
-
-      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-      return `${API_BASE_URL}/tracks/${track.id}/stream?token=${token}`;
-    },
-    [streamTokenData?.token, ensureToken]
-  );
-
-  /**
-   * Play a track with optional crossfade
-   */
-  const playTrack = useCallback(
-    async (track: Track, withCrossfade: boolean = false) => {
-      // Set transitioning guard early to suppress pause events during the
-      // async getStreamUrl call. Without this, on mobile PWA: track ends →
-      // both audios paused → handlePause fires → isPlaying=false →
-      // MediaSession='paused' → OS revokes audio focus → next play() fails.
-      isTransitioningRef.current = true;
-
-      const streamUrl = await getStreamUrl(track);
-      if (!streamUrl) {
-        logger.warn('[Player] Cannot play track: stream URL unavailable');
-        isTransitioningRef.current = false;
-        // Reset crossfading ref if it was set early by onCrossfadeTrigger
-        crossfade.clearCrossfade();
-        return;
-      }
-
-      // Exit radio mode if active (must await to prevent race condition)
-      if (radio.isRadioMode) {
-        await radio.stopRadio();
-      }
-
-      // Use isCrossfadingRef as a synchronous guard: if onCrossfadeTrigger already set it
-      // to true, we MUST take the crossfade path even if `isPlaying` is stale in this closure.
-      // When crossfade settings change, the callback cascade (performCrossfade → crossfade →
-      // playTrack → handlePlayNext → playNextRef) updates asynchronously via useEffect.
-      // During that gap, a stale playTrack with isPlaying=false could take the else branch,
-      // calling clearCrossfade() while both audio elements are already playing.
-      if (
-        withCrossfade &&
-        crossfadeSettings.enabled &&
-        (isPlaying || crossfade.isCrossfadingRef.current)
-      ) {
-        // Crossfade path: both audios will be playing simultaneously so
-        // handlePause won't fire. Clear the transitioning guard; crossfade
-        // manages its own state via isCrossfadingRef.
-        isTransitioningRef.current = false;
-
-        // Check if gapless preload already buffered this track on the inactive element.
-        // If so, skip the reload — the audio is already loaded and ready to play.
-        // This is critical: without preloading, the 2s crossfade window is consumed
-        // by async getStreamUrl + load + buffer, and the track ends before the
-        // crossfade animation can start (causing an abrupt "jump").
-        const preloaded = preloadedNextRef.current;
-        if (preloaded && preloaded.trackId === track.id) {
-          preloadedNextRef.current = null;
-          logger.debug('[Player] Crossfade using preloaded audio:', track.title);
-        } else {
-          // Not preloaded — load now (slower path, may not finish in time)
-          crossfade.prepareCrossfade(streamUrl);
-          logger.debug('[Player] Starting crossfade to:', track.title);
-        }
-
-        // Update track state
-        setCurrentTrack(track);
-
-        // Start crossfade transition. On mobile, playInactive() can fail due to
-        // autoplay policy. If crossfade fails, fall back to normal (non-crossfade) playback.
-        const crossfadeStarted = await crossfade.performCrossfade();
-
-        if (!crossfadeStarted) {
-          // Crossfade failed - fall back to normal playback so the music doesn't stop
-          logger.warn('[Player] Crossfade failed on mobile, falling back to normal playback');
-          isTransitioningRef.current = true;
-          audioElements.stopInactive();
-          audioElements.loadOnActive(streamUrl);
-
-          try {
-            await audioElements.playActive();
-          } catch (error) {
-            logger.warn('[Player] Fallback play failed, retrying:', (error as Error).message);
-            try {
-              await audioElements.playActive(false);
-            } catch (retryError) {
-              logger.error('[Player] Fallback retry failed:', (retryError as Error).message);
-            }
-          } finally {
-            isTransitioningRef.current = false;
-            if (audioElements.getActiveAudio()?.paused) {
-              setIsPlaying(false);
-            }
-          }
-        }
-
-        // Start new play session with queue context if available
-        playTracking.startPlaySession(track, queueContextRef.current);
-      } else {
-        // Normal play (no crossfade)
-        // isTransitioningRef is already true from the top of playTrack
-        crossfade.clearCrossfade();
-        audioElements.stopInactive();
-        audioElements.loadOnActive(streamUrl);
-
-        setCurrentTrack(track);
-        playTracking.startPlaySession(track, queueContextRef.current);
-
-        try {
-          // Play immediately without buffer wait to minimize the gap between
-          // tracks. On mobile PWA, waiting for buffer (3s timeout) gives the OS
-          // enough time to revoke audio focus, causing play() to fail.
-          await audioElements.playActive(false);
-        } catch (error) {
-          // Immediate play failed — retry with buffer wait as fallback.
-          // This covers the case where the audio needs more buffering.
-          logger.warn(
-            '[Player] Immediate play failed, retrying with buffer:',
-            (error as Error).message
-          );
-          try {
-            await audioElements.playActive();
-          } catch (retryError) {
-            logger.error('[Player] Retry failed:', (retryError as Error).message);
-          }
-        } finally {
-          isTransitioningRef.current = false;
-          // Sync isPlaying with actual audio state after transition completes.
-          // Pause events were suppressed during transition, so we need to check
-          // if play actually succeeded or if the audio is still paused.
-          if (audioElements.getActiveAudio()?.paused) {
-            setIsPlaying(false);
-          }
-        }
-      }
-
-      // Note: crossfadeStartedRef is now reset inside clearCrossfade() which runs
-      // when the crossfade completes (finishCrossfade) or when a new track starts
-      // normally (non-crossfade path calls clearCrossfade). No need for a separate
-      // resetCrossfadeFlag() call here, which previously ran while the crossfade
-      // animation was still in progress and caused race conditions.
-    },
-    [
-      getStreamUrl,
-      radio,
-      crossfadeSettings.enabled,
-      isPlaying,
-      crossfade,
-      audioElements,
-      playTracking,
-    ]
-  );
-
-  /**
-   * Play - either a new track or resume current playback
-   */
-  const play = useCallback(
-    (track?: Track, withCrossfade: boolean = false) => {
-      if (track) {
-        playTrack(track, withCrossfade);
-      } else if (currentTrack && !radio.isRadioMode) {
-        // Resume current track
-        audioElements.playActive();
-      } else if (radio.isRadioMode && radio.currentStation) {
-        // Resume radio
-        radio.resumeRadio();
-      }
-    },
-    [playTrack, currentTrack, radio, audioElements]
-  );
-
-  /**
-   * Pause playback
-   */
-  const pause = useCallback(() => {
-    audioElements.pauseActive();
-  }, [audioElements]);
-
-  /**
-   * Stop playback
-   */
-  const stop = useCallback(() => {
-    audioElements.stopBoth();
-    setCurrentTrack(null);
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setDuration(0);
-  }, [audioElements]);
-
-  /**
-   * Seek to time
-   */
-  const seek = useCallback(
-    (time: number) => {
-      audioElements.seek(time);
-      setCurrentTime(time);
-      // Reset crossfade flag so timing check can re-trigger after seek.
-      // Without this, seeking backward after a crossfade trigger point
-      // leaves the flag set, preventing crossfade from ever firing again.
-      crossfade.resetCrossfadeFlag();
-    },
-    [audioElements, crossfade]
-  );
-
-  /**
-   * Set volume
-   */
-  const setVolume = useCallback(
-    (volume: number) => {
-      setUserVolumeState(volume);
-      audioElements.setVolume(volume);
-    },
-    [audioElements]
-  );
-
-  /**
-   * Toggle play/pause
-   */
-  const togglePlayPause = useCallback(() => {
-    if (isPlaying) {
-      pause();
-    } else {
-      play();
-    }
-  }, [isPlaying, pause, play]);
+  const { playTrack, getStreamUrl } = useTrackPlayback({
+    audioElements,
+    crossfade,
+    crossfadeSettings,
+    playTracking,
+    radio,
+    isPlaying,
+    setIsPlaying,
+    setCurrentTrack,
+    isTransitioningRef,
+    preloadedNextRef,
+    queueContextRef,
+  });
 
   // ========== QUEUE OPERATIONS ==========
 
   /**
    * Trigger autoplay with similar artists
-   * @returns true if autoplay was triggered, false otherwise
    */
   const triggerAutoplay = useCallback(
     async (useCrossfade: boolean = false): Promise<boolean> => {
@@ -429,7 +170,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         setIsPlaying(false);
         setIsAutoplayActive(false);
         setAutoplaySourceArtist(null);
-        // Reset crossfading state if it was set early by onCrossfadeTrigger
         crossfade.clearCrossfade();
         return false;
       }
@@ -447,9 +187,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         setAutoplaySourceArtist(result.sourceArtistName);
         queueContextRef.current = 'recommendation';
 
-        // Calculate next index BEFORE adding to queue
         const nextIndex = queue.queue.length;
-        // Add tracks to queue and play
         queue.addToQueue(result.tracks);
         queue.setCurrentIndex(nextIndex);
         playTrack(result.tracks[0], useCrossfade);
@@ -459,7 +197,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         setIsPlaying(false);
         setIsAutoplayActive(false);
         setAutoplaySourceArtist(null);
-        // Reset crossfading state if it was set early by onCrossfadeTrigger
         crossfade.clearCrossfade();
         return false;
       }
@@ -485,17 +222,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         return;
       }
 
-      // End current session as skipped if there's an active session
       if (playTracking.hasActiveSession()) {
         playTracking.endPlaySession(true);
       }
 
       const nextIndex = queue.getNextIndex();
 
-      // No next track - try autoplay
       if (nextIndex === -1) {
-        logger.debug('[Player] No next track in queue');
-        logger.debug('[Player] Attempting autoplay');
+        logger.debug('[Player] No next track in queue, attempting autoplay');
         await triggerAutoplay(useCrossfade);
         return;
       }
@@ -509,33 +243,98 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     [queue, playTracking, playTrack, triggerAutoplay, crossfade]
   );
 
-  // Update ref for crossfade callback
+  // Keep playNextRef current for crossfade callback
   useEffect(() => {
     playNextRef.current = handlePlayNext;
   }, [handlePlayNext]);
 
+  // ========== TRACK TRANSITIONS ==========
+  const { handleEndedRef } = useTrackTransitions({
+    audioElements,
+    crossfade,
+    playTracking,
+    queue,
+    isPlaying,
+    setIsPlaying,
+    setCurrentTrack,
+    currentTrack,
+    userVolume,
+    autoplaySettings,
+    isTransitioningRef,
+    preloadedNextRef,
+    queueContextRef,
+    radio: { isRadioMode: radio.isRadioMode },
+    handlePlayNext,
+    getStreamUrl,
+  });
+
+  // ========== PLAYBACK CONTROLS ==========
+
+  const play = useCallback(
+    (track?: Track, withCrossfade: boolean = false) => {
+      if (track) {
+        playTrack(track, withCrossfade);
+      } else if (currentTrack && !radio.isRadioMode) {
+        audioElements.playActive();
+      } else if (radio.isRadioMode && radio.currentStation) {
+        radio.resumeRadio();
+      }
+    },
+    [playTrack, currentTrack, radio, audioElements]
+  );
+
+  const pause = useCallback(() => {
+    audioElements.pauseActive();
+  }, [audioElements]);
+
+  const stop = useCallback(() => {
+    audioElements.stopBoth();
+    setCurrentTrack(null);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  }, [audioElements]);
+
+  const seek = useCallback(
+    (time: number) => {
+      audioElements.seek(time);
+      setCurrentTime(time);
+      crossfade.resetCrossfadeFlag();
+    },
+    [audioElements, crossfade]
+  );
+
+  const setVolume = useCallback(
+    (volume: number) => {
+      setUserVolumeState(volume);
+      audioElements.setVolume(volume);
+    },
+    [audioElements]
+  );
+
+  const togglePlayPause = useCallback(() => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  }, [isPlaying, pause, play]);
+
   /**
-   * Play next track in queue.
-   * Manual skip — never crossfade. Crossfade only triggers automatically
-   * via checkCrossfadeTiming (2s before natural track end).
+   * Manual skip — never crossfade.
    */
   const playNext = useCallback(() => {
     handlePlayNext(false);
   }, [handlePlayNext]);
 
-  /**
-   * Play previous track in queue
-   */
   const playPrevious = useCallback(() => {
     if (queue.queue.length === 0) return;
 
-    // If more than 3 seconds played, restart current track
     if (audioElements.getCurrentTime() > 3) {
       seek(0);
       return;
     }
 
-    // End current session as skipped
     if (playTracking.hasActiveSession()) {
       playTracking.endPlaySession(true);
     }
@@ -544,24 +343,15 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     queue.setCurrentIndex(prevIndex);
     const prevTrack = queue.getTrackAt(prevIndex);
     if (prevTrack) {
-      // Manual skip — never crossfade. Crossfade only on natural track endings.
       playTrack(prevTrack, false);
     }
   }, [queue, audioElements, playTracking, playTrack, seek]);
 
-  /**
-   * Play a queue of tracks starting at index
-   * Does NOT auto-shuffle - caller is responsible for shuffle state and track order
-   */
   const playQueue = useCallback(
     (tracks: Track[], startIndex: number = 0, context?: PlayContext) => {
-      // Reset autoplay state when user starts new playback
       setIsAutoplayActive(false);
       setAutoplaySourceArtist(null);
       autoplay.resetSession();
-
-      // Store the originating context so all tracks in this queue
-      // inherit it for play tracking (album, playlist, artist, etc.)
       queueContextRef.current = context;
 
       queue.setQueue(tracks, startIndex);
@@ -572,16 +362,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     [queue, playTrack, autoplay]
   );
 
-  /**
-   * Remove track from queue
-   */
   const removeFromQueue = useCallback(
     (index: number) => {
       const wasCurrentTrack = index === queue.currentIndex;
       queue.removeFromQueue(index);
 
       if (wasCurrentTrack && queue.queue.length > 0) {
-        // Play next track if we removed the current one
         const nextTrack = queue.getTrackAt(queue.currentIndex);
         if (nextTrack) {
           playTrack(nextTrack, false);
@@ -591,157 +377,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     [queue, playTrack]
   );
 
-  // ========== TRACK ENDED HANDLER ==========
-  // Use ref-based handler to prevent event listener churn during track transitions.
-  // Previously, this effect had 11 dependencies that changed during every track transition,
-  // causing the 'ended' listeners to be rapidly removed and re-added. On mobile browsers,
-  // the 'ended' event could fire in the gap between removal and re-attachment, causing
-  // playback to silently stop after the current track finished.
-  const handleEndedRef = useRef<(event: Event) => void>(() => {});
-
-  // Keep the handler up to date with the latest state and callbacks
-  useEffect(() => {
-    handleEndedRef.current = async (event: Event) => {
-      const endedAudio = event.target as HTMLAudioElement;
-      const activeAudio = audioElements.getActiveAudio();
-
-      // CRITICAL: Ignore ended events from the inactive audio element
-      // This prevents the old track from triggering playNext after a crossfade
-      if (endedAudio !== activeAudio) {
-        logger.debug('[Player] Ignoring ended event from inactive audio element');
-        return;
-      }
-
-      // Only handle ended if not in crossfade mode.
-      // Use isCrossfadingRef (synchronous) instead of isCrossfading (React state)
-      // to prevent race conditions where the ended event fires before React re-renders.
-      if (crossfade.isCrossfadingRef.current) return;
-
-      // Record completed play (not skipped)
-      playTracking.endPlaySession(false);
-
-      const hasNextTrack = queue.hasNext();
-
-      logger.debug('[Player] Track ended - checking next action', {
-        repeatMode: queue.repeatMode,
-        hasNext: hasNextTrack,
-        currentIndex: queue.currentIndex,
-        queueLength: queue.queue.length,
-        autoplayEnabled: autoplaySettings.enabled,
-        artistId: currentTrack?.artistId || 'MISSING',
-        artistName: currentTrack?.artist || 'MISSING',
-        isRadioMode: radio.isRadioMode,
-      });
-
-      if (queue.repeatMode === 'one') {
-        logger.debug('[Player] Repeat one - replaying current track');
-        audioElements.playActive();
-      } else if (hasNextTrack) {
-        // On iOS (volumeControlSupported=false), always use the simple path.
-        // iOS requires each HTMLAudioElement to receive its first play() from a
-        // user gesture. Audio B has never been played by a user gesture, so
-        // switching to it in an 'ended' handler (not user-initiated) fails.
-        // The simple path reuses Audio A (already gesture-authorized).
-        const preloaded = audioElements.volumeControlSupported ? preloadedNextRef.current : null;
-        const nextIndex = queue.getNextIndex();
-        const nextTrack = nextIndex !== -1 ? queue.getTrackAt(nextIndex) : null;
-
-        if (nextTrack && preloaded && preloaded.trackId === nextTrack.id) {
-          // PRELOADED: inactive element has the next track buffered and ready.
-          // Start playback immediately for a clean, non-overlapping transition.
-          logger.debug('[Player] Preloaded transition to:', nextTrack.title);
-          isTransitioningRef.current = true;
-          preloadedNextRef.current = null;
-
-          queue.setCurrentIndex(nextIndex);
-          setCurrentTrack(nextTrack);
-
-          // Switch: inactive (preloaded) becomes active
-          audioElements.switchActiveAudio();
-
-          // Unmute and restore user volume
-          const newActive = audioElements.getActiveAudio();
-          if (newActive) {
-            newActive.muted = false;
-            newActive.volume = userVolume;
-          }
-
-          // Start playback — track is already buffered from Phase 1 preload
-          // so play() should start near-instantly without async gap.
-          try {
-            await audioElements.playActive(false);
-          } catch (error) {
-            logger.warn('[Player] Preloaded play failed, retrying:', (error as Error).message);
-            try {
-              await audioElements.playActive();
-            } catch (retryError) {
-              logger.error('[Player] Preloaded retry failed:', (retryError as Error).message);
-            }
-          }
-
-          // Cleanup old (now inactive)
-          audioElements.stopInactive();
-
-          isTransitioningRef.current = false;
-          if (audioElements.getActiveAudio()?.paused) {
-            setIsPlaying(false);
-          }
-          playTracking.startPlaySession(nextTrack, queueContextRef.current);
-        } else {
-          // Fallback: normal transition (no preload available)
-          logger.debug('[Player] Playing next track in queue');
-          handlePlayNext(false);
-        }
-      } else {
-        // No more tracks in queue - try autoplay.
-        // No crossfade: the track already ended, nothing to fade from.
-        // (Crossfade only triggers via checkCrossfadeTiming, 2s before end.)
-        logger.debug('[Player] No more tracks - trying autoplay');
-        await handlePlayNext(false);
-      }
-    };
-  }, [
-    audioElements,
-    playTracking,
-    queue,
-    handlePlayNext,
-    autoplaySettings.enabled,
-    currentTrack,
-    radio.isRadioMode,
-    userVolume,
-  ]);
-
-  // Stable event listeners - only set up once when audio elements are created.
-  // The ref indirection ensures the handler always uses the latest state
-  // without needing to remove/re-add DOM event listeners on every state change.
-  useEffect(() => {
-    const audioA = audioElements.audioRefA.current;
-    const audioB = audioElements.audioRefB.current;
-    if (!audioA || !audioB) return;
-
-    const handleEnded = (event: Event) => {
-      handleEndedRef.current(event);
-    };
-
-    audioA.addEventListener('ended', handleEnded);
-    audioB.addEventListener('ended', handleEnded);
-    return () => {
-      audioA.removeEventListener('ended', handleEnded);
-      audioB.removeEventListener('ended', handleEnded);
-    };
-  }, [audioElements.audioRefA, audioElements.audioRefB]);
-
   // ========== AUTOPLAY PREFETCH ==========
-  // Prefetch similar artist tracks when nearing end of queue for instant playback
   useEffect(() => {
-    if (!autoplaySettings.enabled || radio.isRadioMode || !currentTrack?.artistId) {
-      return;
-    }
+    if (!autoplaySettings.enabled || radio.isRadioMode || !currentTrack?.artistId) return;
 
     const tracksRemaining = queue.queue.length - queue.currentIndex - 1;
     const threshold = autoplay.getPrefetchThreshold();
 
-    // Start prefetch when we're within threshold of queue end
     if (tracksRemaining <= threshold && tracksRemaining >= 0) {
       logger.debug(`[Player] ${tracksRemaining} tracks remaining, prefetching autoplay tracks`);
       const currentQueueIds = new Set(queue.queue.map((t) => t.id));
@@ -756,79 +398,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     autoplay,
   ]);
 
-  // ========== GAPLESS PRELOAD HANDLER ==========
-  // Ref-based handler for timeupdate events (same pattern as crossfade timing).
-  // Preloads the next track 15s before end: fetches stream URL and loads on inactive element.
-  // The track is only played when the current one ends (in handleEnded), never before.
-  const gaplessPreloadHandlerRef = useRef<() => void>(() => {});
-
-  useEffect(() => {
-    gaplessPreloadHandlerRef.current = () => {
-      // Skip in radio mode, when not playing, or on iOS.
-      // On iOS (volumeControlSupported=false), we never use audio element B
-      // because iOS requires each element to receive its first play() from a
-      // user gesture. Preloading on B then switching to it in 'ended' handler fails.
-      // Note: gapless preload runs even when crossfade is enabled on desktop. It buffers
-      // the next track at 15s before end. When crossfade triggers at 2s, the audio is
-      // already loaded — no async delay, instant crossfade start.
-      if (radio.isRadioMode || !isPlaying || !audioElements.volumeControlSupported) return;
-
-      const audio = audioElements.getActiveAudio();
-      if (!audio || isNaN(audio.duration) || audio.duration <= 0) return;
-
-      const timeRemaining = audio.duration - audio.currentTime;
-      if (timeRemaining <= 0) return;
-
-      // Phase 1: Preload 15 seconds before track end
-      if (timeRemaining <= 15 && !preloadedNextRef.current) {
-        if (queue.repeatMode === 'one') return;
-        const nextIndex = queue.getNextIndex();
-        if (nextIndex === -1) return;
-        const nextTrack = queue.getTrackAt(nextIndex);
-        if (!nextTrack) return;
-
-        getStreamUrl(nextTrack).then((url) => {
-          if (!url || preloadedNextRef.current) return;
-          preloadedNextRef.current = {
-            trackId: nextTrack.id,
-            nextIndex,
-            track: nextTrack,
-          };
-          audioElements.loadOnInactive(url);
-          logger.debug('[Player] Gapless: preloaded next track:', nextTrack.title);
-        });
-      }
-
-      // Note: Phase 2 (silent pre-play before track end) was removed.
-      // On iOS PWA, starting the next track before the current one finishes
-      // caused audible overlap because iOS audio handling can briefly unmute
-      // during play() calls. Instead, we rely on Phase 1 preloading (buffer
-      // is ready) and start the next track in handleEnded for a clean transition.
-    };
-  }, [radio.isRadioMode, isPlaying, queue, getStreamUrl, audioElements]);
-
-  // Stable timeupdate listener for gapless preloading
-  useEffect(() => {
-    const audioA = audioElements.audioRefA.current;
-    const audioB = audioElements.audioRefB.current;
-    if (!audioA || !audioB) return;
-
-    const handleTimeUpdate = () => gaplessPreloadHandlerRef.current();
-
-    audioA.addEventListener('timeupdate', handleTimeUpdate);
-    audioB.addEventListener('timeupdate', handleTimeUpdate);
-    return () => {
-      audioA.removeEventListener('timeupdate', handleTimeUpdate);
-      audioB.removeEventListener('timeupdate', handleTimeUpdate);
-    };
-  }, [audioElements.audioRefA, audioElements.audioRefB]);
-
-  // Clear preload when track changes
-  useEffect(() => {
-    preloadedNextRef.current = null;
-  }, [currentTrack]);
-
-  // ========== MEDIA SESSION API (for mobile background playback) ==========
+  // ========== MEDIA SESSION (mobile background playback) ==========
   useMediaSession({
     currentTrack,
     radio: {
@@ -847,14 +417,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     seek,
   });
 
-  // ========== PWA VISIBILITY SYNC (background audio recovery) ==========
+  // ========== PWA VISIBILITY SYNC ==========
   useVisibilitySync({
     isPlaying,
     getActiveAudio: audioElements.getActiveAudio,
     setIsPlaying,
   });
 
-  // ========== SOCIAL "LISTENING NOW" SYNC ==========
+  // ========== SOCIAL SYNC ==========
   useSocialSync({
     isPlaying,
     currentTrackId: currentTrack?.id ?? null,
@@ -863,57 +433,41 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // ========== RADIO OPERATIONS ==========
 
-  /**
-   * Play a radio station
-   */
   const playRadio = useCallback(
     async (station: RadioStation | RadioBrowserStation) => {
       try {
-        // Clear track state
         setCurrentTrack(null);
         queue.clearQueue();
         crossfade.clearCrossfade();
-
         await radio.playRadio(station);
       } catch (error) {
         logger.error('[Player] Failed to play radio station:', (error as Error).message);
-        // Ensure we're not stuck in a bad state
         setIsPlaying(false);
       }
     },
     [radio, queue, crossfade]
   );
 
-  /**
-   * Stop radio
-   */
   const stopRadio = useCallback(async () => {
     try {
       await radio.stopRadio();
     } catch (error) {
       logger.error('[Player] Failed to stop radio:', (error as Error).message);
     }
-    // Always reset state even if stopRadio fails
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
   }, [radio]);
 
-  // ========== CROSSFADE SETTINGS ==========
+  // ========== SETTINGS CALLBACKS ==========
 
   const setCrossfadeEnabled = useCallback(
-    (enabled: boolean) => {
-      setCrossfadeEnabledStore(enabled);
-    },
+    (enabled: boolean) => setCrossfadeEnabledStore(enabled),
     [setCrossfadeEnabledStore]
   );
 
-  // ========== AUTOPLAY SETTINGS ==========
-
   const setAutoplayEnabled = useCallback(
-    (enabled: boolean) => {
-      setAutoplayEnabledStore(enabled);
-    },
+    (enabled: boolean) => setAutoplayEnabledStore(enabled),
     [setAutoplayEnabledStore]
   );
 
@@ -921,7 +475,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   const value: PlayerContextValue = useMemo(
     () => ({
-      // Track state
       currentTrack,
       queue: queue.queue,
       currentIndex: queue.currentIndex,
@@ -932,23 +485,19 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       isShuffle: queue.isShuffle,
       repeatMode: queue.repeatMode,
 
-      // Crossfade state
       crossfade: crossfadeSettings,
       isCrossfading: crossfade.isCrossfading,
       volumeControlSupported: audioElements.volumeControlSupported,
 
-      // Radio state
       currentRadioStation: radio.currentStation,
       isRadioMode: radio.isRadioMode,
       radioMetadata: radio.metadata,
       radioSignalStatus: radio.signalStatus,
 
-      // Autoplay state
       autoplay: autoplaySettings,
       isAutoplayActive,
       autoplaySourceArtist,
 
-      // Playback controls
       play,
       pause,
       togglePlayPause,
@@ -956,27 +505,21 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playNext,
       playPrevious,
 
-      // Queue controls
       addToQueue: queue.addToQueue,
       removeFromQueue,
       clearQueue: queue.clearQueue,
       playQueue,
 
-      // Radio controls
       playRadio,
       stopRadio,
 
-      // Player controls
       seek,
       setVolume,
       toggleShuffle: queue.toggleShuffle,
       setShuffle: queue.setShuffle,
       toggleRepeat: queue.toggleRepeat,
 
-      // Crossfade controls
       setCrossfadeEnabled,
-
-      // Autoplay controls
       setAutoplayEnabled,
     }),
     [
