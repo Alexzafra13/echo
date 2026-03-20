@@ -435,128 +435,80 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     volumeControlSupportedRef.current = nativeVolumeSupported;
     setVolumeControlSupportedState(nativeVolumeSupported);
 
-    // Create event handlers
-    const createTimeUpdateHandler = (audio: HTMLAudioElement, audioId: 'A' | 'B') => () => {
-      if (activeAudioRef.current === audioId) {
-        callbacksRef.current?.onTimeUpdate?.(audio.currentTime);
-      }
-    };
-
-    const createLoadedMetadataHandler = (audio: HTMLAudioElement, audioId: 'A' | 'B') => () => {
-      if (activeAudioRef.current === audioId) {
-        callbacksRef.current?.onDurationChange?.(audio.duration);
-      }
-    };
-
-    const handlePlay = () => {
-      callbacksRef.current?.onPlay?.();
-    };
+    // Shared handlers (same for both elements)
+    const handlePlay = () => callbacksRef.current?.onPlay?.();
+    const handleError = (e: Event) => callbacksRef.current?.onError?.(e);
+    const handleWaiting = () => callbacksRef.current?.onWaiting?.();
+    const handlePlaying = () => callbacksRef.current?.onPlaying?.();
+    const handleStalled = () => callbacksRef.current?.onStalled?.();
 
     const handlePause = () => {
-      // Only trigger pause callback if both audios are paused (for crossfade support)
+      // Only trigger pause callback if both audios are paused (for crossfade support).
+      // Skip if the active audio ended naturally — per HTML5 spec, 'pause' fires
+      // BEFORE 'ended'. Without this guard, isPlaying flickers to false, MediaSession
+      // reports 'paused', and on mobile PWA the OS revokes audio focus.
       if (audioA.paused && audioB.paused) {
-        // Skip if the active audio ended naturally — the ended handler will
-        // manage the transition to the next track. Per HTML5 spec, when a track
-        // ends the browser fires 'pause' BEFORE 'ended'. Without this guard,
-        // the pause sets isPlaying=false → MediaSession reports 'paused' →
-        // on mobile PWA the OS revokes audio focus → the next play() fails
-        // with NotAllowedError and playback stops between tracks.
         const activeAudio = activeAudioRef.current === 'A' ? audioA : audioB;
         if (activeAudio.ended) return;
-
         callbacksRef.current?.onPause?.();
       }
     };
 
-    // Only fire onEnded for the ACTIVE audio element.
-    // Without this guard, when the inactive element's old track ends (after a
-    // crossfade or preloaded transition), the spurious 'ended' event could
-    // double-advance the queue. Previously PlayerContext had a separate ended
-    // listener that checked event.target === activeAudio, but that required
-    // maintaining dual listeners which introduced timing fragility.
-    const handleEndedA = () => {
-      if (activeAudioRef.current === 'A') {
-        callbacksRef.current?.onEnded?.();
+    // Build per-element handlers and attach/detach listeners in a loop to
+    // eliminate the duplicated addEventListener/removeEventListener blocks.
+    const elements: Array<{ audio: HTMLAudioElement; id: 'A' | 'B' }> = [
+      { audio: audioA, id: 'A' },
+      { audio: audioB, id: 'B' },
+    ];
+
+    const perElementHandlers = elements.map(({ audio, id }) => {
+      const handlers: Array<[string, EventListener]> = [
+        [
+          'timeupdate',
+          () => {
+            if (activeAudioRef.current === id)
+              callbacksRef.current?.onTimeUpdate?.(audio.currentTime);
+          },
+        ],
+        [
+          'loadedmetadata',
+          () => {
+            if (activeAudioRef.current === id)
+              callbacksRef.current?.onDurationChange?.(audio.duration);
+          },
+        ],
+        // Only fire onEnded for the ACTIVE element to prevent double-advancing
+        // the queue when the inactive element's old track ends.
+        [
+          'ended',
+          () => {
+            if (activeAudioRef.current === id) callbacksRef.current?.onEnded?.();
+          },
+        ],
+        ['play', handlePlay],
+        ['pause', handlePause],
+        ['error', handleError],
+        ['waiting', handleWaiting],
+        ['playing', handlePlaying],
+        ['stalled', handleStalled],
+      ];
+
+      for (const [event, handler] of handlers) {
+        audio.addEventListener(event, handler);
       }
-    };
-    const handleEndedB = () => {
-      if (activeAudioRef.current === 'B') {
-        callbacksRef.current?.onEnded?.();
-      }
-    };
 
-    const handleError = (e: Event) => {
-      callbacksRef.current?.onError?.(e);
-    };
-
-    const handleWaiting = () => {
-      callbacksRef.current?.onWaiting?.();
-    };
-
-    const handlePlaying = () => {
-      callbacksRef.current?.onPlaying?.();
-    };
-
-    const handleStalled = () => {
-      callbacksRef.current?.onStalled?.();
-    };
-
-    const handleTimeUpdateA = createTimeUpdateHandler(audioA, 'A');
-    const handleTimeUpdateB = createTimeUpdateHandler(audioB, 'B');
-    const handleLoadedMetadataA = createLoadedMetadataHandler(audioA, 'A');
-    const handleLoadedMetadataB = createLoadedMetadataHandler(audioB, 'B');
-
-    // Add listeners to audio A
-    audioA.addEventListener('timeupdate', handleTimeUpdateA);
-    audioA.addEventListener('loadedmetadata', handleLoadedMetadataA);
-    audioA.addEventListener('play', handlePlay);
-    audioA.addEventListener('pause', handlePause);
-    audioA.addEventListener('ended', handleEndedA);
-    audioA.addEventListener('error', handleError);
-    audioA.addEventListener('waiting', handleWaiting);
-    audioA.addEventListener('playing', handlePlaying);
-    audioA.addEventListener('stalled', handleStalled);
-
-    // Add listeners to audio B
-    audioB.addEventListener('timeupdate', handleTimeUpdateB);
-    audioB.addEventListener('loadedmetadata', handleLoadedMetadataB);
-    audioB.addEventListener('play', handlePlay);
-    audioB.addEventListener('pause', handlePause);
-    audioB.addEventListener('ended', handleEndedB);
-    audioB.addEventListener('error', handleError);
-    audioB.addEventListener('waiting', handleWaiting);
-    audioB.addEventListener('playing', handlePlaying);
-    audioB.addEventListener('stalled', handleStalled);
+      return { audio, handlers };
+    });
 
     return () => {
-      // Cleanup audio A
-      audioA.removeEventListener('timeupdate', handleTimeUpdateA);
-      audioA.removeEventListener('loadedmetadata', handleLoadedMetadataA);
-      audioA.removeEventListener('play', handlePlay);
-      audioA.removeEventListener('pause', handlePause);
-      audioA.removeEventListener('ended', handleEndedA);
-      audioA.removeEventListener('error', handleError);
-      audioA.removeEventListener('waiting', handleWaiting);
-      audioA.removeEventListener('playing', handlePlaying);
-      audioA.removeEventListener('stalled', handleStalled);
-      audioA.pause();
-      audioA.src = '';
-      audioA.load();
-
-      // Cleanup audio B
-      audioB.removeEventListener('timeupdate', handleTimeUpdateB);
-      audioB.removeEventListener('loadedmetadata', handleLoadedMetadataB);
-      audioB.removeEventListener('play', handlePlay);
-      audioB.removeEventListener('pause', handlePause);
-      audioB.removeEventListener('ended', handleEndedB);
-      audioB.removeEventListener('error', handleError);
-      audioB.removeEventListener('waiting', handleWaiting);
-      audioB.removeEventListener('playing', handlePlaying);
-      audioB.removeEventListener('stalled', handleStalled);
-      audioB.pause();
-      audioB.src = '';
-      audioB.load();
-
+      for (const { audio, handlers } of perElementHandlers) {
+        for (const [event, handler] of handlers) {
+          audio.removeEventListener(event, handler);
+        }
+        audio.pause();
+        audio.src = '';
+        audio.load();
+      }
       audioRefA.current = null;
       audioRefB.current = null;
     };

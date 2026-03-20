@@ -8,6 +8,7 @@
  */
 
 import { useRef, useCallback, useEffect, useState } from 'react';
+import { useLatestCallback } from '@shared/hooks';
 import { logger } from '@shared/utils/logger';
 import type { AudioElements } from './useAudioElements';
 import type { CrossfadeSettings } from '../types';
@@ -369,38 +370,20 @@ export function useCrossfadeLogic({
     return false;
   }, [isRadioMode, repeatMode, hasNextTrack, audioElements]);
 
-  /**
-   * Ref-based handler for timeupdate events.
-   * Uses the same ref indirection pattern as handleEnded in PlayerContext to
-   * prevent listener churn. Previously, the timeupdate effect depended on
-   * checkCrossfadeTiming (which changes when isCrossfading toggles), causing
-   * rapid listener removal/re-addition during crossfade transitions.
-   * On mobile, the timeupdate event could fire in the gap between removal
-   * and re-attachment, causing a missed crossfade trigger.
-   */
-  const handleTimeUpdateRef = useRef<() => void>(() => {});
+  // Stable timeupdate handler — useLatestCallback ensures it always uses the
+  // latest checkCrossfadeTiming without causing listener churn on state changes.
+  const handleTimeUpdate = useLatestCallback(() => {
+    if (checkCrossfadeTiming()) {
+      logger.debug('[Crossfade] Triggering crossfade to next track');
+      callbacksRef.current.onCrossfadeTrigger?.();
+    }
+  });
 
-  // Keep the handler up to date with the latest checkCrossfadeTiming logic
-  useEffect(() => {
-    handleTimeUpdateRef.current = () => {
-      if (checkCrossfadeTiming()) {
-        logger.debug('[Crossfade] Triggering crossfade to next track');
-        callbacksRef.current.onCrossfadeTrigger?.();
-      }
-    };
-  }, [checkCrossfadeTiming]);
-
-  // Stable event listeners - only set up once when audio elements are created.
-  // The ref indirection ensures the handler always uses the latest state
-  // without needing to remove/re-add DOM event listeners on every state change.
+  // Attach listeners once when audio elements are created.
   useEffect(() => {
     const audioA = audioElements.audioRefA.current;
     const audioB = audioElements.audioRefB.current;
     if (!audioA || !audioB) return;
-
-    const handleTimeUpdate = () => {
-      handleTimeUpdateRef.current();
-    };
 
     audioA.addEventListener('timeupdate', handleTimeUpdate);
     audioB.addEventListener('timeupdate', handleTimeUpdate);
@@ -409,7 +392,7 @@ export function useCrossfadeLogic({
       audioA.removeEventListener('timeupdate', handleTimeUpdate);
       audioB.removeEventListener('timeupdate', handleTimeUpdate);
     };
-  }, [audioElements.audioRefA, audioElements.audioRefB]);
+  }, [audioElements.audioRefA, audioElements.audioRefB, handleTimeUpdate]);
 
   // Cleanup on unmount
   useEffect(() => {
