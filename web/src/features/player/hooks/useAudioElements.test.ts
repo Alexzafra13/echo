@@ -31,6 +31,8 @@ function createMockAudio(): MockAudioElement {
     paused: true,
     src: '',
     readyState: 0,
+    muted: false,
+    ended: false,
 
     play: vi.fn().mockImplementation(function (this: typeof mockAudio) {
       this.paused = false;
@@ -78,6 +80,47 @@ function createMockAudio(): MockAudioElement {
   return mockAudio;
 }
 
+// Mock GainNode
+interface MockGainNode {
+  gain: { value: number };
+  connect: ReturnType<typeof vi.fn>;
+}
+
+function createMockGainNode(initialValue: number = 1): MockGainNode {
+  return {
+    gain: { value: initialValue },
+    connect: vi.fn().mockReturnThis(),
+  };
+}
+
+// Track created gain nodes for assertions
+let mockGainNodes: MockGainNode[];
+
+function setupWebAudioMock() {
+  mockGainNodes = [];
+
+  const mockAudioContext = {
+    state: 'running' as AudioContextState,
+    resume: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn(),
+    destination: {},
+    createMediaElementSource: vi.fn().mockReturnValue({
+      connect: vi.fn().mockImplementation((gainNode: MockGainNode) => gainNode),
+    }),
+    createGain: vi.fn().mockImplementation(() => {
+      const gainNode = createMockGainNode();
+      mockGainNodes.push(gainNode);
+      return gainNode;
+    }),
+  };
+
+  (window as unknown as { AudioContext: unknown }).AudioContext = vi
+    .fn()
+    .mockImplementation(() => mockAudioContext);
+
+  return mockAudioContext;
+}
+
 describe('useAudioElements', () => {
   let mockAudioInstances: MockAudioElement[];
   let originalAudio: typeof Audio;
@@ -101,11 +144,15 @@ describe('useAudioElements', () => {
 
     // Mock performance.now
     vi.spyOn(performance, 'now').mockReturnValue(0);
+
+    // Mock Web Audio API
+    setupWebAudioMock();
   });
 
   afterEach(() => {
     global.Audio = originalAudio;
     vi.restoreAllMocks();
+    delete (window as unknown as Record<string, unknown>).AudioContext;
   });
 
   describe('initialization', () => {
@@ -115,24 +162,30 @@ describe('useAudioElements', () => {
       expect(mockAudioInstances).toHaveLength(2);
     });
 
-    it('should set initial volume on both audio elements', () => {
+    it('should set initial volume via gain nodes', () => {
       renderHook(() => useAudioElements({ initialVolume: 0.5 }));
 
-      expect(mockAudioInstances[0].volume).toBe(0.5);
-      expect(mockAudioInstances[1].volume).toBe(0.5);
+      expect(mockGainNodes[0].gain.value).toBe(0.5);
+      expect(mockGainNodes[1].gain.value).toBe(0.5);
     });
 
     it('should use default volume of 0.7 if not specified', () => {
       renderHook(() => useAudioElements());
 
-      expect(mockAudioInstances[0].volume).toBe(0.7);
-      expect(mockAudioInstances[1].volume).toBe(0.7);
+      expect(mockGainNodes[0].gain.value).toBe(0.7);
+      expect(mockGainNodes[1].gain.value).toBe(0.7);
     });
 
     it('should start with audio A as active', () => {
       const { result } = renderHook(() => useAudioElements());
 
       expect(result.current.getActiveAudioId()).toBe('A');
+    });
+
+    it('should always report volumeControlSupported as true', () => {
+      const { result } = renderHook(() => useAudioElements());
+
+      expect(result.current.volumeControlSupported).toBe(true);
     });
   });
 
@@ -213,40 +266,40 @@ describe('useAudioElements', () => {
   });
 
   describe('setVolume', () => {
-    it('should set volume on both audio elements', () => {
+    it('should set volume on both gain nodes', () => {
       const { result } = renderHook(() => useAudioElements());
 
       act(() => {
         result.current.setVolume(0.3);
       });
 
-      expect(mockAudioInstances[0].volume).toBe(0.3);
-      expect(mockAudioInstances[1].volume).toBe(0.3);
+      expect(mockGainNodes[0].gain.value).toBe(0.3);
+      expect(mockGainNodes[1].gain.value).toBe(0.3);
       expect(result.current.volume).toBe(0.3);
     });
   });
 
   describe('setAudioVolume', () => {
-    it('should set volume on specific audio element A', () => {
+    it('should set volume on specific gain node A', () => {
       const { result } = renderHook(() => useAudioElements());
 
       act(() => {
         result.current.setAudioVolume('A', 0.2);
       });
 
-      expect(mockAudioInstances[0].volume).toBe(0.2);
-      expect(mockAudioInstances[1].volume).toBe(0.7); // Unchanged
+      expect(mockGainNodes[0].gain.value).toBe(0.2);
+      expect(mockGainNodes[1].gain.value).toBe(0.7); // Unchanged
     });
 
-    it('should set volume on specific audio element B', () => {
+    it('should set volume on specific gain node B', () => {
       const { result } = renderHook(() => useAudioElements());
 
       act(() => {
         result.current.setAudioVolume('B', 0.8);
       });
 
-      expect(mockAudioInstances[0].volume).toBe(0.7); // Unchanged
-      expect(mockAudioInstances[1].volume).toBe(0.8);
+      expect(mockGainNodes[0].gain.value).toBe(0.7); // Unchanged
+      expect(mockGainNodes[1].gain.value).toBe(0.8);
     });
   });
 
@@ -262,7 +315,7 @@ describe('useAudioElements', () => {
       expect(mockAudioInstances[0].load).toHaveBeenCalled();
     });
 
-    it('should load source on inactive audio element muted', () => {
+    it('should load source on inactive audio element with gain set to 0', () => {
       const { result } = renderHook(() => useAudioElements());
 
       act(() => {
@@ -270,7 +323,7 @@ describe('useAudioElements', () => {
       });
 
       expect(mockAudioInstances[1].src).toBe('http://example.com/next-track.mp3');
-      expect(mockAudioInstances[1].muted).toBe(true); // Muted for preload (works on iOS unlike volume=0)
+      expect(mockGainNodes[1].gain.value).toBe(0); // Silenced via gain node
       expect(mockAudioInstances[1].load).toHaveBeenCalled();
     });
   });
@@ -674,11 +727,11 @@ describe('useAudioElements', () => {
       expect(true).toBe(true);
     });
 
-    it('should resolve immediately if volume is already 0', async () => {
+    it('should resolve immediately if gain is already 0', async () => {
       const { result } = renderHook(() => useAudioElements());
 
       mockAudioInstances[0].paused = false;
-      mockAudioInstances[0].volume = 0;
+      mockGainNodes[0].gain.value = 0;
 
       await act(async () => {
         await result.current.fadeOutAudio(mockAudioInstances[0], 50);
@@ -687,11 +740,11 @@ describe('useAudioElements', () => {
       expect(true).toBe(true);
     });
 
-    it('should fade volume to 0', async () => {
+    it('should fade gain to 0', async () => {
       const { result } = renderHook(() => useAudioElements());
 
       mockAudioInstances[0].paused = false;
-      mockAudioInstances[0].volume = 0.7;
+      mockGainNodes[0].gain.value = 0.7;
 
       // Mock performance.now to simulate time passing
       let time = 0;
@@ -704,7 +757,7 @@ describe('useAudioElements', () => {
         await result.current.fadeOutAudio(mockAudioInstances[0], 50);
       });
 
-      expect(mockAudioInstances[0].volume).toBe(0);
+      expect(mockGainNodes[0].gain.value).toBe(0);
     });
   });
 
@@ -722,7 +775,7 @@ describe('useAudioElements', () => {
   });
 
   describe('crossfade workflow', () => {
-    it('should support complete crossfade workflow', async () => {
+    it('should support complete crossfade workflow via gain nodes', async () => {
       const { result } = renderHook(() => useAudioElements({ initialVolume: 1 }));
 
       // 1. Load track on active (A)
@@ -738,12 +791,12 @@ describe('useAudioElements', () => {
       });
       expect(mockAudioInstances[0].play).toHaveBeenCalled();
 
-      // 3. Preload next track on inactive (B)
+      // 3. Preload next track on inactive (B) — gain set to 0
       act(() => {
         result.current.loadOnInactive('http://example.com/track2.mp3');
       });
       expect(mockAudioInstances[1].src).toBe('http://example.com/track2.mp3');
-      expect(mockAudioInstances[1].muted).toBe(true); // Muted for preload (works on iOS unlike volume=0)
+      expect(mockGainNodes[1].gain.value).toBe(0); // Silenced via GainNode
 
       // 4. Start crossfade - play inactive
       mockAudioInstances[1].readyState = 4;
@@ -752,11 +805,13 @@ describe('useAudioElements', () => {
       });
       expect(mockAudioInstances[1].play).toHaveBeenCalled();
 
-      // 5. Gradually adjust volumes (simulated)
+      // 5. Gradually adjust volumes via gain nodes (simulated crossfade mid-point)
       act(() => {
         result.current.setAudioVolume('A', 0.5);
         result.current.setAudioVolume('B', 0.5);
       });
+      expect(mockGainNodes[0].gain.value).toBe(0.5);
+      expect(mockGainNodes[1].gain.value).toBe(0.5);
 
       // 6. Complete crossfade - switch active
       act(() => {

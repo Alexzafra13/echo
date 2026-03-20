@@ -24,8 +24,6 @@ interface UseCrossfadeLogicParams {
   onCrossfadeComplete?: () => void;
   onCrossfadeTrigger?: () => void; // Called when it's time to start crossfade to next track
   onCrossfadeCleared?: () => void; // Called whenever crossfade state is cleared (completion, cancel, error)
-  // Platform capability: false on iOS Safari where audio.volume is read-only
-  volumeControlSupported?: boolean;
 }
 
 /**
@@ -53,7 +51,6 @@ export function useCrossfadeLogic({
   onCrossfadeComplete,
   onCrossfadeTrigger,
   onCrossfadeCleared,
-  volumeControlSupported = true,
 }: UseCrossfadeLogicParams) {
   const [isCrossfading, setIsCrossfading] = useState(false);
   // Synchronous ref mirrors isCrossfading state to prevent race conditions.
@@ -80,10 +77,6 @@ export function useCrossfadeLogic({
     onCrossfadeTrigger,
     onCrossfadeCleared,
   };
-
-  // Store volumeControlSupported in ref (same reason as settings - avoid callback cascade)
-  const volumeControlSupportedRef = useRef(volumeControlSupported);
-  volumeControlSupportedRef.current = volumeControlSupported;
 
   // Store settings in ref to avoid recreating performCrossfade/checkCrossfadeTiming
   // when settings change. This prevents a cascade of useCallback recreations:
@@ -162,11 +155,9 @@ export function useCrossfadeLogic({
     callbacksRef.current.onCrossfadeStart?.();
 
     try {
-      // Unmute and set volume to 0 for the fade-in start.
-      // loadOnInactive sets muted=true, so we unmute here but at volume 0
-      // to prevent a brief audio flash before the first animateFade frame.
+      // Ensure inactive gain is at 0 for the fade-in start.
+      // loadOnInactive already sets gain to 0; this is a safety net.
       audioElements.setAudioVolume(inactiveId, 0);
-      inactiveAudio.muted = false;
 
       // Start playing the inactive audio (should already have src loaded)
       // On mobile, playInactive() can fail due to autoplay policy. Retry once.
@@ -326,17 +317,12 @@ export function useCrossfadeLogic({
     // needing settings in the useCallback dependency array.
     const currentSettings = settingsRef.current;
 
-    // Skip if crossfade is disabled, already crossfading, in radio mode, repeat one,
-    // or volume control is not supported (iOS Safari where volumeControlSupported=false).
-    // On iOS, audio.volume is read-only so volumeControlSupported=false, and additionally
-    // playInactive() fails without user gesture (autoplay policy) and the ended event
-    // gets swallowed during crossfade. The gapless preloading mechanism provides
-    // seamless transitions on iOS instead.
+    // Skip if crossfade is disabled, already crossfading, in radio mode, or repeat one.
+    // Volume control now works on all platforms via Web Audio GainNodes.
     // Use isCrossfadingRef (synchronous) instead of isCrossfading (React state) to prevent
     // race conditions where timeupdate fires before React re-renders with the new state.
     if (
       !currentSettings.enabled ||
-      !volumeControlSupportedRef.current ||
       isCrossfadingRef.current ||
       isRadioMode ||
       repeatMode === 'one'

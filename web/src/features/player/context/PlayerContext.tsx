@@ -129,7 +129,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       crossfade.isCrossfadingRef.current = true;
       playNextRef.current(true);
     },
-    volumeControlSupported: audioElements.volumeControlSupported,
   });
 
   // ========== RADIO METADATA ==========
