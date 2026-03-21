@@ -43,3 +43,5 @@ Thumbs.db
 [._]sw[a-p]
 # Lighthouse CI
 .lighthouseci/
+
+.claude/

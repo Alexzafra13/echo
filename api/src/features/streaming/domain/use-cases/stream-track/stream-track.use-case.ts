@@ -13,6 +13,9 @@ export class StreamTrackUseCase {
   // mount points where music files can be stored in self-hosted deployments
   private static readonly ALLOWED_ROOTS = ['/mnt', '/media', '/music', '/data', '/home', '/app'];
 
+  // On Windows, allow any absolute path with a drive letter (e.g. C:\, D:\)
+  private static readonly IS_WINDOWS = process.platform === 'win32';
+
   constructor(
     @InjectPinoLogger(StreamTrackUseCase.name)
     private readonly logger: PinoLogger,
@@ -27,9 +30,12 @@ export class StreamTrackUseCase {
   private validateFilePath(filePath: string): string {
     const resolved = path.resolve(filePath);
 
-    const isAllowed = StreamTrackUseCase.ALLOWED_ROOTS.some(
-      (root) => resolved.startsWith(root + path.sep) || resolved === root,
-    );
+    // On Windows, allow any absolute path with a drive letter
+    const isAllowed = StreamTrackUseCase.IS_WINDOWS
+      ? /^[A-Za-z]:\\/.test(resolved)
+      : StreamTrackUseCase.ALLOWED_ROOTS.some(
+          (root) => resolved.startsWith(root + path.sep) || resolved === root,
+        );
 
     if (!isAllowed) {
       this.logger.error(
