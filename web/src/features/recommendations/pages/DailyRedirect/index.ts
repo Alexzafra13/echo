@@ -1,1 +1,1 @@
-export { DailyRedirect } from './DailyRedirect';
+export { DailyRedirect, DailyRedirect as default } from './DailyRedirect';

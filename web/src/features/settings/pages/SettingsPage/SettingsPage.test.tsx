@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { SettingsPage } from './SettingsPage';
+import SettingsPage from './SettingsPage';
 
 // Mock dependencies
 vi.mock('@shared/components/layout/Header', () => ({

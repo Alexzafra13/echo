@@ -47,7 +47,7 @@ const SECTION_LABELS: Record<HomeSectionId, string> = {
  * SettingsPage Component
  * User settings page with home customization, appearance, audio and playback options
  */
-export function SettingsPage() {
+export default function SettingsPage() {
   useDocumentTitle('Ajustes');
   const { themePreference, setThemePreference, theme } = useTheme();
   const { data: homePreferences, isLoading: isLoadingHome } = useHomePreferences();

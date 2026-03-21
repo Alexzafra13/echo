@@ -1,18 +1,6 @@
 import { useMemo } from 'react';
 import styles from './PublicProfilePage.module.css';
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-export const getUserInitials = (name?: string, username?: string): string => {
-  const displayName = name || username || 'U';
-  return displayName.slice(0, 2).toUpperCase();
-};
-
-// =============================================================================
-// Component
-// =============================================================================
+import { getUserInitials } from '@shared/utils/avatar.utils';
 
 interface AvatarProps {
   avatarUrl?: string;

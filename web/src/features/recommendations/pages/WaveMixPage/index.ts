@@ -1,1 +1,1 @@
-export { WaveMixPage } from './WaveMixPage';
+export { WaveMixPage, WaveMixPage as default } from './WaveMixPage';

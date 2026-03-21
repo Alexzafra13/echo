@@ -11,69 +11,29 @@ import { useAuthStore } from '@shared/store';
 import { AudioPlayer } from '@features/player';
 import { GlobalProgressListeners } from '@shared/components/GlobalProgressListeners';
 
-// Lazy loaded pages for better initial bundle size
+// Carga diferida de páginas
 const FirstLoginPage = lazy(() => import('@features/auth/pages/FirstLoginPage'));
 const HomePage = lazy(() => import('@features/home/pages/HomePage'));
-const AlbumPage = lazy(() =>
-  import('@features/home/pages/AlbumPage').then((m) => ({ default: m.AlbumPage }))
-);
-const AlbumsPage = lazy(() =>
-  import('@features/home/pages/AlbumsPage').then((m) => ({ default: m.AlbumsPage }))
-);
-const SearchResultsPage = lazy(() =>
-  import('@features/home/pages/SearchResultsPage').then((m) => ({ default: m.SearchResultsPage }))
-);
+const AlbumPage = lazy(() => import('@features/home/pages/AlbumPage'));
+const AlbumsPage = lazy(() => import('@features/home/pages/AlbumsPage'));
+const SearchResultsPage = lazy(() => import('@features/home/pages/SearchResultsPage'));
 const ArtistsPage = lazy(() => import('@features/artists/pages/ArtistsPage/ArtistsPage'));
-const ArtistDetailPage = lazy(
-  () => import('@features/artists/pages/ArtistDetailPage/ArtistDetailPage')
-);
-const ProfilePage = lazy(() =>
-  import('@features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage }))
-);
-const SettingsPage = lazy(() =>
-  import('@features/settings').then((m) => ({ default: m.SettingsPage }))
-);
-const PublicProfilePage = lazy(() =>
-  import('@features/public-profiles').then((m) => ({ default: m.PublicProfilePage }))
-);
+const ArtistDetailPage = lazy(() => import('@features/artists/pages/ArtistDetailPage/ArtistDetailPage'));
+const ProfilePage = lazy(() => import('@features/profile/pages/ProfilePage'));
+const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage/SettingsPage'));
+const PublicProfilePage = lazy(() => import('@features/public-profiles/pages/PublicProfilePage/PublicProfilePage'));
 const AdminPage = lazy(() => import('@features/admin/pages/AdminPage/AdminPage'));
 const PlaylistsPage = lazy(() => import('@features/playlists/pages/PlaylistsPage'));
 const PlaylistDetailPage = lazy(() => import('@features/playlists/pages/PlaylistDetailPage'));
-const RadioPage = lazy(() =>
-  import('@features/radio/pages/RadioPage').then((m) => ({ default: m.RadioPage }))
-);
-const WaveMixPage = lazy(() =>
-  import('@features/recommendations/pages/WaveMixPage').then((m) => ({ default: m.WaveMixPage }))
-);
-const WavePlaylistDetailPage = lazy(() =>
-  import('@features/recommendations/pages/PlaylistDetailPage').then((m) => ({
-    default: m.PlaylistDetailPage,
-  }))
-);
-const DailyRedirect = lazy(() =>
-  import('@features/recommendations/pages/DailyRedirect').then((m) => ({
-    default: m.DailyRedirect,
-  }))
-);
-const ArtistPlaylistsPage = lazy(() =>
-  import('@features/recommendations/pages/ArtistPlaylistsPage').then((m) => ({
-    default: m.ArtistPlaylistsPage,
-  }))
-);
-const GenrePlaylistsPage = lazy(() =>
-  import('@features/recommendations/pages/GenrePlaylistsPage').then((m) => ({
-    default: m.GenrePlaylistsPage,
-  }))
-);
-const SocialPage = lazy(() =>
-  import('@features/social').then((m) => ({ default: m.SocialPage }))
-);
-const TrendingPage = lazy(() =>
-  import('@features/social').then((m) => ({ default: m.TrendingPage }))
-);
-const SharedAlbumPage = lazy(() =>
-  import('@features/federation').then((m) => ({ default: m.SharedAlbumPage }))
-);
+const RadioPage = lazy(() => import('@features/radio/pages/RadioPage'));
+const WaveMixPage = lazy(() => import('@features/recommendations/pages/WaveMixPage'));
+const WavePlaylistDetailPage = lazy(() => import('@features/recommendations/pages/PlaylistDetailPage'));
+const DailyRedirect = lazy(() => import('@features/recommendations/pages/DailyRedirect'));
+const ArtistPlaylistsPage = lazy(() => import('@features/recommendations/pages/ArtistPlaylistsPage'));
+const GenrePlaylistsPage = lazy(() => import('@features/recommendations/pages/GenrePlaylistsPage'));
+const SocialPage = lazy(() => import('@features/social/pages/SocialPage/SocialPage'));
+const TrendingPage = lazy(() => import('@features/social/pages/TrendingPage/TrendingPage'));
+const SharedAlbumPage = lazy(() => import('@features/federation/pages/SharedAlbumPage/SharedAlbumPage'));
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

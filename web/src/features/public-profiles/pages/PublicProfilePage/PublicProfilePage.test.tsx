@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { PublicProfilePage } from './PublicProfilePage';
+import PublicProfilePage from './PublicProfilePage';
 
 // Mock wouter
 const mockSetLocation = vi.fn();

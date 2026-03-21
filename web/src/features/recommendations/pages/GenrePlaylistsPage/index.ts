@@ -1,1 +1,1 @@
-export { GenrePlaylistsPage } from './GenrePlaylistsPage';
+export { GenrePlaylistsPage, GenrePlaylistsPage as default } from './GenrePlaylistsPage';

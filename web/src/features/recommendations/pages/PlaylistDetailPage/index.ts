@@ -1,1 +1,1 @@
-export { PlaylistDetailPage } from './PlaylistDetailPage';
+export { PlaylistDetailPage, PlaylistDetailPage as default } from './PlaylistDetailPage';

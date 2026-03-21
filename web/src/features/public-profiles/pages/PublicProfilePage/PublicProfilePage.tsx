@@ -24,7 +24,7 @@ import styles from './PublicProfilePage.module.css';
 // Main Component
 // =============================================================================
 
-export function PublicProfilePage() {
+export default function PublicProfilePage() {
   const params = useParams<{ userId: string }>();
   const userId = params.userId || '';
   const { data: profile, isLoading, error } = usePublicProfile(userId);
