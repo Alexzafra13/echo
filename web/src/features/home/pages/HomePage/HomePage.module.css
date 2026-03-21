@@ -98,13 +98,15 @@
 /* Hero Crossfade Transition */
 .heroCrossfade {
   position: relative;
-  isolation: isolate; /* Contain z-index layers so they don't overlap content below */
+  isolation: isolate;
+  overflow: visible;
 }
 
 .heroCrossfade__layer--entering {
   position: relative;
   z-index: 2;
-  animation: heroCrossfadeIn 1.2s ease-in-out;
+  animation: heroCrossfadeIn 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform, filter;
 }
 
 .heroCrossfade__layer--exiting {
@@ -113,25 +115,43 @@
   left: 0;
   right: 0;
   z-index: 1;
-  animation: heroCrossfadeOut 1.2s ease-in-out forwards;
+  animation: heroCrossfadeOut 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: opacity, transform, filter;
   pointer-events: none;
 }
 
 @keyframes heroCrossfadeIn {
   from {
     opacity: 0;
+    transform: scale(1.03);
+    filter: blur(8px);
   }
   to {
     opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
   }
 }
 
 @keyframes heroCrossfadeOut {
   from {
     opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
   }
   to {
     opacity: 0;
+    transform: scale(0.97);
+    filter: blur(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroCrossfade__layer--entering,
+  .heroCrossfade__layer--exiting {
+    animation-duration: 0.3s;
+    filter: none !important;
+    transform: none !important;
   }
 }
 

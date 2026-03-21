@@ -349,7 +349,7 @@ export default function HomePage() {
     if (exitingHeroItem) {
       const timer = setTimeout(() => {
         setExitingHeroItem(null);
-      }, 1200); // Match CSS crossfade duration
+      }, 900); // Coincide con la duración CSS del crossfade
       return () => clearTimeout(timer);
     }
   }, [exitingHeroItem]);
