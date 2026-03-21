@@ -128,7 +128,7 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
   const title = isAlbum ? album!.title : playlist!.name;
   const artistName = isAlbum ? album!.artist : playlist!.metadata.artistName || '';
   const subtitle = isAlbum
-    ? `${album!.year}${album!.totalTracks ? ` • ${album!.totalTracks} Songs` : ''}`
+    ? `${album!.year || ''}${album!.totalTracks ? `${album!.year ? ' • ' : ''}${album!.totalTracks} canciones` : ''}`
     : playlist!.description;
   const ariaLabelCover = isAlbum ? `View ${title} album` : `View ${title} playlist`;
   const ariaLabelArtist = `View ${artistName} artist page`;
@@ -207,7 +207,7 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
           )}
 
           <h2 className={styles.heroSection__albumTitle}>{title}</h2>
-          <p className={styles.heroSection__meta}>{subtitle}</p>
+          <p className={`${styles.heroSection__meta} ${isPlaylist ? styles['heroSection__meta--playlist'] : ''}`}>{subtitle}</p>
 
           <button
             onClick={handlePlay}

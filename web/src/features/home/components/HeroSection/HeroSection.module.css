@@ -34,61 +34,48 @@
 .heroSection__navButton {
   position: absolute;
   top: 50%;
-  left: var(--space-2);
+  left: 8px;
   transform: translateY(-50%);
   z-index: 50;
   width: 36px;
-  height: 56px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--white-12) 0%, var(--white-05) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--white-15);
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--black-40);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--white-10);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--white-85);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
   opacity: 0;
-  box-shadow:
-    0 8px 32px var(--black-30),
-    inset 0 1px 0 var(--white-10);
 }
 
-/* Show buttons on hero hover */
 .heroSection:hover .heroSection__navButton {
   opacity: 1;
 }
 
 .heroSection__navButton:hover {
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.85) 0%, rgba(237, 104, 66, 0.65) 100%);
-  border-color: var(--white-40);
-  color: var(--text-on-primary);
-  transform: translateY(-50%) scale(1.08);
-  box-shadow:
-    0 12px 40px rgba(237, 104, 66, 0.4),
-    0 4px 16px var(--black-20),
-    inset 0 1px 0 var(--white-20);
+  background: var(--color-primary, #e04d28);
+  color: white;
+  transform: translateY(-50%) scale(1.1);
 }
 
 .heroSection__navButton:active {
-  transform: translateY(-50%) scale(0.98);
+  transform: translateY(-50%) scale(0.95);
   transition: all 0.1s ease;
 }
 
-/* Chevron icon animation */
 .heroSection__navButton svg {
-  transition: transform var(--transition-slow);
-}
-
-.heroSection__navButton:hover svg {
-  transform: scale(1.1);
+  width: 18px;
+  height: 18px;
 }
 
 .heroSection__navButton--next {
   left: auto;
-  right: var(--space-2);
+  right: 8px;
 }
 
 .heroSection__content {
@@ -338,11 +325,9 @@
     height: 350px;
   }
 
-  /* Nav buttons slightly smaller on tablet */
   .heroSection__navButton {
-    width: 32px;
-    height: 48px;
-    border-radius: var(--radius-lg);
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -510,13 +495,12 @@
     font-size: 10px;
   }
 
+  .heroSection__meta--playlist {
+    display: none;
+  }
+
   .heroSection__playButton {
-    width: 95px;
-    height: 28px;
-    margin: var(--space-2) 0 0 0;
-    font-size: 9px;
-    padding: 0 var(--space-2);
-    border-radius: var(--radius-sm);
+    display: none;
     letter-spacing: 0.3px;
   }
 
