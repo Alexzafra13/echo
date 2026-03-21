@@ -97,7 +97,7 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (_state, error) => {
         if (error) {
           logger.error('[AuthStore] Error loading persisted state:', error);
-          localStorage.removeItem('echo-auth-storage');
+          try { localStorage.removeItem('echo-auth-storage'); } catch { /* modo privado */ }
         }
       },
 

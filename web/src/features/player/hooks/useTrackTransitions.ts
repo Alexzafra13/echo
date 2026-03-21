@@ -184,6 +184,8 @@ export function useTrackTransitions({
         };
         audioElements.loadOnInactive(url);
         logger.debug('[Player] Gapless: preloaded next track:', nextTrack.title);
+      }).catch((e) => {
+        logger.warn('[Player] Gapless: error al precargar siguiente pista:', (e as Error).message);
       });
     }
   });

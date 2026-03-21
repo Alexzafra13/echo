@@ -53,6 +53,10 @@ vi.mock('@shared/components/ui', () => ({
 }));
 
 // Mock sub-components
+vi.mock('./ServerIdentityCard', () => ({
+  ServerIdentityCard: () => <div data-testid="server-identity">Server Identity</div>,
+}));
+
 vi.mock('./ConnectServerModal', () => ({
   ConnectServerModal: () => <div data-testid="connect-modal">Connect Modal</div>,
 }));

@@ -292,7 +292,7 @@ describe('PublicProfilePage', () => {
 
       render(<PublicProfilePage />);
 
-      expect(screen.getByText('TE')).toBeInTheDocument(); // Initials
+      expect(screen.getByText('TU')).toBeInTheDocument(); // Iniciales (Test User → T+U)
     });
 
     it('should render play count stats', () => {
@@ -777,8 +777,8 @@ describe('PublicProfilePage', () => {
 
       render(<PublicProfilePage />);
 
-      // First 2 chars of 'U' = 'U'
-      expect(screen.getByText('U')).toBeInTheDocument();
+      // Sin nombre ni username → fallback "?"
+      expect(screen.getByText('?')).toBeInTheDocument();
     });
   });
 });

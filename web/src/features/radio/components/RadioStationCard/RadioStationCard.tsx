@@ -1,4 +1,4 @@
-import { Heart, Radio, Music, ImagePlus, Trash2, Wand2 } from 'lucide-react';
+import { Heart, Music, ImagePlus, Trash2, Wand2 } from 'lucide-react';
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import type { RadioBrowserStation } from '../../types';
 import type { RadioStation } from '@features/player/types';
@@ -162,9 +162,8 @@ export const RadioStationCard = memo(function RadioStationCard({
         onClick={handleCardClick}
       >
         <div className={styles.radioCard__coverContainer}>
-          <div className={styles.radioCard__fallback}>
-            <Radio size={32} />
-          </div>
+          <img src="/images/radio/echo_radio_dark.svg" alt="" className={`${styles.radioCard__fallback} ${styles['radioCard__fallback--dark']}`} />
+          <img src="/images/radio/echo_radio_light.svg" alt="" className={`${styles.radioCard__fallback} ${styles['radioCard__fallback--light']}`} />
           {displayFavicon && (
             <img
               src={displayFavicon}

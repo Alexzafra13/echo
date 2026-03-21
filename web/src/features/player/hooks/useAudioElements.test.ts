@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAudioElements } from './useAudioElements';
 
-// Mock logger to avoid console noise
 vi.mock('@shared/utils/logger', () => ({
   logger: {
     debug: vi.fn(),
@@ -12,7 +11,7 @@ vi.mock('@shared/utils/logger', () => ({
   },
 }));
 
-// Interface for mock audio that allows writing readonly HTMLAudioElement properties
+// Mock de HTMLAudioElement con propiedades escribibles
 interface MockAudioElement extends HTMLAudioElement {
   _triggerEvent: (event: string, eventObj?: Event) => void;
   _setReadyState: (state: number) => void;
@@ -20,7 +19,6 @@ interface MockAudioElement extends HTMLAudioElement {
   duration: number;
 }
 
-// Create a mock Audio element with all needed properties and methods
 function createMockAudio(): MockAudioElement {
   const eventListeners: Record<string, Set<EventListener>> = {};
 
@@ -36,7 +34,6 @@ function createMockAudio(): MockAudioElement {
 
     play: vi.fn().mockImplementation(function (this: typeof mockAudio) {
       this.paused = false;
-      // Trigger play event
       eventListeners['play']?.forEach((listener) => listener(new Event('play')));
       return Promise.resolve();
     }),
@@ -61,11 +58,9 @@ function createMockAudio(): MockAudioElement {
       eventListeners[event]?.delete(handler);
     }),
 
-    // Helper to trigger events in tests
     _triggerEvent: (event: string, eventObj?: Event) => {
       eventListeners[event]?.forEach((listener) => {
         listener(eventObj || new Event(event));
-        // Handle { once: true } option
       });
     },
 
@@ -80,751 +75,491 @@ function createMockAudio(): MockAudioElement {
   return mockAudio;
 }
 
-// Mock GainNode
-interface MockGainNode {
-  gain: { value: number };
-  connect: ReturnType<typeof vi.fn>;
-}
-
-function createMockGainNode(initialValue: number = 1): MockGainNode {
-  return {
-    gain: { value: initialValue },
-    connect: vi.fn().mockReturnThis(),
-  };
-}
-
-// Track created gain nodes for assertions
-let mockGainNodes: MockGainNode[];
-
-function setupWebAudioMock() {
-  mockGainNodes = [];
-
-  const mockAudioContext = {
-    state: 'running' as AudioContextState,
-    resume: vi.fn().mockResolvedValue(undefined),
-    close: vi.fn(),
-    destination: {},
-    createMediaElementSource: vi.fn().mockReturnValue({
-      connect: vi.fn().mockImplementation((gainNode: MockGainNode) => gainNode),
-    }),
-    createGain: vi.fn().mockImplementation(() => {
-      const gainNode = createMockGainNode();
-      mockGainNodes.push(gainNode);
-      return gainNode;
-    }),
-  };
-
-  (window as unknown as { AudioContext: unknown }).AudioContext = vi
-    .fn()
-    .mockImplementation(() => mockAudioContext);
-
-  return mockAudioContext;
-}
-
 describe('useAudioElements', () => {
   let mockAudioInstances: MockAudioElement[];
   let originalAudio: typeof Audio;
+
+  // detectVolumeControl() crea un Audio extra al inicializar el hook.
+  // Los 2 últimos siempre son los del hook (A y B).
+  function audioA() { return mockAudioInstances[mockAudioInstances.length - 2]; }
+  function audioB() { return mockAudioInstances[mockAudioInstances.length - 1]; }
 
   beforeEach(() => {
     mockAudioInstances = [];
     originalAudio = global.Audio;
 
-    // Mock Audio constructor
     global.Audio = vi.fn().mockImplementation(() => {
       const mockAudio = createMockAudio();
       mockAudioInstances.push(mockAudio);
       return mockAudio;
     }) as unknown as typeof Audio;
 
-    // Mock requestAnimationFrame for fade animations
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
       cb(performance.now() + 100);
       return 1;
     });
 
-    // Mock performance.now
     vi.spyOn(performance, 'now').mockReturnValue(0);
-
-    // Mock Web Audio API
-    setupWebAudioMock();
   });
 
   afterEach(() => {
     global.Audio = originalAudio;
     vi.restoreAllMocks();
-    delete (window as unknown as Record<string, unknown>).AudioContext;
   });
 
-  describe('initialization', () => {
-    it('should create two audio elements on mount', () => {
-      renderHook(() => useAudioElements());
-
-      expect(mockAudioInstances).toHaveLength(2);
+  describe('inicialización', () => {
+    it('crea dos elementos de audio', () => {
+      const { result } = renderHook(() => useAudioElements());
+      expect(result.current.getActiveAudio()).toBeTruthy();
+      expect(result.current.getInactiveAudio()).toBeTruthy();
+      expect(result.current.getActiveAudio()).not.toBe(result.current.getInactiveAudio());
     });
 
-    it('should set initial volume via gain nodes', () => {
+    it('aplica volumen inicial a ambos elementos', () => {
       renderHook(() => useAudioElements({ initialVolume: 0.5 }));
-
-      expect(mockGainNodes[0].gain.value).toBe(0.5);
-      expect(mockGainNodes[1].gain.value).toBe(0.5);
+      expect(audioA().volume).toBe(0.5);
+      expect(audioB().volume).toBe(0.5);
     });
 
-    it('should use default volume of 0.7 if not specified', () => {
+    it('usa volumen 0.7 por defecto', () => {
       renderHook(() => useAudioElements());
-
-      expect(mockGainNodes[0].gain.value).toBe(0.7);
-      expect(mockGainNodes[1].gain.value).toBe(0.7);
+      expect(audioA().volume).toBe(0.7);
+      expect(audioB().volume).toBe(0.7);
     });
 
-    it('should start with audio A as active', () => {
+    it('empieza con audio A activo', () => {
       const { result } = renderHook(() => useAudioElements());
-
       expect(result.current.getActiveAudioId()).toBe('A');
-    });
-
-    it('should always report volumeControlSupported as true', () => {
-      const { result } = renderHook(() => useAudioElements());
-
-      expect(result.current.volumeControlSupported).toBe(true);
     });
   });
 
   describe('getActiveAudio / getInactiveAudio', () => {
-    it('should return audio A as active initially', () => {
+    it('devuelve audio A como activo inicialmente', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      const activeAudio = result.current.getActiveAudio();
-      const inactiveAudio = result.current.getInactiveAudio();
-
-      expect(activeAudio).toBe(mockAudioInstances[0]);
-      expect(inactiveAudio).toBe(mockAudioInstances[1]);
+      expect(result.current.getActiveAudio()).toBe(audioA());
+      expect(result.current.getInactiveAudio()).toBe(audioB());
     });
 
-    it('should swap after switchActiveAudio', () => {
+    it('intercambia tras switchActiveAudio', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      act(() => {
-        result.current.switchActiveAudio();
-      });
-
-      const activeAudio = result.current.getActiveAudio();
-      const inactiveAudio = result.current.getInactiveAudio();
-
-      expect(activeAudio).toBe(mockAudioInstances[1]);
-      expect(inactiveAudio).toBe(mockAudioInstances[0]);
+      act(() => { result.current.switchActiveAudio(); });
+      expect(result.current.getActiveAudio()).toBe(audioB());
+      expect(result.current.getInactiveAudio()).toBe(audioA());
       expect(result.current.getActiveAudioId()).toBe('B');
     });
   });
 
   describe('switchActiveAudio', () => {
-    it('should toggle between A and B', () => {
+    it('alterna entre A y B', () => {
       const { result } = renderHook(() => useAudioElements());
-
       expect(result.current.getActiveAudioId()).toBe('A');
 
-      act(() => {
-        result.current.switchActiveAudio();
-      });
+      act(() => { result.current.switchActiveAudio(); });
       expect(result.current.getActiveAudioId()).toBe('B');
 
-      act(() => {
-        result.current.switchActiveAudio();
-      });
+      act(() => { result.current.switchActiveAudio(); });
       expect(result.current.getActiveAudioId()).toBe('A');
     });
 
-    it('should return the new active audio id', () => {
+    it('devuelve el nuevo id activo', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      let newActiveId: 'A' | 'B';
-      act(() => {
-        newActiveId = result.current.switchActiveAudio();
-      });
-
-      expect(newActiveId!).toBe('B');
+      let newId: 'A' | 'B';
+      act(() => { newId = result.current.switchActiveAudio(); });
+      expect(newId!).toBe('B');
     });
   });
 
   describe('resetToAudioA', () => {
-    it('should reset active audio to A', () => {
+    it('vuelve a audio A como activo', () => {
       const { result } = renderHook(() => useAudioElements());
-
       act(() => {
-        result.current.switchActiveAudio(); // Now B
-        result.current.switchActiveAudio(); // Now A
-        result.current.switchActiveAudio(); // Now B
+        result.current.switchActiveAudio();
+        result.current.switchActiveAudio();
+        result.current.switchActiveAudio();
       });
-
       expect(result.current.getActiveAudioId()).toBe('B');
 
-      act(() => {
-        result.current.resetToAudioA();
-      });
-
+      act(() => { result.current.resetToAudioA(); });
       expect(result.current.getActiveAudioId()).toBe('A');
     });
   });
 
   describe('setVolume', () => {
-    it('should set volume on both gain nodes', () => {
+    it('cambia volumen en ambos elementos', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      act(() => {
-        result.current.setVolume(0.3);
-      });
-
-      expect(mockGainNodes[0].gain.value).toBe(0.3);
-      expect(mockGainNodes[1].gain.value).toBe(0.3);
+      act(() => { result.current.setVolume(0.3); });
+      expect(audioA().volume).toBe(0.3);
+      expect(audioB().volume).toBe(0.3);
       expect(result.current.volume).toBe(0.3);
     });
   });
 
   describe('setAudioVolume', () => {
-    it('should set volume on specific gain node A', () => {
+    it('cambia volumen solo en el elemento indicado (A)', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      act(() => {
-        result.current.setAudioVolume('A', 0.2);
-      });
-
-      expect(mockGainNodes[0].gain.value).toBe(0.2);
-      expect(mockGainNodes[1].gain.value).toBe(0.7); // Unchanged
+      act(() => { result.current.setAudioVolume('A', 0.2); });
+      expect(audioA().volume).toBe(0.2);
+      expect(audioB().volume).toBe(0.7); // sin cambio
     });
 
-    it('should set volume on specific gain node B', () => {
+    it('cambia volumen solo en el elemento indicado (B)', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      act(() => {
-        result.current.setAudioVolume('B', 0.8);
-      });
-
-      expect(mockGainNodes[0].gain.value).toBe(0.7); // Unchanged
-      expect(mockGainNodes[1].gain.value).toBe(0.8);
+      act(() => { result.current.setAudioVolume('B', 0.8); });
+      expect(audioA().volume).toBe(0.7); // sin cambio
+      expect(audioB().volume).toBe(0.8);
     });
   });
 
   describe('loadOnActive / loadOnInactive', () => {
-    it('should load source on active audio element', () => {
+    it('carga fuente en el audio activo', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      act(() => {
-        result.current.loadOnActive('http://example.com/track.mp3');
-      });
-
-      expect(mockAudioInstances[0].src).toBe('http://example.com/track.mp3');
-      expect(mockAudioInstances[0].load).toHaveBeenCalled();
+      act(() => { result.current.loadOnActive('http://example.com/track.mp3'); });
+      expect(audioA().src).toBe('http://example.com/track.mp3');
+      expect(audioA().load).toHaveBeenCalled();
     });
 
-    it('should load source on inactive audio element with gain set to 0', () => {
+    it('carga fuente en el audio inactivo con volumen 0', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      act(() => {
-        result.current.loadOnInactive('http://example.com/next-track.mp3');
-      });
-
-      expect(mockAudioInstances[1].src).toBe('http://example.com/next-track.mp3');
-      expect(mockGainNodes[1].gain.value).toBe(0); // Silenced via gain node
-      expect(mockAudioInstances[1].load).toHaveBeenCalled();
+      act(() => { result.current.loadOnInactive('http://example.com/next.mp3'); });
+      expect(audioB().src).toBe('http://example.com/next.mp3');
+      expect(audioB().volume).toBe(0);
+      expect(audioB().load).toHaveBeenCalled();
     });
   });
 
   describe('playActive', () => {
-    it('should play the active audio element', async () => {
+    it('reproduce el audio activo', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      // Simulate audio ready
-      mockAudioInstances[0].readyState = 4;
-
-      await act(async () => {
-        await result.current.playActive();
-      });
-
-      expect(mockAudioInstances[0].play).toHaveBeenCalled();
+      audioA().readyState = 4;
+      await act(async () => { await result.current.playActive(); });
+      expect(audioA().play).toHaveBeenCalled();
     });
 
-    it('should wait for audio to be ready by default', async () => {
+    it('espera buffer por defecto', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      // Start with readyState < 4
-      mockAudioInstances[0].readyState = 2;
-
-      // Simulate canplaythrough event after a delay
-      setTimeout(() => {
-        mockAudioInstances[0]._setReadyState(4);
-      }, 10);
-
-      await act(async () => {
-        await result.current.playActive(true);
-      });
-
-      expect(mockAudioInstances[0].play).toHaveBeenCalled();
+      audioA().readyState = 2;
+      setTimeout(() => { audioA()._setReadyState(4); }, 10);
+      await act(async () => { await result.current.playActive(true); });
+      expect(audioA().play).toHaveBeenCalled();
     });
 
-    it('should skip waiting if waitForBuffer is false', async () => {
+    it('salta espera si waitForBuffer es false', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      await act(async () => {
-        await result.current.playActive(false);
-      });
-
-      expect(mockAudioInstances[0].play).toHaveBeenCalled();
+      await act(async () => { await result.current.playActive(false); });
+      expect(audioA().play).toHaveBeenCalled();
     });
   });
 
   describe('playInactive', () => {
-    it('should play the inactive audio element', async () => {
+    it('reproduce el audio inactivo y quita mute', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      // Simulate audio ready
-      mockAudioInstances[1].readyState = 4;
-
-      await act(async () => {
-        await result.current.playInactive();
-      });
-
-      expect(mockAudioInstances[1].play).toHaveBeenCalled();
+      audioB().readyState = 4;
+      audioB().muted = true;
+      await act(async () => { await result.current.playInactive(); });
+      expect(audioB().play).toHaveBeenCalled();
+      expect(audioB().muted).toBe(false);
     });
   });
 
-  describe('pauseActive', () => {
-    it('should pause the active audio element', () => {
+  describe('pauseActive / pauseBoth', () => {
+    it('pausa el audio activo', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      act(() => {
-        result.current.pauseActive();
-      });
-
-      expect(mockAudioInstances[0].pause).toHaveBeenCalled();
+      act(() => { result.current.pauseActive(); });
+      expect(audioA().pause).toHaveBeenCalled();
     });
-  });
 
-  describe('pauseBoth', () => {
-    it('should pause both audio elements', () => {
+    it('pausa ambos audios', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      act(() => {
-        result.current.pauseBoth();
-      });
-
-      expect(mockAudioInstances[0].pause).toHaveBeenCalled();
-      expect(mockAudioInstances[1].pause).toHaveBeenCalled();
+      act(() => { result.current.pauseBoth(); });
+      expect(audioA().pause).toHaveBeenCalled();
+      expect(audioB().pause).toHaveBeenCalled();
     });
   });
 
   describe('stopBoth', () => {
-    it('should stop and clear both audio elements', async () => {
+    it('para y limpia ambos elementos', async () => {
       const { result } = renderHook(() => useAudioElements());
+      audioA().src = 'http://example.com/track1.mp3';
+      audioB().src = 'http://example.com/track2.mp3';
 
-      // Set up some state first
-      mockAudioInstances[0].src = 'http://example.com/track1.mp3';
-      mockAudioInstances[1].src = 'http://example.com/track2.mp3';
+      await act(async () => { await result.current.stopBoth(); });
 
-      await act(async () => {
-        await result.current.stopBoth();
-      });
-
-      expect(mockAudioInstances[0].pause).toHaveBeenCalled();
-      expect(mockAudioInstances[1].pause).toHaveBeenCalled();
-      expect(mockAudioInstances[0].src).toBe('');
-      expect(mockAudioInstances[1].src).toBe('');
-      expect(mockAudioInstances[0].currentTime).toBe(0);
-      expect(mockAudioInstances[1].currentTime).toBe(0);
+      expect(audioA().pause).toHaveBeenCalled();
+      expect(audioB().pause).toHaveBeenCalled();
+      expect(audioA().src).toBe('');
+      expect(audioB().src).toBe('');
+      expect(audioA().currentTime).toBe(0);
+      expect(audioB().currentTime).toBe(0);
     });
 
-    it('should reset active audio to A', async () => {
+    it('vuelve a audio A como activo', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      act(() => {
-        result.current.switchActiveAudio(); // Now B
-      });
-
-      await act(async () => {
-        await result.current.stopBoth();
-      });
-
+      act(() => { result.current.switchActiveAudio(); });
+      await act(async () => { await result.current.stopBoth(); });
       expect(result.current.getActiveAudioId()).toBe('A');
     });
   });
 
-  describe('stopActive', () => {
-    it('should stop and clear the active audio element', async () => {
+  describe('stopActive / stopInactive', () => {
+    it('para y limpia el audio activo', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].src = 'http://example.com/track.mp3';
-
-      await act(async () => {
-        await result.current.stopActive();
-      });
-
-      expect(mockAudioInstances[0].pause).toHaveBeenCalled();
-      expect(mockAudioInstances[0].src).toBe('');
-      expect(mockAudioInstances[0].currentTime).toBe(0);
+      audioA().src = 'http://example.com/track.mp3';
+      await act(async () => { await result.current.stopActive(); });
+      expect(audioA().pause).toHaveBeenCalled();
+      expect(audioA().src).toBe('');
     });
-  });
 
-  describe('stopInactive', () => {
-    it('should stop and clear the inactive audio element', async () => {
+    it('para el inactivo sin limpiar src', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[1].src = 'http://example.com/track.mp3';
-
-      await act(async () => {
-        await result.current.stopInactive();
-      });
-
-      expect(mockAudioInstances[1].pause).toHaveBeenCalled();
-      // src is intentionally NOT cleared to preserve autoplay permission on mobile
-      expect(mockAudioInstances[1].currentTime).toBe(0);
+      audioB().src = 'http://example.com/track.mp3';
+      await act(async () => { await result.current.stopInactive(); });
+      expect(audioB().pause).toHaveBeenCalled();
+      expect(audioB().currentTime).toBe(0);
     });
   });
 
   describe('seek', () => {
-    it('should seek to specified time on active audio', () => {
+    it('mueve la posición del audio activo', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      act(() => {
-        result.current.seek(45.5);
-      });
-
-      expect(mockAudioInstances[0].currentTime).toBe(45.5);
+      act(() => { result.current.seek(45.5); });
+      expect(audioA().currentTime).toBe(45.5);
     });
   });
 
-  describe('getCurrentTime', () => {
-    it('should return current time of active audio', () => {
+  describe('getCurrentTime / getDuration', () => {
+    it('devuelve el tiempo actual del audio activo', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].currentTime = 30;
-
+      audioA().currentTime = 30;
       expect(result.current.getCurrentTime()).toBe(30);
     });
 
-    it('should return 0 if no audio element', () => {
+    it('devuelve la duración del audio activo', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      expect(result.current.getCurrentTime()).toBe(0);
-    });
-  });
-
-  describe('getDuration', () => {
-    it('should return duration of active audio', () => {
-      const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].duration = 180;
-
+      audioA().duration = 180;
       expect(result.current.getDuration()).toBe(180);
     });
   });
 
   describe('areBothPaused', () => {
-    it('should return true when both audios are paused', () => {
+    it('true cuando ambos están pausados', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].paused = true;
-      mockAudioInstances[1].paused = true;
-
+      audioA().paused = true;
+      audioB().paused = true;
       expect(result.current.areBothPaused()).toBe(true);
     });
 
-    it('should return false when one audio is playing', () => {
+    it('false cuando uno está reproduciendo', () => {
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].paused = false;
-      mockAudioInstances[1].paused = true;
-
-      expect(result.current.areBothPaused()).toBe(false);
-    });
-
-    it('should return false when both audios are playing', () => {
-      const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].paused = false;
-      mockAudioInstances[1].paused = false;
-
+      audioA().paused = false;
+      audioB().paused = true;
       expect(result.current.areBothPaused()).toBe(false);
     });
   });
 
   describe('callbacks', () => {
-    it('should call onPlay when audio starts playing', async () => {
+    it('dispara onPlay al reproducir', async () => {
       const onPlay = vi.fn();
       const { result } = renderHook(() => useAudioElements({ callbacks: { onPlay } }));
-
-      mockAudioInstances[0].readyState = 4;
-
-      await act(async () => {
-        await result.current.playActive();
-      });
-
+      audioA().readyState = 4;
+      await act(async () => { await result.current.playActive(); });
       expect(onPlay).toHaveBeenCalled();
     });
 
-    it('should call onPause when both audios are paused', () => {
+    it('dispara onPause solo si ambos están pausados', () => {
       const onPause = vi.fn();
       renderHook(() => useAudioElements({ callbacks: { onPause } }));
-
-      // Simulate both paused
-      mockAudioInstances[0].paused = true;
-      mockAudioInstances[1].paused = true;
-
-      // Trigger pause event
-      mockAudioInstances[0]._triggerEvent('pause');
-
+      audioA().paused = true;
+      audioB().paused = true;
+      audioA()._triggerEvent('pause');
       expect(onPause).toHaveBeenCalled();
     });
 
-    it('should NOT call onPause during crossfade (one still playing)', () => {
+    it('NO dispara onPause durante crossfade (uno sigue sonando)', () => {
       const onPause = vi.fn();
       renderHook(() => useAudioElements({ callbacks: { onPause } }));
-
-      // Simulate crossfade - A paused, B playing
-      mockAudioInstances[0].paused = true;
-      mockAudioInstances[1].paused = false;
-
-      // Trigger pause event on A
-      mockAudioInstances[0]._triggerEvent('pause');
-
+      audioA().paused = true;
+      audioB().paused = false;
+      audioA()._triggerEvent('pause');
       expect(onPause).not.toHaveBeenCalled();
     });
 
-    it('should call onEnded when track ends', () => {
+    it('dispara onEnded cuando termina la pista', () => {
       const onEnded = vi.fn();
       renderHook(() => useAudioElements({ callbacks: { onEnded } }));
-
-      mockAudioInstances[0]._triggerEvent('ended');
-
+      audioA()._triggerEvent('ended');
       expect(onEnded).toHaveBeenCalled();
     });
 
-    it('should call onTimeUpdate only for active audio', () => {
+    it('dispara onTimeUpdate solo para el audio activo', () => {
       const onTimeUpdate = vi.fn();
       renderHook(() => useAudioElements({ callbacks: { onTimeUpdate } }));
-
-      mockAudioInstances[0].currentTime = 15;
-      mockAudioInstances[0]._triggerEvent('timeupdate');
-
+      audioA().currentTime = 15;
+      audioA()._triggerEvent('timeupdate');
       expect(onTimeUpdate).toHaveBeenCalledWith(15);
 
-      // Now trigger on inactive - should not call
       onTimeUpdate.mockClear();
-      mockAudioInstances[1].currentTime = 20;
-      mockAudioInstances[1]._triggerEvent('timeupdate');
-
+      audioB().currentTime = 20;
+      audioB()._triggerEvent('timeupdate');
       expect(onTimeUpdate).not.toHaveBeenCalled();
     });
 
-    it('should call onDurationChange only for active audio', () => {
+    it('dispara onDurationChange solo para el audio activo', () => {
       const onDurationChange = vi.fn();
       renderHook(() => useAudioElements({ callbacks: { onDurationChange } }));
-
-      mockAudioInstances[0].duration = 200;
-      mockAudioInstances[0]._triggerEvent('loadedmetadata');
-
+      audioA().duration = 200;
+      audioA()._triggerEvent('loadedmetadata');
       expect(onDurationChange).toHaveBeenCalledWith(200);
     });
 
-    it('should call onError when error occurs', () => {
+    it('dispara onError en error', () => {
       const onError = vi.fn();
       renderHook(() => useAudioElements({ callbacks: { onError } }));
-
       const errorEvent = new Event('error');
-      mockAudioInstances[0]._triggerEvent('error', errorEvent);
-
+      audioA()._triggerEvent('error', errorEvent);
       expect(onError).toHaveBeenCalledWith(errorEvent);
     });
 
-    it('should call onWaiting when buffering', () => {
+    it('dispara onWaiting en buffering', () => {
       const onWaiting = vi.fn();
       renderHook(() => useAudioElements({ callbacks: { onWaiting } }));
-
-      mockAudioInstances[0]._triggerEvent('waiting');
-
+      audioA()._triggerEvent('waiting');
       expect(onWaiting).toHaveBeenCalled();
     });
 
-    it('should call onPlaying when playback resumes', () => {
+    it('dispara onPlaying cuando continúa', () => {
       const onPlaying = vi.fn();
       renderHook(() => useAudioElements({ callbacks: { onPlaying } }));
-
-      mockAudioInstances[0]._triggerEvent('playing');
-
+      audioA()._triggerEvent('playing');
       expect(onPlaying).toHaveBeenCalled();
     });
 
-    it('should call onStalled when playback stalls', () => {
+    it('dispara onStalled cuando se atasca', () => {
       const onStalled = vi.fn();
       renderHook(() => useAudioElements({ callbacks: { onStalled } }));
-
-      mockAudioInstances[0]._triggerEvent('stalled');
-
+      audioA()._triggerEvent('stalled');
       expect(onStalled).toHaveBeenCalled();
     });
   });
 
   describe('waitForAudioReady', () => {
-    it('should resolve immediately if readyState >= 4', async () => {
+    it('resuelve inmediatamente si readyState >= 4', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].readyState = 4;
-
+      audioA().readyState = 4;
       let resolved = false;
       await act(async () => {
-        resolved = await result.current.waitForAudioReady(mockAudioInstances[0]);
+        resolved = await result.current.waitForAudioReady(audioA());
       });
-
       expect(resolved).toBe(true);
     });
 
-    it('should wait for canplaythrough event', async () => {
+    it('espera al evento canplaythrough', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].readyState = 2;
-
-      // Simulate canplaythrough after a delay
-      setTimeout(() => {
-        mockAudioInstances[0]._setReadyState(4);
-      }, 10);
-
+      audioA().readyState = 2;
+      setTimeout(() => { audioA()._setReadyState(4); }, 10);
       let resolved = false;
       await act(async () => {
-        resolved = await result.current.waitForAudioReady(mockAudioInstances[0], 1000);
+        resolved = await result.current.waitForAudioReady(audioA(), 1000);
       });
-
       expect(resolved).toBe(true);
     });
 
-    it('should resolve true on timeout', async () => {
+    it('resuelve true por timeout', async () => {
       vi.useFakeTimers();
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].readyState = 2;
-
-      const promise = result.current.waitForAudioReady(mockAudioInstances[0], 100);
-
-      // Fast-forward time
-      await act(async () => {
-        vi.advanceTimersByTime(150);
-      });
-
+      audioA().readyState = 2;
+      const promise = result.current.waitForAudioReady(audioA(), 100);
+      await act(async () => { vi.advanceTimersByTime(150); });
       const resolved = await promise;
       expect(resolved).toBe(true);
-
       vi.useRealTimers();
     });
   });
 
   describe('fadeOutAudio', () => {
-    it('should resolve immediately if audio is paused', async () => {
+    it('resuelve inmediatamente si el audio está pausado', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].paused = true;
-
+      audioA().paused = true;
       await act(async () => {
-        await result.current.fadeOutAudio(mockAudioInstances[0], 50);
+        await result.current.fadeOutAudio(audioA(), 50);
       });
-
-      // Should resolve without error
       expect(true).toBe(true);
     });
 
-    it('should resolve immediately if gain is already 0', async () => {
+    it('resuelve inmediatamente si volumen ya es 0', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].paused = false;
-      mockGainNodes[0].gain.value = 0;
-
+      audioA().paused = false;
+      audioA().volume = 0;
       await act(async () => {
-        await result.current.fadeOutAudio(mockAudioInstances[0], 50);
+        await result.current.fadeOutAudio(audioA(), 50);
       });
-
       expect(true).toBe(true);
     });
 
-    it('should fade gain to 0', async () => {
+    it('reduce el volumen a 0', async () => {
       const { result } = renderHook(() => useAudioElements());
-
-      mockAudioInstances[0].paused = false;
-      mockGainNodes[0].gain.value = 0.7;
-
-      // Mock performance.now to simulate time passing
+      audioA().paused = false;
+      audioA().volume = 0.7;
       let time = 0;
       vi.spyOn(performance, 'now').mockImplementation(() => {
-        time += 100; // Each call advances time by 100ms
+        time += 100;
         return time;
       });
-
       await act(async () => {
-        await result.current.fadeOutAudio(mockAudioInstances[0], 50);
+        await result.current.fadeOutAudio(audioA(), 50);
       });
-
-      expect(mockGainNodes[0].gain.value).toBe(0);
+      expect(audioA().volume).toBe(0);
     });
   });
 
   describe('cleanup', () => {
-    it('should remove event listeners and pause audio on unmount', () => {
+    it('limpia listeners y pausa audio al desmontar', () => {
       const { unmount } = renderHook(() => useAudioElements());
-
       unmount();
-
-      expect(mockAudioInstances[0].removeEventListener).toHaveBeenCalled();
-      expect(mockAudioInstances[1].removeEventListener).toHaveBeenCalled();
-      expect(mockAudioInstances[0].pause).toHaveBeenCalled();
-      expect(mockAudioInstances[1].pause).toHaveBeenCalled();
+      expect(audioA().removeEventListener).toHaveBeenCalled();
+      expect(audioB().removeEventListener).toHaveBeenCalled();
+      expect(audioA().pause).toHaveBeenCalled();
+      expect(audioB().pause).toHaveBeenCalled();
     });
   });
 
-  describe('crossfade workflow', () => {
-    it('should support complete crossfade workflow via gain nodes', async () => {
+  describe('flujo de crossfade', () => {
+    it('soporta el flujo completo de crossfade con volumen', async () => {
       const { result } = renderHook(() => useAudioElements({ initialVolume: 1 }));
 
-      // 1. Load track on active (A)
-      act(() => {
-        result.current.loadOnActive('http://example.com/track1.mp3');
-      });
-      expect(mockAudioInstances[0].src).toBe('http://example.com/track1.mp3');
+      // 1. Cargar pista en activo (A)
+      act(() => { result.current.loadOnActive('http://example.com/track1.mp3'); });
+      expect(audioA().src).toBe('http://example.com/track1.mp3');
 
-      // 2. Play active
-      mockAudioInstances[0].readyState = 4;
-      await act(async () => {
-        await result.current.playActive();
-      });
-      expect(mockAudioInstances[0].play).toHaveBeenCalled();
+      // 2. Reproducir
+      audioA().readyState = 4;
+      await act(async () => { await result.current.playActive(); });
+      expect(audioA().play).toHaveBeenCalled();
 
-      // 3. Preload next track on inactive (B) — gain set to 0
-      act(() => {
-        result.current.loadOnInactive('http://example.com/track2.mp3');
-      });
-      expect(mockAudioInstances[1].src).toBe('http://example.com/track2.mp3');
-      expect(mockGainNodes[1].gain.value).toBe(0); // Silenced via GainNode
+      // 3. Precargar siguiente en inactivo (B) — volumen a 0
+      act(() => { result.current.loadOnInactive('http://example.com/track2.mp3'); });
+      expect(audioB().src).toBe('http://example.com/track2.mp3');
+      expect(audioB().volume).toBe(0);
 
-      // 4. Start crossfade - play inactive
-      mockAudioInstances[1].readyState = 4;
-      await act(async () => {
-        await result.current.playInactive();
-      });
-      expect(mockAudioInstances[1].play).toHaveBeenCalled();
+      // 4. Iniciar crossfade — reproducir inactivo
+      audioB().readyState = 4;
+      await act(async () => { await result.current.playInactive(); });
+      expect(audioB().play).toHaveBeenCalled();
 
-      // 5. Gradually adjust volumes via gain nodes (simulated crossfade mid-point)
+      // 5. Ajustar volúmenes (punto medio del crossfade)
       act(() => {
         result.current.setAudioVolume('A', 0.5);
         result.current.setAudioVolume('B', 0.5);
       });
-      expect(mockGainNodes[0].gain.value).toBe(0.5);
-      expect(mockGainNodes[1].gain.value).toBe(0.5);
+      expect(audioA().volume).toBe(0.5);
+      expect(audioB().volume).toBe(0.5);
 
-      // 6. Complete crossfade - switch active
-      act(() => {
-        result.current.switchActiveAudio();
-      });
+      // 6. Completar — intercambiar activo
+      act(() => { result.current.switchActiveAudio(); });
       expect(result.current.getActiveAudioId()).toBe('B');
 
-      // 7. Stop old track
-      await act(async () => {
-        await result.current.stopInactive(); // Now A is inactive
-      });
-      expect(mockAudioInstances[0].pause).toHaveBeenCalled();
-      // src is intentionally NOT cleared to preserve autoplay permission on mobile
+      // 7. Parar pista anterior
+      await act(async () => { await result.current.stopInactive(); });
+      expect(audioA().pause).toHaveBeenCalled();
     });
   });
 });

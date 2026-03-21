@@ -6,6 +6,7 @@ import { ArrowRight, User, Lock, AlertCircle } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { useAuth } from '@shared/hooks';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
+import { safeLocalStorage } from '@shared/utils/safeLocalStorage';
 import styles from './LoginPage.module.css';
 
 /**
@@ -33,9 +34,9 @@ export default function LoginPage() {
   const backgroundImage = useMemo(() => {
     let queue: string[] = [];
     try {
-      queue = JSON.parse(localStorage.getItem('loginBgQueue') || '[]');
+      queue = JSON.parse(safeLocalStorage.getItem('loginBgQueue') || '[]');
     } catch {
-      localStorage.removeItem('loginBgQueue');
+      safeLocalStorage.removeItem('loginBgQueue');
     }
 
     // If queue is empty, reshuffle all backgrounds
@@ -49,7 +50,7 @@ export default function LoginPage() {
 
     // Take the next background from the queue
     const selected = queue.shift()!;
-    localStorage.setItem('loginBgQueue', JSON.stringify(queue));
+    safeLocalStorage.setItem('loginBgQueue', JSON.stringify(queue));
 
     return selected;
   }, []);

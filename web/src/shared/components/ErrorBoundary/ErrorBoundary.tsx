@@ -50,14 +50,16 @@ export class ErrorBoundary extends Component<Props, State> {
     // Auto-reload on stale asset errors (happens after redeploy when
     // the browser still has the old HTML cached with old asset hashes)
     if (isChunkLoadError(error)) {
-      const lastReload = sessionStorage.getItem(RELOAD_KEY);
-      const now = Date.now();
-      // Only auto-reload once per minute to avoid infinite reload loops
-      if (!lastReload || now - Number(lastReload) > 60_000) {
-        sessionStorage.setItem(RELOAD_KEY, String(now));
-        window.location.reload();
-        return;
-      }
+      try {
+        const lastReload = sessionStorage.getItem(RELOAD_KEY);
+        const now = Date.now();
+        // Auto-reload una vez por minuto para evitar loops infinitos
+        if (!lastReload || now - Number(lastReload) > 60_000) {
+          sessionStorage.setItem(RELOAD_KEY, String(now));
+          window.location.reload();
+          return;
+        }
+      } catch { /* sessionStorage no disponible (modo privado) */ }
     }
 
     this.setState({

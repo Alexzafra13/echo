@@ -1,163 +1,24 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import {
-  Settings,
-  Palette,
-  Globe,
-  Check,
-  Music,
-  Home,
-  ChevronUp,
-  ChevronDown,
-  GripVertical,
-  Sun,
-  Moon,
-  Monitor,
-  Database,
-  Bell,
-} from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
-import { Switch } from '@shared/components/ui';
-import { useTheme, useDocumentTitle } from '@shared/hooks';
-import { useHomePreferences, useUpdateHomePreferences } from '../../hooks';
-import { useLibraryAnalysisSettings } from '../../hooks/useLibraryAnalysisSettings';
-import { usePlayer } from '@features/player';
-import {
-  useNotificationPreferences,
-  useUpdatePreference,
-} from '@features/notifications';
-import type { NotificationType } from '@features/notifications';
-import type { HomeSectionConfig, HomeSectionId } from '../../services';
+import { useDocumentTitle } from '@shared/hooks';
+import { HomePersonalizationCard } from './HomePersonalizationCard';
+import { AppearanceCard } from './AppearanceCard';
+import { LibraryAnalysisCard } from './LibraryAnalysisCard';
+import { PlaybackCard } from './PlaybackCard';
+import { NotificationsCard } from './NotificationsCard';
 import styles from './SettingsPage.module.css';
 
-// Section labels for display
-const SECTION_LABELS: Record<HomeSectionId, string> = {
-  'recent-albums': 'Álbumes Añadidos',
-  'artist-mix': 'Mix por Artista',
-  'genre-mix': 'Mix por Género',
-  'recently-played': 'Escuchados Recientes',
-  'my-playlists': 'Mis Playlists',
-  'top-played': 'Más Escuchados',
-  'favorite-radios': 'Radios Favoritas',
-  'surprise-me': 'Sorpréndeme',
-  'shared-albums': 'Bibliotecas Compartidas',
-};
-
-/**
- * SettingsPage Component
- * User settings page with home customization, appearance, audio and playback options
- */
 export default function SettingsPage() {
   useDocumentTitle('Ajustes');
-  const { themePreference, setThemePreference, theme } = useTheme();
-  const { data: homePreferences, isLoading: isLoadingHome } = useHomePreferences();
-  const {
-    mutate: updateHome,
-    isPending: isSavingHome,
-    isSuccess: isSuccessHome,
-  } = useUpdateHomePreferences();
-  const {
-    crossfade,
-    setCrossfadeEnabled,
-    autoplay,
-    setAutoplayEnabled,
-    volumeControlSupported,
-  } = usePlayer();
-
-  // Library analysis settings (LUFS and DJ)
-  const {
-    lufsEnabled,
-    djEnabled,
-    setLufsEnabled,
-    setDjEnabled,
-    isLoading: isLoadingAnalysis,
-  } = useLibraryAnalysisSettings();
-
-  // Notification preferences
-  const { data: notifPreferences, isLoading: isLoadingNotifPrefs } = useNotificationPreferences();
-  const updatePreference = useUpdatePreference();
-
-  // Local state for home sections
-  const [homeSections, setHomeSections] = useState<HomeSectionConfig[]>([]);
-
-  // State for showing success message temporarily
-  const [showSuccess, setShowSuccess] = useState(false);
-  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Show success message temporarily when save succeeds
-  useEffect(() => {
-    if (isSuccessHome) {
-      setShowSuccess(true);
-      // Clear any existing timeout
-      if (successTimeoutRef.current) {
-        clearTimeout(successTimeoutRef.current);
-      }
-      // Hide after 3 seconds
-      successTimeoutRef.current = setTimeout(() => {
-        setShowSuccess(false);
-      }, 3000);
-    }
-    return () => {
-      if (successTimeoutRef.current) {
-        clearTimeout(successTimeoutRef.current);
-      }
-    };
-  }, [isSuccessHome]);
-
-  // Sync home sections with server data
-  useEffect(() => {
-    if (homePreferences?.homeSections) {
-      // Sort by order for display
-      const sorted = [...homePreferences.homeSections].sort((a, b) => a.order - b.order);
-      setHomeSections(sorted);
-    }
-  }, [homePreferences]);
-
-  // Home section handlers
-  const toggleSection = useCallback((id: HomeSectionId) => {
-    setHomeSections((prev) =>
-      prev.map((section) =>
-        section.id === id ? { ...section, enabled: !section.enabled } : section
-      )
-    );
-  }, []);
-
-  const moveSection = useCallback((id: HomeSectionId, direction: 'up' | 'down') => {
-    setHomeSections((prev) => {
-      const index = prev.findIndex((s) => s.id === id);
-      if (index === -1) return prev;
-      if (direction === 'up' && index === 0) return prev;
-      if (direction === 'down' && index === prev.length - 1) return prev;
-
-      const newIndex = direction === 'up' ? index - 1 : index + 1;
-      const newSections = [...prev];
-      // Swap positions
-      [newSections[index], newSections[newIndex]] = [newSections[newIndex], newSections[index]];
-      // Update order values
-      return newSections.map((section, i) => ({ ...section, order: i }));
-    });
-  }, []);
-
-  const handleSaveHome = useCallback(() => {
-    updateHome({ homeSections });
-  }, [homeSections, updateHome]);
-
-  // Check if home sections have changed
-  const hasHomeChanges =
-    homePreferences?.homeSections &&
-    JSON.stringify(homeSections) !==
-      JSON.stringify([...homePreferences.homeSections].sort((a, b) => a.order - b.order));
 
   return (
     <div className={styles.settingsPage}>
       <Sidebar />
-
       <main className={styles.settingsPage__main}>
         <Header showBackButton disableSearch />
-
         <div className={styles.settingsPage__content}>
           <div className={styles.settingsPage__contentInner}>
-            {/* Header */}
             <div className={styles.settingsPage__header}>
               <div className={styles.settingsPage__headerIcon}>
                 <Settings size={28} />
@@ -168,369 +29,30 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {isLoadingHome ? (
-              <div className={styles.settingsPage__loading}>Cargando...</div>
-            ) : (
-              <>
-                {/* Home Page Personalization Card */}
-                <div className={styles.settingsPage__card}>
-                  <div className={styles.settingsPage__cardHeader}>
-                    <h2>
-                      <Home size={20} />
-                      Personalizar Inicio
-                    </h2>
-                  </div>
+            <HomePersonalizationCard />
+            <AppearanceCard />
 
-                  <div className={styles.settingsPage__cardBody}>
-                    <p className={styles.settingsPage__cardDescription}>
-                      Elige qué secciones mostrar en tu página de inicio y en qué orden. El Hero
-                      siempre se muestra primero.
+            {/* Idioma — placeholder para futura implementación */}
+            <div className={styles.settingsPage__card}>
+              <div className={styles.settingsPage__cardHeader}>
+                <h2><span style={{ display: 'inline-flex' }}>🌐</span> Idioma</h2>
+              </div>
+              <div className={styles.settingsPage__cardBody}>
+                <div className={styles.settingsPage__toggleItem}>
+                  <div className={styles.settingsPage__toggleInfo}>
+                    <span className={styles.settingsPage__toggleLabel}>Idioma de la interfaz</span>
+                    <p className={styles.settingsPage__toggleDescription}>
+                      Selecciona el idioma en el que deseas ver la aplicación
                     </p>
-
-                    <div className={styles.settingsPage__sectionsList}>
-                      {homeSections.map((section, index) => (
-                        <div key={section.id} className={styles.settingsPage__sectionItem}>
-                          <div className={styles.settingsPage__sectionHandle}>
-                            <GripVertical size={16} />
-                          </div>
-
-                          <div className={styles.settingsPage__sectionInfo}>
-                            <span className={styles.settingsPage__sectionLabel}>
-                              {SECTION_LABELS[section.id] || section.id}
-                            </span>
-                          </div>
-
-                          <div className={styles.settingsPage__sectionActions}>
-                            <button
-                              type="button"
-                              className={styles.settingsPage__moveButton}
-                              onClick={() => moveSection(section.id, 'up')}
-                              disabled={index === 0}
-                              aria-label="Mover arriba"
-                            >
-                              <ChevronUp size={18} />
-                            </button>
-                            <button
-                              type="button"
-                              className={styles.settingsPage__moveButton}
-                              onClick={() => moveSection(section.id, 'down')}
-                              disabled={index === homeSections.length - 1}
-                              aria-label="Mover abajo"
-                            >
-                              <ChevronDown size={18} />
-                            </button>
-                            <Switch
-                              checked={section.enabled}
-                              onChange={() => toggleSection(section.id)}
-                              aria-label={`Activar ${SECTION_LABELS[section.id] || section.id}`}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Save button and success message */}
-                    {hasHomeChanges && (
-                      <button
-                        className={styles.settingsPage__saveButton}
-                        onClick={handleSaveHome}
-                        disabled={isSavingHome}
-                      >
-                        {isSavingHome ? 'Guardando...' : 'Guardar cambios'}
-                      </button>
-                    )}
-
-                    {showSuccess && !hasHomeChanges && (
-                      <div className={styles.settingsPage__success}>
-                        <Check size={18} />
-                        Configuración guardada
-                      </div>
-                    )}
                   </div>
+                  <span style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>Español</span>
                 </div>
+              </div>
+            </div>
 
-                {/* Appearance Card */}
-                <div className={styles.settingsPage__card}>
-                  <div className={styles.settingsPage__cardHeader}>
-                    <h2>
-                      <Palette size={20} />
-                      Apariencia
-                    </h2>
-                  </div>
-
-                  <div className={styles.settingsPage__cardBody}>
-                    <div className={styles.settingsPage__toggleItem}>
-                      <div className={styles.settingsPage__toggleInfo}>
-                        <span className={styles.settingsPage__toggleLabel}>Tema</span>
-                        <p className={styles.settingsPage__toggleDescription}>
-                          Elige cómo quieres que se vea la aplicación
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Theme selector buttons */}
-                    <div className={styles.settingsPage__themeSelector}>
-                      <button
-                        type="button"
-                        className={`${styles.settingsPage__themeOption} ${themePreference === 'auto' ? styles['settingsPage__themeOption--active'] : ''}`}
-                        onClick={() => setThemePreference('auto')}
-                      >
-                        <Monitor size={20} />
-                        <span className={styles.settingsPage__themeOptionLabel}>Automático</span>
-                        <span className={styles.settingsPage__themeOptionDesc}>
-                          Según tu dispositivo
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        className={`${styles.settingsPage__themeOption} ${themePreference === 'light' ? styles['settingsPage__themeOption--active'] : ''}`}
-                        onClick={() => setThemePreference('light')}
-                      >
-                        <Sun size={20} />
-                        <span className={styles.settingsPage__themeOptionLabel}>Claro</span>
-                        <span className={styles.settingsPage__themeOptionDesc}>
-                          Tema claro siempre
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        className={`${styles.settingsPage__themeOption} ${themePreference === 'dark' ? styles['settingsPage__themeOption--active'] : ''}`}
-                        onClick={() => setThemePreference('dark')}
-                      >
-                        <Moon size={20} />
-                        <span className={styles.settingsPage__themeOptionLabel}>Oscuro</span>
-                        <span className={styles.settingsPage__themeOptionDesc}>
-                          Tema oscuro siempre
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* Current theme indicator when in auto mode */}
-                    {themePreference === 'auto' && (
-                      <p className={styles.settingsPage__themeNote}>
-                        Actualmente usando tema {theme === 'dark' ? 'oscuro' : 'claro'} según tu
-                        dispositivo
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Language Card - Placeholder for future */}
-                <div className={styles.settingsPage__card}>
-                  <div className={styles.settingsPage__cardHeader}>
-                    <h2>
-                      <Globe size={20} />
-                      Idioma
-                    </h2>
-                  </div>
-
-                  <div className={styles.settingsPage__cardBody}>
-                    <div className={styles.settingsPage__toggleItem}>
-                      <div className={styles.settingsPage__toggleInfo}>
-                        <span className={styles.settingsPage__toggleLabel}>
-                          Idioma de la interfaz
-                        </span>
-                        <p className={styles.settingsPage__toggleDescription}>
-                          Selecciona el idioma en el que deseas ver la aplicación
-                        </p>
-                      </div>
-                      <span style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
-                        Español
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Library Analysis Card */}
-                <div className={styles.settingsPage__card}>
-                  <div className={styles.settingsPage__cardHeader}>
-                    <h2>
-                      <Database size={20} />
-                      Análisis de Librería
-                    </h2>
-                  </div>
-
-                  <div className={styles.settingsPage__cardBody}>
-                    {/* Info note */}
-                    <div className={styles.settingsPage__infoNote}>
-                      <Music size={16} />
-                      <span>
-                        Estos análisis se ejecutan automáticamente después de cada escaneo de
-                        librería. Desactívalos si prefieres ahorrar tiempo de procesamiento.
-                      </span>
-                    </div>
-
-                    {/* LUFS Analysis Toggle */}
-                    <div className={styles.settingsPage__toggleItem}>
-                      <div className={styles.settingsPage__toggleInfo}>
-                        <span className={styles.settingsPage__toggleLabel}>Análisis LUFS</span>
-                        <p className={styles.settingsPage__toggleDescription}>
-                          Calcula los niveles de volumen (ReplayGain) para normalización de audio
-                        </p>
-                      </div>
-                      <Switch
-                        checked={lufsEnabled}
-                        onChange={setLufsEnabled}
-                        disabled={isLoadingAnalysis}
-                        aria-label="Análisis LUFS"
-                      />
-                    </div>
-
-                    {/* DJ Analysis Toggle */}
-                    <div className={styles.settingsPage__toggleItem}>
-                      <div className={styles.settingsPage__toggleInfo}>
-                        <span className={styles.settingsPage__toggleLabel}>Análisis DJ</span>
-                        <p className={styles.settingsPage__toggleDescription}>
-                          Detecta BPM, tonalidad (Key) y energía para sugerencias de mezcla armónica
-                        </p>
-                      </div>
-                      <Switch
-                        checked={djEnabled}
-                        onChange={setDjEnabled}
-                        disabled={isLoadingAnalysis}
-                        aria-label="Análisis DJ"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Playback Card - Crossfade settings */}
-                <div className={styles.settingsPage__card}>
-                  <div className={styles.settingsPage__cardHeader}>
-                    <h2>
-                      <Music size={20} />
-                      Reproducción
-                    </h2>
-                  </div>
-
-                  <div className={styles.settingsPage__cardBody}>
-                    {/* Crossfade — only available on platforms with volume control.
-                        On iOS Safari, audio.volume is read-only (hardware-controlled),
-                        making volume-based crossfade impossible. Gapless preloading
-                        provides seamless transitions instead. */}
-                    {volumeControlSupported ? (
-                      <>
-                        {/* Crossfade Toggle */}
-                        <div className={styles.settingsPage__toggleItem}>
-                          <div className={styles.settingsPage__toggleInfo}>
-                            <span className={styles.settingsPage__toggleLabel}>
-                              Fundido entre canciones
-                            </span>
-                            <p className={styles.settingsPage__toggleDescription}>
-                              Transición suave entre canciones con fundido de audio (crossfade)
-                            </p>
-                          </div>
-                          <Switch
-                            checked={crossfade.enabled}
-                            onChange={setCrossfadeEnabled}
-                            aria-label="Fundido entre canciones"
-                          />
-                        </div>
-
-                        {/* Crossfade description when enabled */}
-                        {crossfade.enabled && (
-                          <div className={styles.settingsPage__toggleItem}>
-                            <div className={styles.settingsPage__toggleInfo}>
-                              <p className={styles.settingsPage__toggleDescription}>
-                                Transición automática de 2 segundos entre canciones
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className={styles.settingsPage__toggleItem}>
-                        <div className={styles.settingsPage__toggleInfo}>
-                          <span className={styles.settingsPage__toggleLabel}>
-                            Fundido entre canciones
-                          </span>
-                          <p className={styles.settingsPage__toggleDescription}>
-                            No disponible en este dispositivo. iOS no permite controlar el volumen
-                            desde la web, lo que impide realizar fundidos de audio. Se utiliza
-                            transición sin cortes (gapless) automáticamente.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Autoplay Toggle */}
-                    <div className={styles.settingsPage__toggleItem}>
-                      <div className={styles.settingsPage__toggleInfo}>
-                        <span className={styles.settingsPage__toggleLabel}>
-                          Reproducción automática
-                        </span>
-                        <p className={styles.settingsPage__toggleDescription}>
-                          Cuando termina un álbum o playlist, continúa automáticamente con artistas
-                          similares
-                        </p>
-                      </div>
-                      <Switch
-                        checked={autoplay.enabled}
-                        onChange={setAutoplayEnabled}
-                        aria-label="Reproducción automática"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Notifications Preferences Card */}
-                <div className={styles.settingsPage__card}>
-                  <div className={styles.settingsPage__cardHeader}>
-                    <h2>
-                      <Bell size={20} />
-                      Notificaciones
-                    </h2>
-                  </div>
-
-                  <div className={styles.settingsPage__cardBody}>
-                    {isLoadingNotifPrefs ? (
-                      <div className={styles.settingsPage__toggleItem}>
-                        <div className={styles.settingsPage__toggleInfo}>
-                          <p className={styles.settingsPage__toggleDescription}>
-                            Cargando preferencias...
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      (
-                        [
-                          { type: 'friend_request_received' as NotificationType, label: 'Solicitudes de amistad', desc: 'Cuando alguien te envía una solicitud de amistad' },
-                          { type: 'friend_request_accepted' as NotificationType, label: 'Amistad aceptada', desc: 'Cuando aceptan tu solicitud de amistad' },
-                          { type: 'scan_completed' as NotificationType, label: 'Escaneo completado', desc: 'Cuando finaliza un escaneo de la biblioteca' },
-                          { type: 'enrichment_completed' as NotificationType, label: 'Enriquecimiento completado', desc: 'Cuando finaliza el enriquecimiento de metadatos' },
-                          { type: 'new_content' as NotificationType, label: 'Nuevo contenido', desc: 'Cuando se añade contenido nuevo a la biblioteca' },
-                        ] as const
-                      ).map((item) => {
-                        const pref = notifPreferences?.find((p) => p.type === item.type);
-                        const isEnabled = pref ? pref.enabled : true; // Default enabled
-
-                        return (
-                          <div key={item.type} className={styles.settingsPage__toggleItem}>
-                            <div className={styles.settingsPage__toggleInfo}>
-                              <span className={styles.settingsPage__toggleLabel}>
-                                {item.label}
-                              </span>
-                              <p className={styles.settingsPage__toggleDescription}>
-                                {item.desc}
-                              </p>
-                            </div>
-                            <Switch
-                              checked={isEnabled}
-                              onChange={(checked) =>
-                                updatePreference.mutate({ type: item.type, enabled: checked })
-                              }
-                              aria-label={item.label}
-                            />
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
+            <LibraryAnalysisCard />
+            <PlaybackCard />
+            <NotificationsCard />
           </div>
         </div>
       </main>
