@@ -89,7 +89,8 @@ export function PlaylistDetailPage() {
     if (storedPlaylist) {
       try {
         const parsedData = JSON.parse(storedPlaylist);
-        const validatedPlaylist = AutoPlaylistSchema.parse(parsedData) as AutoPlaylist;
+        // passthrough() devuelve tipo más amplio que AutoPlaylist, doble cast necesario
+        const validatedPlaylist = AutoPlaylistSchema.parse(parsedData) as unknown as AutoPlaylist;
         setPlaylist(validatedPlaylist);
       } catch (error) {
         logger.error('Failed to parse or validate playlist from sessionStorage', error);

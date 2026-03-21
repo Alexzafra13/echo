@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useModal, useNotification } from '@shared/hooks';
 import { Server, Link2, Plus, Shield, Activity } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
-import { apiClient } from '@shared/services/api';
 import { ServerIdentityCard } from './ServerIdentityCard';
 import {
   useConnectedServers,

@@ -137,7 +137,8 @@
       "Read(//c/Users/alex/Desktop/ec/echo/web/**)",
       "Bash(done)",
       "Bash(for file:*)",
-      "Bash(node -e \"try { require\\(''sharp''\\); console.log\\(''sharp in api''\\); } catch { console.log\\(''no''\\); }\")"
+      "Bash(node -e \"try { require\\(''sharp''\\); console.log\\(''sharp in api''\\); } catch { console.log\\(''no''\\); }\")",
+      "Bash(grep -r \"query\\\\|Query\\\\|raw\\\\|Raw\\\\|sql\\\\`\\\\|SQL\" /c/Users/alex/Desktop/ec/echo/api/src --include=\"*.ts\")"
     ]
   }
 }
