@@ -64,7 +64,7 @@ export function useTrackTransitions({
    */
   const playNextWithPreload = useLatestCallback(async () => {
     // Web Audio API enables crossfade on all platforms (including iOS).
-    // Audio B's play() works because AudioContext was resumed on first user gesture.
+    // Audio B's play() works because it was authorized during previous playback.
     const preloaded = preloadedNextRef.current;
     const nextIndex = queue.getNextIndex();
     const nextTrack = nextIndex !== -1 ? queue.getTrackAt(nextIndex) : null;
@@ -78,7 +78,7 @@ export function useTrackTransitions({
       setCurrentTrack(nextTrack);
       audioElements.switchActiveAudio();
 
-      // Restore user volume via GainNode (works on all platforms)
+      // Restore user volume on the new active element
       const newActiveId = audioElements.getActiveAudioId();
       audioElements.setAudioVolume(newActiveId, userVolume);
 

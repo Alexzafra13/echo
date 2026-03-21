@@ -155,8 +155,8 @@ export function useCrossfadeLogic({
     callbacksRef.current.onCrossfadeStart?.();
 
     try {
-      // Ensure inactive gain is at 0 for the fade-in start.
-      // loadOnInactive already sets gain to 0; this is a safety net.
+      // Ensure inactive volume is at 0 for the fade-in start.
+      // loadOnInactive already sets volume to 0; this is a safety net.
       audioElements.setAudioVolume(inactiveId, 0);
 
       // Start playing the inactive audio (should already have src loaded)
@@ -318,7 +318,7 @@ export function useCrossfadeLogic({
     const currentSettings = settingsRef.current;
 
     // Skip if crossfade is disabled, already crossfading, in radio mode, or repeat one.
-    // Volume control now works on all platforms via Web Audio GainNodes.
+    // On iOS, volume is hardware-only so crossfade is overlap-only (acceptable).
     // Use isCrossfadingRef (synchronous) instead of isCrossfading (React state) to prevent
     // race conditions where timeupdate fires before React re-renders with the new state.
     if (

@@ -106,7 +106,10 @@
       "Bash(node -e \":*)",
       "Bash(node -e \"const d=require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\); const p=JSON.parse\\(d\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\)\")",
       "Bash(node -e \"const p=require\\(''./package.json''\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\)\")",
-      "Bash(node -e \"const d=require\\(''''fs''''\\).readFileSync\\(0,''''utf8''''\\); const p=JSON.parse\\(d\\); console.log\\(JSON.stringify\\(p.scripts||{},null,2\\)\\)\")"
+      "Bash(node -e \"const d=require\\(''''fs''''\\).readFileSync\\(0,''''utf8''''\\); const p=JSON.parse\\(d\\); console.log\\(JSON.stringify\\(p.scripts||{},null,2\\)\\)\")",
+      "Bash(xargs wc:*)",
+      "Bash(find /c/Users/alex/Desktop/ec/echo/web/src -name \"*.api.ts\" -exec wc -l {})",
+      "Bash(find /c/Users/alex/Desktop/ec/echo/web/src -name \"index.ts\" -exec wc -l {})"
     ]
   }
 }
