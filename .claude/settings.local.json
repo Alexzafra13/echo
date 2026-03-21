@@ -140,7 +140,18 @@
       "Bash(node -e \"try { require\\(''sharp''\\); console.log\\(''sharp in api''\\); } catch { console.log\\(''no''\\); }\")",
       "Bash(grep -r \"query\\\\|Query\\\\|raw\\\\|Raw\\\\|sql\\\\`\\\\|SQL\" /c/Users/alex/Desktop/ec/echo/api/src --include=\"*.ts\")",
       "Bash(npx jest:*)",
-      "Bash(find /c/Users/alex/Desktop/ec/echo/api/src -type f \\\\\\(-name *dj-energy-calibration* -o -name *scan-processor* -o -name *metadata-events* -o -name *image-resize* -o -name *artist-banners* -o -name *essentia-analyzer* -o -name *lufs-analysis* \\\\\\))"
+      "Bash(find /c/Users/alex/Desktop/ec/echo/api/src -type f \\\\\\(-name *dj-energy-calibration* -o -name *scan-processor* -o -name *metadata-events* -o -name *image-resize* -o -name *artist-banners* -o -name *essentia-analyzer* -o -name *lufs-analysis* \\\\\\))",
+      "Bash(grep -r \"log-sanitizer\" /c/Users/alex/Desktop/ec/echo/api/src --include=\"*.ts\" ! -path \"*/node_modules/*\")",
+      "Bash(grep -r import.*version.util /c/Users/alex/Desktop/ec/echo/api/src --include=*.ts --include=*.js)",
+      "Bash(grep -r \"const.*=.*{\" /c/Users/alex/Desktop/ec/echo/api/src --include=\"*.ts\" ! -path \"*/node_modules/*\" ! -path \"*/.spec.ts\")",
+      "Bash(grep -n \"1048576\\\\|10485760\\\\|5242880\\\\|2097152\\\\|MAX.*10\\\\|MAX.*100\\\\|MAX.*1000\\\\|MAX.*50\" /c/Users/alex/Desktop/ec/echo/api/src/features/admin/presentation/*.controller.ts)",
+      "Bash(grep -r \"forwardRef\" /c/Users/alex/Desktop/ec/echo/api/src --include=\"*.ts\" ! -path \"*spec.ts\")",
+      "Bash(grep -n \"TODO\\\\|FIXME\\\\|HACK\\\\|XXX\\\\|DEPRECATED\\\\|@deprecated\" /c/Users/alex/Desktop/ec/echo/api/src/features/**/*.ts)",
+      "Bash(find /c/Users/alex/Desktop/ec/echo/api/src/features -name \"*.dto.ts\" -exec wc -l {} +)",
+      "Bash(grep -n \": any\\\\|: any;\" /c/Users/alex/Desktop/ec/echo/api/src/features/**/*.ts)",
+      "Bash(grep -n \"throw new BadRequestException.*size\\\\|throw new BadRequestException.*MAX\\\\|throw new BadRequestException.*10\\\\|throw new BadRequestException.*MB\" /c/Users/alex/Desktop/ec/echo/api/src/features/admin/presentation/*.controller.ts)",
+      "Bash(grep -n \"allowedMimeTypes\\\\|ALLOWED_MIME\\\\|image/jpeg.*image/png.*image/webp\" /c/Users/alex/Desktop/ec/echo/api/src/features/admin/presentation/*.controller.ts)",
+      "Bash(grep -r \"allow-change-password\\\\|api-errors\\\\|current-user\\\\|public\" /c/Users/alex/Desktop/ec/echo/api/src/features --include=\"*.ts\" ! -path \"*.spec.ts\")"
     ]
   }
 }

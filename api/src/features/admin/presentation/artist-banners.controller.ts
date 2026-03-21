@@ -16,13 +16,13 @@ import { ManageArtistBannersUseCase } from '../infrastructure/use-cases/manage-a
 
 class AddBannerDto {
   @IsUUID()
-  artistId: string;
+  artistId!: string;
 
   @IsUrl()
-  bannerUrl: string;
+  bannerUrl!: string;
 
   @IsString()
-  provider: string;
+  provider!: string;
 }
 
 @ApiTags('Admin - Artist Banners')

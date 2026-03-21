@@ -111,14 +111,13 @@ export class CustomArtistImagesController {
     const buffer = await data.toBuffer();
 
     if (buffer.length > MAX_SIZE) {
-      throw new BadRequestException('El archivo excede el tamaño máximo de 10MB');
+      throw new BadRequestException('El archivo excede el tamaño máximo (10MB)');
     }
 
-    // Validate MIME type
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedMimeTypes.includes(data.mimetype)) {
       throw new BadRequestException(
-        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`
+        `Tipo de archivo no permitido. Tipos válidos: ${allowedMimeTypes.join(', ')}`
       );
     }
 

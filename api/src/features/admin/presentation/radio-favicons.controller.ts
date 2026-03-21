@@ -160,13 +160,13 @@ export class RadioFaviconsController {
     const buffer = await data.toBuffer();
 
     if (buffer.length > MAX_SIZE) {
-      throw new BadRequestException('File exceeds maximum size of 10MB');
+      throw new BadRequestException('El archivo excede el tamaño máximo (10MB)');
     }
 
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedMimeTypes.includes(data.mimetype)) {
       throw new BadRequestException(
-        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`
+        `Tipo de archivo no permitido. Tipos válidos: ${allowedMimeTypes.join(', ')}`
       );
     }
 
