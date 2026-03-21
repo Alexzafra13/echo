@@ -27,7 +27,7 @@ import styles from './SocialPage.module.css';
 
 /**
  * SocialPage Component
- * Main social hub: friends, listening now, activity feed
+ * Hub social principal: amigos, escuchando ahora, feed de actividad
  */
 export default function SocialPage() {
   useDocumentTitle('Social');
@@ -44,7 +44,7 @@ export default function SocialPage() {
   );
   const dominantColor = useDominantColor(avatarUrl);
 
-  // Debounce search query to avoid firing a request on every keystroke
+  // Debounce del query de búsqueda para no disparar una request por cada tecla
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
@@ -116,7 +116,7 @@ export default function SocialPage() {
   const pendingReceived = overview?.pendingRequests?.received?.length || 0;
   const activities = overview?.recentActivity || [];
 
-  // Search component for Header
+  // Componente de búsqueda para el Header
   const headerSearch = (
     <div className={styles.headerSearch}>
       <div className={styles.headerSearch__wrapper}>

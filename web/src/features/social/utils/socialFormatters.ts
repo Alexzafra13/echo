@@ -1,6 +1,6 @@
 /**
- * Social feature formatters and helpers
- * Centralizes text formatting, icons, and URL generation for social activities
+ * Formateadores y helpers del módulo social.
+ * Centraliza formateo de texto, iconos y generación de URLs para actividades sociales.
  */
 
 export type SocialActionType =
@@ -11,14 +11,7 @@ export type SocialActionType =
 export type TargetType = 'playlist' | 'album' | 'track' | 'artist';
 
 /**
- * Gets the human-readable text for a social action type
- *
- * @param actionType - The type of social action
- * @returns Localized action text in Spanish
- *
- * @example
- * getActionText('created_playlist') // "creó la playlist"
- * getActionText('played_track') // "escuchó"
+ * Devuelve el texto legible para un tipo de acción social.
  */
 export function getActionText(actionType: string): string {
   const actionTexts: Record<string, string> = {
@@ -31,14 +24,7 @@ export function getActionText(actionType: string): string {
 }
 
 /**
- * Gets the emoji icon for a social action type
- *
- * @param actionType - The type of social action
- * @returns Emoji representing the action
- *
- * @example
- * getActionIcon('created_playlist') // "📋"
- * getActionIcon('played_track') // "🎵"
+ * Devuelve el emoji correspondiente a un tipo de acción social.
  */
 export function getActionIcon(actionType: string): string {
   const actionIcons: Record<string, string> = {
@@ -51,17 +37,8 @@ export function getActionIcon(actionType: string): string {
 }
 
 /**
- * Generates the URL for a social activity target
- *
- * @param targetType - Type of the target (playlist, album, track, artist)
- * @param targetId - ID of the target
- * @param albumId - Optional album ID for tracks (since tracks don't have their own page)
- * @returns URL path or null if not navigable
- *
- * @example
- * getTargetUrl('album', '123') // "/album/123"
- * getTargetUrl('track', '456', '789') // "/album/789"
- * getTargetUrl('track', '456') // null
+ * Genera la URL para el objetivo de una actividad social.
+ * Los tracks no tienen página propia, se redirige al álbum.
  */
 export function getTargetUrl(
   targetType: string,
@@ -74,7 +51,7 @@ export function getTargetUrl(
     case 'album':
       return `/album/${targetId}`;
     case 'track':
-      // Tracks don't have their own page, navigate to album instead
+      // Los tracks no tienen página propia, navegar al álbum
       return albumId ? `/album/${albumId}` : null;
     case 'artist':
       return `/artists/${targetId}`;
@@ -84,20 +61,14 @@ export function getTargetUrl(
 }
 
 /**
- * Determines if an activity type should show a cover image
- *
- * @param actionType - The type of social action
- * @returns Whether to show cover for this action type
+ * Determina si un tipo de actividad debe mostrar imagen de portada.
  */
 export function shouldShowCover(actionType: string): boolean {
   return actionType !== 'became_friends';
 }
 
 /**
- * Gets the CSS class suffix for the number of album covers in a mosaic
- *
- * @param count - Number of album covers
- * @returns CSS class suffix for the mosaic layout
+ * Devuelve el sufijo de clase CSS según el número de portadas del mosaico.
  */
 export function getMosaicClass(count: number): string {
   if (count === 1) return 'single';

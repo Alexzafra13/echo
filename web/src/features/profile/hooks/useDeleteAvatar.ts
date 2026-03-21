@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { profileService } from '../services/profile.service';
 
 /**
- * Hook for deleting user avatar
+ * Hook para eliminar el avatar del usuario
  */
 export function useDeleteAvatar() {
   return useMutation({

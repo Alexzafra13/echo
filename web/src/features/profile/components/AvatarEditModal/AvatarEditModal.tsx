@@ -13,7 +13,7 @@ interface AvatarEditModalProps {
 
 /**
  * AvatarEditModal Component
- * Modal for editing user avatar - upload or delete
+ * Modal para editar el avatar del usuario: subir o eliminar
  */
 export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
   const { user } = useAuth();
@@ -22,7 +22,7 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
   const updateUser = useAuthStore((state) => state.updateUser);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Use shared file upload hook for validation and preview
+  // Hook compartido para validación y preview de archivos
   const {
     selectedFile,
     previewUrl,

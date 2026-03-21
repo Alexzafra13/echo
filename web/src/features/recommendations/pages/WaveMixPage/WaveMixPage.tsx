@@ -13,7 +13,7 @@ import styles from './WaveMixPage.module.css';
 
 /**
  * WaveMixPage Component
- * Displays a grid of auto-generated playlists (Wave Mix + Artist playlists)
+ * Muestra una cuadrícula de playlists auto-generadas (Wave Mix + playlists de artista)
  */
 export function WaveMixPage() {
   const [, setLocation] = useLocation();
@@ -40,9 +40,9 @@ export function WaveMixPage() {
     handlePlaylistClick,
   } = useWaveMixPlaylists();
 
-  // Collect unique album cover URLs split into two rows for the animated mosaic.
-  // Capped at MAX_HERO_COVERS to avoid downloading dozens of full-size images
-  // for tiny ~127px thumbnails in the background mosaic.
+  // Recopilar URLs únicas de portadas de álbum en dos filas para el mosaico animado.
+  // Limitado a MAX_HERO_COVERS para no descargar docenas de imágenes grandes
+  // para miniaturas de ~127px del mosaico de fondo.
   const heroCoverRows = useMemo(() => {
     const MAX_HERO_COVERS = 40; // 20 per row is plenty for a seamless loop
     const albumIds = new Set<string>();
@@ -59,7 +59,7 @@ export function WaveMixPage() {
         }
       }
     }
-    // Need at least 8 covers (4 per row) for a decent mosaic
+    // Se necesitan al menos 8 portadas (4 por fila) para un mosaico decente
     if (urls.length < 8) return { row1: [], row2: [] };
     const mid = Math.ceil(urls.length / 2);
     return { row1: urls.slice(0, mid), row2: urls.slice(mid) };
@@ -69,7 +69,7 @@ export function WaveMixPage() {
     maxRows: 2,
     headerHeight: 450,
   });
-  // On mobile use minimum 12 for horizontal scroll; on desktop use exact grid count
+  // En móvil usar mínimo 12 para scroll horizontal; en desktop usar conteo exacto del grid
   const neededItems = isMobile ? Math.max(gridItems, 12) : gridItems;
 
   const getPlaceholdersCount = (itemsCount: number): number => {

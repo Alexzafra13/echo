@@ -57,7 +57,7 @@ export function useWaveMixPlaylists() {
 
   const clearSearch = useCallback(() => setSearchQuery(''), []);
 
-  // Filter playlists based on search query
+  // Filtrar playlists según la búsqueda
   const filteredPlaylists = useMemo(() => {
     if (!searchQuery.trim()) return playlists;
     const query = searchQuery.toLowerCase();
@@ -69,7 +69,7 @@ export function useWaveMixPlaylists() {
     );
   }, [playlists, searchQuery]);
 
-  // Separate playlists by type
+  // Separar playlists por tipo
   const dailyPlaylists = useMemo(
     () => filteredPlaylists.filter((p) => p.type === 'wave-mix'),
     [filteredPlaylists]
@@ -103,7 +103,7 @@ export function useWaveMixPlaylists() {
   };
 }
 
-// Helper to get a random album cover from playlist tracks
+// Obtener portada de álbum aleatoria de los tracks de la playlist
 export function getPlaylistCoverUrl(playlist: AutoPlaylist): string | undefined {
   if (playlist.coverImageUrl) return playlist.coverImageUrl;
 

@@ -1,14 +1,6 @@
 /**
- * useTrackPlayback Hook
- *
- * Handles the core mechanics of playing a single track:
- * - Building stream URLs (with token management)
- * - Loading audio on the correct element
- * - Crossfade vs normal playback branching
- * - Error recovery with retry
- *
- * Extracted from PlayerContext to keep the orchestrator focused on
- * state management and queue coordination.
+ * Reproducción de una pista: construye URL de stream, carga el audio,
+ * decide si usar crossfade o reproducción normal, y reintenta en caso de error.
  */
 
 import { useCallback } from 'react';

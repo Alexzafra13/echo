@@ -6,8 +6,8 @@ interface EqualizerProps {
 }
 
 /**
- * Animated equalizer bars component
- * Shows animated bars like a music visualizer to indicate active playback
+ * Componente de barras de ecualizador animadas.
+ * Muestra barras animadas estilo visualizador para indicar reproducción activa.
  */
 export function Equalizer({ size = 'md', color }: EqualizerProps) {
   return (

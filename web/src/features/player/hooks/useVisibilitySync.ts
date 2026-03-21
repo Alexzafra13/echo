@@ -8,9 +8,9 @@ interface UseVisibilitySyncOptions {
 }
 
 /**
- * Syncs player state with actual audio state when the PWA returns to foreground.
- * On mobile, the OS may suspend audio playback in the background. When the app
- * becomes visible again, this hook detects mismatches and attempts to resume.
+ * Sincroniza el estado del reproductor al volver del segundo plano.
+ * En móvil el SO puede suspender el audio — al volver, detecta
+ * desajustes e intenta reanudar.
  */
 export function useVisibilitySync({
   isPlaying,

@@ -19,8 +19,8 @@ import { logger } from '@shared/utils/logger';
 import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
 import styles from './PlaylistDetailPage.module.css';
 
-// Zod schema for validating playlist data from sessionStorage
-// Using passthrough() to allow additional fields from API that aren't explicitly defined
+// Schema Zod para validar datos de playlist desde sessionStorage.
+// Usa passthrough() para permitir campos adicionales de la API no definidos explícitamente.
 const AutoPlaylistSchema = z
   .object({
     id: z.string(),
@@ -36,13 +36,13 @@ const AutoPlaylistSchema = z
         artistName: z.string().optional().nullable(),
         artistId: z.string().optional().nullable(),
         genreName: z.string().optional().nullable(),
-        // Allow additional metadata fields (topGenres, topArtists, temporalDistribution, etc.)
+        // Permitir campos adicionales de metadata (topGenres, topArtists, etc.)
       })
       .passthrough(),
     tracks: z.array(
       z
         .object({
-          // Support both 'score' and 'totalScore' field names from API
+          // Soportar ambos nombres de campo 'score' y 'totalScore' de la API
           score: z.number().optional(),
           totalScore: z.number().optional(),
           trackId: z.string().optional(),
@@ -60,17 +60,17 @@ const AutoPlaylistSchema = z
             .passthrough()
             .optional()
             .nullable(),
-          // Allow additional track fields (breakdown, album, etc.)
+          // Permitir campos adicionales de track (breakdown, album, etc.)
         })
         .passthrough()
     ),
-    // Allow additional playlist fields (userId, createdAt, expiresAt, etc.)
+    // Permitir campos adicionales de playlist (userId, createdAt, expiresAt, etc.)
   })
   .passthrough();
 
 /**
  * PlaylistDetailPage Component
- * Displays individual playlist with tracks
+ * Muestra una playlist individual con sus tracks
  */
 export function PlaylistDetailPage() {
   const [_match, _params] = useRoute('/wave-mix/:id');
@@ -78,13 +78,13 @@ export function PlaylistDetailPage() {
   const { playQueue, currentTrack, setShuffle } = usePlayer();
   const [playlist, setPlaylist] = useState<AutoPlaylist | null>(null);
 
-  // For artist playlists, get artist images for the background
+  // Para playlists de artista, obtener imágenes para el fondo
   const artistId = playlist?.type === 'artist' ? playlist.metadata.artistId : undefined;
   const { data: artistImages } = useArtistImages(artistId);
   const { data: artist } = useArtist(artistId);
 
   useEffect(() => {
-    // Get playlist from sessionStorage
+    // Obtener playlist de sessionStorage
     const storedPlaylist = safeSessionStorage.getItem('currentPlaylist');
     if (storedPlaylist) {
       try {
@@ -96,14 +96,14 @@ export function PlaylistDetailPage() {
         setLocation('/wave-mix');
       }
     } else {
-      // If no playlist in storage, redirect back to Wave Mix page
+      // Si no hay playlist en storage, redirigir a la página Wave Mix
       setLocation('/wave-mix');
     }
   }, [setLocation]);
 
   const handlePlayAll = () => {
     if (!playlist || playlist.tracks.length === 0) return;
-    // Disable shuffle mode for ordered playback
+    // Desactivar modo aleatorio para reproducción ordenada
     setShuffle(false);
     const tracks = convertToPlayerTracks(playlist);
     playQueue(tracks, 0, 'recommendation');
@@ -115,10 +115,10 @@ export function PlaylistDetailPage() {
     const playerTracks = convertToPlayerTracks(playlist);
     if (playerTracks.length === 0) return;
 
-    // Enable shuffle mode
+    // Activar modo aleatorio
     setShuffle(true);
 
-    // Shuffle the tracks array using Fisher-Yates algorithm
+    // Mezclar el array de tracks con el algoritmo Fisher-Yates
     const shuffledTracks = [...playerTracks];
     for (let i = shuffledTracks.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -135,7 +135,7 @@ export function PlaylistDetailPage() {
     playQueue(tracks, index, 'recommendation');
   };
 
-  // Convert to Player Tracks (for playback)
+  // Convertir a Player Tracks (para reproducción)
   const convertToPlayerTracks = (playlist: AutoPlaylist): PlayerTrack[] => {
     return playlist.tracks
       .filter((st) => st.track)
@@ -147,13 +147,13 @@ export function PlaylistDetailPage() {
         albumName: st.track!.albumName,
         duration: st.track!.duration || 0,
         coverImage: st.track!.albumId ? `/api/albums/${st.track!.albumId}/cover` : undefined,
-        // Audio normalization data (LUFS)
+        // Datos de normalización de audio (LUFS)
         rgTrackGain: st.track!.rgTrackGain,
         rgTrackPeak: st.track!.rgTrackPeak,
       }));
   };
 
-  // Convert to Home Tracks (for display in TrackList)
+  // Convertir a Home Tracks (para mostrar en TrackList)
   const convertToHomeTracks = (playlist: AutoPlaylist): HomeTrack[] => {
     return playlist.tracks
       .filter((st) => st.track)
@@ -175,15 +175,15 @@ export function PlaylistDetailPage() {
       }));
   };
 
-  // Get background image for artist playlists
-  // Priority: background > banner > avatar (coverImageUrl)
+  // Obtener imagen de fondo para playlists de artista
+  // Prioridad: background > banner > avatar (coverImageUrl)
   const getBackgroundUrl = (): string | null => {
     if (playlist?.type !== 'artist' || !artistId) return null;
 
     const hasBackground = artistImages?.images.background?.exists;
     const hasBanner = artistImages?.images.banner?.exists;
 
-    // Priority: always prefer background over banner
+    // Prioridad: siempre preferir background sobre banner
     if (hasBackground) {
       const tag = artistImages?.images.background?.tag;
       return getArtistImageUrl(artistId, 'background', tag);
@@ -194,11 +194,11 @@ export function PlaylistDetailPage() {
       return getArtistImageUrl(artistId, 'banner', tag);
     }
 
-    // Fallback to avatar/coverImageUrl
+    // Fallback a avatar/coverImageUrl
     return playlist.coverImageUrl || null;
   };
 
-  // For genre/wave-mix playlists: collect unique album covers for mosaic background
+  // Para playlists de género/wave-mix: recopilar portadas únicas para mosaico de fondo
   const genreBackgroundUrls = useMemo(() => {
     if (!playlist || playlist.type === 'artist') return [];
     const albumIds = new Set<string>();
@@ -207,11 +207,11 @@ export function PlaylistDetailPage() {
     }
     const ids = Array.from(albumIds);
     if (ids.length === 0) return [];
-    // Take up to 4 covers for the mosaic grid
+    // Tomar hasta 4 portadas para el grid de mosaico
     return ids.slice(0, 4).map((id) => `/api/albums/${id}/cover`);
   }, [playlist]);
 
-  // Extract dominant colors from genre/wave-mix playlist album covers for gradient
+  // Extraer colores dominantes de portadas de álbum para el degradado
   const genreAlbumCoverUrls = useMemo(() => {
     if (!playlist || playlist.type === 'artist') return [];
     const albumIds = new Set<string>();
@@ -224,7 +224,7 @@ export function PlaylistDetailPage() {
   }, [playlist]);
   const genreDominantColors = useDominantColors(genreAlbumCoverUrls);
 
-  // Build multi-color gradient for genre/wave-mix playlists
+  // Construir degradado multicolor para playlists de género/wave-mix
   const genreGradientStyle = useMemo(() => {
     if (!playlist || playlist.type === 'artist') return undefined;
     const c = genreDominantColors;
@@ -248,7 +248,7 @@ export function PlaylistDetailPage() {
   const hasHeroBackground = isArtistPlaylist || genreBackgroundUrls.length > 0;
   const backgroundUrl = isArtistPlaylist ? getBackgroundUrl() : null;
 
-  // Get background position from artist data if available
+  // Obtener posición del fondo de los datos del artista si está disponible
   const backgroundPosition = artist?.backgroundPosition || 'center top';
 
   return (

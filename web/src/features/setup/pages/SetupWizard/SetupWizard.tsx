@@ -1,10 +1,10 @@
 /**
- * Setup Wizard Page
+ * Página del Asistente de Configuración
  *
- * First-run setup wizard (Jellyfin-style):
- * 1. Create admin account
- * 2. Select music library folder
- * 3. Complete setup
+ * Asistente de configuración inicial (estilo Jellyfin):
+ * 1. Crear cuenta de administrador
+ * 2. Seleccionar carpeta de biblioteca de música
+ * 3. Completar configuración
  */
 
 import { useState, useEffect } from 'react';
@@ -37,7 +37,7 @@ import {
 } from '../../api/setup.api';
 import styles from './SetupWizard.module.css';
 
-// Validation schemas
+// Schemas de validación
 const adminSchema = z.object({
   username: z.string().min(3, 'El usuario debe tener al menos 3 caracteres'),
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
@@ -58,7 +58,7 @@ export default function SetupWizard() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Library browser state
+  // Estado del explorador de biblioteca
   const [browseData, setBrowseData] = useState<BrowseResult | null>(null);
   const [selectedPath, setSelectedPath] = useState<string>('/');
   const [libraryValidation, setLibraryValidation] = useState<{
@@ -68,7 +68,7 @@ export default function SetupWizard() {
   } | null>(null);
   const [isBrowsing, setIsBrowsing] = useState(false);
 
-  // Admin form
+  // Formulario de admin
   const {
     register,
     handleSubmit,
@@ -77,12 +77,12 @@ export default function SetupWizard() {
     resolver: zodResolver(adminSchema),
   });
 
-  // Check setup status on mount
+  // Verificar estado de configuración al montar
   useEffect(() => {
     checkStatus();
   }, []);
 
-  // Auto-dismiss error after 5 seconds
+  // Ocultar error automáticamente tras 5 segundos
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), 5000);
@@ -95,13 +95,13 @@ export default function SetupWizard() {
       const setupStatus = await getSetupStatus();
       setStatus(setupStatus);
 
-      // If setup is not needed (completed AND has admin), redirect to login
+      // Si no se necesita setup (completado Y con admin), redirigir al login
       if (!setupStatus.needsSetup) {
         setLocation('/login');
         return;
       }
 
-      // Determine starting step based on what's missing
+      // Determinar paso inicial según lo que falta
       if (!setupStatus.hasAdmin) {
         setStep('admin');
       } else if (!setupStatus.hasMusicLibrary) {
@@ -179,7 +179,7 @@ export default function SetupWizard() {
     setLocation('/login');
   };
 
-  // Render loading state
+  // Renderizar estado de carga
   if (step === 'loading') {
     return (
       <div className={styles.container}>

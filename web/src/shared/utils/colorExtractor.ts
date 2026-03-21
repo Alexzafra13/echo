@@ -1,6 +1,5 @@
 /**
- * Color extraction utilities inspired by Spotify's approach
- * Uses simplified k-means clustering and color vibrancy detection
+ * Extracción de colores dominantes usando k-means y detección de vibración cromática.
  */
 
 import { logger } from './logger';

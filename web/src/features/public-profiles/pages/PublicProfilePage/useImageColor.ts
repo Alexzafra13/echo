@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 
-// Default colors for profiles without avatar
+// Colores por defecto para perfiles sin avatar
 const DEFAULT_COLORS = [
   '#4a3470', // Purple
   '#1e3a5f', // Blue
@@ -14,22 +14,22 @@ const DEFAULT_COLORS = [
 ];
 
 /**
- * Generate a consistent color based on a string (userId)
- * Returns the same color for the same input
+ * Genera un color consistente a partir de un string (userId).
+ * Devuelve siempre el mismo color para la misma entrada.
  */
 export const getColorFromString = (str: string): string => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash = hash & hash; // Convertir a entero de 32 bits
   }
   return DEFAULT_COLORS[Math.abs(hash) % DEFAULT_COLORS.length];
 };
 
 /**
- * Hook to extract dominant color from an image URL
- * Uses shared colorExtractor utility
+ * Hook para extraer el color dominante de una URL de imagen.
+ * Usa la utilidad compartida colorExtractor.
  */
 export const useImageColor = (imageUrl?: string, fallbackId?: string): string => {
   const fallbackColor = useMemo(

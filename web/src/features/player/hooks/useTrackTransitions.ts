@@ -1,22 +1,14 @@
 /**
- * useTrackTransitions Hook
- *
- * Handles automatic track-to-track transitions:
- * - Track ended handler (repeat, preloaded, fallback paths)
- * - Precarga gapless (carga la siguiente pista antes de que termine)
- * - Autoplay triggering when queue is exhausted
- *
- * Extracted from PlayerContext to isolate the complex transition
- * logic from state management and queue coordination.
+ * Transiciones automáticas entre pistas: ended, precarga gapless y autoplay.
  */
 
 import { useEffect } from 'react';
 import { useLatestCallback } from '@shared/hooks';
 import { Track } from '../types';
+import { logger } from '@shared/utils/logger';
 
 // Segundos antes del final para precargar la siguiente pista
 const PRELOAD_BEFORE_END_S = 15;
-import { logger } from '@shared/utils/logger';
 import { playActiveWithRetry } from './playActiveWithRetry';
 import type { AudioElements } from './useAudioElements';
 import type { CrossfadeLogic } from './useCrossfadeLogic';

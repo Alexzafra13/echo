@@ -22,7 +22,7 @@ export const notificationKeys = {
 // Queries
 // ============================================
 
-/** Paginated list of notifications */
+/** Lista paginada de notificaciones */
 export function useNotificationsList(params?: {
   skip?: number;
   take?: number;
@@ -35,7 +35,7 @@ export function useNotificationsList(params?: {
   });
 }
 
-/** Unread notification count (for badge) */
+/** Contador de notificaciones no leídas (para badge) */
 export function useUnreadCount() {
   return useQuery({
     queryKey: notificationKeys.unreadCount,
@@ -45,7 +45,7 @@ export function useUnreadCount() {
   });
 }
 
-/** Notification preferences */
+/** Preferencias de notificaciones */
 export function useNotificationPreferences() {
   return useQuery({
     queryKey: notificationKeys.preferences,
@@ -58,14 +58,14 @@ export function useNotificationPreferences() {
 // Mutations
 // ============================================
 
-/** Mark a single notification as read */
+/** Marcar una notificación como leída */
 export function useMarkAsRead() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => notificationsApi.markAsRead(id),
     onMutate: async (id) => {
-      // Optimistic update
+      // Actualización optimista
       await queryClient.cancelQueries({ queryKey: notificationKeys.all });
 
       queryClient.setQueriesData<{ notifications: PersistentNotification[]; total: number }>(
@@ -89,7 +89,7 @@ export function useMarkAsRead() {
   });
 }
 
-/** Mark all notifications as read */
+/** Marcar todas las notificaciones como leídas */
 export function useMarkAllAsRead() {
   const queryClient = useQueryClient();
 
@@ -117,7 +117,7 @@ export function useMarkAllAsRead() {
   });
 }
 
-/** Delete all notifications */
+/** Eliminar todas las notificaciones */
 export function useDeleteAllNotifications() {
   const queryClient = useQueryClient();
 
@@ -129,7 +129,7 @@ export function useDeleteAllNotifications() {
   });
 }
 
-/** Update notification preference */
+/** Actualizar preferencia de notificación */
 export function useUpdatePreference() {
   const queryClient = useQueryClient();
 

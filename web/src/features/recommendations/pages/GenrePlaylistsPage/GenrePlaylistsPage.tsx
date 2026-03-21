@@ -14,19 +14,19 @@ import styles from './GenrePlaylistsPage.module.css';
 
 /**
  * GenrePlaylistsPage Component
- * Displays paginated grid of genre-based playlists
+ * Muestra una cuadrícula paginada de playlists basadas en géneros
  */
 export function GenrePlaylistsPage() {
   const [, setLocation] = useLocation();
   const user = useAuthStore((state) => state.user);
 
   const [playlists, setPlaylists] = useState<AutoPlaylist[]>([]);
-  const [allPlaylists, setAllPlaylists] = useState<AutoPlaylist[]>([]); // Store all playlists for search
+  const [allPlaylists, setAllPlaylists] = useState<AutoPlaylist[]>([]); // Almacenar todas las playlists para búsqueda
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Pagination state
+  // Estado de paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const ITEMS_PER_PAGE = 12;
@@ -50,7 +50,7 @@ export function GenrePlaylistsPage() {
     }
   };
 
-  // Filter playlists based on search query
+  // Filtrar playlists según la búsqueda
   const filteredPlaylists = searchQuery.trim()
     ? allPlaylists.filter(playlist =>
         playlist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

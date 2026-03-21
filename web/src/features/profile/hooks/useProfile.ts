@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { profileService, ChangePasswordDto, UpdateProfileDto } from '../services/profile.service';
 
 /**
- * Hook to change user password
+ * Hook para cambiar la contraseña del usuario
  */
 export function useChangePassword() {
   return useMutation({
@@ -11,7 +11,7 @@ export function useChangePassword() {
 }
 
 /**
- * Hook to update user profile
+ * Hook para actualizar el perfil del usuario
  */
 export function useUpdateProfile() {
   return useMutation({

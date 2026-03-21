@@ -1,6 +1,6 @@
 /**
- * Factory for creating safe storage wrappers around Storage APIs.
- * Prevents crashes when storage is unavailable (private mode, quota exceeded, etc).
+ * Wrapper seguro para Storage APIs.
+ * Evita crashes en modo privado, cuota excedida o storage bloqueado.
  */
 
 export interface SafeStorage {

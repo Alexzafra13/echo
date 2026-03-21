@@ -39,7 +39,7 @@ function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [, setLocation] = useLocation();
 
-  // Listen for navigation events from non-React code (e.g., axios interceptors)
+  // Navegación desde fuera de React (ej: interceptor de axios al recibir 401)
   useEffect(() => {
     const handler = (e: Event) => {
       if (!(e instanceof CustomEvent) || !e.detail?.path) return;

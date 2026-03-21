@@ -32,9 +32,9 @@ import { Radio, Music2 } from 'lucide-react';
 import { logger } from '@shared/utils/logger';
 import styles from './RadioPage.module.css';
 
-// Unified state for all interdependent radio page UI state.
-// Using a reducer prevents impossible state combinations (e.g. search open
-// with empty query) and ensures page resets when filters/country change.
+// Estado unificado para toda la UI interdependiente de la página de radio.
+// Usar un reducer evita combinaciones de estado imposibles (ej: búsqueda abierta
+// con query vacío) y asegura resets al cambiar filtros/país.
 interface RadioPageState {
   selectedCountry: string;
   activeFilter: string;

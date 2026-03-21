@@ -13,14 +13,14 @@ interface PlaylistCoverProps {
 }
 
 /**
- * Genres that have custom overlay images
- * Image files: /images/wave_mix_covers/wave_mix_{genre}.png
+ * Géneros con imágenes overlay personalizadas.
+ * Archivos: /images/wave_mix_covers/wave_mix_{genre}.png
  */
 const GENRES_WITH_OVERLAY = ['rock'] as const;
 
 /**
- * Apple Music-inspired gradient backgrounds for genre covers.
- * Each genre gets a unique, vibrant gradient.
+ * Fondos degradados inspirados en Apple Music para portadas de género.
+ * Cada género tiene un degradado único y vibrante.
  */
 const GENRE_GRADIENTS: Record<string, string> = {
   // Rock & derivatives
@@ -117,10 +117,10 @@ const GENRE_GRADIENTS: Record<string, string> = {
 };
 
 /**
- * Get overlay image URL for a genre if it exists
+ * Obtener la URL de la imagen overlay para un género si existe
  */
 function getGenreOverlayUrl(name: string): string | null {
-  // Extract genre name from playlist name (e.g., "Rock Mix" -> "rock")
+  // Extraer nombre del género del nombre de playlist (ej: "Rock Mix" -> "rock")
   const genreName = name.replace(/ Mix$/i, '').toLowerCase();
 
   if (GENRES_WITH_OVERLAY.includes(genreName as typeof GENRES_WITH_OVERLAY[number])) {
@@ -130,22 +130,22 @@ function getGenreOverlayUrl(name: string): string | null {
 }
 
 /**
- * Get the gradient for a genre based on its name.
- * Uses keyword matching for compound genre names
- * (e.g., "Alternative Rock" matches "rock", "Rock Pop" matches "pop").
+ * Obtener el degradado para un género según su nombre.
+ * Usa coincidencia por palabra clave para nombres compuestos
+ * (ej: "Alternative Rock" coincide con "rock").
  */
 function getGenreGradient(displayName: string): string {
   const key = displayName.toLowerCase();
 
-  // Exact match first
+  // Coincidencia exacta primero
   if (GENRE_GRADIENTS[key]) return GENRE_GRADIENTS[key];
 
-  // Keyword matching: find the first gradient key contained in the genre name
+  // Coincidencia parcial: buscar la primera clave de degradado contenida en el nombre
   for (const [gradientKey, gradient] of Object.entries(GENRE_GRADIENTS)) {
     if (key.includes(gradientKey)) return gradient;
   }
 
-  // Hash-based fallback: generate a vibrant gradient from the genre name
+  // Fallback basado en hash: genera un degradado vibrante a partir del nombre
   let hash = 0;
   for (let i = 0; i < key.length; i++) {
     hash = key.charCodeAt(i) + ((hash << 5) - hash);
@@ -155,7 +155,7 @@ function getGenreGradient(displayName: string): string {
 }
 
 /**
- * Echo logo badge used on playlist covers (same logo as sidebar)
+ * Badge del logo Echo para portadas de playlist (mismo logo que el sidebar)
  */
 function EchoBadge({ className }: { className?: string }) {
   return (
@@ -170,7 +170,7 @@ function EchoBadge({ className }: { className?: string }) {
 
 /**
  * PlaylistCover Component
- * Displays a playlist cover with either a color background or an artist image
+ * Muestra la portada de una playlist con fondo de color o imagen de artista
  */
 export function PlaylistCover({
   type,
@@ -191,7 +191,7 @@ export function PlaylistCover({
   const genreDisplayName = isGenre ? name.replace(/ Mix$/i, '') : '';
   const genreGradient = isGenre ? getGenreGradient(genreDisplayName) : undefined;
 
-  // Check for genre overlay image
+  // Verificar si existe imagen overlay para el género
   const genreOverlayUrl = isGenre && !overlayError ? getGenreOverlayUrl(name) : null;
 
   return (

@@ -38,7 +38,7 @@ export interface ListNotificationsResponse {
 // ============================================
 
 export const notificationsApi = {
-  /** Get paginated notifications */
+  /** Obtener notificaciones paginadas */
   async list(params?: {
     skip?: number;
     take?: number;
@@ -48,40 +48,40 @@ export const notificationsApi = {
     return response.data;
   },
 
-  /** Get unread count */
+  /** Obtener contador de no leídas */
   async getUnreadCount(): Promise<{ count: number }> {
     const response = await apiClient.get<{ count: number }>('/notifications/unread-count');
     return response.data;
   },
 
-  /** Mark single notification as read */
+  /** Marcar una notificación como leída */
   async markAsRead(id: string): Promise<void> {
     await apiClient.patch(`/notifications/${id}/read`);
   },
 
-  /** Mark all notifications as read */
+  /** Marcar todas las notificaciones como leídas */
   async markAllAsRead(): Promise<void> {
     await apiClient.patch('/notifications/read-all');
   },
 
-  /** Delete all notifications */
+  /** Eliminar todas las notificaciones */
   async deleteAll(): Promise<void> {
     await apiClient.delete('/notifications');
   },
 
-  /** Get notification preferences */
+  /** Obtener preferencias de notificaciones */
   async getPreferences(): Promise<NotificationPreference[]> {
     const response = await apiClient.get<{
       preferences: { notificationType: string; enabled: boolean }[];
     }>('/notifications/preferences');
-    // Backend returns `notificationType`, map to frontend's `type`
+    // El backend devuelve `notificationType`, mapeamos a `type` del frontend
     return response.data.preferences.map((p) => ({
       type: p.notificationType as NotificationType,
       enabled: p.enabled,
     }));
   },
 
-  /** Update a notification preference */
+  /** Actualizar una preferencia de notificación */
   async updatePreference(type: NotificationType, enabled: boolean): Promise<void> {
     await apiClient.put(`/notifications/preferences/${type}`, { enabled });
   },

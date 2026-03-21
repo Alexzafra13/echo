@@ -78,7 +78,7 @@ export interface SocialOverview {
 // ============================================
 
 /**
- * Get social overview (main page data)
+ * Obtener resumen social (datos de la página principal)
  */
 export async function getSocialOverview(): Promise<SocialOverview> {
   const response = await apiClient.get<SocialOverview>('/social');
@@ -86,7 +86,7 @@ export async function getSocialOverview(): Promise<SocialOverview> {
 }
 
 /**
- * Get all friends
+ * Obtener todos los amigos
  */
 export async function getFriends(): Promise<Friend[]> {
   const response = await apiClient.get<Friend[]>('/social/friends');
@@ -94,7 +94,7 @@ export async function getFriends(): Promise<Friend[]> {
 }
 
 /**
- * Send a friend request
+ * Enviar solicitud de amistad
  */
 export async function sendFriendRequest(addresseeId: string): Promise<Friendship> {
   const response = await apiClient.post<Friendship>('/social/friends/request', {
@@ -104,7 +104,7 @@ export async function sendFriendRequest(addresseeId: string): Promise<Friendship
 }
 
 /**
- * Accept a friend request
+ * Aceptar solicitud de amistad
  */
 export async function acceptFriendRequest(friendshipId: string): Promise<Friendship> {
   const response = await apiClient.post<Friendship>(`/social/friends/accept/${friendshipId}`);
@@ -112,14 +112,14 @@ export async function acceptFriendRequest(friendshipId: string): Promise<Friends
 }
 
 /**
- * Remove a friendship or reject a request
+ * Eliminar amistad o rechazar solicitud
  */
 export async function removeFriendship(friendshipId: string): Promise<void> {
   await apiClient.delete(`/social/friends/${friendshipId}`);
 }
 
 /**
- * Get pending friend requests
+ * Obtener solicitudes de amistad pendientes
  */
 export async function getPendingRequests(): Promise<PendingRequests> {
   const response = await apiClient.get<PendingRequests>('/social/friends/pending');
@@ -127,7 +127,7 @@ export async function getPendingRequests(): Promise<PendingRequests> {
 }
 
 /**
- * Get friends who are currently listening
+ * Obtener amigos que están escuchando actualmente
  */
 export async function getListeningFriends(): Promise<ListeningUser[]> {
   const response = await apiClient.get<ListeningUser[]>('/social/listening');
@@ -135,7 +135,7 @@ export async function getListeningFriends(): Promise<ListeningUser[]> {
 }
 
 /**
- * Get friends' activity feed
+ * Obtener feed de actividad de amigos
  */
 export async function getFriendsActivity(limit?: number): Promise<ActivityItem[]> {
   const params = limit ? { limit } : undefined;
@@ -144,7 +144,7 @@ export async function getFriendsActivity(limit?: number): Promise<ActivityItem[]
 }
 
 /**
- * Search users
+ * Buscar usuarios
  */
 export async function searchUsers(query: string, limit?: number): Promise<SearchUserResult[]> {
   const params: Record<string, string | number> = { q: query };

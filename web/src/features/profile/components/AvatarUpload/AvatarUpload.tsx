@@ -8,10 +8,10 @@ import styles from './AvatarUpload.module.css';
 
 /**
  * AvatarUpload Component
- * Allows users to upload and manage their profile avatar
+ * Permite subir y gestionar el avatar de perfil del usuario
  */
 export function AvatarUpload() {
-  // Use single store subscription to ensure state consistency
+  // Suscripción única al store para asegurar consistencia de estado
   const user = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
@@ -34,19 +34,19 @@ export function AvatarUpload() {
 
     setError(null);
 
-    // Validate file type
+    // Validar tipo de archivo
     if (!file.type.match(/image\/(jpeg|jpg|png|webp)/)) {
       setError('Solo se permiten imágenes JPEG, PNG o WebP');
       return;
     }
 
-    // Validate file size (5MB max)
+    // Validar tamaño de archivo (máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError('La imagen no puede superar los 5MB');
       return;
     }
 
-    // Create preview
+    // Crear preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewUrl(reader.result as string);
@@ -66,9 +66,9 @@ export function AvatarUpload() {
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-        // Update user state to reflect avatar exists
+        // Actualizar estado del usuario para reflejar que existe avatar
         updateUser({ hasAvatar: true });
-        // Update timestamp to force image reload (cache bust)
+        // Actualizar timestamp para forzar recarga de imagen (cache bust)
         updateAvatarTimestamp();
       },
       onError: (err) => {
@@ -91,9 +91,9 @@ export function AvatarUpload() {
 
     deleteAvatar(undefined, {
       onSuccess: () => {
-        // Update user state to reflect avatar is removed
+        // Actualizar estado del usuario para reflejar que se eliminó el avatar
         updateUser({ hasAvatar: false });
-        // Update timestamp to ensure UI refreshes
+        // Actualizar timestamp para refrescar la UI
         updateAvatarTimestamp();
       },
       onError: (err) => {

@@ -13,9 +13,7 @@ interface TrackInfoModalProps {
 }
 
 /**
- * TrackInfoModal Component
- * Desktop: centered modal dialog
- * Mobile: bottom sheet with album dominant color accent
+ * Modal de info de pista. En desktop, diálogo centrado; en móvil, bottom sheet con color del álbum.
  */
 export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
   // Use coverImage (federated tracks) or local album cover endpoint

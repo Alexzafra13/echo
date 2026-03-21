@@ -29,9 +29,9 @@ export const socialKeys = {
 };
 
 /**
- * Hook to get social overview (main page data)
- * Note: Real-time updates are handled by SSE (useListeningNowSSE hook)
- * Polling is now just a fallback, so intervals can be longer
+ * Hook para obtener el resumen social (datos de la página principal).
+ * Las actualizaciones en tiempo real las maneja SSE (useListeningNowSSE).
+ * El polling es solo un fallback, así que los intervalos pueden ser mayores.
  */
 export function useSocialOverview() {
   return useQuery<SocialOverview>({
@@ -43,7 +43,7 @@ export function useSocialOverview() {
 }
 
 /**
- * Hook to get all friends
+ * Hook para obtener todos los amigos
  */
 export function useFriends() {
   return useQuery<Friend[]>({
@@ -54,7 +54,7 @@ export function useFriends() {
 }
 
 /**
- * Hook to get pending friend requests
+ * Hook para obtener solicitudes de amistad pendientes
  */
 export function usePendingRequests() {
   return useQuery<PendingRequests>({
@@ -65,9 +65,9 @@ export function usePendingRequests() {
 }
 
 /**
- * Hook to get friends who are listening
- * Note: Real-time updates are handled by SSE (useListeningNowSSE hook)
- * Polling is now just a fallback
+ * Hook para obtener amigos que están escuchando.
+ * Las actualizaciones en tiempo real las maneja SSE (useListeningNowSSE).
+ * El polling es solo un fallback.
  */
 export function useListeningFriends() {
   return useQuery<ListeningUser[]>({
@@ -79,7 +79,7 @@ export function useListeningFriends() {
 }
 
 /**
- * Hook to get friends' activity
+ * Hook para obtener la actividad de los amigos
  */
 export function useFriendsActivity(limit?: number) {
   return useQuery<ActivityItem[]>({
@@ -90,7 +90,7 @@ export function useFriendsActivity(limit?: number) {
 }
 
 /**
- * Hook to search users
+ * Hook para buscar usuarios
  */
 export function useSearchUsers(query: string, enabled = true) {
   return useQuery<SearchUserResult[]>({
@@ -102,7 +102,7 @@ export function useSearchUsers(query: string, enabled = true) {
 }
 
 /**
- * Hook to send a friend request
+ * Hook para enviar solicitud de amistad
  */
 export function useSendFriendRequest() {
   const queryClient = useQueryClient();
@@ -110,18 +110,18 @@ export function useSendFriendRequest() {
   return useMutation({
     mutationFn: (addresseeId: string) => sendFriendRequest(addresseeId),
     onSuccess: () => {
-      // Invalidate relevant queries
+      // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: socialKeys.overview() });
       queryClient.invalidateQueries({ queryKey: socialKeys.pendingRequests() });
       queryClient.invalidateQueries({ queryKey: socialKeys.friends() });
-      // Also invalidate search results to update friendship status
+      // También invalidar resultados de búsqueda para actualizar estado de amistad
       queryClient.invalidateQueries({ queryKey: socialKeys.all });
     },
   });
 }
 
 /**
- * Hook to accept a friend request
+ * Hook para aceptar solicitud de amistad
  */
 export function useAcceptFriendRequest() {
   const queryClient = useQueryClient();
@@ -137,7 +137,7 @@ export function useAcceptFriendRequest() {
 }
 
 /**
- * Hook to remove a friendship
+ * Hook para eliminar una amistad
  */
 export function useRemoveFriendship() {
   const queryClient = useQueryClient();

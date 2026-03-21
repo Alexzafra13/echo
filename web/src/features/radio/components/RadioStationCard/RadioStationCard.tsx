@@ -66,7 +66,7 @@ export const RadioStationCard = memo(function RadioStationCard({
   const bitrate = 'bitrate' in station ? station.bitrate : null;
   const homepage = 'homepage' in station ? station.homepage : null;
 
-  // Get the station UUID (works for both types)
+  // Obtener UUID de la emisora (funciona con ambos tipos)
   const stationUuid =
     'stationuuid' in station
       ? (station as RadioBrowserStation).stationuuid
@@ -74,7 +74,7 @@ export const RadioStationCard = memo(function RadioStationCard({
         ? (station as RadioStation).stationUuid
         : null;
 
-  // Priority: customFaviconUrl > favicon
+  // Prioridad: customFaviconUrl > favicon
   const displayFavicon = customFaviconUrl || favicon;
 
   const genreTags =
@@ -105,7 +105,7 @@ export const RadioStationCard = memo(function RadioStationCard({
 
       uploadMutation.mutate({ stationUuid, file });
 
-      // Reset input
+      // Resetear input
       if (fileInputRef.current) fileInputRef.current.value = '';
     },
     [stationUuid, uploadMutation]

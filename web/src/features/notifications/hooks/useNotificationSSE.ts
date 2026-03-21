@@ -7,11 +7,11 @@ import { logger } from '@shared/utils/logger';
 /**
  * useNotificationSSE
  *
- * Connects to the per-user notification SSE stream.
- * When a new notification arrives, invalidates React Query caches
- * so the notification list and unread count refresh automatically.
+ * Se conecta al stream SSE de notificaciones del usuario.
+ * Al recibir una notificación, invalida las cachés de React Query
+ * para refrescar la lista y el contador de no leídas automáticamente.
  *
- * Uses token-based auth via query parameter (EventSource can't set headers).
+ * Usa auth por token en query param (EventSource no soporta headers).
  */
 export function useNotificationSSE() {
   const { token, isAuthenticated } = useAuth();
@@ -21,7 +21,7 @@ export function useNotificationSSE() {
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
-      // Cleanup on logout
+      // Limpiar al cerrar sesión
       eventSourceRef.current?.close();
       eventSourceRef.current = null;
       return;
@@ -39,16 +39,16 @@ export function useNotificationSSE() {
           const data = JSON.parse(event.data);
           logger.debug('[NotificationSSE] New notification:', data.type);
 
-          // Invalidate queries to refresh notification list and unread count
+          // Invalidar queries para refrescar lista y contador de no leídas
           queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount });
           queryClient.invalidateQueries({ queryKey: ['notifications', 'list'] });
         } catch {
-          // Ignore parse errors
+          // Ignorar errores de parseo
         }
       });
 
       es.addEventListener('keepalive', () => {
-        // Silent keepalive - connection is alive
+        // Keepalive silencioso - conexión activa
       });
 
       es.onerror = () => {
@@ -56,7 +56,7 @@ export function useNotificationSSE() {
         es.close();
         eventSourceRef.current = null;
 
-        // Reconnect after 5 seconds
+        // Reconectar tras 5 segundos
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = setTimeout(() => {
           if (isAuthenticated && token) {

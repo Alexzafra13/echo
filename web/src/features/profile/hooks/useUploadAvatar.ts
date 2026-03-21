@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { profileService } from '../services/profile.service';
 
 /**
- * Hook for uploading user avatar
+ * Hook para subir el avatar del usuario
  */
 export function useUploadAvatar() {
   return useMutation({

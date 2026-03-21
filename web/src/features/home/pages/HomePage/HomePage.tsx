@@ -31,8 +31,7 @@ import type { Album, HeroItem } from '../../types';
 import styles from './HomePage.module.css';
 
 /**
- * HomePage Component
- * Main page after login - displays featured album, recent albums, and Wave Mix recommendations
+ * Página principal tras login: álbum destacado, recientes y recomendaciones Wave Mix.
  */
 export default function HomePage() {
   // Auto-refresh when scan completes

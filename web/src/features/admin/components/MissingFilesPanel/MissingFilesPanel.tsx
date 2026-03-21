@@ -13,8 +13,7 @@ import { logger } from '@shared/utils/logger';
 import styles from './MissingFilesPanel.module.css';
 
 /**
- * MissingFilesPanel Component
- * Panel for managing tracks marked as missing (file not found on disk)
+ * Panel de gestión de pistas con archivos no encontrados en disco.
  */
 export function MissingFilesPanel() {
   const [tracks, setTracks] = useState<MissingTrack[]>([]);

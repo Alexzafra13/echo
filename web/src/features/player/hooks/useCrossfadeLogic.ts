@@ -1,10 +1,6 @@
 /**
- * useCrossfadeLogic Hook
- *
- * Handles crossfade transitions between tracks including:
- * - Volume ramping (fade in/out)
- * - Timing detection for when to start crossfade
- * - Managing dual audio element transitions
+ * Lógica de crossfade: rampa de volumen, detección de timing
+ * y gestión de la transición entre los dos elementos de audio.
  */
 
 import { useRef, useCallback, useEffect, useState } from 'react';

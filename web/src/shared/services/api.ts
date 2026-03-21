@@ -6,8 +6,7 @@ import type { ApiErrorData } from '@shared/types/api.types';
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 /**
- * Navigate without full page reload (SPA-friendly)
- * Uses a custom event that the router listens to, preserving app state
+ * Navega sin recargar la página (SPA). Emite un evento custom que escucha el router.
  */
 function navigateTo(path: string): void {
   window.dispatchEvent(new CustomEvent('app:navigate', { detail: { path } }));

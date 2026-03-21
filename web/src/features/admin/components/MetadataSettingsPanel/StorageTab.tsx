@@ -15,7 +15,7 @@ import { logger } from '@shared/utils/logger';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './StorageTab.module.css';
 
-/** API Setting response from backend */
+/** Respuesta de configuración de API del backend */
 interface ApiSetting {
   key: string;
   value: string;

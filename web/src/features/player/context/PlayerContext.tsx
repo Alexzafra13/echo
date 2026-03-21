@@ -1,15 +1,5 @@
 /**
- * PlayerContext
- *
- * Central orchestrator for all player functionality.
- * Uses specialized hooks for different concerns:
- * - useAudioElements: Dual audio element management
- * - useQueueManagement: Queue and playback order
- * - usePlayTracking: Play session analytics
- * - useCrossfadeLogic: Crossfade transitions
- * - useRadioPlayback: Radio station streaming
- * - useTrackPlayback: Stream URL + play/crossfade mechanics
- * - useTrackTransitions: Ended handler + gapless preload
+ * Contexto central del reproductor. Orquesta cola, crossfade, radio y reproducción de pistas.
  */
 
 import {

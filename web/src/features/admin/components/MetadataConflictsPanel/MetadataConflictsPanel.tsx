@@ -6,8 +6,7 @@ import { ArtistSidebarItem, ConflictCard } from './components';
 import styles from './MetadataConflictsPanel.module.css';
 
 /**
- * MetadataConflictsPanel Component
- * Only renders when there are pending suggestions
+ * Panel de conflictos de metadata. Solo se muestra si hay sugerencias pendientes.
  */
 export function MetadataConflictsPanel() {
   const filters = {

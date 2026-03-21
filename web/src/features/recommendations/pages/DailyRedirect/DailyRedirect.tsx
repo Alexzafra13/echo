@@ -8,7 +8,7 @@ import styles from './DailyRedirect.module.css';
 
 /**
  * DailyRedirect Component
- * Automatically loads the daily Wave Mix playlist and redirects to its detail page
+ * Carga automáticamente la playlist diaria Wave Mix y redirige a su página de detalle
  */
 export function DailyRedirect() {
   const [, setLocation] = useLocation();

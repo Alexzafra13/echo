@@ -1,6 +1,6 @@
 /**
- * Setup API
- * Handles first-run setup wizard communication with backend
+ * API de Setup
+ * Gestiona la comunicación del asistente de configuración inicial con el backend
  */
 
 import axios from 'axios';
@@ -44,7 +44,7 @@ export interface LibraryValidationResult {
 }
 
 /**
- * Get current setup status
+ * Obtener estado actual de configuración
  */
 export async function getSetupStatus(): Promise<SetupStatus> {
   const response = await axios.get<SetupStatus>(`${API_BASE}/status`);
@@ -52,7 +52,7 @@ export async function getSetupStatus(): Promise<SetupStatus> {
 }
 
 /**
- * Create admin account
+ * Crear cuenta de administrador
  */
 export async function createAdmin(data: {
   username: string;
@@ -63,7 +63,7 @@ export async function createAdmin(data: {
 }
 
 /**
- * Configure music library path
+ * Configurar ruta de la biblioteca de música
  */
 export async function configureLibrary(path: string): Promise<LibraryValidationResult> {
   const response = await axios.post<LibraryValidationResult>(`${API_BASE}/library`, { path });
@@ -71,7 +71,7 @@ export async function configureLibrary(path: string): Promise<LibraryValidationR
 }
 
 /**
- * Browse directories
+ * Explorar directorios
  */
 export async function browseDirectories(path: string): Promise<BrowseResult> {
   const response = await axios.post<BrowseResult>(`${API_BASE}/browse`, { path });
@@ -79,7 +79,7 @@ export async function browseDirectories(path: string): Promise<BrowseResult> {
 }
 
 /**
- * Complete setup
+ * Completar configuración
  */
 export async function completeSetup(): Promise<{ success: boolean; message: string }> {
   const response = await axios.post(`${API_BASE}/complete`);

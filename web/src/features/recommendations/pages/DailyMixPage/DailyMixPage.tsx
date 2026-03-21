@@ -18,7 +18,7 @@ import styles from './DailyMixPage.module.css';
 
 /**
  * DailyMixPage Component
- * Displays a personalized Daily Mix of tracks based on user's listening habits
+ * Muestra un Daily Mix personalizado basado en los hábitos de escucha del usuario
  */
 export function DailyMixPage() {
   const { playQueue, currentTrack } = usePlayer();
@@ -66,10 +66,10 @@ export function DailyMixPage() {
     loadDailyMix();
   };
 
-  // Convert ScoredTrack[] to Track[] for player
+  // Convertir ScoredTrack[] a Track[] para el reproductor
   const convertScoredTracksToPlayerTracks = (scoredTracks: ScoredTrack[]): Track[] => {
     return scoredTracks
-      .filter((st) => st.track) // Only include tracks with data
+      .filter((st) => st.track) // Solo incluir tracks con datos
       .map(
         (st) =>
           ({
@@ -80,7 +80,7 @@ export function DailyMixPage() {
             albumId: st.track!.albumId,
             artistId: st.track!.artistId,
             duration: st.track!.duration || 0,
-            // Audio normalization data (LUFS)
+            // Datos de normalización de audio (LUFS)
             rgTrackGain: st.track!.rgTrackGain,
             rgTrackPeak: st.track!.rgTrackPeak,
           }) as Track

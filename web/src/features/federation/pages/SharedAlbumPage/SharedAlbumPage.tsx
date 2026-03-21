@@ -33,8 +33,7 @@ import type { RemoteTrack } from '../../types';
 import styles from './SharedAlbumPage.module.css';
 
 /**
- * SharedAlbumPage Component
- * Displays album details from a federated server
+ * Página de álbum compartido desde un servidor federado.
  */
 export default function SharedAlbumPage() {
   const { serverId, albumId } = useParams<{ serverId: string; albumId: string }>();

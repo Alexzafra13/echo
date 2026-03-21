@@ -47,8 +47,7 @@ interface TrackListProps {
 }
 
 /**
- * TrackList Component
- * Displays a list of tracks with play buttons
+ * Lista de pistas con controles de reproducción.
  *
  * @example
  * <TrackList

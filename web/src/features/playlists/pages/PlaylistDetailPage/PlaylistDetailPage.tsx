@@ -32,8 +32,7 @@ import { logger } from '@shared/utils/logger';
 import styles from './PlaylistDetailPage.module.css';
 
 /**
- * PlaylistDetailPage Component
- * Displays playlist details and track listing
+ * Página de detalle de playlist con listado de pistas.
  */
 export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>();

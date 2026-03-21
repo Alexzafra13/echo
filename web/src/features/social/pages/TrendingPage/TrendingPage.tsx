@@ -11,7 +11,7 @@ type TimeRange = 'week' | 'month' | 'all';
 
 /**
  * TrendingPage Component
- * Shows the top 50 most played tracks on the platform
+ * Muestra las 50 canciones más escuchadas en la plataforma
  */
 export default function TrendingPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');

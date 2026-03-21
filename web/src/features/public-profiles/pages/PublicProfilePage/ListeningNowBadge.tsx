@@ -14,11 +14,11 @@ export function ListeningNowBadge({ listeningNow }: ListeningNowBadgeProps) {
 
   useEffect(() => {
     if (listeningNow) {
-      // New data: show immediately
+      // Datos nuevos: mostrar inmediatamente
       setDisplayData(listeningNow);
       setIsVisible(true);
     } else if (displayData) {
-      // Data removed: fade out first, then remove
+      // Datos eliminados: desvanecer primero, luego eliminar
       setIsVisible(false);
       const timer = setTimeout(() => setDisplayData(null), 500);
       return () => clearTimeout(timer);

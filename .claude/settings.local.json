@@ -127,7 +127,16 @@
       "Bash(grep -v \"//\")",
       "Bash(grep -n \"3000\\\\|15000\\\\|50\\\\|15\\\\|100\\\\|60\" /c/Users/alex/Desktop/ec/echo/web/src/features/player/hooks/*.ts)",
       "Bash(grep -l \"\\\\.module\\\\.css\" /c/Users/alex/Desktop/ec/echo/web/src/features/**/*.tsx)",
-      "Bash(grep -r \"Response\\\\|Result\" /c/Users/alex/Desktop/ec/echo/web/src/features/admin/api/*.ts)"
+      "Bash(grep -r \"Response\\\\|Result\" /c/Users/alex/Desktop/ec/echo/web/src/features/admin/api/*.ts)",
+      "Bash(grep -r \"from.*useCustomArtistImages\\\\|from.*custom-artist-images\" /c/Users/alex/Desktop/ec/echo/web/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r SettingsPage /c/Users/alex/Desktop/ec/echo/web/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r @features/settings /c/Users/alex/Desktop/ec/echo/web/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r from.*@features/home[''] /c/Users/alex/Desktop/ec/echo/web/src --include=*.ts --include=*.tsx)",
+      "Bash(while read:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/alex/Desktop/ec/echo/web/**)",
+      "Bash(done)",
+      "Bash(for file:*)"
     ]
   }
 }
