@@ -146,7 +146,9 @@ export class ImageResizeService {
       const files = await fs.readdir(this.thumbsPath);
       const toDelete = files.filter((f) => f.startsWith(`${cacheKey}_`));
       await Promise.all(
-        toDelete.map((f) => fs.unlink(path.join(this.thumbsPath, f)).catch(() => {}))
+        toDelete.map((f) => fs.unlink(path.join(this.thumbsPath, f)).catch((e) => {
+          this.logger.warn(`No se pudo borrar thumbnail ${f}: ${(e as Error).message}`);
+        }))
       );
       if (toDelete.length > 0) {
         this.logger.debug(`Invalidated ${toDelete.length} thumbnails for ${cacheKey}`);

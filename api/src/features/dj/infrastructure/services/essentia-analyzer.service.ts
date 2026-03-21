@@ -89,7 +89,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
    * Matches the logic used by BullMQ concurrency in the queue service.
    */
   private calculatePoolSize(): number {
-    const envConcurrency = parseInt(process.env.DJ_ANALYSIS_CONCURRENCY || '', 10);
+    const envConcurrency = Number(process.env.DJ_ANALYSIS_CONCURRENCY);
     if (envConcurrency > 0) return envConcurrency;
 
     const cpuCores = os.cpus().length;

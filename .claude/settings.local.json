@@ -138,7 +138,9 @@
       "Bash(done)",
       "Bash(for file:*)",
       "Bash(node -e \"try { require\\(''sharp''\\); console.log\\(''sharp in api''\\); } catch { console.log\\(''no''\\); }\")",
-      "Bash(grep -r \"query\\\\|Query\\\\|raw\\\\|Raw\\\\|sql\\\\`\\\\|SQL\" /c/Users/alex/Desktop/ec/echo/api/src --include=\"*.ts\")"
+      "Bash(grep -r \"query\\\\|Query\\\\|raw\\\\|Raw\\\\|sql\\\\`\\\\|SQL\" /c/Users/alex/Desktop/ec/echo/api/src --include=\"*.ts\")",
+      "Bash(npx jest:*)",
+      "Bash(find /c/Users/alex/Desktop/ec/echo/api/src -type f \\\\\\(-name *dj-energy-calibration* -o -name *scan-processor* -o -name *metadata-events* -o -name *image-resize* -o -name *artist-banners* -o -name *essentia-analyzer* -o -name *lufs-analysis* \\\\\\))"
     ]
   }
 }

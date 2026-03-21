@@ -9,13 +9,19 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { IsString, IsUUID, IsUrl } from 'class-validator';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { ManageArtistBannersUseCase } from '../infrastructure/use-cases/manage-artist-banners';
 
-interface AddBannerDto {
+class AddBannerDto {
+  @IsUUID()
   artistId: string;
+
+  @IsUrl()
   bannerUrl: string;
+
+  @IsString()
   provider: string;
 }
 

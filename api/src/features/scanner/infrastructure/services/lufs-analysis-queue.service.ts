@@ -14,7 +14,7 @@ const LUFS_JOB = 'analyze-track';
 
 // Concurrencia óptima: mitad de cores, limitado por RAM, tope en 12
 function getOptimalConcurrency(): number {
-  const envConcurrency = parseInt(process.env.LUFS_CONCURRENCY || '', 10);
+  const envConcurrency = Number(process.env.LUFS_CONCURRENCY);
   if (envConcurrency > 0) {
     return envConcurrency;
   }

@@ -5,6 +5,17 @@ import { Friendship } from '../entities/friendship.entity';
 import { NotificationsService } from '@features/notifications/application/notifications.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 
+const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  trace: jest.fn(),
+  fatal: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
+} as any;
+
 describe('SendFriendRequestUseCase', () => {
   let useCase: SendFriendRequestUseCase;
   let mockSocialRepo: jest.Mocked<ISocialRepository>;
@@ -45,7 +56,7 @@ describe('SendFriendRequestUseCase', () => {
       },
     } as unknown as jest.Mocked<DrizzleService>;
 
-    useCase = new SendFriendRequestUseCase(mockSocialRepo, mockNotificationsService, mockDrizzleService);
+    useCase = new SendFriendRequestUseCase(mockLogger, mockSocialRepo, mockNotificationsService, mockDrizzleService);
   });
 
   describe('execute', () => {

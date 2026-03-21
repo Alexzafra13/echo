@@ -430,7 +430,9 @@ export class ScanProcessorService implements OnModuleInit {
           ? `${summary} (${tracker.errors} errores)`
           : summary,
         { scanId, duration, totalFiles: tracker.totalFiles, tracksCreated: tracker.tracksCreated, albumsCreated: tracker.albumsCreated, artistsCreated: tracker.artistsCreated, errors: tracker.errors },
-      ).catch(() => {});
+      ).catch((e) => {
+        this.logger.warn(`No se pudo notificar fin de escaneo: ${(e as Error).message}`);
+      });
 
       this.logger.info(
         `✅ Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted} ⏭️${tracker.tracksSkipped} saltados`

@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ValidationError, ConflictError } from '@shared/errors';
 import { ISocialRepository, SOCIAL_REPOSITORY } from '../ports';
 import { Friendship } from '../entities/friendship.entity';
@@ -10,6 +11,8 @@ import { eq } from 'drizzle-orm';
 @Injectable()
 export class SendFriendRequestUseCase {
   constructor(
+    @InjectPinoLogger(SendFriendRequestUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(SOCIAL_REPOSITORY)
     private readonly socialRepository: ISocialRepository,
     private readonly notificationsService: NotificationsService,
@@ -34,7 +37,9 @@ export class SendFriendRequestUseCase {
         if (existing.addresseeId === requesterId) {
           const accepted = await this.socialRepository.acceptFriendRequest(existing.id, requesterId);
           // Notify both users about mutual acceptance
-          this.notifyAccepted(requesterId, addresseeId).catch(() => {});
+          this.notifyAccepted(requesterId, addresseeId).catch((e) => {
+            this.logger.warn(`No se pudo notificar aceptación de amistad: ${(e as Error).message}`);
+          });
           return accepted;
         }
         throw new ConflictError('Friend request already sent');
@@ -47,7 +52,9 @@ export class SendFriendRequestUseCase {
     const friendship = await this.socialRepository.sendFriendRequest(requesterId, addresseeId);
 
     // Notify the addressee about the incoming friend request
-    this.notifyRequestReceived(requesterId, addresseeId, friendship.id).catch(() => {});
+    this.notifyRequestReceived(requesterId, addresseeId, friendship.id).catch((e) => {
+      this.logger.warn(`No se pudo notificar solicitud de amistad: ${(e as Error).message}`);
+    });
 
     return friendship;
   }

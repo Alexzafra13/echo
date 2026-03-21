@@ -70,6 +70,10 @@ const mockAnalyzer = {
   isAvailable: jest.fn().mockResolvedValue(true),
 };
 
+const mockEnergyCalibration = {
+  recalibrate: jest.fn().mockResolvedValue(undefined),
+};
+
 const mockScannerGateway = {
   emitDjProgress: jest.fn(),
 };
@@ -86,12 +90,14 @@ describe('DjAnalysisQueueService', () => {
       bullmq: typeof mockBullmq,
       drizzle: typeof mockDrizzle,
       analyzer: typeof mockAnalyzer,
+      energyCalibration: typeof mockEnergyCalibration,
       scannerGateway: typeof mockScannerGateway
     ) => DjAnalysisQueueService)(
       mockLogger,
       mockBullmq,
       mockDrizzle,
       mockAnalyzer,
+      mockEnergyCalibration,
       mockScannerGateway
     );
   });

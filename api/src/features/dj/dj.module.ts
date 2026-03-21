@@ -3,7 +3,7 @@ import { QueueModule } from '@infrastructure/queue/queue.module';
 import { WebSocketModule } from '@infrastructure/websocket';
 import { DJ_ANALYSIS_REPOSITORY, AUDIO_ANALYZER } from './domain/ports';
 import { DrizzleDjAnalysisRepository } from './infrastructure/persistence';
-import { EssentiaAnalyzerService, DjAnalysisQueueService } from './infrastructure/services';
+import { EssentiaAnalyzerService, DjAnalysisQueueService, DjEnergyCalibrationService } from './infrastructure/services';
 import { DjCompatibilityService } from './domain/services/dj-compatibility.service';
 import { ScannerModule } from '@features/scanner/scanner.module';
 
@@ -17,6 +17,7 @@ import { ScannerModule } from '@features/scanner/scanner.module';
     { provide: DJ_ANALYSIS_REPOSITORY, useClass: DrizzleDjAnalysisRepository },
     { provide: AUDIO_ANALYZER, useClass: EssentiaAnalyzerService },
     EssentiaAnalyzerService,
+    DjEnergyCalibrationService,
     DjAnalysisQueueService,
     DjCompatibilityService,
   ],

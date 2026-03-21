@@ -132,7 +132,9 @@ export class MetadataEventsService {
       `Enriquecimiento de ${typeLabel} completado`,
       msg,
       { entityType: data.entityType, total: data.total, successful: data.successful, failed: data.failed, duration: data.duration },
-    ).catch(() => {});
+    ).catch((e) => {
+      this.logger.warn({ error: (e as Error).message }, 'No se pudo notificar fin de enriquecimiento');
+    });
   }
 
   emitArtistImagesUpdated(data: {
