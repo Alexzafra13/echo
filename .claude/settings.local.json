@@ -136,7 +136,8 @@
       "Bash(do echo:*)",
       "Read(//c/Users/alex/Desktop/ec/echo/web/**)",
       "Bash(done)",
-      "Bash(for file:*)"
+      "Bash(for file:*)",
+      "Bash(node -e \"try { require\\(''sharp''\\); console.log\\(''sharp in api''\\); } catch { console.log\\(''no''\\); }\")"
     ]
   }
 }
