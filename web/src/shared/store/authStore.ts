@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import WebSocketService from '@shared/services/websocket.service';
+import { logger } from '@shared/utils/logger';
 
 // Current store version - increment when changing the persisted state structure
 const STORE_VERSION = 1;
@@ -95,7 +96,7 @@ export const useAuthStore = create<AuthState>()(
       // Error handling: if rehydration fails, clear corrupted data
       onRehydrateStorage: () => (_state, error) => {
         if (error) {
-          console.error('[AuthStore] Error loading persisted state:', error);
+          logger.error('[AuthStore] Error loading persisted state:', error);
           localStorage.removeItem('echo-auth-storage');
         }
       },

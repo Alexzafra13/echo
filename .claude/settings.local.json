@@ -123,7 +123,11 @@
       "Bash(find /c/Users/alex/Desktop/ec/echo/web/src -name \"*.tsx\" -not -name \"*.test.tsx\" -type f -exec wc -l {})",
       "Bash(grep -r \"queryKey.*:\" /c/Users/alex/Desktop/ec/echo/web/src/features/admin/hooks/*.ts)",
       "Bash(grep -B5 -A8 \"const formData = new FormData\" /c/Users/alex/Desktop/ec/echo/web/src/features/admin/api/*.ts)",
-      "Bash(grep -r \"export function use\" /c/Users/alex/Desktop/ec/echo/web/src/shared/hooks/*.ts)"
+      "Bash(grep -r \"export function use\" /c/Users/alex/Desktop/ec/echo/web/src/shared/hooks/*.ts)",
+      "Bash(grep -v \"//\")",
+      "Bash(grep -n \"3000\\\\|15000\\\\|50\\\\|15\\\\|100\\\\|60\" /c/Users/alex/Desktop/ec/echo/web/src/features/player/hooks/*.ts)",
+      "Bash(grep -l \"\\\\.module\\\\.css\" /c/Users/alex/Desktop/ec/echo/web/src/features/**/*.tsx)",
+      "Bash(grep -r \"Response\\\\|Result\" /c/Users/alex/Desktop/ec/echo/web/src/features/admin/api/*.ts)"
     ]
   }
 }

@@ -13,6 +13,12 @@ import { logger } from '@shared/utils/logger';
 import type { AudioElements } from './useAudioElements';
 import type { CrossfadeSettings } from '../types';
 
+// Duración del crossfade en segundos (y milisegundos)
+const CROSSFADE_DURATION_S = 2;
+const CROSSFADE_DURATION_MS = CROSSFADE_DURATION_S * 1000;
+// Mínimo para evitar cortes bruscos
+const CROSSFADE_MIN_MS = 1000;
+
 interface UseCrossfadeLogicParams {
   audioElements: AudioElements;
   settings: CrossfadeSettings;
@@ -168,10 +174,7 @@ export function useCrossfadeLogic({
         await audioElements.playInactive(false);
       }
 
-      // Hardcoded 2s crossfade for web — simple, reliable transitions.
-      // Advanced crossfade options (variable duration, smart mode, tempo match)
-      // are reserved for native apps where audio control is more reliable.
-      const configuredFadeDuration = 2000; // 2 seconds in ms
+      const configuredFadeDuration = CROSSFADE_DURATION_MS;
 
       // Cap fade duration to the actual time remaining in the outgoing track.
       // Critical for smart crossfade: when outroStart is close to track end
@@ -184,8 +187,7 @@ export function useCrossfadeLogic({
         !isNaN(activeDur) && activeDur > activeTime
           ? (activeDur - activeTime) * 1000
           : configuredFadeDuration;
-      // Minimum 1s to avoid jarring instant cuts
-      const fadeDuration = Math.max(1000, Math.min(configuredFadeDuration, trackRemainingMs));
+      const fadeDuration = Math.max(CROSSFADE_MIN_MS, Math.min(configuredFadeDuration, trackRemainingMs));
 
       if (fadeDuration < configuredFadeDuration) {
         logger.debug('[Crossfade] Fade duration capped to remaining track time', {
@@ -337,8 +339,7 @@ export function useCrossfadeLogic({
 
     const duration = audioElements.getDuration();
     const currentTime = audioElements.getCurrentTime();
-    // Hardcoded 2s crossfade for web — no user-configurable duration
-    const crossfadeDuration = 2;
+    const crossfadeDuration = CROSSFADE_DURATION_S;
 
     // Fixed 2-second crossfade before track end
     const timeRemaining = duration - currentTime;

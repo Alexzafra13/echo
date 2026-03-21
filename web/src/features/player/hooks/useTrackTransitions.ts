@@ -3,7 +3,7 @@
  *
  * Handles automatic track-to-track transitions:
  * - Track ended handler (repeat, preloaded, fallback paths)
- * - Gapless preloading (buffers next track 15s before end)
+ * - Precarga gapless (carga la siguiente pista antes de que termine)
  * - Autoplay triggering when queue is exhausted
  *
  * Extracted from PlayerContext to isolate the complex transition
@@ -13,6 +13,9 @@
 import { useEffect } from 'react';
 import { useLatestCallback } from '@shared/hooks';
 import { Track } from '../types';
+
+// Segundos antes del final para precargar la siguiente pista
+const PRELOAD_BEFORE_END_S = 15;
 import { logger } from '@shared/utils/logger';
 import { playActiveWithRetry } from './playActiveWithRetry';
 import type { AudioElements } from './useAudioElements';
@@ -63,8 +66,8 @@ export function useTrackTransitions({
    * Defined before handleEnded so it's available in handleEnded's closure.
    */
   const playNextWithPreload = useLatestCallback(async () => {
-    // Web Audio API enables crossfade on all platforms (including iOS).
-    // Audio B's play() works because it was authorized during previous playback.
+    // Audio B puede reproducir sin gesto del usuario porque ya fue
+    // autorizado durante la reproducción anterior.
     const preloaded = preloadedNextRef.current;
     const nextIndex = queue.getNextIndex();
     const nextTrack = nextIndex !== -1 ? queue.getTrackAt(nextIndex) : null;
@@ -165,7 +168,7 @@ export function useTrackTransitions({
     const timeRemaining = audio.duration - audio.currentTime;
     if (timeRemaining <= 0) return;
 
-    if (timeRemaining <= 15 && !preloadedNextRef.current) {
+    if (timeRemaining <= PRELOAD_BEFORE_END_S && !preloadedNextRef.current) {
       if (queue.repeatMode === 'one') return;
       const nextIndex = queue.getNextIndex();
       if (nextIndex === -1) return;
