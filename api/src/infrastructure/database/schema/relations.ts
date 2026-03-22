@@ -15,6 +15,8 @@ import { shares, bookmarks } from './shares';
 import { friendships } from './social';
 import { notifications, notificationPreferences } from './notifications';
 import { djAnalysis } from './dj';
+import { playlistCollaborators } from './collaboration';
+import { listeningSessions, listeningSessionParticipants, listeningSessionQueue } from './listening-sessions';
 
 // ============================================
 // User Relations
@@ -188,6 +190,7 @@ export const playlistsRelations = relations(playlists, ({ one, many }) => ({
     references: [users.id],
   }),
   tracks: many(playlistTracks),
+  collaborators: many(playlistCollaborators),
 }));
 
 export const playlistTracksRelations = relations(playlistTracks, ({ one }) => ({
@@ -339,6 +342,67 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
   user: one(users, {
     fields: [notificationPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================
+// Playlist Collaborator Relations
+// ============================================
+export const playlistCollaboratorsRelations = relations(playlistCollaborators, ({ one }) => ({
+  playlist: one(playlists, {
+    fields: [playlistCollaborators.playlistId],
+    references: [playlists.id],
+  }),
+  user: one(users, {
+    fields: [playlistCollaborators.userId],
+    references: [users.id],
+  }),
+  inviter: one(users, {
+    fields: [playlistCollaborators.invitedBy],
+    references: [users.id],
+    relationName: 'inviter',
+  }),
+}));
+
+// ============================================
+// Listening Session Relations
+// ============================================
+export const listeningSessionsRelations = relations(listeningSessions, ({ one, many }) => ({
+  host: one(users, {
+    fields: [listeningSessions.hostId],
+    references: [users.id],
+  }),
+  currentTrack: one(tracks, {
+    fields: [listeningSessions.currentTrackId],
+    references: [tracks.id],
+  }),
+  participants: many(listeningSessionParticipants),
+  queue: many(listeningSessionQueue),
+}));
+
+export const listeningSessionParticipantsRelations = relations(listeningSessionParticipants, ({ one }) => ({
+  session: one(listeningSessions, {
+    fields: [listeningSessionParticipants.sessionId],
+    references: [listeningSessions.id],
+  }),
+  user: one(users, {
+    fields: [listeningSessionParticipants.userId],
+    references: [users.id],
+  }),
+}));
+
+export const listeningSessionQueueRelations = relations(listeningSessionQueue, ({ one }) => ({
+  session: one(listeningSessions, {
+    fields: [listeningSessionQueue.sessionId],
+    references: [listeningSessions.id],
+  }),
+  track: one(tracks, {
+    fields: [listeningSessionQueue.trackId],
+    references: [tracks.id],
+  }),
+  addedByUser: one(users, {
+    fields: [listeningSessionQueue.addedBy],
     references: [users.id],
   }),
 }));

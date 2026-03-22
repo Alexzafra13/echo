@@ -134,6 +134,13 @@
       "when": 1769108056351,
       "tag": "0018_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1769194456351,
+      "tag": "0019_collaboration_and_sessions",
+      "breakpoints": true
     }
   ]
 }

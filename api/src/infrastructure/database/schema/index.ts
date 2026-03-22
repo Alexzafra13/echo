@@ -23,6 +23,8 @@ export * from './social';
 export * from './notifications';
 export * from './federation';
 export * from './dj';
+export * from './collaboration';
+export * from './listening-sessions';
 
 // Relations
 export * from './relations';

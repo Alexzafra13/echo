@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY, TrackWithPlaylistOrder } from '../../ports';
+import { ICollaboratorRepository, COLLABORATOR_REPOSITORY } from '../../ports';
 import {
   IDjAnalysisRepository,
   DJ_ANALYSIS_REPOSITORY,
@@ -22,6 +23,8 @@ export class GetPlaylistDjShuffledTracksUseCase {
   constructor(
     @Inject(PLAYLIST_REPOSITORY)
     private readonly playlistRepository: IPlaylistRepository,
+    @Inject(COLLABORATOR_REPOSITORY)
+    private readonly collaboratorRepository: ICollaboratorRepository,
     @Inject(DJ_ANALYSIS_REPOSITORY)
     private readonly djAnalysisRepo: IDjAnalysisRepository
   ) {}
@@ -38,8 +41,12 @@ export class GetPlaylistDjShuffledTracksUseCase {
       throw new NotFoundError('Playlist', input.playlistId);
     }
 
-    // Verify access: only owner or public playlists
-    if (!playlist.public && input.requesterId && playlist.ownerId !== input.requesterId) {
+    // Verify access: owner, public playlists, or collaborator
+    const isOwner = input.requesterId && playlist.ownerId === input.requesterId;
+    const isCollaborator = input.requesterId
+      ? await this.collaboratorRepository.hasAccess(input.playlistId, input.requesterId)
+      : false;
+    if (!playlist.public && !isOwner && !isCollaborator) {
       throw new ForbiddenError('You do not have access to this playlist');
     }
 
