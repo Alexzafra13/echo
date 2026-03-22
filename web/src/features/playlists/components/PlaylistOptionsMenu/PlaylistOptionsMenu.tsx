@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MoreHorizontal, Edit2, Download, Trash2, Globe, Lock, X } from 'lucide-react';
+import { MoreHorizontal, Edit2, Download, Trash2, Globe, Lock, X, Users } from 'lucide-react';
 import { useDropdownMenu, useSheetDragToClose } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
 import styles from './PlaylistOptionsMenu.module.css';
 
 interface PlaylistOptionsMenuProps {
   onEdit?: () => void;
+  onShare?: () => void;
   onDownload?: () => void;
   onDelete?: () => void;
   onToggleVisibility?: () => void;
@@ -17,6 +18,7 @@ interface PlaylistOptionsMenuProps {
 
 export function PlaylistOptionsMenu({
   onEdit,
+  onShare,
   onDownload,
   onDelete,
   onToggleVisibility,
@@ -103,6 +105,18 @@ export function PlaylistOptionsMenu({
         >
           <Edit2 size={isSheet ? 18 : 16} />
           <span>Editar playlist</span>
+        </button>
+      )}
+
+      {onShare && (
+        <button
+          className={
+            isSheet ? styles.playlistOptionsMenu__sheetOption : styles.playlistOptionsMenu__option
+          }
+          onClick={(e) => onOption(e, onShare)}
+        >
+          <Users size={isSheet ? 18 : 16} />
+          <span>Compartir</span>
         </button>
       )}
 

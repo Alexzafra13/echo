@@ -5,6 +5,8 @@ import type {
   UpdatePlaylistDto,
   AddTrackToPlaylistDto,
   ReorderTracksDto,
+  InviteCollaboratorDto,
+  UpdateCollaboratorRoleDto,
 } from '../types';
 
 export function usePlaylists(params?: {
@@ -129,5 +131,67 @@ export function usePlaylistsByArtist(artistId: string | undefined, params?: {
     queryFn: () => playlistsService.getPlaylistsByArtist(artistId!, params),
     enabled: !!artistId,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ============================================
+// Collaboration hooks
+// ============================================
+
+export function usePlaylistCollaborators(playlistId: string) {
+  return useQuery({
+    queryKey: ['playlists', playlistId, 'collaborators'],
+    queryFn: () => playlistsService.getCollaborators(playlistId),
+    enabled: !!playlistId,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useInviteCollaborator() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ playlistId, dto }: { playlistId: string; dto: InviteCollaboratorDto }) =>
+      playlistsService.inviteCollaborator(playlistId, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['playlists', variables.playlistId, 'collaborators'],
+      });
+    },
+  });
+}
+
+export function useUpdateCollaboratorRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      playlistId,
+      userId,
+      dto,
+    }: {
+      playlistId: string;
+      userId: string;
+      dto: UpdateCollaboratorRoleDto;
+    }) => playlistsService.updateCollaboratorRole(playlistId, userId, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['playlists', variables.playlistId, 'collaborators'],
+      });
+    },
+  });
+}
+
+export function useRemoveCollaborator() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ playlistId, userId }: { playlistId: string; userId: string }) =>
+      playlistsService.removeCollaborator(playlistId, userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['playlists', variables.playlistId, 'collaborators'],
+      });
+    },
   });
 }
