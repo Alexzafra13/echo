@@ -179,7 +179,9 @@ export function WaveMixPage() {
                   className={styles.hero__refreshBtn}
                 >
                   <RefreshCw size={16} className={isLoading ? styles.spinning : ''} />
-                  {isLoading ? 'Actualizando...' : 'Actualizar'}
+                  <span className={styles.hero__refreshBtnText}>
+                    {isLoading ? 'Actualizando...' : 'Actualizar'}
+                  </span>
                 </Button>
               </div>
             </div>
