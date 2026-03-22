@@ -71,3 +71,32 @@ export interface TrackOrderDto {
 export interface ReorderTracksDto {
   trackOrders: TrackOrderDto[];
 }
+
+// ============================================
+// Collaboration types
+// ============================================
+
+export type CollaboratorRole = 'editor' | 'viewer';
+export type CollaboratorStatus = 'pending' | 'accepted';
+
+export interface PlaylistCollaborator {
+  id: string;
+  playlistId: string;
+  userId: string;
+  username: string;
+  name?: string;
+  hasAvatar: boolean;
+  role: CollaboratorRole;
+  status: CollaboratorStatus;
+  invitedBy: string;
+  createdAt: string;
+}
+
+export interface InviteCollaboratorDto {
+  userId: string;
+  role: CollaboratorRole;
+}
+
+export interface UpdateCollaboratorRoleDto {
+  role: CollaboratorRole;
+}

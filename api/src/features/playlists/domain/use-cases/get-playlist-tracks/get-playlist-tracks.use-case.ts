@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { validatePagination } from '@shared/utils';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
+import { ICollaboratorRepository, COLLABORATOR_REPOSITORY } from '../../ports';
 import { GetPlaylistTracksInput, GetPlaylistTracksOutput, TrackItem } from './get-playlist-tracks.dto';
 
 @Injectable()
@@ -9,6 +10,8 @@ export class GetPlaylistTracksUseCase {
   constructor(
     @Inject(PLAYLIST_REPOSITORY)
     private readonly playlistRepository: IPlaylistRepository,
+    @Inject(COLLABORATOR_REPOSITORY)
+    private readonly collaboratorRepository: ICollaboratorRepository,
   ) {}
 
   async execute(input: GetPlaylistTracksInput): Promise<GetPlaylistTracksOutput> {
@@ -21,8 +24,12 @@ export class GetPlaylistTracksUseCase {
       throw new NotFoundError('Playlist', input.playlistId);
     }
 
-    // Verificar acceso: solo el owner o playlists públicas
-    if (!playlist.public && input.requesterId && playlist.ownerId !== input.requesterId) {
+    // Verificar acceso: owner, playlists públicas, o colaborador
+    const isOwner = input.requesterId && playlist.ownerId === input.requesterId;
+    const isCollaborator = input.requesterId
+      ? await this.collaboratorRepository.hasAccess(input.playlistId, input.requesterId)
+      : false;
+    if (!playlist.public && !isOwner && !isCollaborator) {
       throw new ForbiddenError('You do not have access to this playlist');
     }
 

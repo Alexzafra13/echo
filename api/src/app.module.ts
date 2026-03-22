@@ -36,6 +36,7 @@ import { PublicProfilesModule } from './features/public-profiles/public-profiles
 import { SocialModule } from './features/social/social.module';
 import { FederationModule } from './features/federation/federation.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
+import { ListeningSessionsModule } from './features/listening-sessions/listening-sessions.module';
 import { validateEnvironment } from './config/env.validation';
 import { SecuritySecretsModule } from './config/security-secrets.module';
 import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer.util';
@@ -117,6 +118,7 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
     SocialModule,
     FederationModule,
     NotificationsModule,
+    ListeningSessionsModule,
   ],
   controllers: [],
   providers: [

@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
+import { ICollaboratorRepository, COLLABORATOR_REPOSITORY } from '../../ports';
 import { IUserRepository, USER_REPOSITORY } from '@features/auth/domain/ports/user-repository.port';
 import { GetPlaylistInput, GetPlaylistOutput } from './get-playlist.dto';
 
@@ -9,6 +10,8 @@ export class GetPlaylistUseCase {
   constructor(
     @Inject(PLAYLIST_REPOSITORY)
     private readonly playlistRepository: IPlaylistRepository,
+    @Inject(COLLABORATOR_REPOSITORY)
+    private readonly collaboratorRepository: ICollaboratorRepository,
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
   ) {}
@@ -26,9 +29,13 @@ export class GetPlaylistUseCase {
       throw new NotFoundError('Playlist', input.id);
     }
 
-    // 3. Verificar acceso: playlist pública O usuario es el dueño
+    // 3. Verificar acceso: playlist pública, usuario es el dueño, o es colaborador
     const isOwner = input.requesterId && playlist.ownerId === input.requesterId;
-    if (!playlist.public && !isOwner) {
+    const isCollaborator = input.requesterId
+      ? await this.collaboratorRepository.hasAccess(input.id, input.requesterId)
+      : false;
+
+    if (!playlist.public && !isOwner && !isCollaborator) {
       throw new ForbiddenError('No tienes acceso a esta playlist');
     }
 
@@ -37,7 +44,7 @@ export class GetPlaylistUseCase {
     const ownerName = owner?.name || owner?.username;
     const ownerHasAvatar = owner?.avatarPath ? true : false;
 
-    // 4. Retornar output
+    // 5. Retornar output
     return {
       id: playlist.id,
       name: playlist.name,

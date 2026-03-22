@@ -21,6 +21,7 @@ import {
   PlaylistOptionsMenu,
   EditPlaylistModal,
   DeletePlaylistModal,
+  SharePlaylistModal,
 } from '../../components';
 import { UpdatePlaylistDto } from '../../types';
 import type { Track as SharedTrack } from '@shared/types/track.types';
@@ -44,6 +45,7 @@ export default function PlaylistDetailPage() {
   const imageModal = useModal();
   const editModal = useModal();
   const deleteModal = useModal();
+  const shareModal = useModal();
 
   const { data: playlist, isLoading: loadingPlaylist, error: playlistError } = usePlaylist(id!);
   useDocumentTitle(playlist?.name);
@@ -335,6 +337,7 @@ export default function PlaylistDetailPage() {
                 </Button>
                 <PlaylistOptionsMenu
                   onEdit={editModal.open}
+                  onShare={shareModal.open}
                   onToggleVisibility={handleToggleVisibility}
                   onDelete={deleteModal.open}
                   isPublic={playlist.public}
@@ -407,6 +410,14 @@ export default function PlaylistDetailPage() {
           onClose={deleteModal.close}
           onConfirm={handleDeletePlaylist}
           isLoading={deletePlaylistMutation.isPending}
+        />
+      )}
+
+      {/* Share Playlist Modal */}
+      {shareModal.isOpen && playlist && (
+        <SharePlaylistModal
+          playlist={playlist}
+          onClose={shareModal.close}
         />
       )}
     </div>
