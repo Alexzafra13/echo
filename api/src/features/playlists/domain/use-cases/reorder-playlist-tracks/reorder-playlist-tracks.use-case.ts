@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
+import { ICollaboratorRepository, COLLABORATOR_REPOSITORY } from '../../ports';
 import { ReorderPlaylistTracksInput, ReorderPlaylistTracksOutput } from './reorder-playlist-tracks.dto';
 
 @Injectable()
@@ -8,6 +9,8 @@ export class ReorderPlaylistTracksUseCase {
   constructor(
     @Inject(PLAYLIST_REPOSITORY)
     private readonly playlistRepository: IPlaylistRepository,
+    @Inject(COLLABORATOR_REPOSITORY)
+    private readonly collaboratorRepository: ICollaboratorRepository,
   ) {}
 
   async execute(input: ReorderPlaylistTracksInput): Promise<ReorderPlaylistTracksOutput> {
@@ -26,8 +29,10 @@ export class ReorderPlaylistTracksUseCase {
       throw new NotFoundError('Playlist', input.playlistId);
     }
 
-    // 3. SEGURIDAD: Verificar que el usuario es el propietario
-    if (playlist.ownerId !== input.userId) {
+    // 3. SEGURIDAD: Verificar que el usuario es el propietario o editor colaborador
+    const isOwner = playlist.ownerId === input.userId;
+    const isEditor = !isOwner && await this.collaboratorRepository.isEditor(input.playlistId, input.userId);
+    if (!isOwner && !isEditor) {
       throw new ForbiddenError('You do not have permission to modify this playlist');
     }
 

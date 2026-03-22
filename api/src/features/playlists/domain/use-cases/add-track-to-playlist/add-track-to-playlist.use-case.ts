@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError, ValidationError, ConflictError, ForbiddenError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
+import { ICollaboratorRepository, COLLABORATOR_REPOSITORY } from '../../ports';
 import { TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
 import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { PlaylistTrack } from '../../entities';
@@ -11,6 +12,8 @@ export class AddTrackToPlaylistUseCase {
   constructor(
     @Inject(PLAYLIST_REPOSITORY)
     private readonly playlistRepository: IPlaylistRepository,
+    @Inject(COLLABORATOR_REPOSITORY)
+    private readonly collaboratorRepository: ICollaboratorRepository,
     @Inject(TRACK_REPOSITORY)
     private readonly trackRepository: ITrackRepository,
   ) {}
@@ -31,8 +34,10 @@ export class AddTrackToPlaylistUseCase {
       throw new NotFoundError('Playlist', input.playlistId);
     }
 
-    // 3. SEGURIDAD: Verificar que el usuario es el propietario
-    if (playlist.ownerId !== input.userId) {
+    // 3. SEGURIDAD: Verificar que el usuario es el propietario o editor colaborador
+    const isOwner = playlist.ownerId === input.userId;
+    const isEditor = !isOwner && await this.collaboratorRepository.isEditor(input.playlistId, input.userId);
+    if (!isOwner && !isEditor) {
       throw new ForbiddenError('You do not have permission to modify this playlist');
     }
 

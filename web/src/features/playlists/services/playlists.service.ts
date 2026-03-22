@@ -2,10 +2,13 @@ import { apiClient } from '@shared/services/api';
 import type {
   Playlist,
   PlaylistTrack,
+  PlaylistCollaborator,
   CreatePlaylistDto,
   UpdatePlaylistDto,
   AddTrackToPlaylistDto,
   ReorderTracksDto,
+  InviteCollaboratorDto,
+  UpdateCollaboratorRoleDto,
 } from '../types';
 
 /**
@@ -161,5 +164,37 @@ export const playlistsService = {
       take: number;
     }>(`/playlists/by-artist/${artistId}`, { params });
     return data;
+  },
+
+  // ============================================
+  // Collaboration
+  // ============================================
+
+  getCollaborators: async (playlistId: string): Promise<{
+    playlistId: string;
+    collaborators: PlaylistCollaborator[];
+  }> => {
+    const { data } = await apiClient.get<{
+      playlistId: string;
+      collaborators: PlaylistCollaborator[];
+    }>(`/playlists/${playlistId}/collaborators`);
+    return data;
+  },
+
+  inviteCollaborator: async (playlistId: string, dto: InviteCollaboratorDto): Promise<PlaylistCollaborator> => {
+    const { data } = await apiClient.post<PlaylistCollaborator>(`/playlists/${playlistId}/collaborators`, dto);
+    return data;
+  },
+
+  acceptCollaboration: async (collaborationId: string): Promise<void> => {
+    await apiClient.post(`/playlists/collaborations/${collaborationId}/accept`);
+  },
+
+  updateCollaboratorRole: async (playlistId: string, userId: string, dto: UpdateCollaboratorRoleDto): Promise<void> => {
+    await apiClient.patch(`/playlists/${playlistId}/collaborators/${userId}/role`, dto);
+  },
+
+  removeCollaborator: async (playlistId: string, userId: string): Promise<void> => {
+    await apiClient.delete(`/playlists/${playlistId}/collaborators/${userId}`);
   },
 };

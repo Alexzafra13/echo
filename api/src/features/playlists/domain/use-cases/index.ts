@@ -9,3 +9,8 @@ export * from './remove-track-from-playlist';
 export * from './get-playlist-tracks';
 export * from './reorder-playlist-tracks';
 export * from './get-playlist-dj-shuffled-tracks';
+export * from './invite-collaborator';
+export * from './accept-collaboration';
+export * from './remove-collaborator';
+export * from './get-collaborators';
+export * from './update-collaborator-role';
