@@ -28,7 +28,8 @@ export const listeningSessions = pgTable(
     inviteCode: varchar('invite_code', { length: 8 }).notNull().unique(),
     isActive: boolean('is_active').default(true).notNull(),
     currentTrackId: uuid('current_track_id').references(() => tracks.id, { onDelete: 'set null' }),
-    currentPosition: integer('current_position').default(0).notNull(), // playback position in seconds
+    currentPosition: integer('current_position').default(0).notNull(),
+    guestsCanControl: boolean('guests_can_control').default(true).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

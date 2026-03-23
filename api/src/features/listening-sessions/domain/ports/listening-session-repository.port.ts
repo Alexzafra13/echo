@@ -38,6 +38,7 @@ export interface IListeningSessionRepository {
   findById(id: string): Promise<ListeningSession | null>;
   findByInviteCode(code: string): Promise<ListeningSession | null>;
   findActiveByHostId(hostId: string): Promise<ListeningSession | null>;
+  findActiveByParticipantId(userId: string): Promise<ListeningSession | null>;
   update(id: string, session: ListeningSession): Promise<ListeningSession | null>;
   end(id: string): Promise<boolean>;
 
@@ -53,6 +54,7 @@ export interface IListeningSessionRepository {
   getQueue(sessionId: string): Promise<QueueItemWithTrack[]>;
   markPlayed(sessionId: string, position: number): Promise<boolean>;
   getNextUnplayed(sessionId: string): Promise<QueueItemWithTrack | null>;
+  removeFromQueue(sessionId: string, queueItemId: string): Promise<boolean>;
   clearQueue(sessionId: string): Promise<boolean>;
 }
 

@@ -179,6 +179,8 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
         return <UserPlus size={16} />;
       case 'friend_request_accepted':
         return <UserCheck size={16} />;
+      case 'session_invite':
+        return <Music size={16} />;
       case 'scan_completed':
         return <Radio size={16} />;
       case 'enrichment_completed':
@@ -249,6 +251,8 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
       // Navigate based on type
       if (item.type === 'friend_request_received' || item.type === 'friend_request_accepted') {
         close(() => setLocation('/social'));
+      } else if ((item.type === 'session_invite' || item.type === 'new_content') && item.data?.inviteCode) {
+        close(() => setLocation(`/join/${item.data.inviteCode}`));
       } else if (item.type === 'scan_completed') {
         close(() => setLocation('/admin?tab=scanner'));
       } else if (item.type === 'enrichment_completed') {

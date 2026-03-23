@@ -1,6 +1,6 @@
 import { NotFoundError, ValidationError, ConflictError } from '@shared/errors';
 import { AddTrackToPlaylistUseCase } from './add-track-to-playlist.use-case';
-import { IPlaylistRepository } from '../../ports';
+import { IPlaylistRepository, ICollaboratorRepository } from '../../ports';
 import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { Playlist, PlaylistTrack } from '../../entities';
 import { Track } from '@features/tracks/domain/entities/track.entity';
@@ -8,6 +8,7 @@ import { Track } from '@features/tracks/domain/entities/track.entity';
 describe('AddTrackToPlaylistUseCase', () => {
   let useCase: AddTrackToPlaylistUseCase;
   let playlistRepository: jest.Mocked<IPlaylistRepository>;
+  let collaboratorRepository: jest.Mocked<ICollaboratorRepository>;
   let trackRepository: jest.Mocked<ITrackRepository>;
 
   // Helper functions to create fresh instances for each test
@@ -61,6 +62,12 @@ describe('AddTrackToPlaylistUseCase', () => {
       isTrackInPlaylist: jest.fn(),
     } as unknown as jest.Mocked<IPlaylistRepository>;
 
+    collaboratorRepository = {
+      hasAccess: jest.fn().mockResolvedValue(false),
+      isEditor: jest.fn().mockResolvedValue(false),
+      isCollaborator: jest.fn().mockResolvedValue(false),
+    } as unknown as jest.Mocked<ICollaboratorRepository>;
+
     trackRepository = {
       findById: jest.fn(),
       findAll: jest.fn(),
@@ -72,7 +79,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       delete: jest.fn(),
     } as unknown as jest.Mocked<ITrackRepository>;
 
-    useCase = new AddTrackToPlaylistUseCase(playlistRepository, trackRepository);
+    useCase = new AddTrackToPlaylistUseCase(playlistRepository, collaboratorRepository, trackRepository);
   });
 
   afterEach(() => {

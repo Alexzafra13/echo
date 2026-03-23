@@ -1,0 +1,98 @@
+.section {
+  margin-bottom: var(--space-4);
+}
+
+.header {
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.emptyActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Card de sesion activa */
+.activeCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.06) 0%, var(--white-03) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-family: inherit;
+  text-align: left;
+  color: var(--text-secondary);
+}
+
+.activeCard:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, var(--white-05) 100%);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.activeDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.activeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.activeName {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.activeMeta {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.activeAvatars {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.activeAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--bg-base, #0a0e27);
+  margin-left: -10px;
+  background: var(--white-08);
+}
+
+.activeAvatar:first-child {
+  margin-left: 0;
+}

@@ -10,6 +10,7 @@ export interface ListeningSessionProps {
   isActive: boolean;
   currentTrackId?: string;
   currentPosition: number;
+  guestsCanControl: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,6 +46,7 @@ export class ListeningSession {
       inviteCode: generateInviteCode(),
       isActive: true,
       currentPosition: 0,
+      guestsCanControl: true,
       createdAt: now,
       updatedAt: now,
     });
@@ -61,6 +63,7 @@ export class ListeningSession {
   get isActive(): boolean { return this.props.isActive; }
   get currentTrackId(): string | undefined { return this.props.currentTrackId; }
   get currentPosition(): number { return this.props.currentPosition; }
+  get guestsCanControl(): boolean { return this.props.guestsCanControl; }
   get createdAt(): Date { return this.props.createdAt; }
   get updatedAt(): Date { return this.props.updatedAt; }
 

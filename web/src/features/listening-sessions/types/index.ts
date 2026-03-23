@@ -12,6 +12,7 @@ export interface ListeningSession {
   isActive: boolean;
   currentTrackId?: string;
   currentPosition: number;
+  guestsCanControl: boolean;
   participants: SessionParticipant[];
   queue: SessionQueueItem[];
   createdAt: string;

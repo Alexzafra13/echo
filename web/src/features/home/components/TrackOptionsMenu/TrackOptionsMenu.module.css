@@ -143,6 +143,19 @@
   color: var(--color-primary-500, #ed6842);
 }
 
+/* Session Option */
+.trackOptionsMenu__optionSession {
+  color: #22c55e;
+}
+
+.trackOptionsMenu__optionSession svg {
+  color: #22c55e;
+}
+
+.trackOptionsMenu__optionSession:hover {
+  background: rgba(34, 197, 94, 0.1);
+}
+
 /* Danger Option */
 .trackOptionsMenu__optionDanger {
   color: #ef4444;

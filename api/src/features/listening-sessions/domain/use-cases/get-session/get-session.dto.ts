@@ -14,6 +14,7 @@ export interface GetSessionOutput {
   isActive: boolean;
   currentTrackId?: string;
   currentPosition: number;
+  guestsCanControl: boolean;
   participants: ParticipantWithUser[];
   queue: QueueItemWithTrack[];
   createdAt: Date;

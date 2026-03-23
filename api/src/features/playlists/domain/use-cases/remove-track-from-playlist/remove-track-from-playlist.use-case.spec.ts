@@ -1,7 +1,7 @@
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { RemoveTrackFromPlaylistUseCase } from './remove-track-from-playlist.use-case';
 import { Playlist } from '../../entities';
-import { IPlaylistRepository } from '../../ports';
+import { IPlaylistRepository, ICollaboratorRepository } from '../../ports';
 import { Track } from '@features/tracks/domain/entities/track.entity';
 import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 
@@ -12,6 +12,11 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
     removeTrack: jest.Mock;
     isTrackInPlaylist: jest.Mock;
     update: jest.Mock;
+  };
+  let mockCollaboratorRepository: {
+    hasAccess: jest.Mock;
+    isEditor: jest.Mock;
+    isCollaborator: jest.Mock;
   };
   let mockTrackRepository: {
     findById: jest.Mock;
@@ -59,12 +64,19 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
       update: jest.fn(),
     };
 
+    mockCollaboratorRepository = {
+      hasAccess: jest.fn().mockResolvedValue(false),
+      isEditor: jest.fn().mockResolvedValue(false),
+      isCollaborator: jest.fn().mockResolvedValue(false),
+    };
+
     mockTrackRepository = {
       findById: jest.fn(),
     };
 
     useCase = new RemoveTrackFromPlaylistUseCase(
       mockPlaylistRepository as unknown as IPlaylistRepository,
+      mockCollaboratorRepository as unknown as ICollaboratorRepository,
       mockTrackRepository as unknown as ITrackRepository
     );
   });

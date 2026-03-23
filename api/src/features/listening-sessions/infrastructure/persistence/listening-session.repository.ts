@@ -83,6 +83,22 @@ export class DrizzleListeningSessionRepository implements IListeningSessionRepos
     return result[0] ? this.toDomain(result[0]) : null;
   }
 
+  async findActiveByParticipantId(userId: string): Promise<ListeningSession | null> {
+    const result = await this.drizzle.db
+      .select({ session: listeningSessions })
+      .from(listeningSessionParticipants)
+      .innerJoin(listeningSessions, eq(listeningSessionParticipants.sessionId, listeningSessions.id))
+      .where(
+        and(
+          eq(listeningSessionParticipants.userId, userId),
+          eq(listeningSessions.isActive, true),
+        ),
+      )
+      .limit(1);
+
+    return result[0] ? this.toDomain(result[0].session) : null;
+  }
+
   async update(id: string, session: ListeningSession): Promise<ListeningSession | null> {
     const props = session.toPrimitives();
     const result = await this.drizzle.db
@@ -338,6 +354,18 @@ export class DrizzleListeningSessionRepository implements IListeningSessionRepos
     };
   }
 
+  async removeFromQueue(sessionId: string, queueItemId: string): Promise<boolean> {
+    const result = await this.drizzle.db
+      .delete(listeningSessionQueue)
+      .where(
+        and(
+          eq(listeningSessionQueue.sessionId, sessionId),
+          eq(listeningSessionQueue.id, queueItemId),
+        ),
+      );
+    return (result.rowCount ?? 0) > 0;
+  }
+
   async clearQueue(sessionId: string): Promise<boolean> {
     await this.drizzle.db
       .delete(listeningSessionQueue)
@@ -355,6 +383,7 @@ export class DrizzleListeningSessionRepository implements IListeningSessionRepos
       isActive: row.isActive,
       currentTrackId: row.currentTrackId ?? undefined,
       currentPosition: row.currentPosition,
+      guestsCanControl: row.guestsCanControl,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

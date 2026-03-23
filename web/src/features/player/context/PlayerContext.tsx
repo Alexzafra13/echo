@@ -31,7 +31,7 @@ import { useRadioSignalSync } from '../hooks/useRadioSignalSync';
 import { useVisibilitySync } from '../hooks/useVisibilitySync';
 import type { RadioBrowserStation } from '@shared/types/radio.types';
 
-const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
+export const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 
 interface PlayerProviderProps {
   children: ReactNode;

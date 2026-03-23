@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useContext } from 'react';
 import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio } from 'lucide-react';
-import { usePlayer } from '../../context/PlayerContext';
+import { usePlayer, PlayerContext } from '../../context/PlayerContext';
 import { usePlayerSettingsStore } from '../../store';
 import { useClickOutsideRef } from '../../hooks/useClickOutsideRef';
 import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
@@ -19,6 +19,11 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const preference = usePlayerSettingsStore((s) => s.playerPreference);
+
+  // Proteger contra renderizado fuera del PlayerProvider (HMR o error boundary)
+  const ctx = useContext(PlayerContext);
+  if (!ctx) return null;
+
   const {
     currentTrack,
     currentRadioStation,
@@ -32,7 +37,7 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
     playPrevious,
     seek,
     setVolume,
-  } = usePlayer();
+  } = ctx;
 
   useClickOutsideRef(menuRef, () => setIsMenuOpen(false), isMenuOpen);
 

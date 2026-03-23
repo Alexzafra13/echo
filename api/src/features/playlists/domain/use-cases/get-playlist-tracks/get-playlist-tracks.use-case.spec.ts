@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GetPlaylistTracksUseCase } from './get-playlist-tracks.use-case';
-import { IPlaylistRepository, PLAYLIST_REPOSITORY, TrackWithPlaylistOrder } from '../../ports';
+import { IPlaylistRepository, PLAYLIST_REPOSITORY, ICollaboratorRepository, COLLABORATOR_REPOSITORY, TrackWithPlaylistOrder } from '../../ports';
 import { Playlist } from '../../entities';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 
 describe('GetPlaylistTracksUseCase', () => {
   let useCase: GetPlaylistTracksUseCase;
   let repository: jest.Mocked<IPlaylistRepository>;
+  let collaboratorRepo: jest.Mocked<ICollaboratorRepository>;
 
   const mockPlaylist = Playlist.fromPrimitives({
     id: 'playlist-1',
@@ -83,6 +84,12 @@ describe('GetPlaylistTracksUseCase', () => {
       countPlaylistTracks: jest.fn(),
     };
 
+    const mockCollaboratorRepo: Partial<ICollaboratorRepository> = {
+      hasAccess: jest.fn().mockResolvedValue(false),
+      isEditor: jest.fn().mockResolvedValue(false),
+      isCollaborator: jest.fn().mockResolvedValue(false),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetPlaylistTracksUseCase,
@@ -90,11 +97,16 @@ describe('GetPlaylistTracksUseCase', () => {
           provide: PLAYLIST_REPOSITORY,
           useValue: mockRepository,
         },
+        {
+          provide: COLLABORATOR_REPOSITORY,
+          useValue: mockCollaboratorRepo,
+        },
       ],
     }).compile();
 
     useCase = module.get<GetPlaylistTracksUseCase>(GetPlaylistTracksUseCase);
     repository = module.get(PLAYLIST_REPOSITORY);
+    collaboratorRepo = module.get(COLLABORATOR_REPOSITORY);
   });
 
   describe('execute', () => {
@@ -183,14 +195,12 @@ describe('GetPlaylistTracksUseCase', () => {
       expect(result.playlistId).toBe('playlist-1');
     });
 
-    it('should allow access to private playlist without requesterId', async () => {
+    it('should throw ForbiddenError for private playlist without requesterId', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(mockPrivatePlaylist);
-      (repository.getPlaylistTracks as jest.Mock).mockResolvedValue(mockTracks);
-      (repository.countPlaylistTracks as jest.Mock).mockResolvedValue(2);
 
-      const result = await useCase.execute({ playlistId: 'playlist-private' });
-
-      expect(result.playlistId).toBe('playlist-private');
+      await expect(
+        useCase.execute({ playlistId: 'playlist-private' }),
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('should map track properties correctly', async () => {

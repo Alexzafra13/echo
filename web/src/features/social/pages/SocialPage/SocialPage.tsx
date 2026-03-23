@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Users, Search, X, UserPlus, CheckCircle, Headphones, Activity } from 'lucide-react';
 import { useDocumentTitle } from '@shared/hooks';
+import { useModal } from '@shared/hooks';
 import { useDominantColor } from '@shared/hooks/useDominantColor';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
@@ -23,6 +24,7 @@ import {
   FriendsSection,
   ActivityFeed,
 } from './components';
+import { CreateSessionModal, JoinSessionModal, SessionSection } from '@features/listening-sessions/components';
 import styles from './SocialPage.module.css';
 
 /**
@@ -102,6 +104,10 @@ export default function SocialPage() {
       }
     }
   };
+
+  // Modales de sesiones de escucha
+  const createSessionModal = useModal();
+  const joinSessionModal = useModal();
 
   const handleClearSearch = useCallback(() => {
     setSearchQuery('');
@@ -243,6 +249,12 @@ export default function SocialPage() {
             </div>
           ) : (
             <>
+              {/* Sesiones de escucha */}
+              <SessionSection
+                onCreateSession={createSessionModal.open}
+                onJoinSession={joinSessionModal.open}
+              />
+
               {/* Listening Now */}
               <ListeningNowSection
                 listeningUsers={actuallyListening}
@@ -282,6 +294,15 @@ export default function SocialPage() {
           )}
         </div>
       </main>
+
+      {/* Modales de sesiones */}
+      {createSessionModal.isOpen && (
+        <CreateSessionModal onClose={createSessionModal.close} />
+      )}
+      {joinSessionModal.isOpen && (
+        <JoinSessionModal onClose={joinSessionModal.close} />
+      )}
+
     </div>
   );
 }

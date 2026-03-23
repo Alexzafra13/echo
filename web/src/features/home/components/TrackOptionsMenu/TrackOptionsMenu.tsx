@@ -10,10 +10,13 @@ import {
   Download,
   Star,
   X,
+  Radio,
 } from 'lucide-react';
 import { useDropdownMenu, useSheetDragToClose } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
 import { RatingStars } from '@shared/components/ui/RatingStars';
+import { useSessionStore } from '@features/listening-sessions/store/sessionStore';
+import { listeningSessionsService } from '@features/listening-sessions/services/listening-sessions.service';
 import type { Track } from '../../types';
 import styles from './TrackOptionsMenu.module.css';
 
@@ -26,7 +29,7 @@ interface TrackOptionsMenuProps {
   onShowInfo?: (track: Track) => void;
   onRemoveFromPlaylist?: (track: Track) => void;
   onDownload?: (track: Track) => void;
-  hideRating?: boolean; // Hide "Calificar" option entirely (e.g. for federated tracks)
+  hideRating?: boolean;
 }
 
 /**
@@ -115,6 +118,19 @@ export function TrackOptionsMenu({
 
   const coverUrl = track.albumId ? `/api/albums/${track.albumId}/cover` : '/placeholder-album.png';
 
+  // Sesion activa para opcion de añadir
+  const activeSession = useSessionStore((s) => s.activeSession);
+  const myRole = useSessionStore((s) => s.myRole);
+  const canAddToSession = activeSession && (myRole === 'host' || myRole === 'dj');
+
+  const handleAddToSession = useCallback(async (t: Track) => {
+    if (!activeSession?.id) return;
+    try {
+      await listeningSessionsService.addToQueue(activeSession.id, { trackId: t.id });
+      if (onAddToQueue) onAddToQueue(t);
+    } catch { /* silencioso */ }
+  }, [activeSession?.id, onAddToQueue]);
+
   // Shared options content (showRating: only show in mobile bottom sheet)
   const renderOptions = (
     onOption: (e: React.MouseEvent, cb?: (track: Track) => void) => void,
@@ -138,6 +154,16 @@ export function TrackOptionsMenu({
         >
           <Plus size={18} />
           <span>Agregar a la cola</span>
+        </button>
+      )}
+
+      {canAddToSession && (
+        <button
+          className={`${styles.trackOptionsMenu__option} ${styles.trackOptionsMenu__optionSession}`}
+          onClick={(e) => onOption(e, handleAddToSession)}
+        >
+          <Radio size={18} />
+          <span>Añadir a la sesion</span>
         </button>
       )}
 

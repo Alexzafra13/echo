@@ -25,6 +25,7 @@ import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { useDominantColor } from '@shared/hooks';
 import { ProgressBar } from './ProgressBar';
+import { SessionIndicator } from '@features/listening-sessions/components';
 import styles from './AudioPlayer.module.css';
 
 export function AudioPlayer() {
@@ -408,6 +409,8 @@ export function AudioPlayer() {
             {isQueueOpen && <QueueList onClose={() => setIsQueueOpen(false)} />}
           </div>
         )}
+
+        <SessionIndicator />
 
         <div className={styles.volumeContainer}>
           <button

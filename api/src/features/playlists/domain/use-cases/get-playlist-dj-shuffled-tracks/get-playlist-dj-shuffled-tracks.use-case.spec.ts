@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GetPlaylistDjShuffledTracksUseCase } from './get-playlist-dj-shuffled-tracks.use-case';
-import { IPlaylistRepository, PLAYLIST_REPOSITORY, TrackWithPlaylistOrder } from '../../ports';
+import { IPlaylistRepository, PLAYLIST_REPOSITORY, COLLABORATOR_REPOSITORY, TrackWithPlaylistOrder } from '../../ports';
 import {
   IDjAnalysisRepository,
   DJ_ANALYSIS_REPOSITORY,
@@ -150,6 +150,14 @@ describe('GetPlaylistDjShuffledTracksUseCase', () => {
           useValue: {
             findById: jest.fn(),
             getPlaylistTracks: jest.fn(),
+          },
+        },
+        {
+          provide: COLLABORATOR_REPOSITORY,
+          useValue: {
+            hasAccess: jest.fn().mockResolvedValue(false),
+            isEditor: jest.fn().mockResolvedValue(false),
+            isCollaborator: jest.fn().mockResolvedValue(false),
           },
         },
         {
