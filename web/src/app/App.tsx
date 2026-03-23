@@ -10,6 +10,8 @@ import { PageLoader } from '@shared/components/PageLoader';
 import { useAuthStore } from '@shared/store';
 import { AudioPlayer } from '@features/player';
 import { GlobalProgressListeners } from '@shared/components/GlobalProgressListeners';
+import { useRestoreActiveSession } from '@features/listening-sessions/hooks';
+import { SessionSync } from '@features/listening-sessions/components/SessionSync/SessionSync';
 
 // Carga diferida de páginas
 const FirstLoginPage = lazy(() => import('@features/auth/pages/FirstLoginPage'));
@@ -32,12 +34,17 @@ const DailyRedirect = lazy(() => import('@features/recommendations/pages/DailyRe
 const ArtistPlaylistsPage = lazy(() => import('@features/recommendations/pages/ArtistPlaylistsPage'));
 const GenrePlaylistsPage = lazy(() => import('@features/recommendations/pages/GenrePlaylistsPage'));
 const SocialPage = lazy(() => import('@features/social/pages/SocialPage/SocialPage'));
+const JoinSessionRedirect = lazy(() => import('@features/listening-sessions/components/JoinSessionRedirect/JoinSessionRedirect'));
+const SessionPage = lazy(() => import('@features/listening-sessions/pages/SessionPage/SessionPage'));
 const TrendingPage = lazy(() => import('@features/social/pages/TrendingPage/TrendingPage'));
 const SharedAlbumPage = lazy(() => import('@features/federation/pages/SharedAlbumPage/SharedAlbumPage'));
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [, setLocation] = useLocation();
+
+  // Restaurar sesion de escucha activa al cargar la app
+  useRestoreActiveSession();
 
   // Navegación desde fuera de React (ej: interceptor de axios al recibir 401)
   useEffect(() => {
@@ -197,6 +204,20 @@ function App() {
             </ProtectedRoute>
           </Route>
 
+          {/* Session detail page */}
+          <Route path="/session/:id">
+            <ProtectedRoute>
+              <SessionPage />
+            </ProtectedRoute>
+          </Route>
+
+          {/* Join Session via invite code */}
+          <Route path="/join/:code">
+            <ProtectedRoute>
+              <JoinSessionRedirect />
+            </ProtectedRoute>
+          </Route>
+
           {/* Social Route (Protected) */}
           <Route path="/social">
             <ProtectedRoute>
@@ -245,6 +266,7 @@ function App() {
       {isAuthenticated && (
         <>
           <GlobalProgressListeners />
+          <SessionSync />
           <AudioPlayer />
         </>
       )}

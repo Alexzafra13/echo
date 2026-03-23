@@ -151,7 +151,13 @@
       "Bash(grep -n \": any\\\\|: any;\" /c/Users/alex/Desktop/ec/echo/api/src/features/**/*.ts)",
       "Bash(grep -n \"throw new BadRequestException.*size\\\\|throw new BadRequestException.*MAX\\\\|throw new BadRequestException.*10\\\\|throw new BadRequestException.*MB\" /c/Users/alex/Desktop/ec/echo/api/src/features/admin/presentation/*.controller.ts)",
       "Bash(grep -n \"allowedMimeTypes\\\\|ALLOWED_MIME\\\\|image/jpeg.*image/png.*image/webp\" /c/Users/alex/Desktop/ec/echo/api/src/features/admin/presentation/*.controller.ts)",
-      "Bash(grep -r \"allow-change-password\\\\|api-errors\\\\|current-user\\\\|public\" /c/Users/alex/Desktop/ec/echo/api/src/features --include=\"*.ts\" ! -path \"*.spec.ts\")"
+      "Bash(grep -r \"allow-change-password\\\\|api-errors\\\\|current-user\\\\|public\" /c/Users/alex/Desktop/ec/echo/api/src/features --include=\"*.ts\" ! -path \"*.spec.ts\")",
+      "Bash(pnpm --filter api test -- --testPathPattern=\"get-playlist-tracks.use-case|get-playlist.use-case|reorder-playlist-tracks\")",
+      "Bash(pnpm test:*)",
+      "Bash(grep -r \"listening-sessions\\\\|listeningSession\" /c/Users/alex/Desktop/ec/echo/web/src --include=*.tsx --include=*.ts)",
+      "Bash(xargs -I {} find {} -type d)",
+      "Bash(grep -r listeningSession /c/Users/alex/Desktop/ec/echo/api/src/infrastructure/database/schema --include=*.ts)",
+      "Bash(git log:*)"
     ]
   }
 }

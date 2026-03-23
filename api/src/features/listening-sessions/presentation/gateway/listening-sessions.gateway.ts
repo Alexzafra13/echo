@@ -5,28 +5,23 @@ import {
   OnGatewayDisconnect,
   ConnectedSocket,
   MessageBody,
-  UseGuards,
 } from '@nestjs/websockets';
-import { UseFilters, UseInterceptors } from '@nestjs/common';
+import { UseGuards, UseFilters, UseInterceptors, Inject } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { WsJwtGuard } from '@infrastructure/websocket/guards/ws-jwt.guard';
 import { WsExceptionFilter } from '@infrastructure/websocket/filters/ws-exception.filter';
 import { WsLoggingInterceptor } from '@infrastructure/websocket/interceptors/ws-logging.interceptor';
+import { IListeningSessionRepository, LISTENING_SESSION_REPOSITORY } from '../../domain/ports/listening-session-repository.port';
 
 /**
  * ListeningSessionsGateway
  *
- * WebSocket gateway for real-time listening session events.
- * Clients join a room named `session:{sessionId}` and receive
- * events like queue updates, track changes, and participant changes.
+ * WebSocket gateway para sesiones de escucha compartida.
+ * Gestiona la sincronizacion de reproduccion entre host y participantes.
  *
- * Events emitted to clients:
- * - session:queue-updated - When a track is added to the queue
- * - session:track-changed - When the current track changes (skip)
- * - session:participant-joined - When someone joins
- * - session:participant-left - When someone leaves
- * - session:participant-role-changed - When a role is updated
- * - session:ended - When the session ends
+ * Eventos de control (host -> server -> participantes):
+ * - session:playback-update: estado periodico (cada 5s)
+ * - session:play/pause/seek/track-change: acciones inmediatas del host
  */
 @WebSocketGateway({
   namespace: 'listening-sessions',
@@ -39,6 +34,28 @@ export class ListeningSessionsGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
+  // socket -> { sessionId, userId, isHost }
+  private socketSessions = new Map<string, { sessionId: string; userId: string; isHost: boolean }>();
+
+  private cleanupService: {
+    cancelHostDisconnectTimeout: (sessionId: string) => Promise<void>;
+    scheduleHostDisconnectTimeout: (sessionId: string) => Promise<void>;
+    resetInactivityTimeout: (sessionId: string) => Promise<void>;
+  } | null = null;
+
+  constructor(
+    @Inject(LISTENING_SESSION_REPOSITORY)
+    private readonly sessionRepository: IListeningSessionRepository,
+  ) {}
+
+  setCleanupService(service: typeof this.cleanupService) {
+    this.cleanupService = service;
+  }
+
+  // ============================================
+  // Sesion: join/leave
+  // ============================================
+
   @SubscribeMessage('session:join')
   async handleJoinSession(
     @ConnectedSocket() client: Socket,
@@ -48,14 +65,29 @@ export class ListeningSessionsGateway implements OnGatewayDisconnect {
     client.join(room);
 
     const userId = client.data.user?.userId || client.data.userId;
+    const session = await this.sessionRepository.findById(data.sessionId);
+    const isHost = session?.hostId === userId;
 
-    // Notify others in the room
+    this.socketSessions.set(client.id, {
+      sessionId: data.sessionId,
+      userId,
+      isHost,
+    });
+
+    if (isHost && this.cleanupService) {
+      await this.cleanupService.cancelHostDisconnectTimeout(data.sessionId);
+    }
+
+    if (this.cleanupService) {
+      await this.cleanupService.resetInactivityTimeout(data.sessionId);
+    }
+
     client.to(room).emit('session:participant-joined', {
       userId,
       sessionId: data.sessionId,
     });
 
-    return { event: 'session:joined', data: { sessionId: data.sessionId } };
+    return { event: 'session:joined', data: { sessionId: data.sessionId, isHost } };
   }
 
   @SubscribeMessage('session:leave')
@@ -65,6 +97,7 @@ export class ListeningSessionsGateway implements OnGatewayDisconnect {
   ) {
     const room = `session:${data.sessionId}`;
     client.leave(room);
+    this.socketSessions.delete(client.id);
 
     const userId = client.data.user?.userId || client.data.userId;
 
@@ -76,11 +109,83 @@ export class ListeningSessionsGateway implements OnGatewayDisconnect {
     return { event: 'session:left', data: { sessionId: data.sessionId } };
   }
 
-  handleDisconnect(client: Socket) {
-    // Socket.IO automatically removes from all rooms on disconnect
+  async handleDisconnect(client: Socket) {
+    const sessionInfo = this.socketSessions.get(client.id);
+    if (!sessionInfo) return;
+
+    this.socketSessions.delete(client.id);
+
+    if (sessionInfo.isHost && this.cleanupService) {
+      await this.cleanupService.scheduleHostDisconnectTimeout(sessionInfo.sessionId);
+    }
   }
 
-  // Methods called by the controller/use-cases to broadcast events
+  // ============================================
+  // Sincronizacion de reproduccion (host -> participantes)
+  // ============================================
+
+  @SubscribeMessage('session:playback-update')
+  handlePlaybackUpdate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { trackId: string; position: number; isPlaying: boolean },
+  ) {
+    const info = this.socketSessions.get(client.id);
+    if (!info?.isHost) return; // Solo el host puede emitir
+
+    client.to(`session:${info.sessionId}`).emit('session:sync', {
+      trackId: data.trackId,
+      position: data.position,
+      isPlaying: data.isPlaying,
+    });
+  }
+
+  @SubscribeMessage('session:play')
+  handlePlay(@ConnectedSocket() client: Socket) {
+    const info = this.socketSessions.get(client.id);
+    if (!info?.isHost) return;
+
+    client.to(`session:${info.sessionId}`).emit('session:host-play', {});
+  }
+
+  @SubscribeMessage('session:pause')
+  handlePause(@ConnectedSocket() client: Socket) {
+    const info = this.socketSessions.get(client.id);
+    if (!info?.isHost) return;
+
+    client.to(`session:${info.sessionId}`).emit('session:host-pause', {});
+  }
+
+  @SubscribeMessage('session:seek')
+  handleSeek(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { position: number },
+  ) {
+    const info = this.socketSessions.get(client.id);
+    if (!info?.isHost) return;
+
+    client.to(`session:${info.sessionId}`).emit('session:host-seek', {
+      position: data.position,
+    });
+  }
+
+  @SubscribeMessage('session:track-change')
+  handleTrackChange(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { trackId: string; trackData: Record<string, unknown> },
+  ) {
+    const info = this.socketSessions.get(client.id);
+    if (!info?.isHost) return;
+
+    client.to(`session:${info.sessionId}`).emit('session:host-track-change', {
+      trackId: data.trackId,
+      trackData: data.trackData,
+    });
+  }
+
+  // ============================================
+  // Broadcasts desde controllers/use-cases
+  // ============================================
+
   notifyQueueUpdated(sessionId: string, data: Record<string, unknown>) {
     this.server.to(`session:${sessionId}`).emit('session:queue-updated', data);
   }

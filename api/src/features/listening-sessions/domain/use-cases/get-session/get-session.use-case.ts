@@ -10,6 +10,19 @@ export class GetSessionUseCase {
     private readonly sessionRepository: IListeningSessionRepository,
   ) {}
 
+  /**
+   * Buscar sesion activa donde el usuario es host o participante
+   */
+  async findActiveForUser(userId: string) {
+    // Primero buscar como host
+    const asHost = await this.sessionRepository.findActiveByHostId(userId);
+    if (asHost) return asHost;
+
+    // Buscar como participante en sesiones activas
+    const asParticipant = await this.sessionRepository.findActiveByParticipantId(userId);
+    return asParticipant;
+  }
+
   async execute(input: GetSessionInput): Promise<GetSessionOutput> {
     if (!input.sessionId && !input.inviteCode) {
       throw new ValidationError('Session ID or invite code is required');
@@ -42,6 +55,7 @@ export class GetSessionUseCase {
       isActive: session.isActive,
       currentTrackId: session.currentTrackId,
       currentPosition: session.currentPosition,
+      guestsCanControl: session.guestsCanControl,
       participants,
       queue,
       createdAt: session.createdAt,

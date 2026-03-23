@@ -78,6 +78,7 @@ export const NOTIFICATION_TYPES = [
   'system_alert',
   'scan_completed',
   'new_content',
+  'session_invite',
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

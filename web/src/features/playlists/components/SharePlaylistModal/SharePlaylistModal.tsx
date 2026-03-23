@@ -4,7 +4,7 @@ import { Button, Modal } from '@shared/components/ui';
 import { useAuthStore } from '@shared/store';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
-import { searchUsers, type SearchUserResult } from '@features/social/services/social.service';
+import { searchUsers, getFriends, type SearchUserResult } from '@features/social/services/social.service';
 import {
   usePlaylistCollaborators,
   useInviteCollaborator,
@@ -36,11 +36,37 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
   // User search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchUserResult[]>([]);
+  const [suggestions, setSuggestions] = useState<SearchUserResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isFocused, setIsFocused] = useState(true);
   const [inviteRole, setInviteRole] = useState<CollaboratorRole>('viewer');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  // IDs a excluir (owner + colaboradores existentes)
+  const existingIds = new Set([
+    playlist.ownerId,
+    ...collaborators.map((c) => c.userId),
+  ]);
+
+  // Cargar amigos como sugerencias al abrir el modal
+  useEffect(() => {
+    getFriends()
+      .then((friends) => {
+        const available = friends
+          .filter((f) => !existingIds.has(f.id))
+          .map((f) => ({
+            id: f.id,
+            username: f.username,
+            name: f.name,
+            avatarUrl: f.avatarUrl,
+          }));
+        setSuggestions(available);
+      })
+      .catch(() => setSuggestions([]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collaborators.length]);
 
   // Debounced user search
   useEffect(() => {
@@ -142,6 +168,8 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
                 placeholder="Buscar usuarios por nombre..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setTimeout(() => setIsFocused(false), 200)}
                 autoFocus
               />
               {searchQuery && (
@@ -217,6 +245,38 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
                     No se encontraron usuarios
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Sugerencias de amigos cuando no hay búsqueda activa */}
+            {!searchQuery.trim() && isFocused && suggestions.length > 0 && (
+              <div className={styles.searchResults}>
+                <div className={styles.suggestionsHeader}>Amigos</div>
+                {suggestions.slice(0, 5).map((user) => (
+                  <div key={user.id} className={styles.searchResultItem}>
+                    <img
+                      src={getUserAvatarUrl(user.id, !!user.avatarUrl, avatarTimestamp)}
+                      alt={user.username}
+                      className={styles.avatar}
+                      onError={handleAvatarError}
+                    />
+                    <div className={styles.userInfo}>
+                      <span className={styles.userName}>
+                        {user.name || user.username}
+                      </span>
+                      <span className={styles.userHandle}>@{user.username}</span>
+                    </div>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleInvite(user.id)}
+                      disabled={inviteMutation.isPending}
+                      leftIcon={<UserPlus size={14} />}
+                    >
+                      Invitar
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
           </div>

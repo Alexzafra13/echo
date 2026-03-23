@@ -21,7 +21,8 @@ export type NotificationType =
   | 'enrichment_completed'
   | 'system_alert'
   | 'scan_completed'
-  | 'new_content';
+  | 'new_content'
+  | 'session_invite';
 
 export interface NotificationPreference {
   type: NotificationType;
