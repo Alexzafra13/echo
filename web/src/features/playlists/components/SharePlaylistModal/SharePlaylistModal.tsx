@@ -53,13 +53,14 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
     searchTimeout.current = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const results = await searchUsers(searchQuery, 8);
+        const results: SearchUserResult[] = await searchUsers(searchQuery, 8);
         // Filter out owner and existing collaborators
         const existingIds = new Set([
           playlist.ownerId,
           ...collaborators.map((c) => c.userId),
         ]);
-        setSearchResults(results.filter((u) => !existingIds.has(u.id)));
+        const filtered: SearchUserResult[] = results.filter((u) => !existingIds.has(u.id));
+        setSearchResults(filtered);
       } catch {
         setSearchResults([]);
       } finally {
