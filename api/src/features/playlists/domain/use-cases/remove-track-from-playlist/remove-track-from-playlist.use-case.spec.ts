@@ -13,11 +13,7 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
     isTrackInPlaylist: jest.Mock;
     update: jest.Mock;
   };
-  let mockCollaboratorRepository: {
-    hasAccess: jest.Mock;
-    isEditor: jest.Mock;
-    isCollaborator: jest.Mock;
-  };
+  let collaboratorRepository: jest.Mocked<ICollaboratorRepository>;
   let mockTrackRepository: {
     findById: jest.Mock;
   };
@@ -64,11 +60,22 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
       update: jest.fn(),
     };
 
-    mockCollaboratorRepository = {
-      hasAccess: jest.fn().mockResolvedValue(false),
-      isEditor: jest.fn().mockResolvedValue(false),
-      isCollaborator: jest.fn().mockResolvedValue(false),
-    };
+    collaboratorRepository = {
+      create: jest.fn(),
+      findById: jest.fn(),
+      findByPlaylistAndUser: jest.fn(),
+      findByPlaylistId: jest.fn(),
+      findByUserId: jest.fn(),
+      updateStatus: jest.fn(),
+      updateRole: jest.fn(),
+      delete: jest.fn(),
+      deleteByPlaylistAndUser: jest.fn(),
+      isCollaborator: jest.fn(),
+      isEditor: jest.fn(),
+      hasAccess: jest.fn(),
+    } as unknown as jest.Mocked<ICollaboratorRepository>;
+
+    collaboratorRepository.isEditor.mockResolvedValue(false);
 
     mockTrackRepository = {
       findById: jest.fn(),
@@ -76,7 +83,7 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
 
     useCase = new RemoveTrackFromPlaylistUseCase(
       mockPlaylistRepository as unknown as IPlaylistRepository,
-      mockCollaboratorRepository as unknown as ICollaboratorRepository,
+      collaboratorRepository,
       mockTrackRepository as unknown as ITrackRepository
     );
   });

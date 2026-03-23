@@ -8,7 +8,7 @@ import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 describe('GetPlaylistUseCase', () => {
   let useCase: GetPlaylistUseCase;
   let mockPlaylistRepo: jest.Mocked<IPlaylistRepository>;
-  let mockCollaboratorRepo: jest.Mocked<ICollaboratorRepository>;
+  let collaboratorRepository: jest.Mocked<ICollaboratorRepository>;
   let mockUserRepo: jest.Mocked<IUserRepository>;
 
   const now = new Date();
@@ -55,17 +55,28 @@ describe('GetPlaylistUseCase', () => {
       findById: jest.fn(),
     } as unknown as jest.Mocked<IPlaylistRepository>;
 
-    mockCollaboratorRepo = {
-      hasAccess: jest.fn().mockResolvedValue(false),
-      isEditor: jest.fn().mockResolvedValue(false),
-      isCollaborator: jest.fn().mockResolvedValue(false),
+    collaboratorRepository = {
+      create: jest.fn(),
+      findById: jest.fn(),
+      findByPlaylistAndUser: jest.fn(),
+      findByPlaylistId: jest.fn(),
+      findByUserId: jest.fn(),
+      updateStatus: jest.fn(),
+      updateRole: jest.fn(),
+      delete: jest.fn(),
+      deleteByPlaylistAndUser: jest.fn(),
+      isCollaborator: jest.fn(),
+      isEditor: jest.fn(),
+      hasAccess: jest.fn(),
     } as unknown as jest.Mocked<ICollaboratorRepository>;
+
+    collaboratorRepository.hasAccess.mockResolvedValue(false);
 
     mockUserRepo = {
       findById: jest.fn(),
     } as unknown as jest.Mocked<IUserRepository>;
 
-    useCase = new GetPlaylistUseCase(mockPlaylistRepo, mockCollaboratorRepo, mockUserRepo);
+    useCase = new GetPlaylistUseCase(mockPlaylistRepo, collaboratorRepository, mockUserRepo);
   });
 
   describe('execute', () => {

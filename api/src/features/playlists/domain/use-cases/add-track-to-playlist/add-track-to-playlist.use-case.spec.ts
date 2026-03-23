@@ -63,10 +63,21 @@ describe('AddTrackToPlaylistUseCase', () => {
     } as unknown as jest.Mocked<IPlaylistRepository>;
 
     collaboratorRepository = {
-      hasAccess: jest.fn().mockResolvedValue(false),
-      isEditor: jest.fn().mockResolvedValue(false),
-      isCollaborator: jest.fn().mockResolvedValue(false),
+      create: jest.fn(),
+      findById: jest.fn(),
+      findByPlaylistAndUser: jest.fn(),
+      findByPlaylistId: jest.fn(),
+      findByUserId: jest.fn(),
+      updateStatus: jest.fn(),
+      updateRole: jest.fn(),
+      delete: jest.fn(),
+      deleteByPlaylistAndUser: jest.fn(),
+      isCollaborator: jest.fn(),
+      isEditor: jest.fn(),
+      hasAccess: jest.fn(),
     } as unknown as jest.Mocked<ICollaboratorRepository>;
+
+    collaboratorRepository.isEditor.mockResolvedValue(false);
 
     trackRepository = {
       findById: jest.fn(),
@@ -79,7 +90,11 @@ describe('AddTrackToPlaylistUseCase', () => {
       delete: jest.fn(),
     } as unknown as jest.Mocked<ITrackRepository>;
 
-    useCase = new AddTrackToPlaylistUseCase(playlistRepository, collaboratorRepository, trackRepository);
+    useCase = new AddTrackToPlaylistUseCase(
+      playlistRepository,
+      collaboratorRepository,
+      trackRepository
+    );
   });
 
   afterEach(() => {
