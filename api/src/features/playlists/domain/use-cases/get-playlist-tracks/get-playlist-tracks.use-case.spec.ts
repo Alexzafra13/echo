@@ -1,12 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GetPlaylistTracksUseCase } from './get-playlist-tracks.use-case';
-import { IPlaylistRepository, PLAYLIST_REPOSITORY, TrackWithPlaylistOrder } from '../../ports';
+import {
+  IPlaylistRepository,
+  PLAYLIST_REPOSITORY,
+  ICollaboratorRepository,
+  COLLABORATOR_REPOSITORY,
+  TrackWithPlaylistOrder,
+} from '../../ports';
 import { Playlist } from '../../entities';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 
 describe('GetPlaylistTracksUseCase', () => {
   let useCase: GetPlaylistTracksUseCase;
   let repository: jest.Mocked<IPlaylistRepository>;
+  let collaboratorRepository: jest.Mocked<ICollaboratorRepository>;
 
   const mockPlaylist = Playlist.fromPrimitives({
     id: 'playlist-1',
@@ -83,6 +90,21 @@ describe('GetPlaylistTracksUseCase', () => {
       countPlaylistTracks: jest.fn(),
     };
 
+    const mockCollaboratorRepository = {
+      create: jest.fn(),
+      findById: jest.fn(),
+      findByPlaylistAndUser: jest.fn(),
+      findByPlaylistId: jest.fn(),
+      findByUserId: jest.fn(),
+      updateStatus: jest.fn(),
+      updateRole: jest.fn(),
+      delete: jest.fn(),
+      deleteByPlaylistAndUser: jest.fn(),
+      isCollaborator: jest.fn(),
+      isEditor: jest.fn(),
+      hasAccess: jest.fn().mockResolvedValue(false),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetPlaylistTracksUseCase,
@@ -90,11 +112,16 @@ describe('GetPlaylistTracksUseCase', () => {
           provide: PLAYLIST_REPOSITORY,
           useValue: mockRepository,
         },
+        {
+          provide: COLLABORATOR_REPOSITORY,
+          useValue: mockCollaboratorRepository,
+        },
       ],
     }).compile();
 
     useCase = module.get<GetPlaylistTracksUseCase>(GetPlaylistTracksUseCase);
     repository = module.get(PLAYLIST_REPOSITORY);
+    collaboratorRepository = module.get(COLLABORATOR_REPOSITORY);
   });
 
   describe('execute', () => {
@@ -143,16 +170,14 @@ describe('GetPlaylistTracksUseCase', () => {
     it('should throw NotFoundError when playlist does not exist', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        useCase.execute({ playlistId: 'nonexistent' }),
-      ).rejects.toThrow(NotFoundError);
+      await expect(useCase.execute({ playlistId: 'nonexistent' })).rejects.toThrow(NotFoundError);
     });
 
     it('should throw ForbiddenError for private playlist with different requester', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(mockPrivatePlaylist);
 
       await expect(
-        useCase.execute({ playlistId: 'playlist-private', requesterId: 'other-user' }),
+        useCase.execute({ playlistId: 'playlist-private', requesterId: 'other-user' })
       ).rejects.toThrow(ForbiddenError);
     });
 
@@ -183,14 +208,12 @@ describe('GetPlaylistTracksUseCase', () => {
       expect(result.playlistId).toBe('playlist-1');
     });
 
-    it('should allow access to private playlist without requesterId', async () => {
+    it('should throw ForbiddenError for private playlist without requesterId', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(mockPrivatePlaylist);
-      (repository.getPlaylistTracks as jest.Mock).mockResolvedValue(mockTracks);
-      (repository.countPlaylistTracks as jest.Mock).mockResolvedValue(2);
 
-      const result = await useCase.execute({ playlistId: 'playlist-private' });
-
-      expect(result.playlistId).toBe('playlist-private');
+      await expect(useCase.execute({ playlistId: 'playlist-private' })).rejects.toThrow(
+        ForbiddenError
+      );
     });
 
     it('should map track properties correctly', async () => {
@@ -226,9 +249,7 @@ describe('GetPlaylistTracksUseCase', () => {
     it('should propagate repository errors', async () => {
       (repository.findById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-      await expect(useCase.execute({ playlistId: 'playlist-1' })).rejects.toThrow(
-        'Database error',
-      );
+      await expect(useCase.execute({ playlistId: 'playlist-1' })).rejects.toThrow('Database error');
     });
   });
 });

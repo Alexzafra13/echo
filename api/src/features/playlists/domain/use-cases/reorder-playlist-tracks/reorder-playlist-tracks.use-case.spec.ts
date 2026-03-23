@@ -1,11 +1,12 @@
 import { ReorderPlaylistTracksUseCase } from './reorder-playlist-tracks.use-case';
-import { IPlaylistRepository } from '../../ports';
+import { IPlaylistRepository, ICollaboratorRepository } from '../../ports';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { Playlist } from '../../entities';
 
 describe('ReorderPlaylistTracksUseCase', () => {
   let useCase: ReorderPlaylistTracksUseCase;
   let mockRepo: jest.Mocked<IPlaylistRepository>;
+  let collaboratorRepository: jest.Mocked<ICollaboratorRepository>;
 
   const mockPlaylist = {
     id: 'playlist-1',
@@ -20,7 +21,24 @@ describe('ReorderPlaylistTracksUseCase', () => {
       isTrackInPlaylist: jest.fn(),
     } as unknown as jest.Mocked<IPlaylistRepository>;
 
-    useCase = new ReorderPlaylistTracksUseCase(mockRepo);
+    collaboratorRepository = {
+      create: jest.fn(),
+      findById: jest.fn(),
+      findByPlaylistAndUser: jest.fn(),
+      findByPlaylistId: jest.fn(),
+      findByUserId: jest.fn(),
+      updateStatus: jest.fn(),
+      updateRole: jest.fn(),
+      delete: jest.fn(),
+      deleteByPlaylistAndUser: jest.fn(),
+      isCollaborator: jest.fn(),
+      isEditor: jest.fn(),
+      hasAccess: jest.fn(),
+    } as unknown as jest.Mocked<ICollaboratorRepository>;
+
+    collaboratorRepository.isEditor.mockResolvedValue(false);
+
+    useCase = new ReorderPlaylistTracksUseCase(mockRepo, collaboratorRepository);
   });
 
   it('should reorder tracks successfully', async () => {

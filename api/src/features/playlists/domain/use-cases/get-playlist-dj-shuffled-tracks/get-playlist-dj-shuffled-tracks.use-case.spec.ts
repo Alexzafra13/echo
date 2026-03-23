@@ -1,6 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GetPlaylistDjShuffledTracksUseCase } from './get-playlist-dj-shuffled-tracks.use-case';
-import { IPlaylistRepository, PLAYLIST_REPOSITORY, TrackWithPlaylistOrder } from '../../ports';
+import {
+  IPlaylistRepository,
+  PLAYLIST_REPOSITORY,
+  ICollaboratorRepository,
+  COLLABORATOR_REPOSITORY,
+  TrackWithPlaylistOrder,
+} from '../../ports';
 import {
   IDjAnalysisRepository,
   DJ_ANALYSIS_REPOSITORY,
@@ -12,6 +18,7 @@ import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 describe('GetPlaylistDjShuffledTracksUseCase', () => {
   let useCase: GetPlaylistDjShuffledTracksUseCase;
   let playlistRepo: jest.Mocked<IPlaylistRepository>;
+  let collaboratorRepository: jest.Mocked<ICollaboratorRepository>;
   let djAnalysisRepo: jest.Mocked<IDjAnalysisRepository>;
 
   const mockPlaylist = Playlist.fromPrimitives({
@@ -153,6 +160,23 @@ describe('GetPlaylistDjShuffledTracksUseCase', () => {
           },
         },
         {
+          provide: COLLABORATOR_REPOSITORY,
+          useValue: {
+            create: jest.fn(),
+            findById: jest.fn(),
+            findByPlaylistAndUser: jest.fn(),
+            findByPlaylistId: jest.fn(),
+            findByUserId: jest.fn(),
+            updateStatus: jest.fn(),
+            updateRole: jest.fn(),
+            delete: jest.fn(),
+            deleteByPlaylistAndUser: jest.fn(),
+            isCollaborator: jest.fn(),
+            isEditor: jest.fn(),
+            hasAccess: jest.fn().mockResolvedValue(false),
+          },
+        },
+        {
           provide: DJ_ANALYSIS_REPOSITORY,
           useValue: {
             findByTrackIds: jest.fn(),
@@ -163,6 +187,7 @@ describe('GetPlaylistDjShuffledTracksUseCase', () => {
 
     useCase = module.get(GetPlaylistDjShuffledTracksUseCase);
     playlistRepo = module.get(PLAYLIST_REPOSITORY);
+    collaboratorRepository = module.get(COLLABORATOR_REPOSITORY);
     djAnalysisRepo = module.get(DJ_ANALYSIS_REPOSITORY);
   });
 
