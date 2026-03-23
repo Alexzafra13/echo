@@ -1,8 +1,18 @@
 import { useState, useCallback, useEffect, useContext } from 'react';
 import { useParams, useLocation } from 'wouter';
 import {
-  Copy, Check, Crown, Music, SkipForward, X,
-  LogOut, Power, Radio, Plus, UserPlus, Search,
+  Copy,
+  Check,
+  Crown,
+  Music,
+  SkipForward,
+  X,
+  LogOut,
+  Power,
+  Radio,
+  Plus,
+  UserPlus,
+  Search,
 } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
@@ -14,12 +24,7 @@ import { useAuthStore } from '@shared/store';
 import { PlayerContext } from '@features/player/context/PlayerContext';
 import { getFriends } from '@features/social/services/social.service';
 import { useSessionStore } from '../../store/sessionStore';
-import {
-  useSessionDetails,
-  useSkipTrack,
-  useLeaveSession,
-  useEndSession,
-} from '../../hooks';
+import { useSessionDetails, useSkipTrack, useLeaveSession, useEndSession } from '../../hooks';
 import { listeningSessionsService } from '../../services/listening-sessions.service';
 import type { SessionQueueItem } from '../../types';
 import styles from './SessionPage.module.css';
@@ -29,7 +34,6 @@ export default function SessionPage() {
   const [, setLocation] = useLocation();
   const activeSession = useSessionStore((s) => s.activeSession);
   const myRole = useSessionStore((s) => s.myRole);
-  const userId = useAuthStore((s) => s.user?.id);
   const avatarTimestamp = useAuthStore((s) => s.avatarTimestamp);
   const playerCtx = useContext(PlayerContext);
 
@@ -40,12 +44,18 @@ export default function SessionPage() {
 
   const [copied, setCopied] = useState(false);
   const [trackSearch, setTrackSearch] = useState('');
-  const [trackResults, setTrackResults] = useState<{ id: string; title: string; artistName?: string; albumId?: string }[]>([]);
+  const [trackResults, setTrackResults] = useState<
+    { id: string; title: string; artistName?: string; albumId?: string }[]
+  >([]);
   const [searchingTracks, setSearchingTracks] = useState(false);
   const [addedTrackId, setAddedTrackId] = useState<string | null>(null);
-  const [availableFriends, setAvailableFriends] = useState<{ id: string; username: string; name: string | null; avatarUrl: string | null }[]>([]);
+  const [availableFriends, setAvailableFriends] = useState<
+    { id: string; username: string; name: string | null; avatarUrl: string | null }[]
+  >([]);
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
-  const [recommendations, setRecommendations] = useState<{ id: string; title: string; artistName?: string; albumId?: string }[]>([]);
+  const [recommendations, setRecommendations] = useState<
+    { id: string; title: string; artistName?: string; albumId?: string }[]
+  >([]);
 
   const skipMutation = useSkipTrack();
   const leaveMutation = useLeaveSession();
@@ -68,30 +78,45 @@ export default function SessionPage() {
     if (!isHost) return;
     const participantIds = new Set(session?.participants?.map((p) => p.userId) ?? []);
     getFriends()
-      .then((friends) => setAvailableFriends(friends.filter((f) => !participantIds.has(f.id)).map((f) => ({ id: f.id, username: f.username, name: f.name, avatarUrl: f.avatarUrl }))))
+      .then((friends) =>
+        setAvailableFriends(
+          friends
+            .filter((f) => !participantIds.has(f.id))
+            .map((f) => ({ id: f.id, username: f.username, name: f.name, avatarUrl: f.avatarUrl }))
+        )
+      )
       .catch(() => setAvailableFriends([]));
   }, [isHost, session?.participants]);
 
   // Cargar recomendaciones
   useEffect(() => {
     if (!session?.id || recommendations.length > 0) return;
-    listeningSessionsService.getSessionRecommendations(session.id)
+    listeningSessionsService
+      .getSessionRecommendations(session.id)
       .then(setRecommendations)
       .catch(() => setRecommendations([]));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.id]);
 
   // Buscar canciones
   useEffect(() => {
-    if (!trackSearch.trim()) { setTrackResults([]); return; }
+    if (!trackSearch.trim()) {
+      setTrackResults([]);
+      return;
+    }
     const timer = setTimeout(async () => {
       setSearchingTracks(true);
       try {
         const { apiClient } = await import('@shared/services/api');
-        const { data } = await apiClient.get(`/tracks/search/${encodeURIComponent(trackSearch)}`, { params: { limit: 8 } });
+        const { data } = await apiClient.get(`/tracks/search/${encodeURIComponent(trackSearch)}`, {
+          params: { limit: 8 },
+        });
         setTrackResults(((data as { data?: unknown[] }).data ?? []) as typeof trackResults);
-      } catch { setTrackResults([]); }
-      finally { setSearchingTracks(false); }
+      } catch {
+        setTrackResults([]);
+      } finally {
+        setSearchingTracks(false);
+      }
     }, 300);
     return () => clearTimeout(timer);
   }, [trackSearch]);
@@ -103,32 +128,54 @@ export default function SessionPage() {
     setTimeout(() => setCopied(false), 2000);
   }, [session?.inviteCode]);
 
-  const handleAddTrack = useCallback(async (trackId: string) => {
-    if (!session?.id) return;
-    try {
-      await listeningSessionsService.addToQueue(session.id, { trackId });
-      const trackData = [...trackResults, ...recommendations].find((t) => t.id === trackId);
-      if (trackData && playerCtx) {
-        playerCtx.addToQueue({ ...trackData, duration: 0 } as never);
+  const handleAddTrack = useCallback(
+    async (trackId: string) => {
+      if (!session?.id) return;
+      try {
+        await listeningSessionsService.addToQueue(session.id, { trackId });
+        const trackData = [...trackResults, ...recommendations].find((t) => t.id === trackId);
+        if (trackData && playerCtx) {
+          playerCtx.addToQueue({ ...trackData, duration: 0 } as never);
+        }
+        setAddedTrackId(trackId);
+        setTimeout(() => setAddedTrackId(null), 2000);
+        setTrackSearch('');
+        setTrackResults([]);
+      } catch {
+        /* silencioso */
       }
-      setAddedTrackId(trackId);
-      setTimeout(() => setAddedTrackId(null), 2000);
-      setTrackSearch('');
-      setTrackResults([]);
-    } catch { /* silencioso */ }
-  }, [session?.id, trackResults, recommendations, playerCtx]);
+    },
+    [session?.id, trackResults, recommendations, playerCtx]
+  );
 
-  const handleInviteFriend = useCallback(async (friendId: string) => {
-    if (!session?.id) return;
-    try {
-      await listeningSessionsService.inviteFriend(session.id, friendId);
-      setInvitedIds((prev) => new Set(prev).add(friendId));
-    } catch { /* silencioso */ }
-  }, [session?.id]);
+  const handleInviteFriend = useCallback(
+    async (friendId: string) => {
+      if (!session?.id) return;
+      try {
+        await listeningSessionsService.inviteFriend(session.id, friendId);
+        setInvitedIds((prev) => new Set(prev).add(friendId));
+      } catch {
+        /* silencioso */
+      }
+    },
+    [session?.id]
+  );
 
-  const handleSkip = useCallback(() => { if (session?.id) skipMutation.mutate(session.id); }, [session?.id, skipMutation]);
-  const handleLeave = useCallback(() => { if (session?.id) { leaveMutation.mutate(session.id); setLocation('/social'); } }, [session?.id, leaveMutation, setLocation]);
-  const handleEnd = useCallback(() => { if (session?.id) { endMutation.mutate(session.id); setLocation('/social'); } }, [session?.id, endMutation, setLocation]);
+  const handleSkip = useCallback(() => {
+    if (session?.id) skipMutation.mutate(session.id);
+  }, [session?.id, skipMutation]);
+  const handleLeave = useCallback(() => {
+    if (session?.id) {
+      leaveMutation.mutate(session.id);
+      setLocation('/social');
+    }
+  }, [session?.id, leaveMutation, setLocation]);
+  const handleEnd = useCallback(() => {
+    if (session?.id) {
+      endMutation.mutate(session.id);
+      setLocation('/social');
+    }
+  }, [session?.id, endMutation, setLocation]);
 
   if (!session) {
     return (
@@ -165,7 +212,9 @@ export default function SessionPage() {
               </span>
               <h1 className={styles.heroTitle}>{session.name}</h1>
               <div className={styles.heroMeta}>
-                <span>{participants.length} participante{participants.length !== 1 ? 's' : ''}</span>
+                <span>
+                  {participants.length} participante{participants.length !== 1 ? 's' : ''}
+                </span>
                 <span>·</span>
                 <span>{queue.length} en cola</span>
               </div>
@@ -175,11 +224,21 @@ export default function SessionPage() {
                   {copied ? <Check size={14} /> : <Copy size={14} />}
                 </button>
                 {isHost ? (
-                  <button className={styles.endBtn} onClick={handleEnd} disabled={endMutation.isPending} type="button">
+                  <button
+                    className={styles.endBtn}
+                    onClick={handleEnd}
+                    disabled={endMutation.isPending}
+                    type="button"
+                  >
                     <Power size={14} /> Terminar
                   </button>
                 ) : (
-                  <button className={styles.leaveBtn} onClick={handleLeave} disabled={leaveMutation.isPending} type="button">
+                  <button
+                    className={styles.leaveBtn}
+                    onClick={handleLeave}
+                    disabled={leaveMutation.isPending}
+                    type="button"
+                  >
                     <LogOut size={14} /> Salir
                   </button>
                 )}
@@ -201,7 +260,9 @@ export default function SessionPage() {
                     onChange={async (e) => {
                       const newValue = e.target.checked;
                       setGuestsCanControl(newValue);
-                      await listeningSessionsService.updateSettings(session.id, { guestsCanControl: newValue }).catch(() => {});
+                      await listeningSessionsService
+                        .updateSettings(session.id, { guestsCanControl: newValue })
+                        .catch(() => {});
                     }}
                   />
                 </label>
@@ -210,28 +271,52 @@ export default function SessionPage() {
             <div className={styles.participantsGrid}>
               {participants.map((p) => (
                 <div key={p.id} className={styles.participant}>
-                  <img src={getUserAvatarUrl(p.userId, p.hasAvatar, avatarTimestamp)} alt={p.username} className={styles.participantAvatar} onError={handleAvatarError} />
+                  <img
+                    src={getUserAvatarUrl(p.userId, p.hasAvatar, avatarTimestamp)}
+                    alt={p.username}
+                    className={styles.participantAvatar}
+                    onError={handleAvatarError}
+                  />
                   <span className={styles.participantName}>{p.name || p.username}</span>
                   {p.role === 'host' && (
-                    <span className={styles.hostBadge}><Crown size={10} /> Host</span>
+                    <span className={styles.hostBadge}>
+                      <Crown size={10} /> Host
+                    </span>
                   )}
                 </div>
               ))}
               {/* Invitar amigos */}
-              {isHost && availableFriends.slice(0, 4).map((f) => (
-                <div key={f.id} className={`${styles.participant} ${styles['participant--invite']}`}>
-                  <img src={getUserAvatarUrl(f.id, !!f.avatarUrl, avatarTimestamp)} alt={f.username} className={styles.participantAvatar} onError={handleAvatarError} />
-                  <span className={styles.participantName}>{f.name || f.username}</span>
-                  <button
-                    className={`${styles.inviteBtn} ${invitedIds.has(f.id) ? styles['inviteBtn--done'] : ''}`}
-                    onClick={() => handleInviteFriend(f.id)}
-                    disabled={invitedIds.has(f.id)}
-                    type="button"
+              {isHost &&
+                availableFriends.slice(0, 4).map((f) => (
+                  <div
+                    key={f.id}
+                    className={`${styles.participant} ${styles['participant--invite']}`}
                   >
-                    {invitedIds.has(f.id) ? <><Check size={12} /> Enviado</> : <><UserPlus size={12} /> Invitar</>}
-                  </button>
-                </div>
-              ))}
+                    <img
+                      src={getUserAvatarUrl(f.id, !!f.avatarUrl, avatarTimestamp)}
+                      alt={f.username}
+                      className={styles.participantAvatar}
+                      onError={handleAvatarError}
+                    />
+                    <span className={styles.participantName}>{f.name || f.username}</span>
+                    <button
+                      className={`${styles.inviteBtn} ${invitedIds.has(f.id) ? styles['inviteBtn--done'] : ''}`}
+                      onClick={() => handleInviteFriend(f.id)}
+                      disabled={invitedIds.has(f.id)}
+                      type="button"
+                    >
+                      {invitedIds.has(f.id) ? (
+                        <>
+                          <Check size={12} /> Enviado
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus size={12} /> Invitar
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ))}
             </div>
           </section>
 
@@ -242,14 +327,30 @@ export default function SessionPage() {
                 <Music size={18} /> Reproduciendo
               </h2>
               <div className={styles.nowPlaying}>
-                <img src={getCoverUrl(currentTrack.albumId ? `/api/albums/${currentTrack.albumId}/cover` : undefined)} alt="" className={styles.nowPlayingCover} onError={(e) => { (e.target as HTMLImageElement).src = '/radio/radio-cover-dark.webp'; }} />
+                <img
+                  src={getCoverUrl(
+                    currentTrack.albumId ? `/api/albums/${currentTrack.albumId}/cover` : undefined
+                  )}
+                  alt=""
+                  className={styles.nowPlayingCover}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/radio/radio-cover-dark.webp';
+                  }}
+                />
                 <div className={styles.nowPlayingInfo}>
                   <span className={styles.nowPlayingTitle}>{currentTrack.trackTitle}</span>
                   <span className={styles.nowPlayingArtist}>{currentTrack.artistName}</span>
-                  <span className={styles.nowPlayingMeta}>{currentTrack.addedByUsername} · {formatDuration(currentTrack.trackDuration)}</span>
+                  <span className={styles.nowPlayingMeta}>
+                    {currentTrack.addedByUsername} · {formatDuration(currentTrack.trackDuration)}
+                  </span>
                 </div>
                 {isHost && (
-                  <button className={styles.skipBtn} onClick={handleSkip} disabled={skipMutation.isPending} type="button">
+                  <button
+                    className={styles.skipBtn}
+                    onClick={handleSkip}
+                    disabled={skipMutation.isPending}
+                    type="button"
+                  >
                     <SkipForward size={20} />
                   </button>
                 )}
@@ -275,7 +376,14 @@ export default function SessionPage() {
                   onChange={(e) => setTrackSearch(e.target.value)}
                 />
                 {trackSearch && (
-                  <button className={styles.searchClear} onClick={() => { setTrackSearch(''); setTrackResults([]); }} type="button">
+                  <button
+                    className={styles.searchClear}
+                    onClick={() => {
+                      setTrackSearch('');
+                      setTrackResults([]);
+                    }}
+                    type="button"
+                  >
                     <X size={14} />
                   </button>
                 )}
@@ -285,11 +393,22 @@ export default function SessionPage() {
             {trackResults.length > 0 ? (
               <div className={styles.trackGrid}>
                 {trackResults.map((t) => (
-                  <TrackCard key={t.id} track={t} onAdd={canAddToQueue ? handleAddTrack : () => {}} added={addedTrackId === t.id} />
+                  <TrackCard
+                    key={t.id}
+                    track={t}
+                    onAdd={canAddToQueue ? handleAddTrack : () => {}}
+                    added={addedTrackId === t.id}
+                  />
                 ))}
               </div>
             ) : (
-              <SuggestionsSection recommendations={recommendations} queue={queue} trackSearch={trackSearch} onAdd={canAddToQueue ? handleAddTrack : () => {}} addedTrackId={addedTrackId} />
+              <SuggestionsSection
+                recommendations={recommendations}
+                queue={queue}
+                trackSearch={trackSearch}
+                onAdd={canAddToQueue ? handleAddTrack : () => {}}
+                addedTrackId={addedTrackId}
+              />
             )}
           </section>
 
@@ -301,14 +420,35 @@ export default function SessionPage() {
                 {pendingTracks.map((item, i) => (
                   <div key={item.id} className={styles.queueItem}>
                     <span className={styles.queueIndex}>{i + 1}</span>
-                    <img src={getCoverUrl(item.albumId ? `/api/albums/${item.albumId}/cover` : undefined)} alt="" className={styles.queueCover} onError={(e) => { (e.target as HTMLImageElement).src = '/radio/radio-cover-dark.webp'; }} />
+                    <img
+                      src={getCoverUrl(
+                        item.albumId ? `/api/albums/${item.albumId}/cover` : undefined
+                      )}
+                      alt=""
+                      className={styles.queueCover}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/radio/radio-cover-dark.webp';
+                      }}
+                    />
                     <div className={styles.queueInfo}>
                       <span className={styles.queueTitle}>{item.trackTitle}</span>
-                      <span className={styles.queueMeta}>{item.artistName} · {item.addedByUsername}</span>
+                      <span className={styles.queueMeta}>
+                        {item.artistName} · {item.addedByUsername}
+                      </span>
                     </div>
-                    <span className={styles.queueDuration}>{formatDuration(item.trackDuration)}</span>
+                    <span className={styles.queueDuration}>
+                      {formatDuration(item.trackDuration)}
+                    </span>
                     {isHost && (
-                      <button className={styles.removeBtn} onClick={async () => { await listeningSessionsService.removeFromQueue(session.id, item.id).catch(() => {}); }} type="button">
+                      <button
+                        className={styles.removeBtn}
+                        onClick={async () => {
+                          await listeningSessionsService
+                            .removeFromQueue(session.id, item.id)
+                            .catch(() => {});
+                        }}
+                        type="button"
+                      >
                         <X size={14} />
                       </button>
                     )}
@@ -330,22 +470,48 @@ export default function SessionPage() {
   );
 }
 
-function TrackCard({ track, onAdd, added }: { track: { id: string; title: string; artistName?: string; albumId?: string }; onAdd: (id: string) => void; added: boolean }) {
+function TrackCard({
+  track,
+  onAdd,
+  added,
+}: {
+  track: { id: string; title: string; artistName?: string; albumId?: string };
+  onAdd: (id: string) => void;
+  added: boolean;
+}) {
   return (
     <div className={styles.trackCard}>
-      <img src={getCoverUrl(track.albumId ? `/api/albums/${track.albumId}/cover` : undefined)} alt="" className={styles.trackCardCover} onError={(e) => { (e.target as HTMLImageElement).src = '/radio/radio-cover-dark.webp'; }} />
+      <img
+        src={getCoverUrl(track.albumId ? `/api/albums/${track.albumId}/cover` : undefined)}
+        alt=""
+        className={styles.trackCardCover}
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = '/radio/radio-cover-dark.webp';
+        }}
+      />
       <div className={styles.trackCardInfo}>
         <span className={styles.trackCardTitle}>{track.title}</span>
         <span className={styles.trackCardArtist}>{track.artistName}</span>
       </div>
-      <button className={`${styles.trackCardAdd} ${added ? styles['trackCardAdd--done'] : ''}`} onClick={() => onAdd(track.id)} disabled={added} type="button">
+      <button
+        className={`${styles.trackCardAdd} ${added ? styles['trackCardAdd--done'] : ''}`}
+        onClick={() => onAdd(track.id)}
+        disabled={added}
+        type="button"
+      >
         {added ? <Check size={16} /> : <Plus size={16} />}
       </button>
     </div>
   );
 }
 
-function SuggestionsSection({ recommendations, queue, trackSearch, onAdd, addedTrackId }: {
+function SuggestionsSection({
+  recommendations,
+  queue,
+  trackSearch,
+  onAdd,
+  addedTrackId,
+}: {
   recommendations: { id: string; title: string; artistName?: string; albumId?: string }[];
   queue: SessionQueueItem[];
   trackSearch: string;

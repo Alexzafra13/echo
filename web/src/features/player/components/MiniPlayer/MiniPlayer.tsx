@@ -1,7 +1,7 @@
 import { useState, useRef, useContext } from 'react';
 import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio } from 'lucide-react';
-import { usePlayer, PlayerContext } from '../../context/PlayerContext';
+import { PlayerContext } from '../../context/PlayerContext';
 import { usePlayerSettingsStore } from '../../store';
 import { useClickOutsideRef } from '../../hooks/useClickOutsideRef';
 import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
@@ -76,10 +76,7 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
 
   const canNavigateToAlbum = !isRadioMode && albumId;
 
-  const shouldShow =
-    preference === 'sidebar' ? true :
-    preference === 'dynamic' ? isVisible :
-    false;
+  const shouldShow = preference === 'sidebar' ? true : preference === 'dynamic' ? isVisible : false;
 
   return (
     <div className={`${styles.miniPlayer} ${shouldShow ? styles['miniPlayer--visible'] : ''}`}>
@@ -112,14 +109,8 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
 
       {!isRadioMode && (
         <div className={styles.progressContainer}>
-          <div
-            className={styles.progressBar}
-            onClick={handleProgressClick}
-          >
-            <div
-              className={styles.progressFill}
-              style={{ width: `${progressPercent}%` }}
-            />
+          <div className={styles.progressBar} onClick={handleProgressClick}>
+            <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
           </div>
           <div className={styles.timeDisplay}>
             <span className={styles.timeText}>{formatDuration(currentTime)}</span>
@@ -137,11 +128,7 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
 
       <div className={styles.controls}>
         {!isRadioMode && (
-          <button
-            className={styles.controlBtn}
-            onClick={playPrevious}
-            title="Anterior"
-          >
+          <button className={styles.controlBtn} onClick={playPrevious} title="Anterior">
             <SkipBack size={18} />
           </button>
         )}
@@ -155,11 +142,7 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         </button>
 
         {!isRadioMode && (
-          <button
-            className={styles.controlBtn}
-            onClick={playNext}
-            title="Siguiente"
-          >
+          <button className={styles.controlBtn} onClick={playNext} title="Siguiente">
             <SkipForward size={18} />
           </button>
         )}
@@ -185,10 +168,7 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         </button>
         <div className={styles.volumeBarContainer}>
           <div className={styles.volumeBarTrack}>
-            <div
-              className={styles.volumeBarFill}
-              style={{ width: `${volume * 100}%` }}
-            />
+            <div className={styles.volumeBarFill} style={{ width: `${volume * 100}%` }} />
           </div>
           <input
             type="range"

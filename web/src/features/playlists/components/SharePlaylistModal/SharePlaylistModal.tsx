@@ -4,7 +4,11 @@ import { Button, Modal } from '@shared/components/ui';
 import { useAuthStore } from '@shared/store';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
-import { searchUsers, getFriends, type SearchUserResult } from '@features/social/services/social.service';
+import {
+  searchUsers,
+  getFriends,
+  type SearchUserResult,
+} from '@features/social/services/social.service';
 import {
   usePlaylistCollaborators,
   useInviteCollaborator,
@@ -45,10 +49,7 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   // IDs a excluir (owner + colaboradores existentes)
-  const existingIds = new Set([
-    playlist.ownerId,
-    ...collaborators.map((c) => c.userId),
-  ]);
+  const existingIds = new Set([playlist.ownerId, ...collaborators.map((c) => c.userId)]);
 
   // Cargar amigos como sugerencias al abrir el modal
   useEffect(() => {
@@ -61,11 +62,12 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
             username: f.username,
             name: f.name,
             avatarUrl: f.avatarUrl,
+            friendshipStatus: 'accepted' as const,
           }));
         setSuggestions(available);
       })
       .catch(() => setSuggestions([]));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collaborators.length]);
 
   // Debounced user search
@@ -81,10 +83,7 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
       try {
         const results: SearchUserResult[] = await searchUsers(searchQuery, 8);
         // Filter out owner and existing collaborators
-        const existingIds = new Set([
-          playlist.ownerId,
-          ...collaborators.map((c) => c.userId),
-        ]);
+        const existingIds = new Set([playlist.ownerId, ...collaborators.map((c) => c.userId)]);
         const filtered: SearchUserResult[] = results.filter((u) => !existingIds.has(u.id));
         setSearchResults(filtered);
       } catch {
@@ -224,9 +223,7 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
                         onError={handleAvatarError}
                       />
                       <div className={styles.userInfo}>
-                        <span className={styles.userName}>
-                          {user.name || user.username}
-                        </span>
+                        <span className={styles.userName}>{user.name || user.username}</span>
                         <span className={styles.userHandle}>@{user.username}</span>
                       </div>
                       <Button
@@ -241,9 +238,7 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
                     </div>
                   ))
                 ) : (
-                  <div className={styles.searchEmpty}>
-                    No se encontraron usuarios
-                  </div>
+                  <div className={styles.searchEmpty}>No se encontraron usuarios</div>
                 )}
               </div>
             )}
@@ -261,9 +256,7 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
                       onError={handleAvatarError}
                     />
                     <div className={styles.userInfo}>
-                      <span className={styles.userName}>
-                        {user.name || user.username}
-                      </span>
+                      <span className={styles.userName}>{user.name || user.username}</span>
                       <span className={styles.userHandle}>@{user.username}</span>
                     </div>
                     <Button
@@ -289,9 +282,7 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
             {successMessage}
           </div>
         )}
-        {error && (
-          <div className={styles.errorMessage}>{error}</div>
-        )}
+        {error && <div className={styles.errorMessage}>{error}</div>}
 
         {/* Collaborators list */}
         <div className={styles.collaboratorsSection}>
@@ -324,9 +315,7 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
             </div>
 
             {/* Loading state */}
-            {loadingCollabs && (
-              <div className={styles.loadingState}>Cargando colaboradores...</div>
-            )}
+            {loadingCollabs && <div className={styles.loadingState}>Cargando colaboradores...</div>}
 
             {/* Collaborators */}
             {collaborators.map((collab) => (
@@ -361,9 +350,7 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
                     <select
                       className={styles.roleSelect}
                       value={collab.role}
-                      onChange={(e) =>
-                        handleRoleChange(collab, e.target.value as CollaboratorRole)
-                      }
+                      onChange={(e) => handleRoleChange(collab, e.target.value as CollaboratorRole)}
                       disabled={updateRoleMutation.isPending}
                     >
                       <option value="viewer">Lector</option>
@@ -403,9 +390,7 @@ export function SharePlaylistModal({ playlist, onClose }: SharePlaylistModalProp
                 <UserPlus size={24} />
                 <p>Nadie mas tiene acceso a esta playlist</p>
                 {isOwner && (
-                  <p className={styles.emptyHint}>
-                    Busca usuarios arriba para invitarlos
-                  </p>
+                  <p className={styles.emptyHint}>Busca usuarios arriba para invitarlos</p>
                 )}
               </div>
             )}

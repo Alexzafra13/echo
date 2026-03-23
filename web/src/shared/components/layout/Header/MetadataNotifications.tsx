@@ -251,8 +251,11 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
       // Navigate based on type
       if (item.type === 'friend_request_received' || item.type === 'friend_request_accepted') {
         close(() => setLocation('/social'));
-      } else if ((item.type === 'session_invite' || item.type === 'new_content') && item.data?.inviteCode) {
-        close(() => setLocation(`/join/${item.data.inviteCode}`));
+      } else if (
+        (item.type === 'session_invite' || item.type === 'new_content') &&
+        item.data?.inviteCode
+      ) {
+        close(() => setLocation(`/join/${item.data!.inviteCode}`));
       } else if (item.type === 'scan_completed') {
         close(() => setLocation('/admin?tab=scanner'));
       } else if (item.type === 'enrichment_completed') {
