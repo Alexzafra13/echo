@@ -1,0 +1,86 @@
+import { Injectable, Inject } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
+import {
+  ILibraryStatsProvider,
+  IStorageBreakdownProvider,
+  ISystemHealthChecker,
+  IEnrichmentStatsProvider,
+  IActivityStatsProvider,
+  IScanStatsProvider,
+  IAlertsProvider,
+  LIBRARY_STATS_PROVIDER,
+  STORAGE_BREAKDOWN_PROVIDER,
+  SYSTEM_HEALTH_CHECKER,
+  ENRICHMENT_STATS_PROVIDER,
+  ACTIVITY_STATS_PROVIDER,
+  SCAN_STATS_PROVIDER,
+  ALERTS_PROVIDER,
+} from '../../ports';
+import { GetDashboardStatsInput, GetDashboardStatsOutput } from './get-dashboard-stats.dto';
+
+@Injectable()
+export class GetDashboardStatsUseCase {
+  constructor(
+    @InjectPinoLogger(GetDashboardStatsUseCase.name)
+    private readonly logger: PinoLogger,
+    @Inject(LIBRARY_STATS_PROVIDER)
+    private readonly libraryStats: ILibraryStatsProvider,
+    @Inject(STORAGE_BREAKDOWN_PROVIDER)
+    private readonly storageBreakdown: IStorageBreakdownProvider,
+    @Inject(SYSTEM_HEALTH_CHECKER)
+    private readonly systemHealth: ISystemHealthChecker,
+    @Inject(ENRICHMENT_STATS_PROVIDER)
+    private readonly enrichmentStats: IEnrichmentStatsProvider,
+    @Inject(ACTIVITY_STATS_PROVIDER)
+    private readonly activityStats: IActivityStatsProvider,
+    @Inject(SCAN_STATS_PROVIDER)
+    private readonly scanStats: IScanStatsProvider,
+    @Inject(ALERTS_PROVIDER)
+    private readonly alerts: IAlertsProvider,
+  ) {}
+
+  async execute(_input: GetDashboardStatsInput): Promise<GetDashboardStatsOutput> {
+    try {
+      // Se obtiene primero porque systemHealth y alerts lo necesitan
+      const storageBreakdownData = await this.storageBreakdown.get();
+
+      const [
+        libraryStatsData,
+        systemHealthData,
+        enrichmentStatsData,
+        activityStatsData,
+        scanStatsData,
+        activeAlertsData,
+        activityTimelineData,
+        recentActivitiesData,
+      ] = await Promise.all([
+        this.libraryStats.get(),
+        this.systemHealth.check(storageBreakdownData),
+        this.enrichmentStats.get(),
+        this.activityStats.getStats(),
+        this.scanStats.get(),
+        this.alerts.get(storageBreakdownData),
+        this.activityStats.getTimeline(),
+        this.activityStats.getRecentActivities(),
+      ]);
+
+      return {
+        libraryStats: libraryStatsData,
+        storageBreakdown: storageBreakdownData,
+        systemHealth: systemHealthData,
+        enrichmentStats: enrichmentStatsData,
+        activityStats: activityStatsData,
+        scanStats: scanStatsData,
+        activeAlerts: activeAlertsData,
+        activityTimeline: activityTimelineData,
+        recentActivities: recentActivitiesData,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error getting dashboard stats: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
+      throw error;
+    }
+  }
+}

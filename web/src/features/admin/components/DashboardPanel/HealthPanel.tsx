@@ -1,0 +1,281 @@
+import {
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Activity,
+  Database,
+  Zap,
+  Radio,
+  HardDrive,
+  AlertTriangle,
+  ChevronRight,
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import styles from './HealthPanel.module.css';
+
+interface SystemHealth {
+  database: 'healthy' | 'degraded' | 'down';
+  redis: 'healthy' | 'degraded' | 'down';
+  scanner: 'idle' | 'running' | 'error';
+  metadataApis: {
+    lastfm: 'healthy' | 'degraded' | 'down';
+    fanart: 'healthy' | 'degraded' | 'down';
+    musicbrainz: 'healthy' | 'degraded' | 'down';
+  };
+  storage: 'healthy' | 'warning' | 'critical';
+}
+
+interface ActiveAlerts {
+  orphanedFiles: number;
+  pendingConflicts: number;
+  storageWarning: boolean;
+  storageDetails?: {
+    currentMB: number;
+    limitMB: number;
+    percentUsed: number;
+  };
+  scanErrors: number;
+}
+
+interface ScanStats {
+  currentScan: {
+    isRunning: boolean;
+    startedAt: string | null;
+    progress: number;
+  };
+}
+
+interface HealthPanelProps {
+  health: SystemHealth;
+  alerts: ActiveAlerts;
+  scanStats?: ScanStats;
+  onNavigateToTab?: (tab: string) => void;
+}
+
+/**
+ * HealthPanel Component
+ * Panel que muestra el estado de salud del sistema y alertas activas
+ */
+export function HealthPanel({ health, alerts, scanStats, onNavigateToTab }: HealthPanelProps) {
+  const { t } = useTranslation();
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'healthy':
+      case 'idle':
+        return <CheckCircle2 size={13} className={styles.iconHealthy} />;
+      case 'degraded':
+      case 'warning':
+      case 'running':
+        return <AlertCircle size={13} className={styles.iconWarning} />;
+      case 'down':
+      case 'error':
+      case 'critical':
+        return <XCircle size={13} className={styles.iconError} />;
+      default:
+        return <AlertCircle size={13} className={styles.iconWarning} />;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      healthy: t('admin.health.statusHealthy'),
+      degraded: t('admin.health.statusDegraded'),
+      down: t('admin.health.statusDown'),
+      idle: t('admin.health.statusIdle'),
+      running: t('admin.health.statusRunning'),
+      error: t('admin.health.statusError'),
+      warning: t('admin.health.statusWarning'),
+      critical: t('admin.health.statusCritical'),
+    };
+    return labels[status] || status;
+  };
+
+  const totalAlerts =
+    alerts.orphanedFiles +
+    alerts.pendingConflicts +
+    (alerts.storageWarning ? 1 : 0) +
+    alerts.scanErrors;
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <Activity size={20} />
+        <h3 className={styles.title}>{t('admin.health.systemStatus')}</h3>
+      </div>
+
+      <div className={styles.grid}>
+        {/* Database */}
+        <div className={`${styles.healthItem} ${styles.servicePostgres}`}>
+          <div className={styles.healthHeader}>
+            <Database size={18} />
+            <span className={styles.healthLabel}>{t('admin.health.database')}</span>
+          </div>
+          <div className={styles.healthStatus}>
+            {getStatusIcon(health.database)}
+            <span>{getStatusLabel(health.database)}</span>
+          </div>
+        </div>
+
+        {/* Redis */}
+        <div className={`${styles.healthItem} ${styles.serviceRedis}`}>
+          <div className={styles.healthHeader}>
+            <Zap size={18} />
+            <span className={styles.healthLabel}>{t('admin.health.cacheRedis')}</span>
+          </div>
+          <div className={styles.healthStatus}>
+            {getStatusIcon(health.redis)}
+            <span>{getStatusLabel(health.redis)}</span>
+          </div>
+        </div>
+
+        {/* Scanner */}
+        <div className={`${styles.healthItem} ${styles.serviceScanner}`}>
+          <div className={styles.healthHeader}>
+            <Radio size={18} />
+            <span className={styles.healthLabel}>{t('admin.health.scanner')}</span>
+          </div>
+          <div className={styles.healthStatus}>
+            {getStatusIcon(health.scanner)}
+            <span>{getStatusLabel(health.scanner)}</span>
+            {scanStats?.currentScan.isRunning && (
+              <span className={styles.scanProgress}>{scanStats.currentScan.progress}%</span>
+            )}
+          </div>
+          {scanStats?.currentScan.isRunning && (
+            <div className={styles.progressBar}>
+              <div
+                className={styles.progressFill}
+                style={{ width: `${scanStats.currentScan.progress}%` }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Storage */}
+        <div className={`${styles.healthItem} ${styles.serviceStorage}`}>
+          <div className={styles.healthHeader}>
+            <HardDrive size={18} />
+            <span className={styles.healthLabel}>{t('admin.health.storage')}</span>
+          </div>
+          <div className={styles.healthStatus}>
+            {getStatusIcon(health.storage)}
+            <span>{getStatusLabel(health.storage)}</span>
+          </div>
+        </div>
+
+        {/* Last.fm */}
+        <div className={`${styles.healthItem} ${styles.serviceLastfm}`}>
+          <div className={styles.healthHeader}>
+            <Radio size={18} />
+            <span className={styles.healthLabel}>Last.fm API</span>
+          </div>
+          <div className={styles.healthStatus}>
+            {getStatusIcon(health.metadataApis.lastfm)}
+            <span>{getStatusLabel(health.metadataApis.lastfm)}</span>
+          </div>
+        </div>
+
+        {/* Fanart.tv */}
+        <div className={`${styles.healthItem} ${styles.serviceFanart}`}>
+          <div className={styles.healthHeader}>
+            <Radio size={18} />
+            <span className={styles.healthLabel}>Fanart.tv API</span>
+          </div>
+          <div className={styles.healthStatus}>
+            {getStatusIcon(health.metadataApis.fanart)}
+            <span>{getStatusLabel(health.metadataApis.fanart)}</span>
+          </div>
+        </div>
+
+        {/* MusicBrainz */}
+        <div className={`${styles.healthItem} ${styles.serviceMusicbrainz}`}>
+          <div className={styles.healthHeader}>
+            <Radio size={18} />
+            <span className={styles.healthLabel}>MusicBrainz API</span>
+          </div>
+          <div className={styles.healthStatus}>
+            {getStatusIcon(health.metadataApis.musicbrainz)}
+            <span>{getStatusLabel(health.metadataApis.musicbrainz)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Active Alerts */}
+      {totalAlerts > 0 && (
+        <div className={styles.alertsSection}>
+          <div className={styles.alertsHeader}>
+            <AlertTriangle size={18} />
+            <h4 className={styles.alertsTitle}>
+              {t('admin.health.activeAlerts', { count: totalAlerts })}
+            </h4>
+          </div>
+          <div className={styles.alertsList}>
+            {alerts.orphanedFiles > 0 && (
+              <button
+                className={styles.alertButton}
+                onClick={() => onNavigateToTab?.('maintenance')}
+                title={t('admin.health.goToMaintenance')}
+              >
+                <div className={styles.alertContent}>
+                  <AlertCircle size={14} />
+                  <span>{t('admin.health.orphanFiles', { count: alerts.orphanedFiles })}</span>
+                </div>
+                <ChevronRight size={14} className={styles.alertChevron} />
+              </button>
+            )}
+            {alerts.pendingConflicts > 0 && (
+              <button
+                className={styles.alertButton}
+                onClick={() => onNavigateToTab?.('metadata')}
+                title={t('admin.health.goToMetadata')}
+              >
+                <div className={styles.alertContent}>
+                  <AlertCircle size={14} />
+                  <span>
+                    {t('admin.health.pendingConflicts', { count: alerts.pendingConflicts })}
+                  </span>
+                </div>
+                <ChevronRight size={14} className={styles.alertChevron} />
+              </button>
+            )}
+            {alerts.storageWarning && (
+              <button
+                className={styles.alertButton}
+                onClick={() => onNavigateToTab?.('maintenance')}
+                title={t('admin.health.goToMaintenanceShort')}
+              >
+                <div className={styles.alertContent}>
+                  <AlertCircle size={14} />
+                  <span>
+                    {alerts.storageDetails
+                      ? t('admin.health.storageDetailedWarning', {
+                          percent: alerts.storageDetails.percentUsed,
+                          current: alerts.storageDetails.currentMB,
+                          limit: alerts.storageDetails.limitMB,
+                        })
+                      : t('admin.health.storageNearLimit')}
+                  </span>
+                </div>
+                <ChevronRight size={14} className={styles.alertChevron} />
+              </button>
+            )}
+            {alerts.scanErrors > 0 && (
+              <button
+                className={styles.alertButton}
+                onClick={() => onNavigateToTab?.('logs')}
+                title={t('admin.health.goToLogs')}
+              >
+                <div className={styles.alertContent}>
+                  <AlertCircle size={14} />
+                  <span>{t('admin.health.scanErrors', { count: alerts.scanErrors })}</span>
+                </div>
+                <ChevronRight size={14} className={styles.alertChevron} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

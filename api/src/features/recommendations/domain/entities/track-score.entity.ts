@@ -1,0 +1,98 @@
+export interface TrackScore {
+  trackId: string;
+  totalScore: number; // 0-100
+  breakdown: ScoreBreakdown;
+  rank: number;
+}
+
+export interface ScoreBreakdown {
+  explicitFeedback: number; // 0-100 raw (ponderado ×0.30 → max 30 pts en score final)
+  implicitBehavior: number; // 0-100 raw (ponderado ×0.50 → max 50 pts en score final)
+  recency: number; // 0-100 raw (ponderado ×0.18 → max 18 pts en score final)
+  diversity: number; // 0-100 raw (ponderado ×0.02 → max 2 pts en score final)
+}
+
+export interface RecommendationOptions {
+  userId: string;
+  limit?: number;
+  excludeListenedRecently?: boolean;
+  diversityFactor?: number; // 0-1, how much to promote variety
+  recencyDays?: number; // Consider data from last N days
+  minScore?: number; // Minimum score threshold
+}
+
+export interface WaveMixConfig {
+  maxTracks: number; // Max 50 tracks
+  minScore: number; // Minimum score to consider (default: 20)
+  freshnessRatio: number; // 0-1, ratio of "new" tracks (default: 0.2)
+  genreDiversity: number; // 0-1, genre variety (default: 0.3)
+  temporalBalance: TemporalBalance; // Distribution by time period
+}
+
+export interface TemporalBalance {
+  lastWeek: number; // 0.4 = 40% from last week
+  lastMonth: number; // 0.3 = 30% from last month
+  lastYear: number; // 0.2 = 20% from last year
+  older: number; // 0.1 = 10% from older
+}
+
+export interface AutoPlaylist {
+  id: string;
+  type: 'wave-mix' | 'artist' | 'genre' | 'mood';
+  userId: string;
+  name: string;
+  description: string;
+  tracks: TrackScore[];
+  createdAt: Date;
+  expiresAt: Date;
+  metadata: PlaylistMetadata;
+  coverColor?: string; // Hex color for generated cover
+  coverImageUrl?: string; // URL for artist/album cover
+}
+
+export interface PlaylistMetadata {
+  totalTracks: number;
+  avgScore: number;
+  topGenres: string[];
+  topArtists: string[];
+  artistId?: string; // For artist playlists
+  artistName?: string; // For artist playlists
+  temporalDistribution: {
+    lastWeek: number;
+    lastMonth: number;
+    lastYear: number;
+    older: number;
+  };
+}
+
+export interface SmartPlaylistConfig {
+  name: string;
+  description?: string;
+  artistId?: string; // Build playlist for specific artist
+  genreId?: string; // Build playlist for specific genre
+  mood?: string; // Build playlist for mood (energetic, calm, etc.)
+  minScore?: number;
+  maxTracks?: number;
+  sortBy?: 'score' | 'popularity' | 'recent' | 'random';
+}
+
+// Scoring algorithm weights
+// Optimized to focus on what users actually listen to, not just likes
+export const SCORING_WEIGHTS = {
+  explicitFeedback: 0.3, // 30% weight (reduced - many users don't like/rate)
+  implicitBehavior: 0.5, // 50% weight (increased - focus on what they actually play)
+  recency: 0.18, // 18% weight (slightly increased - recent activity matters)
+  diversity: 0.02, // 2% weight (reduced - don't force diversity too much)
+};
+
+// Explicit feedback scoring (ratings only)
+export const FEEDBACK_SCORES = {
+  noFeedback: 0,
+  ratingMultiplier: 20, // 1-5 stars → 20-100 points (scaled up since no more likes/dislikes)
+};
+
+// Recency decay factor (lambda for exponential decay)
+// Lower lambda = gentler decay = tracks stay relevant longer
+export const RECENCY_DECAY = {
+  lambda: 0.03, // 3% decay per day (reduced from 5% for better retention)
+};

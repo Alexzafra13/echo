@@ -1,0 +1,606 @@
+/* ScannerPanel Component Styles */
+
+.panel {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  border: none;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.headerLeft {
+  flex: 1;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.headerIcon {
+  color: #818cf8;
+}
+
+.title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Status Card */
+.statusCard {
+  background: var(--white-02);
+  border: 1px solid var(--white-06);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.statusHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--white-06);
+}
+
+.statusInfo {
+  flex: 1;
+}
+
+.statusTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 2px 0;
+}
+
+.statusDate {
+  font-size: var(--text-12);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.statusIconSuccess {
+  color: var(--color-success);
+  flex-shrink: 0;
+}
+
+.statusIconError {
+  color: var(--color-error);
+  flex-shrink: 0;
+}
+
+.statusIconRunning {
+  color: var(--color-info);
+  flex-shrink: 0;
+  animation: spin 2s linear infinite;
+}
+
+.statusIconPending {
+  color: var(--color-warning);
+  flex-shrink: 0;
+}
+
+.statusIconPaused {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+/* Scan Controls */
+.scanControls {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.controlButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-base);
+  border: 1px solid var(--white-10);
+  background: var(--white-05);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.controlButton:hover {
+  background: var(--white-10);
+  color: var(--color-text-primary);
+}
+
+.controlButtonResume {
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.controlButtonResume:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.controlButtonCancel {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.controlButtonCancel:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 12px;
+  background: var(--white-03);
+  border: 1px solid var(--white-06);
+  border-radius: var(--radius-md);
+}
+
+.statValue {
+  font-size: 22px;
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-size: var(--text-11);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: var(--font-medium);
+}
+
+/* Error Box */
+.errorBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
+  border-radius: var(--radius-base);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  margin-top: 16px;
+}
+
+/* Scan Button */
+.scanButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md);
+  color: #34d399;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.scanButton:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.scanButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.scanButton__spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* History Toggle */
+.historyToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--white-06);
+  margin-top: 20px;
+  border-radius: var(--radius-base);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-13);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+  width: 100%;
+  justify-content: center;
+}
+
+.historyToggle:hover {
+  background: var(--white-03);
+  border-color: var(--white-10);
+  color: var(--color-text-secondary);
+}
+
+/* History */
+.history {
+  margin-top: 12px;
+}
+
+.historyEmpty {
+  text-align: center;
+  padding: 24px;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-13);
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.historyItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-base);
+  transition: background var(--transition-fast);
+  border-bottom: 1px solid var(--white-04);
+}
+
+.historyItem:last-child {
+  border-bottom: none;
+}
+
+.historyItem:hover {
+  background: var(--white-03);
+}
+
+.historyItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.historyItemHeader svg {
+  width: 16px;
+  height: 16px;
+}
+
+.historyItemDate {
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+}
+
+.historyItemStats {
+  display: flex;
+  gap: 14px;
+  font-size: var(--text-12);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.historyItemStats span:first-child {
+  color: #34d399;
+}
+
+.historyItemStats span:nth-child(2) {
+  color: #fbbf24;
+}
+
+.historyItemStats span:last-child {
+  color: #f87171;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .panel {
+    padding: 24px 20px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .title {
+    font-size: var(--text-xl);
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .historyItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+/* Progress Bar */
+.progressBar {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: var(--white-05);
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
+  border-radius: var(--radius-sm);
+  transition: width 0.3s ease-in-out;
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+}
+
+.progressText {
+  position: absolute;
+  right: 12px;
+  top: -24px;
+  font-size: var(--text-12);
+  font-weight: var(--font-semibold);
+  color: var(--color-primary);
+}
+
+/* File Counter */
+.fileCounter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--white-02);
+  border-radius: var(--radius-base);
+  margin-top: 16px;
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+}
+
+.errorCount {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-error);
+  font-weight: var(--font-medium);
+}
+
+/* Current File */
+.currentFile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-12);
+}
+
+.currentFileLabel {
+  color: var(--color-primary);
+  font-weight: var(--font-semibold);
+}
+
+.currentFileName {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+/* Stat Icon */
+.statIcon {
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
+/* LUFS Analysis - Compact Bar */
+.lufsBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: var(--radius-base);
+  margin-bottom: 20px;
+  font-size: var(--text-13);
+}
+
+.lufsIcon {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.lufsIconRunning {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.lufsText {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-medium);
+}
+
+.lufsPercent {
+  color: var(--color-text-tertiary);
+  margin-left: 4px;
+}
+
+.lufsEta {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-12);
+  margin-left: auto;
+}
+
+.lufsProgressInline {
+  width: 60px;
+  height: 4px;
+  background: var(--white-08);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lufsProgressFill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 2px;
+  transition: width 0.5s ease-out;
+}
+
+/* DJ Analysis - Compact Bar */
+.djBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: var(--radius-base);
+  margin-bottom: 20px;
+  font-size: var(--text-13);
+}
+
+.djIcon {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.djIconRunning {
+  color: #14b8a6;
+  flex-shrink: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.djText {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-medium);
+}
+
+.djPercent {
+  color: var(--color-text-tertiary);
+  margin-left: 4px;
+}
+
+.djEta {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-12);
+  margin-left: auto;
+}
+
+.djProgressInline {
+  width: 60px;
+  height: 4px;
+  background: var(--white-08);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.djProgressFill {
+  height: 100%;
+  background: #14b8a6;
+  border-radius: 2px;
+  transition: width 0.5s ease-out;
+}
+
+/* Light theme */
+:root[data-theme='light'] .statItem {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .scanButton {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #059669;
+}
+
+:root[data-theme='light'] .scanButton:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.5);
+}

@@ -1,0 +1,439 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+  Sse,
+  Req,
+  Res,
+  UseGuards,
+  BadRequestException,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import { FastifyRequest, FastifyReply } from 'fastify';
+import { Observable } from 'rxjs';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { CurrentUser } from '@shared/decorators/current-user.decorator';
+import { Public } from '@shared/decorators/public.decorator';
+import { SaveFavoriteStationUseCase } from '../domain/use-cases/save-favorite-station/save-favorite-station.use-case';
+import { GetUserFavoritesUseCase } from '../domain/use-cases/get-user-favorites/get-user-favorites.use-case';
+import { DeleteFavoriteStationUseCase } from '../domain/use-cases/delete-favorite-station/delete-favorite-station.use-case';
+import { SearchStationsUseCase } from '../domain/use-cases/search-stations/search-stations.use-case';
+import { IcyMetadataService, RadioMetadata } from '../domain/services/icy-metadata.service';
+import { RadioFaviconFetchService } from '../infrastructure/services/radio-favicon-fetch.service';
+import { RadioStationResponseDto } from './dto/radio-station-response.dto';
+import { SearchStationsDto } from './dto/search-stations.dto';
+import { CreateCustomStationDto } from './dto/create-custom-station.dto';
+import { SaveApiStationDto } from './dto/save-api-station.dto';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { radioStationImages } from '@infrastructure/database/schema';
+import { inArray } from 'drizzle-orm';
+import * as http from 'http';
+import * as https from 'https';
+
+@ApiTags('radio')
+@Controller('radio')
+@UseGuards(JwtAuthGuard)
+export class RadioController {
+  constructor(
+    private readonly saveFavoriteUseCase: SaveFavoriteStationUseCase,
+    private readonly getUserFavoritesUseCase: GetUserFavoritesUseCase,
+    private readonly deleteFavoriteUseCase: DeleteFavoriteStationUseCase,
+    private readonly searchStationsUseCase: SearchStationsUseCase,
+    private readonly icyMetadataService: IcyMetadataService,
+    private readonly drizzle: DrizzleService,
+    private readonly faviconFetch: RadioFaviconFetchService
+  ) {}
+
+  /**
+   * Build a map of stationUuid -> customFaviconUrl for a set of station UUIDs
+   */
+  private async getCustomFaviconMap(stationUuids: string[]): Promise<Map<string, string>> {
+    if (stationUuids.length === 0) return new Map();
+
+    const customImages = await this.drizzle.db
+      .select({
+        stationUuid: radioStationImages.stationUuid,
+        updatedAt: radioStationImages.updatedAt,
+      })
+      .from(radioStationImages)
+      .where(inArray(radioStationImages.stationUuid, stationUuids));
+
+    const map = new Map<string, string>();
+    for (const img of customImages) {
+      const tag = img.updatedAt ? img.updatedAt.getTime().toString(36) : '';
+      map.set(img.stationUuid, `/api/images/radio/${img.stationUuid}/favicon?tag=${tag}`);
+    }
+    return map;
+  }
+
+  /**
+   * Enrich Radio Browser stations with custom favicon URLs
+   */
+  private async enrichWithCustomFavicons<T extends { stationuuid: string; favicon: string }>(
+    stations: T[]
+  ): Promise<(T & { customFaviconUrl?: string })[]> {
+    const uuids = stations.map((s) => s.stationuuid);
+    const faviconMap = await this.getCustomFaviconMap(uuids);
+    if (faviconMap.size === 0) return stations;
+
+    return stations.map((station) => {
+      const customUrl = faviconMap.get(station.stationuuid);
+      return customUrl ? { ...station, customFaviconUrl: customUrl } : station;
+    });
+  }
+
+  @Get('search')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Buscar emisoras de radio',
+    description: 'Busca emisoras en Radio Browser API con filtros',
+  })
+  @ApiResponse({ status: 200, description: 'Emisoras encontradas' })
+  async searchStations(@Query() query: SearchStationsDto) {
+    const stations = await this.searchStationsUseCase.execute(query);
+    return this.enrichWithCustomFavicons(stations);
+  }
+
+  @Get('top-voted')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Emisoras más votadas',
+    description: 'Obtiene las emisoras con más votos de la comunidad',
+  })
+  async getTopVoted(@Query('limit') limit?: number) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 200);
+    const stations = await this.searchStationsUseCase.getTopVoted(safeLimit);
+    return this.enrichWithCustomFavicons(stations);
+  }
+
+  @Get('popular')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Emisoras populares',
+    description: 'Obtiene las emisoras más escuchadas',
+  })
+  async getPopular(@Query('limit') limit?: number) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 200);
+    const stations = await this.searchStationsUseCase.getPopular(safeLimit);
+    return this.enrichWithCustomFavicons(stations);
+  }
+
+  @Get('by-country/:code')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Emisoras por país',
+    description: 'Obtiene emisoras de un país específico',
+  })
+  async getByCountry(@Param('code') code: string, @Query('limit') limit?: number) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
+    const stations = await this.searchStationsUseCase.getByCountry(code, safeLimit);
+    return this.enrichWithCustomFavicons(stations);
+  }
+
+  @Get('by-tag/:tag')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Emisoras por género',
+    description: 'Obtiene emisoras de un género específico',
+  })
+  async getByTag(@Param('tag') tag: string, @Query('limit') limit?: number) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
+    const stations = await this.searchStationsUseCase.getByTag(tag, safeLimit);
+    return this.enrichWithCustomFavicons(stations);
+  }
+
+  @Get('tags')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener géneros disponibles',
+    description: 'Lista todos los géneros/tags de emisoras',
+  })
+  async getTags(@Query('limit') limit?: number) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 500);
+    return this.searchStationsUseCase.getTags(safeLimit);
+  }
+
+  @Get('countries')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener países disponibles',
+    description: 'Lista todos los países con emisoras',
+  })
+  async getCountries() {
+    return this.searchStationsUseCase.getCountries();
+  }
+
+  @Get('favorites')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener favoritos',
+    description: 'Lista las emisoras favoritas del usuario autenticado',
+  })
+  @ApiResponse({ status: 200, type: [RadioStationResponseDto] })
+  async getFavorites(@CurrentUser('id') userId: string) {
+    const stations = await this.getUserFavoritesUseCase.execute(userId);
+
+    // Enrich with custom favicon URLs
+    const stationUuids = stations
+      .map((s) => s.stationUuid)
+      .filter((uuid): uuid is string => !!uuid);
+    const customFaviconMap = await this.getCustomFaviconMap(stationUuids);
+
+    return RadioStationResponseDto.fromDomainArray(stations, customFaviconMap);
+  }
+
+  @Post('favorites/from-api')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Guardar emisora de Radio Browser',
+    description: 'Guarda una emisora de Radio Browser como favorita',
+  })
+  @ApiResponse({ status: 201, type: RadioStationResponseDto })
+  async saveFavoriteFromApi(@CurrentUser('id') userId: string, @Body() dto: SaveApiStationDto) {
+    const station = await this.saveFavoriteUseCase.execute({
+      userId,
+      stationData: dto,
+      isCustom: false,
+    });
+
+    // Check for existing custom favicon
+    const customFaviconMap = station.stationUuid
+      ? await this.getCustomFaviconMap([station.stationUuid])
+      : new Map();
+    const customUrl = station.stationUuid ? customFaviconMap.get(station.stationUuid) : undefined;
+
+    // Auto-fetch favicon if none exists (await so the response includes it)
+    if (station.stationUuid && !customUrl) {
+      try {
+        const result = await this.faviconFetch.fetchAndSave(
+          station.stationUuid,
+          station.name,
+          dto.homepage
+        );
+        if (result.success) {
+          const newMap = await this.getCustomFaviconMap([station.stationUuid]);
+          return RadioStationResponseDto.fromDomain(station, newMap.get(station.stationUuid));
+        }
+      } catch {
+        // Ignore fetch errors, return without custom favicon
+      }
+    }
+
+    return RadioStationResponseDto.fromDomain(station, customUrl);
+  }
+
+  @Post('favorites/custom')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Crear emisora personalizada',
+    description: 'Crea una emisora personalizada con URL manual',
+  })
+  @ApiResponse({ status: 201, type: RadioStationResponseDto })
+  async saveFavoriteCustom(@CurrentUser('id') userId: string, @Body() dto: CreateCustomStationDto) {
+    const station = await this.saveFavoriteUseCase.execute({
+      userId,
+      stationData: {
+        name: dto.name,
+        url: dto.url,
+        homepage: dto.homepage,
+        favicon: dto.favicon,
+        country: dto.country,
+        language: dto.language,
+        tags: dto.tags,
+        codec: dto.codec,
+        bitrate: dto.bitrate,
+      },
+      isCustom: true,
+    });
+
+    return RadioStationResponseDto.fromDomain(station);
+  }
+
+  @Delete('favorites/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Eliminar favorito',
+    description: 'Elimina una emisora de los favoritos',
+  })
+  @ApiResponse({ status: 204, description: 'Emisora eliminada' })
+  async deleteFavorite(
+    @CurrentUser('id') userId: string,
+    @Param('id', ParseUUIDPipe) stationId: string
+  ) {
+    await this.deleteFavoriteUseCase.execute({ stationId, userId });
+  }
+
+  // SSE: EventSource no puede enviar JWT, metadata es pública
+  @Sse('metadata/stream')
+  @Public()
+  @ApiOperation({
+    summary: 'Stream de metadata de radio',
+    description: 'Server-Sent Events que transmite metadata ICY en tiempo real (canción actual)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Stream de eventos de metadata',
+  })
+  streamMetadata(
+    @Query('stationUuid') stationUuid: string,
+    @Query('streamUrl') streamUrl: string,
+    @Req() request: FastifyRequest
+  ): Observable<MessageEvent> {
+    return new Observable((subscriber) => {
+      // Subscribe to metadata updates
+      const emitter = this.icyMetadataService.subscribe(stationUuid, streamUrl);
+
+      // Forward metadata events to SSE client
+      const onMetadata = (metadata: RadioMetadata) => {
+        subscriber.next({
+          type: 'metadata',
+          data: metadata,
+        } as MessageEvent);
+      };
+
+      // Forward error events to SSE client
+      const onError = (error: Error) => {
+        subscriber.next({
+          type: 'error',
+          data: { message: error.message },
+        } as MessageEvent);
+      };
+
+      emitter.on('metadata', onMetadata);
+      emitter.on('error', onError);
+
+      // Send keepalive every 30 seconds
+      const keepaliveInterval = setInterval(() => {
+        subscriber.next({
+          type: 'keepalive',
+          data: { timestamp: Date.now() },
+        } as MessageEvent);
+      }, 30000);
+
+      // Cleanup on client disconnect (use request.raw for Node.js IncomingMessage)
+      request.raw.on('close', () => {
+        emitter.off('metadata', onMetadata);
+        emitter.off('error', onError);
+        this.icyMetadataService.unsubscribe(stationUuid, emitter);
+        clearInterval(keepaliveInterval);
+        subscriber.complete();
+      });
+    });
+  }
+
+  // Proxy HTTP→HTTPS para evitar Mixed Content en el navegador
+  @Get('stream/proxy')
+  @Public()
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Proxy de stream de radio',
+    description: 'Proxy HTTP streams through HTTPS to avoid Mixed Content blocking',
+  })
+  async proxyStream(
+    @Query('url') streamUrl: string,
+    @Req() request: FastifyRequest,
+    @Res() reply: FastifyReply
+  ) {
+    if (!streamUrl) {
+      throw new BadRequestException('Parámetro URL requerido');
+    }
+
+    // Validate URL format
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(streamUrl);
+    } catch {
+      throw new BadRequestException('Formato de URL inválido');
+    }
+
+    // Only allow http and https protocols
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      throw new BadRequestException('Solo se permiten URLs HTTP y HTTPS');
+    }
+
+    // Block private/internal networks (SSRF protection)
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const blockedPatterns = [
+      /^localhost$/,
+      /^127\./,
+      /^0\.0\.0\.0$/,
+      /^10\./,
+      /^192\.168\./,
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+      /^169\.254\./,
+      /^\[?::1\]?$/,
+      /^postgres$/,
+      /^redis$/,
+      /^echo$/,
+    ];
+
+    if (blockedPatterns.some((pattern) => pattern.test(hostname))) {
+      throw new BadRequestException('Acceso a redes internas no permitido');
+    }
+
+    // Proxy the stream
+    const httpModule = parsedUrl.protocol === 'https:' ? https : http;
+
+    return new Promise<void>((resolve, _reject) => {
+      const proxyRequest = httpModule.get(
+        streamUrl,
+        {
+          headers: {
+            'User-Agent': 'Echo/1.0 (Radio Stream Proxy)',
+            Accept: '*/*',
+            'Icy-MetaData': '0',
+          },
+          timeout: 10000,
+        },
+        (proxyResponse) => {
+          // Set CORS headers
+          reply.header('Access-Control-Allow-Origin', '*');
+          reply.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+          reply.header('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
+
+          // Forward content type and other relevant headers
+          if (proxyResponse.headers['content-type']) {
+            reply.header('Content-Type', proxyResponse.headers['content-type']);
+          }
+          if (proxyResponse.headers['icy-name']) {
+            reply.header('icy-name', proxyResponse.headers['icy-name']);
+          }
+          if (proxyResponse.headers['icy-br']) {
+            reply.header('icy-br', proxyResponse.headers['icy-br']);
+          }
+
+          // Set status and stream the response
+          reply.status(proxyResponse.statusCode || 200);
+          reply.send(proxyResponse);
+          resolve();
+        }
+      );
+
+      proxyRequest.on('error', (error) => {
+        reply
+          .status(502)
+          .send({ error: 'Failed to connect to radio stream', message: error.message });
+        resolve();
+      });
+
+      proxyRequest.on('timeout', () => {
+        proxyRequest.destroy();
+        reply.status(504).send({ error: 'Radio stream connection timeout' });
+        resolve();
+      });
+
+      // Handle client disconnect
+      request.raw.on('close', () => {
+        proxyRequest.destroy();
+      });
+    });
+  }
+}

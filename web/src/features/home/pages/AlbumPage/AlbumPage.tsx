@@ -1,0 +1,393 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useParams, useLocation } from 'wouter';
+import { useQueryClient } from '@tanstack/react-query';
+import { Play, Shuffle } from 'lucide-react';
+import { Header } from '@shared/components/layout/Header';
+import { Sidebar, TrackList, AlbumOptionsMenu, AlbumInfoModal, AlbumCard } from '../../components';
+import { AlbumCoverSelectorModal } from '@features/admin';
+import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
+import { useArtistAlbums } from '@features/artists/hooks';
+import { useQueue, usePlayback } from '@features/player';
+import type { Track } from '@shared/types/track.types';
+import { useAlbumMetadataSync, useModal, useDominantColor, useDocumentTitle } from '@shared/hooks';
+import { Button } from '@shared/components/ui';
+import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
+import { toPlayerTracks } from '@shared/utils/track.utils';
+import {
+  getArtistImageUrl,
+  useAlbumCoverMetadata,
+  getAlbumCoverUrl,
+  useArtistImages,
+} from '../../hooks';
+import { logger } from '@shared/utils/logger';
+import { downloadService } from '@shared/services/download.service';
+import styles from './AlbumPage.module.css';
+
+/**
+ * AlbumPage Component
+ * Displays album details and track listing with dynamic color from album cover
+ */
+export default function AlbumPage() {
+  const { t } = useTranslation();
+  const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+  const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(
+    null
+  );
+  const imageLightboxModal = useModal();
+  const infoModal = useModal();
+  const coverSelectorModal = useModal();
+  const { playQueue, setShuffle } = useQueue();
+  const { currentTrack } = usePlayback();
+
+  // Real-time synchronization via WebSocket for album cover
+  useAlbumMetadataSync(id);
+
+  const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
+  useDocumentTitle(album?.title);
+  const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
+
+  // Fetch other albums from the same artist
+  const { data: artistAlbumsData } = useArtistAlbums(album?.artistId);
+
+  // Filter out the current album from artist's discography
+  const moreFromArtist = useMemo(() => {
+    if (!artistAlbumsData?.data || !id) return [];
+    return artistAlbumsData.data.filter((a) => a.id !== id);
+  }, [artistAlbumsData?.data, id]);
+
+  // Fetch artist images metadata for tag-based cache busting on artist avatar
+  const { data: artistImages } = useArtistImages(album?.artistId);
+  // Fetch cover metadata with tag for cache busting
+  const { data: coverMeta } = useAlbumCoverMetadata(id);
+
+  // Derive cover key from metadata tag instead of using unnecessary state
+  const coverKey = useMemo(() => coverMeta?.cover.tag || 'default', [coverMeta?.cover.tag]);
+
+  // Get cover URL with tag-based cache busting
+  const coverUrl =
+    id && coverMeta?.cover.exists
+      ? getAlbumCoverUrl(id, coverMeta.cover.tag)
+      : getCoverUrl(album?.coverImage);
+
+  // Extract dominant color from album cover
+  const dominantColor = useDominantColor(coverUrl);
+
+  // Preload cover image when URL changes (cache busting handled by coverKey)
+  useEffect(() => {
+    if (coverUrl && coverMeta?.cover.tag) {
+      const cacheBustUrl = coverUrl.includes('?')
+        ? `${coverUrl}&_cb=${Date.now()}`
+        : `${coverUrl}?_cb=${Date.now()}`;
+
+      const img = new window.Image();
+      img.src = cacheBustUrl;
+    }
+  }, [coverUrl, coverMeta]);
+
+  // Load cover dimensions when modal opens
+  useEffect(() => {
+    if (imageLightboxModal.isOpen && coverUrl) {
+      const img = new window.Image();
+      img.onload = () => {
+        setCoverDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.src = coverUrl;
+    } else if (!imageLightboxModal.isOpen) {
+      setCoverDimensions(null); // Reset when modal closes
+    }
+  }, [imageLightboxModal.isOpen, coverUrl]);
+
+  const handleArtistClick = () => {
+    if (album?.artistId) {
+      setLocation(`/artists/${album.artistId}`);
+    }
+  };
+
+  // Album context for track conversion
+  const albumContext = {
+    albumId: id,
+    albumName: album?.title,
+    artist: album?.artist,
+    artistId: album?.artistId,
+    coverImage: album?.coverImage,
+  };
+
+  const handlePlayAll = () => {
+    if (!tracks || tracks.length === 0) return;
+    // Disable shuffle mode for ordered playback
+    setShuffle(false);
+    const playerTracks = toPlayerTracks(tracks, albumContext);
+    playQueue(playerTracks, 0, 'album');
+  };
+
+  const handleShufflePlay = () => {
+    if (!tracks || tracks.length === 0) return;
+    const playerTracks = toPlayerTracks(tracks, albumContext);
+    // Enable shuffle mode
+    setShuffle(true);
+    // Shuffle the tracks array using Fisher-Yates algorithm
+    // This ensures true random order - navigation will advance sequentially through shuffled queue
+    const shuffledTracks = [...playerTracks];
+    for (let i = shuffledTracks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
+    }
+    playQueue(shuffledTracks, 0, 'album');
+  };
+
+  const handleTrackPlay = (track: Track) => {
+    if (!tracks) return;
+    const playerTracks = toPlayerTracks(tracks, albumContext);
+    const trackIndex = tracks.findIndex((t) => t.id === track.id);
+    playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0, 'album');
+  };
+
+  const handleShowAlbumInfo = () => {
+    infoModal.open();
+  };
+
+  const handleDownloadAlbum = async () => {
+    if (!album || !id) return;
+    try {
+      await downloadService.downloadAlbum(id, album.title, album.artist);
+    } catch (error) {
+      logger.error('Failed to download album:', error);
+    }
+  };
+
+  const handleChangeCover = () => {
+    coverSelectorModal.open();
+  };
+
+  const handleCoverChanged = () => {
+    // Force immediate refetch to update album data with new cover
+    queryClient.refetchQueries({
+      queryKey: ['album', id],
+      type: 'active',
+    });
+    queryClient.refetchQueries({
+      queryKey: ['album-cover-metadata', id],
+      type: 'active',
+    });
+
+    // Close the modal
+    coverSelectorModal.close();
+  };
+
+  if (loadingAlbum) {
+    return (
+      <div className={styles.albumPage}>
+        <Sidebar />
+        <main className={styles.albumPage__main}>
+          <Header showBackButton disableSearch />
+          <div className={styles.albumPage__content}>
+            <div className={styles.albumPage__loadingState}>
+              <p>{t('albums.loadingAlbum')}</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (albumError || !album) {
+    return (
+      <div className={styles.albumPage}>
+        <Sidebar />
+        <main className={styles.albumPage__main}>
+          <Header showBackButton disableSearch />
+          <div className={styles.albumPage__content}>
+            <div className={styles.albumPage__errorState}>
+              <p>{t('albums.errorLoadingAlbum')}</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const totalDuration = tracks?.reduce((acc, track) => acc + (track.duration || 0), 0) || 0;
+  const totalMinutes = Math.floor(totalDuration / 60);
+
+  return (
+    <div className={styles.albumPage}>
+      <Sidebar />
+
+      <main className={styles.albumPage__main}>
+        <Header showBackButton disableSearch />
+
+        <div
+          className={styles.albumPage__content}
+          style={{
+            background: `linear-gradient(180deg,
+              rgba(${dominantColor}, 0.4) 0%,
+              rgba(${dominantColor}, 0.2) 25%,
+              transparent 60%)`,
+          }}
+        >
+          {/* Album hero section */}
+          <div className={styles.albumPage__hero}>
+            {/* Album cover */}
+            <img
+              key={`cover-${coverKey}`}
+              src={coverUrl}
+              alt={album.title}
+              className={styles.albumPage__heroCover}
+              onError={handleImageError}
+              onClick={imageLightboxModal.open}
+            />
+
+            {/* Album info */}
+            <div className={styles.albumPage__heroInfo}>
+              <span className={styles.albumPage__heroType}>{t('albums.albumLabel')}</span>
+              <h1 className={styles.albumPage__heroTitle}>{album.title}</h1>
+              <div className={styles.albumPage__heroMeta}>
+                <button
+                  className={styles.albumPage__heroArtistButton}
+                  onClick={handleArtistClick}
+                  title={t('albums.viewArtistProfile', { artist: album.artist })}
+                >
+                  {album.artistId && (
+                    <img
+                      src={getArtistImageUrl(
+                        album.artistId,
+                        'profile',
+                        artistImages?.images.profile?.tag
+                      )}
+                      alt={album.artist}
+                      className={styles.albumPage__heroArtistAvatar}
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/avatar-default.svg';
+                      }}
+                    />
+                  )}
+                  {album.artist}
+                </button>
+                <span className={styles.albumPage__heroDivider}>•</span>
+                <span>{album.year}</span>
+                <span className={styles.albumPage__heroDivider}>•</span>
+                <span>
+                  {album.totalTracks} {t('trackInfo.songs')}
+                </span>
+                {totalMinutes > 0 && (
+                  <>
+                    <span className={styles.albumPage__heroDivider}>•</span>
+                    <span>{totalMinutes} min</span>
+                  </>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div className={styles.albumPage__heroActions}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handlePlayAll}
+                  leftIcon={<Play size={20} fill="currentColor" />}
+                >
+                  {t('albums.play')}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  onClick={handleShufflePlay}
+                  leftIcon={<Shuffle size={20} />}
+                >
+                  {t('albums.shuffle')}
+                </Button>
+                <AlbumOptionsMenu
+                  onShowInfo={handleShowAlbumInfo}
+                  onDownload={handleDownloadAlbum}
+                  onChangeCover={handleChangeCover}
+                  albumTitle={album?.title}
+                  albumArtist={album?.artist}
+                  albumCoverUrl={coverUrl}
+                  dominantColor={dominantColor}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Track listing */}
+          <div className={styles.albumPage__trackSection}>
+            {loadingTracks ? (
+              <div className={styles.albumPage__loadingTracks}>
+                <p>{t('albums.loadingTracks')}</p>
+              </div>
+            ) : tracks && tracks.length > 0 ? (
+              <TrackList
+                tracks={tracks}
+                onTrackPlay={handleTrackPlay}
+                currentTrackId={currentTrack?.id}
+                hideGoToAlbum={true}
+                hideAlbumCover={true}
+              />
+            ) : (
+              <div className={styles.albumPage__emptyTracks}>
+                <p>{t('albums.noTracks')}</p>
+              </div>
+            )}
+          </div>
+
+          {/* More from this artist */}
+          {moreFromArtist.length > 0 && (
+            <div className={styles.albumPage__moreFromArtist}>
+              <h2 className={styles.albumPage__moreFromArtistTitle}>
+                {t('albums.moreFromArtist', { artist: album.artist })}
+              </h2>
+              <div className={styles.albumPage__moreFromArtistGrid}>
+                {moreFromArtist.map((otherAlbum) => (
+                  <AlbumCard
+                    key={otherAlbum.id}
+                    cover={otherAlbum.coverImage}
+                    title={otherAlbum.title}
+                    artist={otherAlbum.artist}
+                    onClick={() => setLocation(`/album/${otherAlbum.id}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Image Modal/Lightbox */}
+      {imageLightboxModal.isOpen && (
+        <div className={styles.albumPage__imageModal} onClick={imageLightboxModal.close}>
+          <div className={styles.albumPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
+            <img
+              key={`modal-cover-${coverKey}`}
+              src={coverUrl}
+              alt={album.title}
+              className={styles.albumPage__imageModalImage}
+              onError={handleImageError}
+            />
+            {coverDimensions && (
+              <div className={styles.albumPage__imageDimensions}>
+                {coverDimensions.width} × {coverDimensions.height} px
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Album Info Modal */}
+      {infoModal.isOpen && album && (
+        <AlbumInfoModal album={album} tracks={tracks || []} onClose={infoModal.close} />
+      )}
+
+      {/* Album Cover Selector Modal */}
+      {coverSelectorModal.isOpen && album && (
+        <AlbumCoverSelectorModal
+          albumId={album.id}
+          albumName={album.title}
+          onClose={coverSelectorModal.close}
+          onSuccess={handleCoverChanged}
+        />
+      )}
+    </div>
+  );
+}

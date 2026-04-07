@@ -1,0 +1,623 @@
+/* ===== Mini Player ===== */
+
+.miniPlayer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  max-height: 380px;
+  background: linear-gradient(180deg, rgba(18, 18, 22, 0.92) 0%, rgba(10, 10, 14, 0.96) 100%);
+  border-top: 1px solid var(--white-06);
+  padding: 10px 10px 8px;
+  z-index: var(--z-fixed);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: 0 -8px 32px var(--black-40);
+  transform: translateY(100%);
+  opacity: 0;
+  transition:
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.miniPlayer--visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ===== Menu Container ===== */
+
+.menuContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  z-index: var(--z-fixed);
+  margin-left: var(--space-1);
+}
+
+.menuButton {
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  color: var(--text-secondary);
+  padding: 5px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity var(--transition-base),
+    background-color var(--transition-base),
+    color var(--transition-base);
+  opacity: 0.7;
+}
+
+.menuButton:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+
+.menuButton--active {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+.menuDropdown {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  background: rgba(20, 20, 24, 0.98);
+  border: 1px solid var(--white-12);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  min-width: 160px;
+  box-shadow: 0 12px 40px var(--black-60);
+  backdrop-filter: blur(16px);
+  animation: menuFadeIn 0.15s ease;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menuOption {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  text-align: left;
+  font-size: var(--text-12);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.menuOption:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.menuOption--active {
+  background: var(--primary-15);
+  color: var(--color-primary-500);
+}
+
+.menuOption--active:hover {
+  background: var(--primary-20);
+}
+
+/* ===== Cover Container ===== */
+
+.coverContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  margin-bottom: 10px;
+  border-radius: var(--radius-base);
+  overflow: hidden;
+  background: var(--black-30);
+  box-shadow: 0 4px 20px var(--black-40);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.coverContainer:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 28px var(--black-50);
+}
+
+.cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.coverContainer--clickable {
+  cursor: pointer;
+}
+
+/* Playing Indicator - Barras animadas en la parte inferior */
+.playingIndicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 var(--space-3);
+  z-index: 2;
+  background: linear-gradient(to bottom, transparent 0%, var(--black-40) 50%, var(--black-60) 100%);
+}
+
+.bar {
+  width: 3px;
+  background: var(--color-primary-500);
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom;
+  animation: playing 1s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(237, 104, 66, 0.5);
+}
+
+.bar1 {
+  animation-delay: 0.2s;
+}
+
+.bar2 {
+  animation-delay: 0.5s;
+}
+
+.bar3 {
+  animation-delay: 0.6s;
+}
+
+.bar4 {
+  animation-delay: 0s;
+}
+
+.bar5 {
+  animation-delay: 0.4s;
+}
+
+@keyframes playing {
+  0% {
+    height: 4px;
+    opacity: 0.6;
+  }
+  33% {
+    height: 14px;
+    opacity: 0.8;
+  }
+  66% {
+    height: 20px;
+    opacity: 1;
+  }
+  100% {
+    height: 4px;
+    opacity: 0.6;
+  }
+}
+
+/* ===== Info ===== */
+
+.info {
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+
+.title {
+  font-size: var(--text-13);
+  font-weight: var(--font-semibold);
+  color: #f3f4f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+  letter-spacing: -0.01em;
+}
+
+.artist {
+  font-size: var(--text-11);
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Progress Bar ===== */
+
+.progressContainer {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  overflow: visible;
+  margin-bottom: 4px;
+  transition: height var(--transition-base);
+}
+
+.progressBar:hover {
+  height: 5px;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-primary-500);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+  position: relative;
+}
+
+/* Progress handle dot */
+.progressFill::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px var(--black-40);
+  transition: transform 0.15s ease;
+}
+
+.progressBar:hover .progressFill::after {
+  transform: translateY(-50%) scale(1);
+}
+
+.timeDisplay {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.timeText {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: var(--font-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Controls ===== */
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.menuWrapper {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.controlBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    transform var(--transition-base);
+  border-radius: var(--radius-full);
+}
+
+.controlBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.08);
+}
+
+.controlBtn:active {
+  transform: scale(0.95);
+}
+
+.playBtn {
+  width: 36px;
+  height: 36px;
+  background: var(--color-primary-500);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  transition:
+    background-color var(--transition-base),
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
+  flex-shrink: 0;
+  box-shadow: 0 2px 12px rgba(237, 104, 66, 0.3);
+}
+
+.playBtn:hover {
+  background: var(--color-primary-600);
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.45);
+}
+
+.playBtn:active {
+  transform: scale(1.02);
+}
+
+.liveIndicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: var(--radius-md);
+}
+
+.liveIcon {
+  color: #22c55e;
+  animation: pulse-live 2s ease-in-out infinite;
+}
+
+.liveText {
+  font-size: 9px;
+  font-weight: var(--font-semibold);
+  color: #22c55e;
+  letter-spacing: 0.5px;
+}
+
+@keyframes pulse-live {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* ===== Volume Control - Desplegable en hover ===== */
+
+.volumeContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.volumeButton {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.volumeButton:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.volumeSliderContainer {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  padding-bottom: 8px;
+  width: 30px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-base);
+}
+
+/* Mantener visible cuando hay hover en el container o en el slider mismo */
+.volumeContainer:hover .volumeSliderContainer,
+.volumeSliderContainer:hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.volumeSlider {
+  position: absolute;
+  width: 6px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.volumeFill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(to top, var(--color-primary-600), var(--color-primary-500));
+  transition: height 0.1s ease;
+  box-shadow: 0 0 8px rgba(237, 104, 66, 0.4);
+}
+
+.volumeInput {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  outline: none;
+  cursor: pointer;
+  margin: 0;
+  z-index: 1;
+}
+
+.volumeInput::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px var(--black-40);
+  transition: transform 0.1s ease;
+}
+
+.volumeInput::-webkit-slider-thumb:hover {
+  transform: scale(1.3);
+}
+
+.volumeInput::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px var(--black-40);
+  transition: transform 0.1s ease;
+}
+
+.volumeInput::-moz-range-thumb:hover {
+  transform: scale(1.3);
+}
+
+/* ===== Horizontal Volume Bar ===== */
+
+.volumeSection {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.volumeBarContainer {
+  flex: 1;
+  position: relative;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.volumeBarTrack {
+  position: absolute;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.volumeBarFill {
+  height: 100%;
+  background: linear-gradient(to right, var(--color-primary-500), var(--color-primary-400));
+  border-radius: 2px;
+  transition: width 0.1s ease;
+}
+
+.volumeBarInput {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+  margin: 0;
+  z-index: 1;
+}
+
+.volumeBarInput::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 4px var(--black-40);
+  transition: transform var(--transition-fast);
+}
+
+.volumeBarInput::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.volumeBarInput::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 4px var(--black-40);
+}
+
+.volumeBarInput::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* ===== Light Theme: MiniPlayer keeps dark background ===== */
+:root[data-theme='light'] .miniPlayer {
+  background: linear-gradient(180deg, rgba(18, 18, 22, 0.94) 0%, rgba(10, 10, 14, 0.97) 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 1024px) {
+  .miniPlayer {
+    display: none;
+  }
+}

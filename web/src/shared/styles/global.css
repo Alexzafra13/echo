@@ -1,0 +1,471 @@
+/**
+ * Global Styles
+ * Imports reset, variables, and sets up base styles
+ */
+
+@import './reset.css';
+@import './variables.css';
+
+/* Import fonts - Add Google Fonts link in index.html */
+/* @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap'); */
+
+/* ===== Base Styles ===== */
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  /* Prevenir scroll horizontal en toda la página */
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-base);
+  background-image: var(--gradient-textured);
+  background-attachment: fixed;
+  min-height: 100vh;
+  /* Prevenir scroll horizontal */
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* ===== Sistema de Espaciado Dinámico para el Reproductor ===== */
+/*
+ * El reproductor puede estar en 3 modos:
+ * - 'footer': Siempre visible en el footer (necesita espacio)
+ * - 'sidebar': En el sidebar (no necesita espacio en footer)
+ * - 'dynamic': Cambia entre footer y sidebar según scroll
+ *
+ * La variable --player-bottom-spacer se activa automáticamente cuando:
+ * - El reproductor está visible en modo footer
+ * - AudioPlayer.tsx agrega la clase 'has-footer-player' al body
+ *
+ * PATRÓN CORRECTO para padding-bottom en páginas:
+ * - Desktop: calc(40px + var(--player-bottom-spacer, 0px))
+ * - Mobile:  calc(60px + var(--player-bottom-spacer, 0px))
+ *
+ * Esto garantiza que el reproductor NUNCA pise contenido,
+ * independiente del modo o dispositivo.
+ */
+:root {
+  --player-bottom-spacer: 0px; /* Default: sin espacio adicional */
+}
+
+body.has-footer-player {
+  --player-bottom-spacer: 120px; /* Altura del reproductor en footer (desktop) */
+}
+
+/* Mobile: Reproductor flotante requiere espacio adicional */
+@media (max-width: 768px) {
+  body.has-footer-player {
+    --player-bottom-spacer: 90px; /* Mobile: 60px base + 90px spacer = 150px total (50px nav + 12px margin + ~70px player) */
+  }
+}
+
+/*
+ * IMPORTANT: Removed global overflow-x: hidden from all Page/main/content selectors
+ * to allow Portal-based dropdowns to render correctly.
+ *
+ * Individual pages should apply overflow-x: hidden only where needed,
+ * preferably on specific scrollable containers, not on the entire page.
+ *
+ * This prevents dropdowns from being clipped while still allowing
+ * horizontal scroll prevention on specific elements.
+ */
+
+/* ===== Typography ===== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: var(--text-4xl);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+}
+
+h4 {
+  font-size: var(--text-xl);
+}
+
+h5 {
+  font-size: var(--text-lg);
+}
+
+h6 {
+  font-size: var(--text-base);
+}
+
+p {
+  margin-bottom: var(--space-4);
+}
+
+a {
+  color: var(--color-primary-500);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary-400);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ===== Focus Visible ===== */
+
+:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* ===== Scrollbar Styles ===== */
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-slate-600);
+  border-radius: var(--radius-base);
+  border: 2px solid var(--bg-elevated);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-slate-500);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-slate-600) var(--bg-elevated);
+}
+
+/* ===== Selection ===== */
+
+::selection {
+  background-color: var(--color-primary-500);
+  color: var(--text-on-primary);
+}
+
+/* ===== Utility Classes ===== */
+
+/* Text truncation - single line with ellipsis */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Multi-line text truncation (2 lines) */
+.text-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Multi-line text truncation (3 lines) */
+.text-truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Card hover shadow effect */
+.card-shadow {
+  box-shadow: 0 4px 12px var(--black-30);
+  transition: box-shadow var(--transition-slow);
+}
+
+.card-shadow:hover {
+  box-shadow: 0 8px 24px var(--black-50);
+}
+
+/* Image cover container - 1:1 aspect ratio */
+.cover-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+
+.cover-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.cover-container:hover img {
+  transform: scale(1.03);
+}
+
+/* Overlay for cards */
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+  transition: background var(--transition-base);
+}
+
+.card-overlay:hover,
+*:hover > .card-overlay {
+  background: var(--black-20);
+}
+
+/* Floating action button (play buttons, favorite buttons) */
+.floating-action-btn {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-slow),
+    transform var(--transition-slow),
+    box-shadow var(--transition-slow),
+    opacity var(--transition-slow);
+  color: white;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: auto;
+  box-shadow: 0 4px 12px var(--primary-40);
+}
+
+.floating-action-btn:hover {
+  background: var(--color-primary-hover);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px var(--primary-50);
+}
+
+.floating-action-btn:active {
+  transform: scale(1.05);
+}
+
+/* Show floating button on parent hover */
+*:hover > .floating-action-btn,
+.floating-action-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Interactive card hover effect - use on clickable cards */
+.interactive-card {
+  transition:
+    transform var(--transition-slow),
+    box-shadow var(--transition-slow);
+}
+
+.interactive-card:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Icon button - circular 40x40 button for toolbar actions */
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--white-05);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.icon-button:hover {
+  background: var(--white-10);
+  color: var(--text-primary);
+}
+
+/* Flex utilities */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Disabled state */
+.disabled-state {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ===== Shared Keyframe Animations ===== */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ===== Skip Link for Accessibility ===== */
+.skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+  background: var(--color-primary-500);
+  color: var(--text-on-primary);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+  z-index: var(--z-nav-mobile);
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  padding: var(--space-3) var(--space-6);
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+  border-radius: var(--radius-base);
+  outline: 2px solid var(--color-primary-300);
+  outline-offset: 2px;
+}
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+/* ===== Utilities ===== */
+
+/* Reset fieldset styles for use as form grouping without visual chrome */
+.fieldset-reset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
+}
+
+/* ===== App Layout ===== */
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}

@@ -1,0 +1,392 @@
+/* DjProgressIndicator Component Styles */
+
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Compact circular indicator */
+.indicator {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition:
+    transform var(--transition-slow),
+    box-shadow var(--transition-slow);
+  box-shadow: 0 0 0 0 currentColor;
+}
+
+.indicator:hover {
+  transform: scale(1.1);
+}
+
+.indicator--running {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  animation: pulse 2s infinite;
+}
+
+.indicator--idle {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.indicator--stalled {
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  animation: pulse-stalled 2s infinite;
+}
+
+@keyframes pulse-stalled {
+  0% {
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.iconSpinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* Tooltip/Popover */
+.tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 12px;
+  background: rgba(15, 18, 28, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-md);
+  min-width: 280px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 10px 25px -3px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: var(--z-popover);
+  overflow: hidden;
+
+  /* Animation */
+  transform-origin: top right;
+  animation: tooltipSlideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tooltip--closing {
+  animation: tooltipSlideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes tooltipSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes tooltipSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+}
+
+/* Header */
+.tooltipHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(249, 115, 22, 0.1);
+}
+
+.headerIcon {
+  color: #f97316;
+}
+
+.tooltipTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: #ffffff;
+  flex: 1;
+}
+
+.statusBadge {
+  font-size: var(--text-11);
+  font-weight: var(--font-semibold);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.statusBadge--running {
+  background: rgba(249, 115, 22, 0.2);
+  color: #f97316;
+}
+
+.statusBadge--idle {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.statusBadge--stalled {
+  background: rgba(234, 179, 8, 0.2);
+  color: #eab308;
+}
+
+/* Content */
+.tooltipContent {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Progress bar section */
+.progressSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #f97316 0%, #ea580c 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease-out;
+}
+
+.progressPercent {
+  font-size: var(--text-13);
+  font-weight: var(--font-semibold);
+  color: #f97316;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Stats grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statLabel {
+  font-size: var(--text-11);
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statValue {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: #ffffff;
+}
+
+/* Stalled progress bar */
+.progressFill--stalled {
+  background: linear-gradient(90deg, #eab308 0%, #ca8a04 100%);
+  animation: stalledStripes 1.5s linear infinite;
+  background-size: 20px 20px;
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.1) 75%,
+    transparent 75%,
+    transparent
+  );
+}
+
+@keyframes stalledStripes {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 40px 0;
+  }
+}
+
+/* Control buttons */
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.controlBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--radius-base);
+  font-size: var(--text-12);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.controlBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.controlBtn--retry {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+}
+
+.controlBtn--retry:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.25);
+}
+
+.controlBtn--stop {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.controlBtn--stop:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* Info text */
+.infoText {
+  font-size: var(--text-12);
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.4;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 768px) {
+  .indicator {
+    width: 26px;
+    height: 26px;
+  }
+
+  /* Full-width panel on mobile */
+  .tooltip {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    margin-top: 0;
+    border-radius: 0;
+    min-width: auto;
+    animation: slideDown 0.3s ease;
+  }
+
+  .tooltip--closing {
+    animation: slideUp 0.2s ease forwards;
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+
+  .tooltipHeader {
+    padding: 16px;
+  }
+
+  .tooltipContent {
+    padding: 16px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .statValue {
+    font-size: var(--text-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .indicator {
+    width: 24px;
+    height: 24px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

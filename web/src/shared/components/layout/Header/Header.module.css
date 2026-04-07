@@ -1,0 +1,774 @@
+/* Header Component Styles - BEM Naming Convention */
+
+/* Header Wrapper - Contains header + search panel as one sticky unit */
+.headerWrapper {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: transparent;
+  /* This wrapper makes header + search panel move together */
+}
+
+/* When inside wrapper, header is not sticky (wrapper handles it) */
+.headerWrapper .header {
+  position: relative;
+  top: auto;
+  z-index: 3; /* Above search overlay backdrop (z-index: 1) so header remains clickable */
+}
+
+/* Block: header */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) 30px;
+  gap: var(--space-5);
+  /* Transparent background by default - becomes glassmorphic on scroll or alwaysGlass */
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition:
+    border-color var(--transition-slow),
+    box-shadow var(--transition-slow);
+}
+
+/* Glass effect layer - animated with opacity for smooth transition */
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(10, 14, 39, 0.25), rgba(15, 23, 42, 0.35));
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Glassmorphism effect when scrolled or alwaysGlass (modifier) */
+.header--scrolled {
+  border-bottom: 1px solid var(--header-border-scrolled);
+  box-shadow: var(--header-shadow-scrolled);
+}
+
+.header--scrolled::before {
+  opacity: 1;
+}
+
+/* Light theme glassmorphism override */
+[data-theme='light'] .header::before {
+  background: linear-gradient(to bottom, rgba(250, 250, 249, 0.3), var(--white-40));
+}
+
+/* Back button (admin mode) */
+.header__backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--white-03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-slow),
+    color var(--transition-slow),
+    transform var(--transition-slow),
+    box-shadow var(--transition-slow);
+  box-shadow: 0 2px 8px var(--black-10);
+}
+
+.header__backButton:hover {
+  background: var(--white-06);
+  color: var(--text-primary);
+  transform: translateX(-3px);
+  box-shadow: 0 4px 12px var(--black-15);
+}
+
+.header__backButton:active {
+  transform: translateX(-3px) scale(0.98);
+}
+
+.header__backButton svg {
+  flex-shrink: 0;
+  transition: transform var(--transition-slow);
+}
+
+.header__backButton:hover svg {
+  transform: translateX(-3px);
+}
+
+/* Left section - Search and custom content */
+.header__leftSection {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex: 1;
+  justify-content: flex-start;
+}
+
+/* Right section - Theme toggle, notifications, user menu */
+.header__rightSection {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-shrink: 0;
+}
+
+.header__searchForm,
+.header__customSearch {
+  position: relative; /* For search results dropdown positioning */
+  max-width: 700px; /* Aumentado de 600px → 700px (más larga hacia la izquierda) */
+  min-width: 400px; /* Aumentado de 300px → 400px (más visible en pantallas pequeñas) */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.header__searchWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.header__searchIcon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.header__searchInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 48px; /* Extra padding right for clear button */
+  border-radius: var(--radius-xl);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.header__searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.header__searchInput:focus {
+  outline: none;
+  background: var(--white-08);
+  border-color: var(--color-primary);
+}
+
+.header__searchClearButton {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.header__searchClearButton:hover {
+  background: var(--white-10);
+  color: var(--text-primary);
+}
+
+/* Theme Toggle Button */
+.header__themeToggle {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--white-05);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.header__themeToggle:hover {
+  background: var(--white-10);
+  color: var(--color-primary);
+  transform: rotate(15deg);
+}
+
+.header__themeToggle:active {
+  transform: scale(0.95) rotate(15deg);
+}
+
+.header__userMenu {
+  position: relative;
+}
+
+.header__userButton {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--white-05);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
+  padding: 0;
+  overflow: hidden;
+}
+
+.header__userButton:hover {
+  background: var(--white-10);
+  color: var(--text-primary);
+}
+
+.header__userAvatar {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-full);
+  border: none;
+  box-shadow: 0 2px 8px var(--black-30);
+  transition:
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+}
+
+.header__userButton:hover .header__userAvatar {
+  box-shadow: 0 2px 8px var(--black-30);
+  transform: scale(1.05);
+}
+
+.header__userDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 24px; /* Un poco más abajo */
+  min-width: 220px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  background: rgba(15, 18, 28, 0.95); /* Color oscuro menos transparente */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 4px 6px -1px var(--black-10),
+    0 10px 25px -3px var(--black-30),
+    0 0 0 1px var(--white-15);
+  padding: var(--space-2);
+  z-index: var(--z-popover);
+
+  /* Animación de entrada */
+  transform-origin: top right;
+  animation: userDropdownSlideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Animación de salida */
+  opacity: 1;
+  transition:
+    opacity var(--transition-base),
+    transform 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes userDropdownSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Estado al cerrarse con animación */
+.header__userDropdown--closing {
+  animation: userDropdownSlideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes userDropdownSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+}
+
+.header__userInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--white-10);
+  margin-bottom: var(--space-1);
+  width: 100%;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.header__userInfo:hover {
+  background: var(--white-05);
+}
+
+.header__userAvatarLarge {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: none;
+  box-shadow: 0 2px 8px var(--black-30);
+  flex-shrink: 0;
+}
+
+.header__userName {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.header__userRole {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin: var(--space-1) 0 0 0;
+  text-transform: capitalize;
+}
+
+.header__userDivider {
+  height: 1px;
+  background: var(--white-10);
+  margin: var(--space-1) 0;
+}
+
+.header__userMenuItem {
+  width: 100%;
+  padding: 10px var(--space-3);
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.header__userMenuItem:hover {
+  background: var(--white-05);
+  color: var(--text-primary);
+  transform: translateX(4px);
+}
+
+.header__userMenuItem:active {
+  transform: translateX(2px);
+}
+
+.header__userMenuItem--danger {
+  color: var(--color-error);
+}
+
+.header__userMenuItem--danger:hover {
+  background: var(--primary-10);
+  color: var(--color-error-dark);
+}
+
+/* Mobile-only menu items - hidden on desktop where sidebar shows these */
+.header__userMenuItem--mobileOnly {
+  display: none;
+}
+
+/* ===== Responsive Design ===== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .header {
+    padding: var(--space-4) var(--space-6);
+    gap: var(--space-4);
+  }
+
+  .header__searchForm,
+  .header__customSearch {
+    max-width: 500px;
+    min-width: 250px; /* Más flexible que 400px */
+  }
+
+  .header__leftSection {
+    gap: var(--space-4);
+  }
+
+  .header__rightSection {
+    gap: var(--space-4);
+  }
+}
+
+/* Mobile Large (855px crítico) */
+@media (max-width: 855px) {
+  .header {
+    gap: var(--space-3);
+  }
+
+  .header__searchForm,
+  .header__customSearch {
+    min-width: 200px; /* Todavía más flexible */
+    max-width: 400px;
+  }
+
+  .header__leftSection {
+    gap: var(--space-3);
+  }
+
+  .header__rightSection {
+    gap: var(--space-3);
+  }
+}
+
+/* Mobile - iOS Style */
+@media (max-width: 768px) {
+  .header {
+    padding: var(--space-2) var(--space-4);
+    /* iOS PWA safe area - avoid status bar overlap */
+    padding-top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
+    gap: var(--space-2);
+    height: calc(56px + env(safe-area-inset-top, 0px)); /* iOS standard header height + safe area */
+    border-bottom: 1px solid var(--white-10);
+  }
+
+  /* Glass effect siempre activo en móvil - override pseudo-element */
+  .header::before {
+    background: linear-gradient(to bottom, rgba(10, 14, 39, 0.4), rgba(15, 23, 42, 0.5));
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    opacity: 1; /* Always visible on mobile */
+  }
+
+  /* Light theme en móvil */
+  [data-theme='light'] .header::before {
+    background: linear-gradient(to bottom, rgba(250, 250, 249, 0.4), rgba(255, 255, 255, 0.5));
+  }
+
+  .header__leftSection {
+    gap: var(--space-2);
+  }
+
+  .header__rightSection {
+    gap: var(--space-2);
+  }
+
+  .header__searchForm,
+  .header__customSearch {
+    flex: 1;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .header__searchInput {
+    height: 36px;
+    font-size: 15px; /* iOS standard font */
+    border-radius: var(--radius-md); /* iOS rounded corners */
+    padding: 0 var(--space-3) 0 40px;
+  }
+
+  .header__searchIcon {
+    left: var(--space-3);
+  }
+
+  /* Botones más compactos estilo iOS */
+  .header__themeToggle {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .header__userButton {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  /* Dropdown como modal full-width en móvil */
+  .header__userDropdown {
+    position: fixed;
+    top: calc(56px + env(safe-area-inset-top, 0px)); /* Pegado al bottom del header + safe area */
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: calc(100vh - 56px - env(safe-area-inset-top, 0px));
+    margin-top: 0; /* Sin margen en móvil */
+    background: rgba(15, 18, 28, 0.95); /* Mismo color que desktop */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 0; /* Sin bordes redondeados */
+    box-shadow: 0 4px 20px var(--black-30);
+    padding: var(--space-5) var(--space-4);
+    animation: slideDown 0.3s ease;
+    z-index: var(--z-popover);
+  }
+
+  /* Light theme para dropdown móvil */
+  [data-theme='light'] .header__userDropdown {
+    background: rgba(240, 242, 245, 0.95); /* Light theme */
+  }
+
+  /* Animación de cierre en móvil - sube hacia el header */
+  .header__userDropdown--closing {
+    animation: slideUp 0.2s ease forwards;
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+
+  .header__userInfo {
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    border-bottom: none; /* Sin borde, ya tiene el card */
+    background: var(--white-05);
+    border-radius: var(--radius-lg);
+  }
+
+  .header__userAvatarLarge {
+    width: 56px;
+    height: 56px;
+  }
+
+  .header__userName {
+    font-size: 17px;
+    font-weight: var(--font-semibold);
+  }
+
+  .header__userRole {
+    font-size: var(--text-sm);
+    margin-top: 2px;
+  }
+
+  .header__userMenuItem {
+    padding: 14px var(--space-4);
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-1);
+  }
+
+  .header__userMenuItem:active {
+    transform: scale(0.98);
+    background: var(--white-10);
+  }
+
+  /* Show mobile-only items on mobile */
+  .header__userMenuItem--mobileOnly {
+    display: flex;
+  }
+
+  .header__userDivider {
+    margin: var(--space-3) 0;
+  }
+}
+
+/* Mobile Small - Search icon only */
+@media (max-width: 480px) {
+  .header {
+    padding: var(--space-2) var(--space-3);
+    gap: 6px;
+  }
+
+  .header__leftSection {
+    gap: 6px;
+  }
+
+  .header__rightSection {
+    gap: 6px;
+  }
+
+  .header__searchForm,
+  .header__customSearch {
+    flex: 1;
+    min-width: 120px; /* Mínimo razonable */
+  }
+
+  .header__searchInput {
+    font-size: var(--text-sm);
+    padding: 0 var(--space-2) 0 36px;
+  }
+
+  .header__searchInput::placeholder {
+    font-size: var(--text-sm);
+  }
+
+  .header__searchIcon {
+    left: 10px;
+  }
+
+  .header__themeToggle,
+  .header__userButton {
+    width: 28px;
+    height: 28px;
+  }
+
+  .header__themeToggle svg,
+  .header__userButton svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme='light'] .header__userDropdown {
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 10px 25px -3px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+:root[data-theme='light'] .header__userInfo {
+  border-bottom-color: rgba(31, 41, 55, 0.12);
+}
+
+:root[data-theme='light'] .header__userDivider {
+  background: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme='light'] .header__userMenuItem:hover {
+  background: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme='light'] .header__searchInput {
+  background: rgba(209, 213, 219, 0.45); /* Gray 300, sutil */
+  border-color: rgba(156, 163, 175, 0.3);
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] .header__searchInput::placeholder {
+  color: var(--text-secondary);
+}
+
+:root[data-theme='light'] .header__searchInput:focus {
+  background: rgba(209, 213, 219, 0.65);
+  border-color: var(--color-primary);
+}
+
+/* Custom search inputs de cada página dentro del header */
+:root[data-theme='light'] .header__customSearch input {
+  background: rgba(209, 213, 219, 0.45);
+  border-color: rgba(156, 163, 175, 0.3);
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] .header__customSearch input::placeholder {
+  color: var(--text-secondary);
+}
+
+:root[data-theme='light'] .header__customSearch input:focus {
+  background: rgba(209, 213, 219, 0.65);
+  border-color: var(--color-primary);
+}
+
+/* Icono de búsqueda dentro de custom search */
+:root[data-theme='light'] .header__customSearch svg {
+  color: var(--text-secondary);
+}
+
+:root[data-theme='light'] .header__searchIcon {
+  color: var(--text-secondary);
+}
+
+:root[data-theme='light'] .header__themeToggle {
+  background: rgba(209, 213, 219, 0.45);
+  color: var(--color-slate-700);
+}
+
+:root[data-theme='light'] .header__themeToggle:hover {
+  background: rgba(209, 213, 219, 0.65);
+}
+
+:root[data-theme='light'] .header__userButton {
+  background: rgba(209, 213, 219, 0.45);
+}
+
+:root[data-theme='light'] .header__userButton:hover {
+  background: rgba(209, 213, 219, 0.65);
+}
+
+:root[data-theme='light'] .header__backButton {
+  background: rgba(209, 213, 219, 0.5);
+  color: var(--color-slate-700);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+}
+
+:root[data-theme='light'] .header__backButton:hover {
+  background: rgba(209, 213, 219, 0.65);
+  color: var(--text-primary);
+}
+
+/* ===== PWA Standalone Mode - iOS Status Bar Fix ===== */
+/* Combined media query for mobile PWA mode (not nested) */
+@media (max-width: 768px) and (display-mode: standalone) {
+  .header {
+    /* Extra padding for iOS status bar/Dynamic Island in PWA mode */
+    padding-top: calc(20px + env(safe-area-inset-top, 47px));
+    height: calc(72px + env(safe-area-inset-top, 47px));
+  }
+
+  .header__userDropdown {
+    top: calc(72px + env(safe-area-inset-top, 47px));
+    max-height: calc(100vh - 72px - env(safe-area-inset-top, 47px));
+  }
+}

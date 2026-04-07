@@ -1,0 +1,197 @@
+import { Injectable } from '@nestjs/common';
+import { eq, desc, or, inArray, count, sql, asc, isNull, and } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { DrizzleBaseRepository } from '@shared/base';
+import { createSearchPattern } from '@shared/utils';
+import { tracks } from '@infrastructure/database/schema';
+import { Track } from '../../domain/entities/track.entity';
+import { ITrackRepository } from '../../domain/ports/track-repository.port';
+import { TrackMapper } from './track.mapper';
+
+@Injectable()
+export class DrizzleTrackRepository
+  extends DrizzleBaseRepository<Track>
+  implements ITrackRepository
+{
+  protected readonly mapper = TrackMapper;
+  protected readonly table = tracks;
+
+  constructor(protected readonly drizzle: DrizzleService) {
+    super();
+  }
+
+  async findById(id: string): Promise<Track | null> {
+    const result = await this.drizzle.db.select().from(tracks).where(eq(tracks.id, id)).limit(1);
+
+    return result[0] ? TrackMapper.toDomain(result[0]) : null;
+  }
+
+  async findByIds(ids: string[]): Promise<Track[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const result = await this.drizzle.db.select().from(tracks).where(inArray(tracks.id, ids));
+
+    return TrackMapper.toDomainArray(result);
+  }
+
+  async findAll(skip: number, take: number): Promise<Track[]> {
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(isNull(tracks.missingAt)) // Exclude missing tracks
+      .orderBy(desc(tracks.createdAt))
+      .offset(skip)
+      .limit(take);
+
+    return TrackMapper.toDomainArray(result);
+  }
+
+  async search(title: string, skip: number, take: number): Promise<Track[]> {
+    const query = title.trim();
+
+    // Use full-text search with GIN index for queries >= 2 chars
+    // Falls back to ILIKE for single-char queries (tsquery requires 2+ chars with 'simple')
+    // Also falls back to ILIKE on title when fullText is NULL (legacy data)
+    const searchCondition =
+      query.length >= 2
+        ? sql`(
+            (${tracks.fullText} IS NOT NULL AND to_tsvector('simple', ${tracks.fullText}) @@ plainto_tsquery('simple', ${query}))
+            OR (${tracks.fullText} IS NULL AND ${tracks.title} ILIKE ${createSearchPattern(query)})
+          )`
+        : sql`${tracks.title} ILIKE ${createSearchPattern(query)}`;
+
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(and(searchCondition, isNull(tracks.missingAt)))
+      .orderBy(tracks.title)
+      .offset(skip)
+      .limit(take);
+
+    return TrackMapper.toDomainArray(result);
+  }
+
+  async findByAlbumId(
+    albumId: string,
+    includeMissing = true,
+    skip?: number,
+    take?: number
+  ): Promise<Track[]> {
+    // For album views, include missing tracks as "ghost tracks" (shown grayed out)
+    const whereCondition = includeMissing
+      ? eq(tracks.albumId, albumId)
+      : and(eq(tracks.albumId, albumId), isNull(tracks.missingAt));
+
+    let query = this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(whereCondition)
+      .orderBy(asc(tracks.discNumber), asc(tracks.trackNumber));
+
+    if (skip !== undefined) query = query.offset(skip) as typeof query;
+    if (take !== undefined) query = query.limit(take) as typeof query;
+
+    return TrackMapper.toDomainArray(await query);
+  }
+
+  async countByAlbumId(albumId: string, includeMissing = true): Promise<number> {
+    const whereCondition = includeMissing
+      ? eq(tracks.albumId, albumId)
+      : and(eq(tracks.albumId, albumId), isNull(tracks.missingAt));
+
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(tracks)
+      .where(whereCondition);
+
+    return result[0]?.count ?? 0;
+  }
+
+  async findByArtistId(artistId: string, skip: number, take: number): Promise<Track[]> {
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(
+        and(
+          or(eq(tracks.artistId, artistId), eq(tracks.albumArtistId, artistId)),
+          isNull(tracks.missingAt) // Exclude missing tracks
+        )
+      )
+      .orderBy(desc(tracks.createdAt))
+      .offset(skip)
+      .limit(take);
+
+    return TrackMapper.toDomainArray(result);
+  }
+
+  async count(): Promise<number> {
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(tracks)
+      .where(isNull(tracks.missingAt)); // Exclude missing tracks
+
+    return result[0]?.count ?? 0;
+  }
+
+  async findShuffledPaginated(seed: number, skip: number, take: number): Promise<Track[]> {
+    // Usa md5(id || seed) para crear un orden determinístico y reproducible
+    // Esto permite paginación consistente con el mismo seed
+    const seedStr = seed.toString();
+
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(isNull(tracks.missingAt)) // Exclude missing tracks
+      .orderBy(sql`md5(${tracks.id} || ${seedStr})`)
+      .offset(skip)
+      .limit(take);
+
+    return TrackMapper.toDomainArray(result);
+  }
+
+  async create(track: Track): Promise<Track> {
+    const persistenceData = TrackMapper.toPersistence(track);
+
+    const result = await this.drizzle.db.insert(tracks).values(persistenceData).returning();
+
+    return TrackMapper.toDomain(result[0]);
+  }
+
+  async update(id: string, track: Partial<Track>): Promise<Track | null> {
+    const primitives = this.toPrimitives(track);
+
+    const updateData = this.buildUpdateData(primitives, [
+      'title',
+      'albumId',
+      'artistId',
+      'albumArtistId',
+      'trackNumber',
+      'discNumber',
+      'year',
+      'duration',
+      'path',
+      'bitRate',
+      'size',
+      'suffix',
+      'lyrics',
+      'comment',
+      'albumName',
+      'artistName',
+      'albumArtistName',
+      'compilation',
+    ]);
+
+    const result = await this.drizzle.db
+      .update(tracks)
+      .set({
+        ...updateData,
+        updatedAt: new Date(),
+      })
+      .where(eq(tracks.id, id))
+      .returning();
+
+    return result[0] ? TrackMapper.toDomain(result[0]) : null;
+  }
+}

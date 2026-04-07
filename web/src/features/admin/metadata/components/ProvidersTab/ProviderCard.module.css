@@ -1,0 +1,186 @@
+.providerCard {
+  background: linear-gradient(135deg, rgba(var(--provider-color-rgb), 0.08) 0%, transparent 50%);
+  background-color: var(--white-04);
+  border-radius: 14px;
+  padding: 22px;
+  border: 1px solid rgba(var(--provider-color-rgb), 0.12);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    transform var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.providerCard:hover {
+  border-color: rgba(var(--provider-color-rgb), 0.25);
+  transform: translateY(-1px);
+}
+
+.providerHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.logoContainer {
+  min-width: 52px;
+  height: 52px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(var(--provider-color-rgb), 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--transition-base);
+}
+
+.providerCard:hover .logoContainer {
+  background: rgba(var(--provider-color-rgb), 0.18);
+}
+
+.logoContainer img {
+  height: 28px;
+  width: auto;
+  max-width: 120px;
+  display: block;
+}
+
+.providerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.providerName {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--white-95);
+  margin: 0 0 2px 0;
+}
+
+.providerDescription {
+  font-size: var(--text-13);
+  color: var(--white-50);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-xl);
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  font-size: var(--text-12);
+  font-weight: var(--font-semibold);
+  flex-shrink: 0;
+}
+
+.alwaysOnBadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-xl);
+  background-color: rgba(var(--provider-color-rgb), 0.1);
+  color: var(--provider-color);
+  font-size: var(--text-12);
+  font-weight: var(--font-semibold);
+  flex-shrink: 0;
+}
+
+.providerBody {
+  padding-left: 0;
+}
+
+.providerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.providerLink {
+  color: rgba(var(--provider-color-rgb), 0.65);
+  font-size: var(--text-13);
+  font-weight: var(--font-medium);
+  text-decoration: none;
+  transition: color 0.25s ease;
+  position: relative;
+  display: inline-block;
+}
+
+.providerLink::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--provider-color);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.providerLink:hover {
+  color: var(--provider-color);
+}
+
+.providerLink:hover::after {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .providerCard {
+    padding: 16px;
+  }
+
+  .providerBody {
+    padding-left: 0;
+  }
+
+  .logoContainer {
+    min-width: 44px;
+    height: 44px;
+    padding: 6px 12px;
+  }
+
+  .logoContainer img {
+    height: 22px;
+    max-width: 100px;
+  }
+}
+
+/* Light theme */
+:root[data-theme='light'] .providerCard {
+  background: rgba(255, 255, 255, 0.65);
+  background-image: linear-gradient(
+    135deg,
+    rgba(var(--provider-color-rgb), 0.06) 0%,
+    transparent 50%
+  );
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .providerCard:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(var(--provider-color-rgb), 0.3);
+}
+
+:root[data-theme='light'] .providerName {
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] .providerDescription {
+  color: var(--text-secondary);
+}
+
+:root[data-theme='light'] .statusBadge {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}

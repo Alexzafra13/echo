@@ -1,0 +1,434 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useParams, Link, useLocation } from 'wouter';
+import { Play, Shuffle, Music, Globe, Lock } from 'lucide-react';
+import { Header } from '@shared/components/layout/Header';
+import { Sidebar } from '@shared/components/layout/Sidebar';
+import { TrackList } from '@shared/components/TrackList';
+import {
+  usePlaylist,
+  usePlaylistTracks,
+  useUpdatePlaylist,
+  useRemoveTrackFromPlaylist,
+  useDeletePlaylist,
+  useReorderPlaylistTracks,
+} from '../../hooks/usePlaylists';
+import { playlistsService } from '../../services/playlists.service';
+import { useQueue, usePlayback } from '@features/player';
+import { Button } from '@shared/components/ui';
+import { useModal, useDominantColors, useDocumentTitle, useNotification } from '@shared/hooks';
+import {
+  PlaylistCoverMosaic,
+  PlaylistOptionsMenu,
+  EditPlaylistModal,
+  DeletePlaylistModal,
+  SharePlaylistModal,
+} from '../../components';
+import { UpdatePlaylistDto } from '../../types';
+import type { Track } from '@shared/types/track.types';
+import { formatDuration } from '@shared/utils/format';
+import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
+import { toPlayerTracks } from '@shared/utils/track.utils';
+import { useAuthStore } from '@shared/store';
+import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
+import styles from './PlaylistDetailPage.module.css';
+
+/**
+ * Página de detalle de playlist con listado de pistas.
+ */
+export default function PlaylistDetailPage() {
+  const { t } = useTranslation();
+  const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
+  const { playQueue, setShuffle } = useQueue();
+  const { currentTrack } = usePlayback();
+  const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
+
+  // Modal state management
+  const imageModal = useModal();
+  const editModal = useModal();
+  const deleteModal = useModal();
+  const shareModal = useModal();
+
+  const { showError } = useNotification();
+  const { data: playlist, isLoading: loadingPlaylist, error: playlistError } = usePlaylist(id!);
+  useDocumentTitle(playlist?.name);
+  const { data: playlistTracks, isLoading: loadingTracks } = usePlaylistTracks(id!);
+  const updatePlaylistMutation = useUpdatePlaylist();
+  const deletePlaylistMutation = useDeletePlaylist();
+  const removeTrackMutation = useRemoveTrackFromPlaylist();
+  const reorderTracksMutation = useReorderPlaylistTracks();
+
+  // Extract dominant colors from up to 4 unique album covers in the playlist
+  const albumCoverUrls = (() => {
+    const tracks = playlistTracks?.tracks || [];
+    const uniqueAlbumIds = Array.from(new Set(tracks.map((t) => t.albumId).filter(Boolean)));
+    return uniqueAlbumIds.slice(0, 4).map((id) => `/api/albums/${id}/cover`);
+  })();
+  const dominantColors = useDominantColors(albumCoverUrls);
+
+  // Build a multi-color gradient from the extracted colors
+  // Fades to transparent so the textured background (--gradient-textured) shows through
+  const playlistGradient = (() => {
+    const c = dominantColors;
+    if (c.length === 0) return undefined;
+    if (c.length === 1) {
+      return `linear-gradient(180deg, rgba(${c[0]}, 0.6) 0%, rgba(${c[0]}, 0.3) 25%, transparent 60%)`;
+    }
+    // Multiple colors: radial gradient blobs at different positions
+    const blobs = [
+      `radial-gradient(ellipse at 20% 0%, rgba(${c[0]}, 0.55) 0%, transparent 55%)`,
+      `radial-gradient(ellipse at 80% 0%, rgba(${c[1] || c[0]}, 0.45) 0%, transparent 55%)`,
+      c[2] ? `radial-gradient(ellipse at 0% 40%, rgba(${c[2]}, 0.3) 0%, transparent 50%)` : '',
+      c[3] ? `radial-gradient(ellipse at 100% 30%, rgba(${c[3]}, 0.25) 0%, transparent 50%)` : '',
+    ].filter(Boolean);
+    return blobs.join(', ');
+  })();
+
+  // First cover URL for the playlist options menu
+  const playlistCoverUrl = albumCoverUrls[0];
+
+  const handlePlayAll = () => {
+    const tracks = playlistTracks?.tracks || [];
+    if (tracks.length === 0) return;
+    // Disable shuffle mode for ordered playback
+    setShuffle(false);
+    const playerTracks = toPlayerTracks(tracks);
+    playQueue(playerTracks, 0, 'playlist');
+  };
+
+  const [shuffleLoading, setShuffleLoading] = useState(false);
+
+  const handleShufflePlay = async () => {
+    if (!id || shuffleLoading) return;
+    const tracks = playlistTracks?.tracks || [];
+    if (tracks.length === 0) return;
+
+    setShuffleLoading(true);
+    try {
+      // Try DJ-aware harmonic ordering from backend
+      const result = await playlistsService.getDjShuffledTracks(id);
+      const playerTracks = toPlayerTracks(result.tracks);
+      setShuffle(true);
+      playQueue(playerTracks, 0, 'playlist');
+    } catch {
+      // Fallback: client-side Fisher-Yates shuffle
+      const playerTracks = toPlayerTracks(tracks);
+      setShuffle(true);
+      const shuffledTracks = [...playerTracks];
+      for (let i = shuffledTracks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
+      }
+      playQueue(shuffledTracks, 0, 'playlist');
+    } finally {
+      setShuffleLoading(false);
+    }
+  };
+
+  const handleTrackPlay = (track: Track) => {
+    const tracks = playlistTracks?.tracks || [];
+    if (tracks.length === 0) return;
+    const playerTracks = toPlayerTracks(tracks);
+    const trackIndex = tracks.findIndex((t) => t.id === track.id);
+    playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0, 'playlist');
+  };
+
+  const handleUpdatePlaylist = async (id: string, data: UpdatePlaylistDto) => {
+    await updatePlaylistMutation.mutateAsync({ id, dto: data });
+  };
+
+  const handleRemoveTrack = async (track: Track) => {
+    if (!id) return;
+    try {
+      await removeTrackMutation.mutateAsync({ playlistId: id, trackId: track.id });
+    } catch (error) {
+      logger.error('Error removing track from playlist:', error);
+      showError(getApiErrorMessage(error, t('playlists.removeTrackError')));
+    }
+  };
+
+  const handleDeletePlaylist = async () => {
+    if (!id) return;
+    try {
+      await deletePlaylistMutation.mutateAsync(id);
+      deleteModal.close();
+      setLocation('/playlists');
+    } catch (error) {
+      logger.error('Error deleting playlist:', error);
+      showError(getApiErrorMessage(error, t('playlists.deleteError')));
+    }
+  };
+
+  const handleToggleVisibility = async () => {
+    if (!playlist || !id) return;
+    try {
+      await updatePlaylistMutation.mutateAsync({
+        id,
+        dto: { public: !playlist.public },
+      });
+    } catch (error) {
+      logger.error('Error toggling playlist visibility:', error);
+      showError(getApiErrorMessage(error, t('playlists.changeVisibilityError')));
+    }
+  };
+
+  const handleMoveTrackUp = async (_track: Track, index: number) => {
+    if (!id || index === 0) return;
+    const currentTracks = playlistTracks?.tracks || [];
+    if (currentTracks.length < 2) return;
+
+    // Create new order: swap with previous track
+    const newOrder = currentTracks.map((t) => t.id);
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+
+    try {
+      await reorderTracksMutation.mutateAsync({
+        playlistId: id,
+        dto: { trackOrders: newOrder.map((trackId, idx) => ({ trackId, order: idx })) },
+      });
+    } catch (error) {
+      logger.error('Error reordering tracks:', error);
+      showError(getApiErrorMessage(error, t('playlists.reorderTracksError')));
+    }
+  };
+
+  const handleMoveTrackDown = async (_track: Track, index: number) => {
+    if (!id) return;
+    const currentTracks = playlistTracks?.tracks || [];
+    if (index >= currentTracks.length - 1) return;
+
+    // Create new order: swap with next track
+    const newOrder = currentTracks.map((t) => t.id);
+    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+
+    try {
+      await reorderTracksMutation.mutateAsync({
+        playlistId: id,
+        dto: { trackOrders: newOrder.map((trackId, idx) => ({ trackId, order: idx })) },
+      });
+    } catch (error) {
+      logger.error('Error reordering tracks:', error);
+      showError(getApiErrorMessage(error, t('playlists.reorderTracksError')));
+    }
+  };
+
+  if (loadingPlaylist) {
+    return (
+      <div className={styles.playlistDetailPage}>
+        <Sidebar />
+        <main className={styles.playlistDetailPage__main}>
+          <Header showBackButton disableSearch />
+          <div className={styles.playlistDetailPage__content}>
+            <div className={styles.playlistDetailPage__loadingState}>
+              <p>{t('playlists.loadingPlaylist')}</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (playlistError || !playlist) {
+    return (
+      <div className={styles.playlistDetailPage}>
+        <Sidebar />
+        <main className={styles.playlistDetailPage__main}>
+          <Header showBackButton disableSearch />
+          <div className={styles.playlistDetailPage__content}>
+            <div className={styles.playlistDetailPage__errorState}>
+              <p>{t('playlists.errorLoadingPlaylist')}</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Get tracks for the track list
+  const tracks = playlistTracks?.tracks || [];
+
+  // Extract unique album IDs for the mosaic
+  const albumIds = tracks.map((track) => track.albumId).filter((id): id is string => !!id);
+
+  return (
+    <div className={styles.playlistDetailPage}>
+      <Sidebar />
+
+      <main className={styles.playlistDetailPage__main}>
+        <Header showBackButton disableSearch />
+
+        <div
+          className={styles.playlistDetailPage__content}
+          style={
+            playlistGradient
+              ? ({ '--playlist-bg': playlistGradient } as React.CSSProperties)
+              : undefined
+          }
+        >
+          {/* Playlist hero section */}
+          <div className={styles.playlistDetailPage__hero}>
+            {/* Playlist cover */}
+            <div className={styles.playlistDetailPage__heroCover}>
+              <PlaylistCoverMosaic albumIds={albumIds} playlistName={playlist.name} />
+            </div>
+
+            {/* Playlist info */}
+            <div className={styles.playlistDetailPage__heroInfo}>
+              <div className={styles.playlistDetailPage__heroTypeRow}>
+                <span className={styles.playlistDetailPage__heroType}>
+                  {t('playlists.typeLabel')}
+                </span>
+                <span
+                  className={`${styles.playlistDetailPage__visibilityBadge} ${playlist.public ? styles['playlistDetailPage__visibilityBadge--public'] : styles['playlistDetailPage__visibilityBadge--private']}`}
+                >
+                  {playlist.public ? <Globe size={14} /> : <Lock size={14} />}
+                  {playlist.public
+                    ? t('playlists.visibilityPublic')
+                    : t('playlists.visibilityPrivate')}
+                </span>
+              </div>
+              <h1 className={styles.playlistDetailPage__heroTitle}>{playlist.name}</h1>
+              {playlist.description && (
+                <p className={styles.playlistDetailPage__heroDescription}>{playlist.description}</p>
+              )}
+              <div className={styles.playlistDetailPage__heroMeta}>
+                {playlist.ownerName && playlist.ownerId && (
+                  <>
+                    <Link
+                      href={`/user/${playlist.ownerId}`}
+                      className={styles.playlistDetailPage__heroOwner}
+                    >
+                      <img
+                        src={getUserAvatarUrl(playlist.ownerId, true, avatarTimestamp)}
+                        alt={playlist.ownerName}
+                        className={styles.playlistDetailPage__heroOwnerAvatar}
+                        onError={handleAvatarError}
+                      />
+                      {playlist.ownerName}
+                    </Link>
+                    <span className={styles.playlistDetailPage__heroDivider}>•</span>
+                  </>
+                )}
+                <span>{t('playlists.songs', { count: playlist.songCount })}</span>
+                {playlist.duration > 0 && (
+                  <>
+                    <span className={styles.playlistDetailPage__heroDivider}>•</span>
+                    <span>{formatDuration(playlist.duration)}</span>
+                  </>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div className={styles.playlistDetailPage__heroActions}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handlePlayAll}
+                  leftIcon={<Play size={20} fill="currentColor" />}
+                  disabled={
+                    !playlistTracks || !playlistTracks.tracks || playlistTracks.tracks.length === 0
+                  }
+                >
+                  {t('albums.play')}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  onClick={handleShufflePlay}
+                  leftIcon={<Shuffle size={20} />}
+                  disabled={
+                    shuffleLoading ||
+                    !playlistTracks ||
+                    !playlistTracks.tracks ||
+                    playlistTracks.tracks.length === 0
+                  }
+                >
+                  {t('albums.shuffle')}
+                </Button>
+                <PlaylistOptionsMenu
+                  onEdit={editModal.open}
+                  onShare={shareModal.open}
+                  onToggleVisibility={handleToggleVisibility}
+                  onDelete={deleteModal.open}
+                  isPublic={playlist.public}
+                  playlistName={playlist.name}
+                  playlistCoverUrl={playlistCoverUrl}
+                  dominantColor={dominantColors[0]}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Track listing */}
+          <div className={styles.playlistDetailPage__trackSection}>
+            {loadingTracks ? (
+              <div className={styles.playlistDetailPage__loadingTracks}>
+                <p>{t('playlists.loadingTracks')}</p>
+              </div>
+            ) : tracks && tracks.length > 0 ? (
+              <TrackList
+                tracks={tracks}
+                onTrackPlay={handleTrackPlay}
+                currentTrackId={currentTrack?.id}
+                onRemoveFromPlaylist={handleRemoveTrack}
+                onMoveUp={handleMoveTrackUp}
+                onMoveDown={handleMoveTrackDown}
+              />
+            ) : (
+              <div className={styles.playlistDetailPage__emptyTracks}>
+                <Music size={48} />
+                <p>{t('playlists.emptyPlaylist')}</p>
+                <p className={styles.playlistDetailPage__emptyHint}>
+                  {t('playlists.emptyPlaylistHint')}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Image Modal/Lightbox */}
+      {imageModal.isOpen && playlist.coverImageUrl && (
+        <div className={styles.playlistDetailPage__imageModal} onClick={imageModal.close}>
+          <div
+            className={styles.playlistDetailPage__imageModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={playlist.coverImageUrl}
+              alt={playlist.name}
+              className={styles.playlistDetailPage__imageModalImage}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Playlist Modal */}
+      {editModal.isOpen && playlist && (
+        <EditPlaylistModal
+          playlist={playlist}
+          onClose={editModal.close}
+          onSubmit={handleUpdatePlaylist}
+          isLoading={updatePlaylistMutation.isPending}
+        />
+      )}
+
+      {/* Delete Playlist Modal */}
+      {deleteModal.isOpen && playlist && (
+        <DeletePlaylistModal
+          playlistName={playlist.name}
+          onClose={deleteModal.close}
+          onConfirm={handleDeletePlaylist}
+          isLoading={deletePlaylistMutation.isPending}
+        />
+      )}
+
+      {/* Share Playlist Modal */}
+      {shareModal.isOpen && playlist && (
+        <SharePlaylistModal playlist={playlist} onClose={shareModal.close} />
+      )}
+    </div>
+  );
+}

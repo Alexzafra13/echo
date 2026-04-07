@@ -1,0 +1,54 @@
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundError } from '@shared/errors';
+import { assertCanViewPlaylist } from '../../services/playlist-authorization';
+import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
+import { ICollaboratorRepository, COLLABORATOR_REPOSITORY } from '../../ports';
+import { IUserRepository, USER_REPOSITORY } from '@features/auth/domain/ports/user-repository.port';
+import { GetPlaylistInput, GetPlaylistOutput } from './get-playlist.dto';
+
+@Injectable()
+export class GetPlaylistUseCase {
+  constructor(
+    @Inject(PLAYLIST_REPOSITORY)
+    private readonly playlistRepository: IPlaylistRepository,
+    @Inject(COLLABORATOR_REPOSITORY)
+    private readonly collaboratorRepository: ICollaboratorRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: IUserRepository
+  ) {}
+
+  async execute(input: GetPlaylistInput): Promise<GetPlaylistOutput> {
+    // 1. Buscar playlist
+    const playlist = await this.playlistRepository.findById(input.id);
+
+    if (!playlist) {
+      throw new NotFoundError('Playlist', input.id);
+    }
+
+    await assertCanViewPlaylist(playlist, input.requesterId, this.collaboratorRepository);
+
+    // 4. Obtener información del usuario owner (name/username y hasAvatar)
+    const owner = await this.userRepository.findById(playlist.ownerId);
+    const ownerName = owner?.name || owner?.username;
+    const ownerHasAvatar = owner?.avatarPath ? true : false;
+
+    // 5. Retornar output
+    return {
+      id: playlist.id,
+      name: playlist.name,
+      description: playlist.description,
+      coverImageUrl: playlist.coverImageUrl,
+      duration: playlist.duration,
+      size: playlist.size,
+      ownerId: playlist.ownerId,
+      ownerName,
+      ownerHasAvatar,
+      public: playlist.public,
+      songCount: playlist.songCount,
+      path: playlist.path,
+      sync: playlist.sync,
+      createdAt: playlist.createdAt,
+      updatedAt: playlist.updatedAt,
+    };
+  }
+}

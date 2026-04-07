@@ -1,0 +1,32 @@
+import { Module, forwardRef } from '@nestjs/common';
+import { QueueModule } from '@infrastructure/queue/queue.module';
+import { WebSocketModule } from '@infrastructure/websocket';
+import { DJ_ANALYSIS_REPOSITORY, AUDIO_ANALYZER } from './domain/ports';
+import { DrizzleDjAnalysisRepository } from './infrastructure/persistence';
+import {
+  EssentiaAnalyzerService,
+  DjAnalysisQueueService,
+  DjEnergyCalibrationService,
+} from './infrastructure/services';
+import { DjCompatibilityService } from './domain/services/dj-compatibility.service';
+import { ScannerModule } from '@features/scanner/scanner.module';
+
+/**
+ * NOTA DE ARQUITECTURA: DjAnalysisQueueService accede directamente a
+ * DrizzleService en vez de usar IDjAnalysisRepository. Razón: el queue
+ * service ejecuta operaciones batch (transacciones, upserts, updates masivos)
+ * que el repositorio no expone. Trade-off: rendimiento batch > pureza.
+ */
+@Module({
+  imports: [QueueModule, WebSocketModule, forwardRef(() => ScannerModule)],
+  providers: [
+    { provide: DJ_ANALYSIS_REPOSITORY, useClass: DrizzleDjAnalysisRepository },
+    { provide: AUDIO_ANALYZER, useClass: EssentiaAnalyzerService },
+    EssentiaAnalyzerService,
+    DjEnergyCalibrationService,
+    DjAnalysisQueueService,
+    DjCompatibilityService,
+  ],
+  exports: [DJ_ANALYSIS_REPOSITORY, AUDIO_ANALYZER, DjAnalysisQueueService, DjCompatibilityService],
+})
+export class DjModule {}

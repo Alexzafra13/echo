@@ -1,0 +1,318 @@
+import { lazy, Suspense, useEffect } from 'react';
+import { Route, Switch, Redirect, useLocation } from 'wouter';
+import { SetupWizard } from '@features/setup';
+import LoginPage from '@features/auth/pages/LoginPage/LoginPage';
+import { ProtectedRoute } from '@shared/components/ProtectedRoute';
+import { AdminRoute } from '@shared/components/AdminRoute';
+import { SetupGuard } from '@shared/components/SetupGuard';
+import { ErrorBoundary } from '@shared/components/ErrorBoundary';
+import { PageLoader } from '@shared/components/PageLoader';
+import { useAuthStore } from '@shared/store';
+import { usePwaAutoUpdate } from '@shared/hooks';
+import { AudioPlayer } from '@features/player';
+import { GlobalProgressListeners } from '@shared/components/GlobalProgressListeners';
+import { useRestoreActiveSession } from '@features/listening-sessions/hooks';
+import { SessionSync } from '@features/listening-sessions/components/SessionSync/SessionSync';
+import { SessionIndicator } from '@features/listening-sessions/components';
+
+// Carga diferida de páginas
+const FirstLoginPage = lazy(() => import('@features/auth/pages/FirstLoginPage'));
+const HomePage = lazy(() => import('@features/home/pages/HomePage'));
+const AlbumPage = lazy(() => import('@features/home/pages/AlbumPage'));
+const AlbumsPage = lazy(() => import('@features/home/pages/AlbumsPage'));
+const SearchResultsPage = lazy(() => import('@features/home/pages/SearchResultsPage'));
+const ArtistsPage = lazy(() => import('@features/artists/pages/ArtistsPage/ArtistsPage'));
+const ArtistDetailPage = lazy(() => import('@features/artists/pages/ArtistDetailPage/ArtistDetailPage'));
+const ProfilePage = lazy(() => import('@features/profile/pages/ProfilePage'));
+const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage/SettingsPage'));
+const PublicProfilePage = lazy(() => import('@features/public-profiles/pages/PublicProfilePage/PublicProfilePage'));
+const AdminPage = lazy(() => import('@features/admin/pages/AdminPage/AdminPage'));
+const PlaylistsPage = lazy(() => import('@features/playlists/pages/PlaylistsPage'));
+const PlaylistDetailPage = lazy(() => import('@features/playlists/pages/PlaylistDetailPage'));
+const RadioPage = lazy(() => import('@features/radio/pages/RadioPage'));
+const WaveMixPage = lazy(() => import('@features/recommendations/pages/WaveMixPage'));
+const WavePlaylistDetailPage = lazy(() => import('@features/recommendations/pages/PlaylistDetailPage'));
+const DailyRedirect = lazy(() => import('@features/recommendations/pages/DailyRedirect'));
+const ArtistPlaylistsPage = lazy(() => import('@features/recommendations/pages/ArtistPlaylistsPage'));
+const GenrePlaylistsPage = lazy(() => import('@features/recommendations/pages/GenrePlaylistsPage'));
+const SocialPage = lazy(() => import('@features/social/pages/SocialPage/SocialPage'));
+const JoinSessionRedirect = lazy(() => import('@features/listening-sessions/components/JoinSessionRedirect/JoinSessionRedirect'));
+const SessionPage = lazy(() => import('@features/listening-sessions/pages/SessionPage/SessionPage'));
+const TrendingPage = lazy(() => import('@features/social/pages/TrendingPage/TrendingPage'));
+const SharedAlbumPage = lazy(() => import('@features/federation/pages/SharedAlbumPage/SharedAlbumPage'));
+
+function App() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [location, setLocation] = useLocation();
+
+  // Transparent PWA auto-update: reload on next navigation when a new SW activates
+  usePwaAutoUpdate(location);
+
+  // Restaurar sesion de escucha activa al cargar la app
+  useRestoreActiveSession();
+
+  // Navegación desde fuera de React (ej: interceptor de axios al recibir 401)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if (!(e instanceof CustomEvent) || !e.detail?.path) return;
+      setLocation(e.detail.path);
+    };
+    window.addEventListener('app:navigate', handler);
+    return () => window.removeEventListener('app:navigate', handler);
+  }, [setLocation]);
+
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <Switch>
+          {/* Setup Wizard (First-run) */}
+          <Route path="/setup" component={SetupWizard} />
+
+          {/* Login Route - Checks setup status first */}
+          <Route path="/login">
+            <SetupGuard>
+              <LoginPage />
+            </SetupGuard>
+          </Route>
+
+          {/* First Login - Change Password (Protected) */}
+          <Route path="/first-login">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <FirstLoginPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Home Route (Protected) */}
+          <Route path="/home">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <HomePage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Search Results Route (Protected) */}
+          <Route path="/search">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <SearchResultsPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Profile Route (Protected) */}
+          <Route path="/profile">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <ProfilePage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Settings Route (Protected) */}
+          <Route path="/settings">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <SettingsPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* User Public Profile Route (Protected) */}
+          <Route path="/user/:userId">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <PublicProfilePage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Albums List Route (Protected) */}
+          <Route path="/albums">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <AlbumsPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Album Detail Route (Protected) */}
+          <Route path="/album/:id">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <AlbumPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Artists List Route (Protected) */}
+          <Route path="/artists">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <ArtistsPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Artist Detail Route (Protected) */}
+          <Route path="/artists/:id">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <ArtistDetailPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Playlists List Route (Protected) */}
+          <Route path="/playlists">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <PlaylistsPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Playlist Detail Route (Protected) */}
+          <Route path="/playlists/:id">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <PlaylistDetailPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Radio Route (Protected) */}
+          <Route path="/radio">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <RadioPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Wave Mix Route (Protected) */}
+          <Route path="/wave-mix">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <WaveMixPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Wave Mix Playlist Detail Route (Protected) */}
+          <Route path="/wave-mix/:id">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <WavePlaylistDetailPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Artist Playlists Route (Protected) */}
+          <Route path="/artist-playlists">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <ArtistPlaylistsPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Genre Playlists Route (Protected) */}
+          <Route path="/genre-playlists">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <GenrePlaylistsPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Daily Mix Route (Protected) - Redirects to Wave Mix playlist */}
+          <Route path="/daily">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <DailyRedirect />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Session detail page */}
+          <Route path="/session/:id">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <SessionPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Join Session via invite code */}
+          <Route path="/join/:code">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <JoinSessionRedirect />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Social Route (Protected) */}
+          <Route path="/social">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <SocialPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Trending Route (Protected) - Top 50 most played tracks */}
+          <Route path="/trending">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <TrendingPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Federation Album Route (Protected) */}
+          <Route path="/federation/album/:serverId/:albumId">
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <SharedAlbumPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Admin Route (Protected - Admin Only) */}
+          <Route path="/admin">
+            <AdminRoute>
+              <ErrorBoundary>
+                <AdminPage />
+              </ErrorBoundary>
+            </AdminRoute>
+          </Route>
+
+          {/* Root - Redirect based on auth status */}
+          <Route path="/">
+            {isAuthenticated ? <Redirect to="/home" /> : <Redirect to="/login" />}
+          </Route>
+
+          {/* 404 - Redirect to home or login */}
+          <Route>
+            {isAuthenticated ? <Redirect to="/home" /> : <Redirect to="/login" />}
+          </Route>
+        </Switch>
+      </Suspense>
+
+      {/* Global listeners & Audio Player - Only when authenticated */}
+      {isAuthenticated && (
+        <>
+          <GlobalProgressListeners />
+          <SessionSync />
+          <AudioPlayer statusSlot={<SessionIndicator />} />
+        </>
+      )}
+    </ErrorBoundary>
+  );
+}
+
+export default App;

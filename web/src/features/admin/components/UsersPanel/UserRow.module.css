@@ -1,0 +1,303 @@
+/* UserRow Styles */
+
+/* User Info Cell */
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.userAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid var(--white-15);
+  transition:
+    background-color var(--transition-slow),
+    color var(--transition-slow),
+    transform var(--transition-slow);
+}
+
+.userAvatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.userAvatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.25) 0%, rgba(237, 104, 66, 0.12) 100%);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.userName {
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.userEmail {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: var(--font-medium);
+}
+
+/* Badge Styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px var(--space-3);
+  border-radius: var(--radius-xl);
+  font-size: var(--text-11);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.badgeAdmin {
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.18) 0%, rgba(237, 104, 66, 0.1) 100%);
+  color: var(--color-primary);
+  border: 1px solid rgba(237, 104, 66, 0.3);
+  box-shadow: 0 2px 8px rgba(237, 104, 66, 0.1);
+}
+
+.badgeSystemAdmin {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  font-weight: var(--font-black);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.15);
+}
+
+.badgeUser {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.15) 0%, rgba(34, 211, 238, 0.08) 100%);
+  color: var(--color-info);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+}
+
+.badgeActive {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.1) 100%);
+  color: var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badgeInactive {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.08) 100%);
+  color: var(--color-error);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* Actions Cell */
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.actionButton {
+  padding: 7px var(--space-3);
+  border: 1px solid var(--white-12);
+  border-radius: var(--radius-base);
+  background: var(--white-05);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.actionButton:hover {
+  background: var(--white-10);
+  border-color: var(--white-20);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.actionButton:active {
+  transform: translateY(0);
+}
+
+.actionButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.actionButtonWarning {
+  border-color: rgba(245, 158, 11, 0.25);
+  color: var(--color-warning);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.actionButtonWarning:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: var(--color-warning);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+}
+
+.actionButtonWarning:disabled {
+  border-color: rgba(245, 158, 11, 0.1);
+  color: rgba(245, 158, 11, 0.4);
+}
+
+.actionButtonDanger {
+  border-color: rgba(239, 68, 68, 0.25);
+  color: var(--color-error);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.actionButtonDanger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: var(--color-error);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+}
+
+.actionButtonSuccess {
+  border-color: rgba(34, 197, 94, 0.25);
+  color: var(--color-success);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.actionButtonSuccess:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: var(--color-success);
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .userInfo {
+    flex: 1;
+    justify-content: flex-start;
+    gap: var(--space-3);
+  }
+
+  .userAvatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .userName {
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+  }
+
+  .userEmail {
+    font-size: var(--text-13);
+    color: var(--text-secondary);
+  }
+
+  .badge {
+    padding: 5px 10px;
+    font-size: var(--text-11);
+  }
+
+  .actions {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+    width: 100%;
+  }
+
+  .actionButton {
+    justify-content: center;
+    font-size: var(--text-xs);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-base);
+    min-width: unset;
+  }
+}
+
+@media (max-width: 480px) {
+  .userInfo {
+    gap: var(--space-3);
+  }
+
+  .userAvatar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .userName {
+    font-size: 15px;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .actionButton {
+    font-size: var(--text-11);
+    padding: var(--space-2) var(--space-2);
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Light Theme */
+:root[data-theme='light'] .actionButton {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme='light'] .actionButton:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme='light'] .badgeSystemAdmin {
+  background: linear-gradient(135deg, rgba(180, 140, 0, 0.15) 0%, rgba(180, 140, 0, 0.08) 100%);
+  color: #92700c;
+  border-color: rgba(180, 140, 0, 0.3);
+}
+
+:root[data-theme='light'] .badgeAdmin {
+  color: #c4501a;
+}
+
+:root[data-theme='light'] .badgeUser {
+  color: #0891b2;
+}
+
+:root[data-theme='light'] .badgeActive {
+  color: #059669;
+}
+
+:root[data-theme='light'] .badgeInactive {
+  color: #dc2626;
+}

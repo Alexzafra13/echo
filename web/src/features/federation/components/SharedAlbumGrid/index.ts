@@ -1,0 +1,1 @@
+export { SharedAlbumGrid } from './SharedAlbumGrid';

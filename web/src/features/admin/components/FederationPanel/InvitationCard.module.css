@@ -1,0 +1,156 @@
+/* InvitationCard Styles */
+
+.invitationCard {
+  border-radius: 14px;
+  padding: 18px 20px;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.invitationCardActive {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.03) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.invitationCardActive:hover {
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.invitationCardUsed {
+  background: var(--white-04);
+  border: 1px solid var(--white-08);
+  opacity: 0.7;
+}
+
+.invitationCardUsed:hover {
+  opacity: 0.85;
+}
+
+.invitationTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.invitationTokenRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.invitationTopRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.token {
+  font-family: var(--font-mono);
+  font-size: var(--text-13);
+  color: var(--color-primary);
+  background: var(--primary-10);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copyButton {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--white-10);
+  border-radius: var(--radius-sm);
+  background: var(--white-05);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+  flex-shrink: 0;
+}
+
+.copyButton:hover {
+  background: var(--white-10);
+  color: var(--color-text-primary);
+}
+
+.copySuccess {
+  color: var(--color-success);
+}
+
+.invitationDeleteBtn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--error-20);
+  border-radius: var(--radius-base);
+  background: transparent;
+  color: var(--color-error);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    opacity var(--transition-base);
+  opacity: 0.6;
+}
+
+.invitationCard:hover .invitationDeleteBtn {
+  opacity: 1;
+}
+
+.invitationDeleteBtn:hover {
+  background: var(--error-10);
+  border-color: var(--error-30);
+  opacity: 1;
+}
+
+.invitationName {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  margin: 0 0 10px 0;
+}
+
+.invitationMeta {
+  display: flex;
+  gap: 16px;
+  font-size: var(--text-12);
+  color: var(--color-text-secondary);
+}
+
+.invitationMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-11);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+}
+
+.badgeActive {
+  background: var(--success-15);
+  color: var(--color-success);
+}
+
+.badgeUsed {
+  background: var(--white-10);
+  color: var(--color-text-secondary);
+}

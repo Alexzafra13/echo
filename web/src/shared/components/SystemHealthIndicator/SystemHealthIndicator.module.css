@@ -1,0 +1,300 @@
+/* SystemHealthIndicator Component Styles */
+
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.indicator {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: transform var(--transition-slow);
+  box-shadow: 0 0 0 0 currentColor;
+  animation: pulse 2s infinite;
+}
+
+.indicator:hover {
+  transform: scale(1.1);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--white-40);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 28px; /* Un poco más abajo para alinearse con el bottom del header */
+  background: rgba(15, 18, 28, 0.95); /* Color oscuro menos transparente */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-md);
+  padding: 0;
+  min-width: 280px;
+  box-shadow:
+    0 4px 6px -1px var(--black-10),
+    0 10px 25px -3px var(--black-30),
+    0 0 0 1px var(--white-15);
+  z-index: var(--z-popover);
+
+  /* Animación de entrada - Spring effect */
+  transform-origin: top right;
+  animation: healthTooltipSlideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Animación de salida - clase aplicada por React */
+.tooltip--closing {
+  animation: healthTooltipSlideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes healthTooltipSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+}
+
+@keyframes healthTooltipSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tooltipHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-bottom: 1px solid var(--white-10);
+}
+
+.tooltipTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.tooltipContent {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tooltipSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-13);
+}
+
+.tooltipLabel {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-medium);
+}
+
+/* Status colors */
+.status-healthy,
+.status-idle {
+  color: var(--color-success);
+  font-weight: var(--font-semibold);
+}
+
+.status-degraded,
+.status-warning,
+.status-running {
+  color: var(--color-warning);
+  font-weight: var(--font-semibold);
+}
+
+.status-down,
+.status-error,
+.status-critical {
+  color: var(--color-error);
+  font-weight: var(--font-semibold);
+}
+
+.tooltipDivider {
+  height: 1px;
+  background: var(--white-10);
+  margin: 8px 0;
+}
+
+.tooltipAlerts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tooltipAlert {
+  font-size: var(--text-12);
+  color: var(--color-warning);
+  line-height: 1.4;
+}
+
+.tooltipFooter {
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 12px;
+  padding-bottom: 4px;
+  border: none;
+  border-top: 1px solid var(--white-10);
+  background: transparent;
+  font-size: var(--text-12);
+  color: var(--color-primary);
+  text-align: center;
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition:
+    color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.tooltipFooter:hover {
+  color: #ff8585;
+  transform: translateX(4px);
+}
+
+/* Icon colors in tooltip */
+.iconHealthy {
+  color: var(--color-success);
+}
+
+.iconWarning {
+  color: var(--color-warning);
+}
+
+.iconCritical {
+  color: var(--color-error);
+}
+
+/* ===== Light Theme ===== */
+:global([data-theme='light']) .tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 10px 25px -3px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+:global([data-theme='light']) .tooltipHeader {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .tooltipDivider {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .tooltipFooter {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Responsive Design ===== */
+
+/* Mobile */
+@media (max-width: 768px) {
+  .indicator {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Tooltip como modal full-width en móvil */
+  .tooltip {
+    position: fixed;
+    top: 48px; /* Pegado al bottom del header */
+    left: 0;
+    right: 0;
+    width: 100%;
+    margin-top: 0; /* Sin margen en móvil */
+    max-height: calc(100vh - 48px);
+    background: rgba(15, 18, 28, 0.95); /* Mismo color que desktop */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 0; /* Sin bordes redondeados */
+    box-shadow: 0 4px 20px var(--black-30);
+    animation: slideDown 0.3s ease;
+    z-index: var(--z-popover);
+    min-width: auto; /* Ancho completo */
+  }
+
+  /* Light theme para tooltip móvil */
+  [data-theme='light'] .tooltip {
+    background: rgba(240, 242, 245, 0.95); /* Light theme */
+  }
+
+  /* Animación de cierre en móvil - sube hacia el header */
+  .tooltip--closing {
+    animation: slideUp 0.2s ease forwards;
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+
+  .tooltipHeader {
+    padding: 16px;
+  }
+
+  .tooltipTitle {
+    font-size: var(--text-base);
+  }
+
+  .tooltipContent {
+    padding: 16px;
+  }
+
+  .tooltipSection {
+    padding: 12px 0;
+    font-size: 15px;
+  }
+
+  .tooltipFooter {
+    padding: 14px;
+    font-size: var(--text-sm);
+  }
+}

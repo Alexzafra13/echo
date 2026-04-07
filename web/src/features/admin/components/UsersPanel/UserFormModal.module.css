@@ -1,0 +1,278 @@
+/* UserFormModal Styles - Simplified (Modal handles structure) */
+/* Shared by CreateUserModal and EditUserModal */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.required {
+  color: var(--color-error);
+}
+
+.input {
+  padding: 14px 16px;
+  background: var(--white-04);
+  border: 1px solid var(--white-10);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  color: var(--color-text-primary);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    outline var(--transition-base);
+}
+
+.input:hover {
+  background: var(--white-06);
+  border-color: var(--white-15);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: var(--white-08);
+  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.15);
+}
+
+.input::placeholder {
+  color: var(--white-35);
+}
+
+.inputError {
+  border-color: var(--color-error);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.inputError:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.errorText {
+  font-size: var(--text-13);
+  color: var(--color-error);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Custom Checkbox Styling */
+.checkboxWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: var(--radius-md);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.checkboxWrapper:hover {
+  background: var(--white-05);
+  border-color: var(--white-12);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  user-select: none;
+}
+
+.checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--white-20);
+  background: var(--white-05);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    outline var(--transition-base);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.checkbox:hover {
+  border-color: var(--white-30);
+  background: var(--white-08);
+}
+
+.checkbox:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%) rotate(45deg);
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+}
+
+.checkbox:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.3);
+}
+
+.checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.helpText {
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+  padding-left: 34px;
+}
+
+.errorBox {
+  padding: 14px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.infoBox {
+  padding: 14px 16px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: var(--radius-md);
+  color: #fbbf24;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.infoBox p {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--white-08);
+}
+
+.actions button {
+  flex: 1;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-md);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .form {
+    gap: 16px;
+  }
+
+  .input {
+    padding: 12px 14px;
+    font-size: var(--text-base); /* Prevents zoom on iOS */
+  }
+
+  .checkboxWrapper {
+    padding: 14px;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .actions button {
+    padding: 16px 20px;
+  }
+}
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme='light'] .input {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.15);
+  color: var(--color-text-primary);
+}
+
+:root[data-theme='light'] .input:hover {
+  background: rgba(31, 41, 55, 0.08);
+  border-color: rgba(31, 41, 55, 0.2);
+}
+
+:root[data-theme='light'] .input:focus {
+  background: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme='light'] .input::placeholder {
+  color: rgba(31, 41, 55, 0.5);
+}
+
+:root[data-theme='light'] .checkboxWrapper {
+  background: rgba(31, 41, 55, 0.04);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme='light'] .checkboxWrapper:hover {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme='light'] .checkbox {
+  border-color: rgba(31, 41, 55, 0.25);
+  background: rgba(31, 41, 55, 0.05);
+}
+
+:root[data-theme='light'] .checkbox:hover {
+  border-color: rgba(31, 41, 55, 0.35);
+  background: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme='light'] .actions {
+  border-top-color: rgba(31, 41, 55, 0.1);
+}

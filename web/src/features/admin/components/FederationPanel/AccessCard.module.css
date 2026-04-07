@@ -1,0 +1,201 @@
+/* AccessCard Styles */
+
+.accessCard {
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.1) 0%,
+    rgba(139, 92, 246, 0.04) 50%,
+    rgba(99, 102, 241, 0.06) 100%
+  );
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: border-color var(--transition-base);
+}
+
+.accessCard:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.accessHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.accessInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.accessIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.12) 100%);
+  color: #818cf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform var(--transition-slow);
+}
+
+.accessCard:hover .accessIcon {
+  transform: scale(1.05);
+}
+
+.accessInfo h4 {
+  font-size: 15px;
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.accessUrl {
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+  display: block;
+  margin-top: 2px;
+}
+
+.permissions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.permission {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-base);
+  background: var(--white-05);
+  border: 1px solid var(--white-08);
+  font-size: var(--text-12);
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+}
+
+.permissionEnabled {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.permissionToggle {
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.permissionToggle:hover {
+  background: var(--white-10);
+  border-color: var(--white-20);
+}
+
+.permissionToggle.permissionEnabled:hover {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.permissionToggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.accessFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--white-08);
+}
+
+.lastUsed {
+  font-size: var(--text-12);
+  color: var(--color-text-secondary);
+}
+
+.accessActions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-11);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+}
+
+.badgeActive {
+  background: var(--success-15);
+  color: var(--color-success);
+}
+
+.badgeInactive {
+  background: var(--error-10);
+  color: var(--color-error);
+}
+
+/* Action Buttons */
+.actionButton {
+  padding: 6px 12px;
+  border: 1px solid var(--white-10);
+  border-radius: var(--radius-sm);
+  background: var(--white-05);
+  color: var(--color-text-secondary);
+  font-size: var(--text-12);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.actionButton:hover {
+  background: var(--white-08);
+  color: var(--color-text-primary);
+}
+
+.actionButtonDanger {
+  border-color: var(--error-30);
+  color: var(--color-error);
+}
+
+.actionButtonDanger:hover {
+  background: var(--error-10);
+}
+
+.actionButtonSuccess {
+  border-color: var(--success-30);
+  color: var(--color-success);
+}
+
+.actionButtonSuccess:hover {
+  background: var(--success-10);
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .accessList {
+    grid-template-columns: 1fr;
+  }
+}

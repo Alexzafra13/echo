@@ -1,0 +1,166 @@
+/* StatCard Component Styles */
+
+.card {
+  background: var(--white-03);
+  border: 1px solid var(--white-06);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color var(--transition-base);
+}
+
+.card:hover {
+  border-color: var(--white-12);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: var(--text-11);
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--white-04);
+  border: none;
+  border-radius: var(--radius-base);
+  color: var(--color-text-tertiary);
+}
+
+.card:hover .iconContainer {
+  color: var(--color-text-secondary);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.value {
+  font-size: 28px;
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  line-height: 1;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.subtitle {
+  font-size: var(--text-12);
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-normal);
+}
+
+.change {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-11);
+  color: var(--color-success);
+  font-weight: var(--font-semibold);
+  width: fit-content;
+}
+
+.change svg {
+  flex-shrink: 0;
+}
+
+/* Color Variants */
+.card[data-variant='music'] {
+  background: rgba(99, 102, 241, 0.06);
+  border-color: rgba(99, 102, 241, 0.15);
+}
+.card[data-variant='music'] .iconContainer {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+}
+.card[data-variant='music'] .title {
+  color: #a5b4fc;
+}
+
+.card[data-variant='disc'] {
+  background: rgba(236, 72, 153, 0.05);
+  border-color: rgba(236, 72, 153, 0.14);
+}
+.card[data-variant='disc'] .iconContainer {
+  background: rgba(236, 72, 153, 0.12);
+  color: #f472b6;
+}
+.card[data-variant='disc'] .title {
+  color: #f9a8d4;
+}
+
+.card[data-variant='users'] {
+  background: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16, 185, 129, 0.14);
+}
+.card[data-variant='users'] .iconContainer {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+}
+.card[data-variant='users'] .title {
+  color: #6ee7b7;
+}
+
+.card[data-variant='tag'] {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.14);
+}
+.card[data-variant='tag'] .iconContainer {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+.card[data-variant='tag'] .title {
+  color: #fcd34d;
+}
+
+.card[data-variant='clock'] {
+  background: rgba(14, 165, 233, 0.05);
+  border-color: rgba(14, 165, 233, 0.14);
+}
+.card[data-variant='clock'] .iconContainer {
+  background: rgba(14, 165, 233, 0.12);
+  color: #38bdf8;
+}
+.card[data-variant='clock'] .title {
+  color: #7dd3fc;
+}
+
+.card[data-variant='hard-drive'] {
+  background: rgba(20, 184, 166, 0.05);
+  border-color: rgba(20, 184, 166, 0.14);
+}
+.card[data-variant='hard-drive'] .iconContainer {
+  background: rgba(20, 184, 166, 0.12);
+  color: #2dd4bf;
+}
+.card[data-variant='hard-drive'] .title {
+  color: #5eead4;
+}
+
+/* Light Theme */
+:root[data-theme='light'] .card {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .card:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.15);
+}

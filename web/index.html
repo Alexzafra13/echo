@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Echo - Your personal music streaming server. Listen to your music collection from anywhere." />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="dark light" />
+
+    <!-- Self-hosted app, no indexing needed -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Echo" />
+
+    <!-- Favicon & PWA Icons -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/logos/echo-icon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/logos/echo-icon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/logos/echo-icon-180.png" />
+
+    <!-- Google Fonts with preload for critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/images/logos/echo-icon-192.png" as="image" />
+
+    <title>Echo - Music Streaming</title>
+  </head>
+  <body>
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div id="root"></div>
+
+    <!-- Fallback for users without JavaScript -->
+    <noscript>
+      <div style="padding: 2rem; text-align: center; background: #0f172a; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <h1 style="font-size: 1.5rem; margin-bottom: 1rem;">Echo Music Streaming</h1>
+        <p style="color: #94a3b8;">Echo requires JavaScript to run. Please enable it in your browser.</p>
+      </div>
+    </noscript>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

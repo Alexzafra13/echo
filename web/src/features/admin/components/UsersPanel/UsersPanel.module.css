@@ -1,0 +1,407 @@
+/* UsersPanel Layout, Table Shell & States */
+
+.panel {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  border: none;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--white-06);
+}
+
+.headerLeft {
+  flex: 1;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2) 0;
+  letter-spacing: -0.3px;
+}
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin: 0;
+  line-height: var(--leading-normal);
+  font-weight: var(--font-medium);
+}
+
+/* User Stats Row */
+.statsRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.statPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-13);
+  border: 1px solid transparent;
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.statPill svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.statPillValue {
+  font-weight: var(--font-bold);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.statPillLabel {
+  font-weight: var(--font-medium);
+  opacity: 0.75;
+  font-size: var(--text-12);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.statPillTotal {
+  background: var(--white-05);
+  border-color: var(--white-10);
+  color: var(--text-primary);
+}
+
+.statPillTotal svg {
+  color: var(--color-primary);
+}
+
+.statPillActive {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.15);
+  color: var(--color-success);
+}
+
+.statPillAdmin {
+  background: rgba(237, 104, 66, 0.08);
+  border-color: rgba(237, 104, 66, 0.15);
+  color: var(--color-primary);
+}
+
+.statPillInactive {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.15);
+  color: var(--color-error);
+}
+
+.filterIndicator {
+  margin-left: auto;
+  font-size: var(--text-12);
+  font-weight: var(--font-medium);
+  color: var(--text-tertiary);
+  padding: 6px 12px;
+  background: var(--white-03);
+  border-radius: var(--radius-base);
+  border: 1px solid var(--white-08);
+}
+
+/* Table Styles */
+.tableContainer {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--white-08);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white-02);
+}
+
+.table thead {
+  background: var(--white-05);
+}
+
+.table th {
+  padding: var(--space-4);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--white-08);
+}
+
+.table td {
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--white-05);
+}
+
+.table tbody tr {
+  transition: background var(--transition-base);
+}
+
+.table tbody tr:hover {
+  background: var(--white-03);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px var(--space-8);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.emptyIcon {
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+  opacity: 0.6;
+}
+
+.emptyTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.emptyMessage {
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+/* Loading/Error States */
+.loadingState,
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px var(--space-8);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.errorState {
+  color: var(--color-error);
+}
+
+/* Responsive - Table to card layout transformation */
+@media (max-width: 768px) {
+  .panel {
+    padding: var(--space-5) var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+
+  .header {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .title {
+    font-size: var(--text-xl);
+  }
+
+  .statsRow {
+    gap: 8px;
+    margin-bottom: var(--space-4);
+  }
+
+  .statPill {
+    padding: 6px 10px;
+    gap: 6px;
+    font-size: var(--text-12);
+  }
+
+  .statPillValue {
+    font-size: var(--text-sm);
+  }
+
+  .statPillLabel {
+    font-size: var(--text-11);
+  }
+
+  .filterIndicator {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Convert table to cards on mobile */
+  .tableContainer {
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .table {
+    display: block;
+    background: transparent;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .table tbody tr {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, var(--white-04) 0%, var(--white-02) 100%);
+    border: 1px solid var(--white-08);
+    border-radius: var(--radius-xl);
+    padding: 0;
+    margin-bottom: 0;
+    gap: 0;
+    overflow: hidden;
+    transition:
+      background-color var(--transition-base),
+      color var(--transition-base),
+      transform var(--transition-base);
+  }
+
+  .table tbody tr:hover {
+    background: linear-gradient(180deg, var(--white-06) 0%, var(--white-03) 100%);
+    border-color: var(--white-12);
+    transform: translateY(-1px);
+  }
+
+  .table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Card Header - User Info */
+  .table td:first-child {
+    background: var(--white-02);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--white-06);
+  }
+
+  .table td:first-child::before {
+    display: none;
+  }
+
+  .table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    border: none;
+    gap: var(--space-3);
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-weight: var(--font-semibold);
+    font-size: var(--text-11);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  .table td:last-child {
+    padding: var(--space-4);
+    background: var(--white-02);
+    border-top: 1px solid var(--white-06);
+  }
+
+  .table td:last-child::before {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .panel {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .title {
+    font-size: var(--text-lg);
+  }
+
+  .description {
+    font-size: var(--text-13);
+  }
+}
+
+/* Light Theme */
+:root[data-theme='light'] .panel {
+  background: transparent;
+  border: none;
+}
+
+:root[data-theme='light'] .panel:hover {
+  background: transparent;
+  border: none;
+}
+
+:root[data-theme='light'] .statPillTotal {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme='light'] .filterIndicator {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme='light'] .tableContainer {
+  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .table {
+  background: transparent;
+}
+
+:root[data-theme='light'] .table thead {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+:root[data-theme='light'] .table th {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-secondary);
+}
+
+:root[data-theme='light'] .table td {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+:root[data-theme='light'] .table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.03);
+}

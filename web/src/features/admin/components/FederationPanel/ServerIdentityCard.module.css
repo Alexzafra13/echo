@@ -1,0 +1,248 @@
+/* ServerIdentityCard Styles */
+
+.serverIdentityCard {
+  --server-color: #8b5cf6;
+  --server-color-rgb: 139, 92, 246;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--server-color-rgb), 0.12) 0%,
+    rgba(var(--server-color-rgb), 0.05) 100%
+  );
+  border: 1px solid rgba(var(--server-color-rgb), 0.25);
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+}
+
+.serverIdentityCardExpanded {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin-bottom: 0;
+  border-bottom-color: transparent;
+}
+
+.serverIdentityIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(var(--server-color-rgb), 0.18);
+  border-radius: var(--radius-md);
+  color: var(--server-color);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.identityColorBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(var(--server-color-rgb), 0.25);
+  border-radius: var(--radius-md);
+  background: rgba(var(--server-color-rgb), 0.1);
+  color: var(--server-color);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    transform var(--transition-base);
+  flex-shrink: 0;
+}
+
+.identityColorBtn:hover {
+  background: rgba(var(--server-color-rgb), 0.2);
+  border-color: rgba(var(--server-color-rgb), 0.4);
+  transform: scale(1.05);
+}
+
+.identityColorBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.identityColorPicker {
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 14px 20px;
+  margin-bottom: 24px;
+}
+
+.identityColorLabel {
+  display: block;
+  font-size: var(--text-12);
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+}
+
+.serverIdentityInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.serverIdentityLabel {
+  display: block;
+  font-size: var(--text-12);
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.serverIdentityName {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.serverNameDisplay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.serverNameEditBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--white-10);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+}
+
+.serverNameEditBtn:hover {
+  background: var(--white-15);
+  color: var(--color-text-primary);
+}
+
+.serverNameEdit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.serverNameInput {
+  flex: 1;
+  max-width: 300px;
+  padding: 8px 12px;
+  background: var(--white-10);
+  border: 1px solid var(--white-20);
+  border-radius: var(--radius-base);
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  outline: none;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.serverNameInput:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+}
+
+.serverNameInput::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.serverNameSaveBtn,
+.serverNameCancelBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+}
+
+.serverNameSaveBtn {
+  background: #22c55e;
+  color: white;
+}
+
+.serverNameSaveBtn:hover:not(:disabled) {
+  background: #16a34a;
+}
+
+.serverNameSaveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.serverNameCancelBtn {
+  background: var(--white-10);
+  color: var(--color-text-secondary);
+}
+
+.serverNameCancelBtn:hover:not(:disabled) {
+  background: var(--white-15);
+  color: var(--color-text-primary);
+}
+
+/* Color Picker */
+.colorPicker {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.colorSwatch {
+  --swatch-color: #8b5cf6;
+  --swatch-rgb: 139, 92, 246;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  background: var(--swatch-color);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    transform var(--transition-base);
+  position: relative;
+}
+
+.colorSwatch:hover {
+  transform: scale(1.1);
+  border-color: rgba(var(--swatch-rgb), 0.5);
+}
+
+.colorSwatchActive {
+  border-color: #fff;
+  transform: scale(1.1);
+}
+
+.colorSwatchActive::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}

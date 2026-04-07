@@ -1,0 +1,797 @@
+.waveMixPage {
+  display: flex;
+  min-height: 100vh;
+  background: var(--background-primary);
+  color: var(--text-primary);
+}
+
+.waveMixPage__main {
+  flex: 1;
+  margin-left: 200px; /* Sidebar width */
+  display: flex;
+  flex-direction: column;
+  position: relative; /* Creates stacking context for sticky header */
+  /* overflow removed to allow sticky header to work */
+}
+
+.waveMixPage__content {
+  flex: 1 1 0;
+  min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
+  margin-top: -84px; /* Content starts behind header */
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  padding: calc(84px + 2rem) 30px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px for header + dynamic player spacer */
+}
+
+.waveMixPage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Search Form (in Header) */
+.waveMixPage__searchForm {
+  flex: 1;
+  max-width: 600px;
+}
+
+.waveMixPage__searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.waveMixPage__searchIcon {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.waveMixPage__searchInput {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 3rem;
+  border: 1px solid var(--white-10);
+  border-radius: 2rem;
+  background: var(--white-05);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    outline var(--transition-base);
+}
+
+.waveMixPage__searchInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: var(--white-08);
+}
+
+.waveMixPage__searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.waveMixPage__searchClearButton {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+}
+
+.waveMixPage__searchClearButton:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+/* ===== Search Responsive ===== */
+@media (max-width: 768px) {
+  .waveMixPage__searchInput {
+    height: 36px;
+    font-size: 15px;
+    border-radius: var(--radius-md);
+    padding: 0 12px 0 40px;
+  }
+
+  .waveMixPage__searchIcon {
+    left: 12px;
+  }
+
+  .waveMixPage__searchClearButton {
+    right: 8px;
+  }
+}
+
+/* ===== Hero Section ===== */
+.hero {
+  position: relative;
+  margin-bottom: 2rem;
+  border-radius: 0;
+  overflow: hidden;
+  height: 340px;
+  background: var(--background-primary);
+  margin-left: -30px;
+  margin-right: -30px;
+  margin-top: calc(-84px - 2rem);
+  padding-top: calc(84px + 2rem);
+}
+
+/* Gradient fallback when there aren't enough album covers for the mosaic */
+.hero--fallback {
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(237, 104, 66, 0.2) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(34, 211, 238, 0.15) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
+    linear-gradient(
+      135deg,
+      var(--background-primary) 0%,
+      #1a1a2e 50%,
+      var(--background-primary) 100%
+    );
+  animation: auroraShift 12s ease-in-out infinite alternate;
+}
+
+@keyframes auroraShift {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(30deg);
+  }
+  100% {
+    filter: hue-rotate(-20deg);
+  }
+}
+
+/* Mosaic container — two rows */
+.hero__mosaic {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+  /* No filter here — blur on individual images is GPU-friendlier */
+}
+
+/* Each row clips its scrolling track */
+.hero__row {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* The track holds images in a line and animates */
+.hero__track {
+  display: flex;
+  gap: 6px;
+  height: 100%;
+  width: max-content;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.hero__track[data-direction='left'] {
+  animation: scrollLeft 180s linear infinite;
+}
+
+.hero__track[data-direction='right'] {
+  animation: scrollRight 195s linear infinite;
+}
+
+.hero__coverImg {
+  height: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+/* Pause on hero hover for a nice touch */
+.hero:hover .hero__track {
+  animation-play-state: paused;
+}
+
+@keyframes scrollLeft {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes scrollRight {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Gradient fade + blur overlay — single static layer is much cheaper than per-image filters */
+.hero__fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  backdrop-filter: blur(1.5px) brightness(0.75) saturate(1.2);
+  -webkit-backdrop-filter: blur(1.5px) brightness(0.75) saturate(1.2);
+  background:
+    /* Strong left fade for title area */
+    linear-gradient(
+      90deg,
+      var(--background-primary) 0%,
+      rgba(15, 23, 42, 0.88) 16%,
+      rgba(15, 23, 42, 0.4) 38%,
+      transparent 60%
+    ),
+    /* Bottom fade */
+    linear-gradient(0deg, rgba(15, 23, 42, 0.75) 0%, rgba(15, 23, 42, 0.3) 35%, transparent 65%),
+    /* Top subtle vignette */ linear-gradient(180deg, rgba(15, 23, 42, 0.25) 0%, transparent 35%);
+}
+
+/* Content layer — pinned bottom */
+.hero__content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  gap: 2rem;
+}
+
+.hero__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--black-40);
+  backdrop-filter: blur(var(--blur-xl));
+  -webkit-backdrop-filter: blur(var(--blur-xl));
+  border: 1px solid var(--white-10);
+}
+
+.hero__title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-extrabold);
+  margin: 0;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.hero__subtitle {
+  font-size: 0.8rem;
+  color: var(--white-60);
+  margin: 0;
+}
+
+.hero__username {
+  color: var(--color-primary);
+  font-weight: var(--font-semibold);
+}
+
+/* Right side: stats + refresh */
+.hero__right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-shrink: 0;
+}
+
+.hero__stats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--black-40);
+  backdrop-filter: blur(var(--blur-xl));
+  -webkit-backdrop-filter: blur(var(--blur-xl));
+  border: 1px solid var(--white-10);
+}
+
+.hero__stat {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--white-50);
+}
+
+.hero__statValue {
+  font-weight: var(--font-bold);
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.hero__statLabel {
+  font-size: 0.8rem;
+  color: var(--white-50);
+}
+
+.hero__statDivider {
+  width: 1px;
+  height: 20px;
+  background: var(--white-15);
+}
+
+.hero__refreshBtn {
+  gap: 0.5rem;
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(var(--blur-xl));
+  -webkit-backdrop-filter: blur(var(--blur-xl));
+}
+
+/* Sections */
+.waveMixPage__section {
+  margin-bottom: 3rem;
+}
+
+.waveMixPage__sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.waveMixPage__sectionTitle {
+  font-size: 1.75rem;
+  font-weight: var(--font-bold);
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
+
+.waveMixPage__viewAllButtonWrapper {
+  margin-bottom: 1.5rem;
+}
+
+.waveMixPage__viewAllButton {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  padding: 0.5rem 1rem;
+  transition:
+    background var(--transition-slow),
+    color var(--transition-slow),
+    left var(--transition-slow);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.waveMixPage__viewAllButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--primary-15),
+    var(--primary-25),
+    var(--primary-15),
+    transparent
+  );
+  transition: left 0.4s ease;
+  border-radius: var(--radius-xl);
+}
+
+.waveMixPage__viewAllButton:hover {
+  color: var(--color-primary);
+  background: var(--primary-10);
+}
+
+.waveMixPage__viewAllButton:hover::before {
+  left: 100%;
+}
+
+/* Daily Cards - ActionCard row */
+.waveMixPage__dailyCards {
+  display: flex;
+  gap: 16px;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+/* Grid - Same as HomePage */
+.waveMixPage__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 0 20px;
+}
+
+/* Playlist Card - matches HomePage playlistCard styling */
+.playlistCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform var(--transition-slow);
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+}
+
+.playlistCard:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+.playlistCard__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.playlistCard__name {
+  font-size: 15px;
+  font-weight: var(--font-semibold);
+  margin: 0;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playlistCard__description {
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+}
+
+.playlistCard__meta {
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Placeholder for incomplete grid rows */
+.playlistCard__placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.separator {
+  opacity: 0.5;
+}
+
+/* Loading State */
+.waveMixPage__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+  color: var(--text-secondary);
+}
+
+.waveMixPage__loadingSpinner {
+  color: var(--accent-color);
+}
+
+/* Error State */
+.waveMixPage__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+  color: var(--text-secondary);
+}
+
+.waveMixPage__error p {
+  color: var(--error-color);
+  margin: 0;
+}
+
+/* Empty State */
+.waveMixPage__emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 0 2rem;
+}
+
+.waveMixPage__emptyState h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+}
+
+.waveMixPage__emptyState p {
+  margin: 0;
+  max-width: 400px;
+}
+
+/* Spinning animation */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+
+/* Tablet Large */
+@media (max-width: 1200px) {
+  .waveMixPage__grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .waveMixPage__sectionTitle {
+    font-size: 22px;
+  }
+}
+
+/* Mobile - iOS Style with Bottom Nav */
+@media (max-width: 768px) {
+  .waveMixPage {
+    overflow: visible; /* Allow child elements to scroll horizontally */
+  }
+
+  .waveMixPage__main {
+    margin-left: 0; /* No sidebar en mobile */
+    max-width: 100vw;
+    padding-top: 0;
+  }
+
+  .waveMixPage__content {
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: 68px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    overflow-x: hidden; /* Solo content tiene overflow-x hidden */
+  }
+
+  .hero {
+    height: 220px;
+    border-radius: 0;
+    margin-left: -16px;
+    margin-right: -16px;
+  }
+
+  .hero__fade {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(
+      0deg,
+      rgba(15, 23, 42, 0.95) 0%,
+      rgba(15, 23, 42, 0.6) 50%,
+      rgba(15, 23, 42, 0.25) 100%
+    );
+  }
+
+  .hero__content {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 1.25rem;
+    gap: 0.75rem;
+  }
+
+  .hero__info {
+    padding: 0;
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .hero__title {
+    font-size: var(--text-2xl);
+  }
+
+  .hero__subtitle {
+    font-size: 0.8rem;
+  }
+
+  .hero__right {
+    flex-shrink: 0;
+  }
+
+  .hero__stats {
+    display: none;
+  }
+
+  .hero__refreshBtn {
+    border-radius: 50%;
+    padding: 0.625rem;
+  }
+
+  .hero__refreshBtnText {
+    display: none;
+  }
+
+  .waveMixPage__section {
+    margin-bottom: 2rem;
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .waveMixPage__sectionHeader {
+    padding: 0 16px;
+  }
+
+  .waveMixPage__sectionTitle {
+    font-size: var(--text-xl);
+    margin-bottom: 0.75rem;
+    padding: 0;
+  }
+
+  .waveMixPage__viewAllButtonWrapper {
+    margin-bottom: 1rem;
+    padding: 0 16px;
+  }
+
+  .waveMixPage__viewAllButton {
+    border-radius: var(--radius-xl); /* iOS rounded button */
+  }
+
+  /* Daily cards row on mobile */
+  .waveMixPage__dailyCards {
+    gap: 12px;
+    padding: 0 16px;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Horizontal scroll carousel for grids on mobile */
+  .waveMixPage__grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 12px;
+    padding: 0 16px;
+    padding-bottom: 8px;
+    width: 100%;
+    max-width: 100%;
+
+    /* Hide scrollbar but keep functionality */
+    scrollbar-width: none;
+  }
+
+  .waveMixPage__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Fixed width for carousel items */
+  .waveMixPage__grid > * {
+    flex: 0 0 160px;
+    min-width: 160px;
+    scroll-snap-align: start;
+  }
+
+  .playlistCard {
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+  }
+
+  .playlistCard:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .playlistCard__name {
+    font-size: var(--text-13);
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .playlistCard__description {
+    display: none; /* Ocultar descripción en carousel móvil */
+  }
+
+  .playlistCard__meta {
+    font-size: var(--text-11);
+  }
+}
+
+@media (max-width: 480px) {
+  .waveMixPage__content {
+    padding: 68px 12px calc(60px + var(--player-bottom-spacer, 0px));
+  }
+
+  .hero {
+    height: 250px;
+    margin-left: -12px;
+    margin-right: -12px;
+  }
+
+  .hero__content {
+    padding: 1rem;
+  }
+
+  .hero__title {
+    font-size: 1.35rem;
+  }
+
+  .waveMixPage__section {
+    margin-left: -12px;
+    margin-right: -12px;
+  }
+
+  .waveMixPage__sectionTitle {
+    font-size: var(--text-lg);
+    padding: 0 12px;
+  }
+
+  .waveMixPage__viewAllButtonWrapper {
+    padding: 0 12px;
+  }
+
+  .waveMixPage__dailyCards {
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .waveMixPage__grid {
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  .waveMixPage__grid > * {
+    flex: 0 0 150px;
+    min-width: 150px;
+  }
+
+  .playlistCard__name {
+    font-size: var(--text-12);
+  }
+
+  .playlistCard__meta {
+    font-size: 10px;
+  }
+}

@@ -1,0 +1,990 @@
+/* ===== Audio Player ===== */
+
+.player {
+  position: fixed;
+  bottom: var(--space-4);
+  left: var(--space-4);
+  right: var(--space-4);
+  height: auto; /* Auto height para acomodar la barra de progreso */
+  background: linear-gradient(to bottom, var(--black-75), var(--black-85));
+  border: 1px solid var(--white-08);
+  border-radius: var(--radius-md);
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  grid-template-rows: auto auto; /* Fila para contenido principal y fila para progress bar */
+  align-items: center;
+  padding: var(--space-2) var(--space-4) var(--space-1);
+  gap: var(--space-1) var(--space-3);
+  z-index: var(--z-fixed);
+  backdrop-filter: blur(var(--blur-xl));
+  box-shadow: var(--shadow-2xl);
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  transition:
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: auto;
+}
+
+.player--hidden {
+  transform: translateY(120px) scale(0.9);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ===== Track Info ===== */
+
+.trackInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  grid-column: 1; /* Primera columna */
+  grid-row: 1; /* Primera fila */
+}
+
+.trackCoverContainer {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.trackCoverFallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-base) 100%);
+  color: var(--color-text-secondary);
+  z-index: 1;
+}
+
+.trackCover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  z-index: 2;
+}
+
+.trackDetails {
+  min-width: 0;
+  flex: 1;
+}
+
+.trackTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackArtist {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackArtist--clickable {
+  cursor: pointer;
+  transition: color var(--transition-base);
+}
+
+.trackArtist--clickable:hover {
+  color: var(--color-primary-500);
+}
+
+.trackAlbum {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackCoverContainer--clickable {
+  cursor: pointer;
+}
+
+.trackMetadata {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 2px;
+  opacity: 0.9;
+  /* Desktop: texto completo sin truncar */
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+/* ===== Player Controls ===== */
+
+.playerControls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  grid-column: 2; /* Segunda columna */
+  grid-row: 1; /* Primera fila */
+}
+
+.controlButtons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.controlButton {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color var(--transition-base),
+    transform var(--transition-base),
+    background-color var(--transition-base);
+  border-radius: var(--radius-full);
+}
+
+.controlButton:hover {
+  color: var(--text-primary);
+  transform: scale(1.08);
+  background: var(--white-10);
+}
+
+.controlButton:active {
+  transform: scale(0.95);
+}
+
+.controlButton.active {
+  color: var(--color-primary-500);
+}
+
+.controlButtonSmall {
+  padding: var(--space-1);
+}
+
+.playButton {
+  width: 40px;
+  height: 40px;
+  background: var(--color-primary-500);
+  color: white;
+  border-radius: var(--radius-full);
+}
+
+.playButton:hover {
+  background: var(--color-primary-600);
+  transform: scale(1.1);
+}
+
+.playButton:active {
+  transform: scale(1.05);
+}
+
+/* ===== Progress Bar ===== */
+
+.progressContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  grid-column: 1 / -1; /* Ocupa todas las columnas */
+  grid-row: 2; /* Segunda fila */
+}
+
+.timeLabel {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  min-width: 40px;
+  text-align: center;
+}
+
+.progressBar {
+  flex: 1;
+  max-width: 1200px;
+  height: 4px;
+  background: var(--white-20);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  position: relative;
+  transition: height var(--transition-base);
+}
+
+.progressBar:hover {
+  height: 6px;
+}
+
+.progressBar:hover .progressHandle {
+  opacity: 1;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-primary-500);
+  border-radius: var(--radius-sm);
+  transition: width 0.1s linear;
+}
+
+.progressHandle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: var(--radius-full);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  box-shadow: var(--shadow-md);
+}
+
+/* ===== Volume Control ===== */
+
+.volumeControl {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  grid-column: 3; /* Tercera columna */
+  grid-row: 1; /* Primera fila */
+}
+
+.volumeContainer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.volumeButton {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    transform var(--transition-base);
+  border-radius: var(--radius-full);
+}
+
+.volumeButton:hover {
+  color: var(--text-primary);
+  background: var(--white-10);
+  transform: scale(1.05);
+}
+
+.volumeSlider {
+  width: 80px;
+  height: 5px;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  outline: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--text-primary);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  box-shadow: var(--shadow-md);
+  margin-top: -4.5px;
+}
+
+.volumeSlider:hover::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.volumeSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--text-primary);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  border: none;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  box-shadow: var(--shadow-md);
+  margin-top: -4.5px;
+}
+
+.volumeSlider:hover::-moz-range-thumb {
+  opacity: 1;
+}
+
+.volumeSlider::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--color-primary-500) 0%,
+    var(--color-primary-500) var(--volume-percent),
+    var(--white-20) var(--volume-percent),
+    var(--white-20) 100%
+  );
+  height: 5px;
+  border-radius: var(--radius-sm);
+}
+
+.volumeSlider::-moz-range-track {
+  background: var(--white-20);
+  height: 5px;
+  border-radius: var(--radius-sm);
+}
+
+.volumeSlider::-moz-range-progress {
+  background: var(--color-primary-500);
+  height: 5px;
+  border-radius: var(--radius-sm);
+}
+
+/* ===== Queue Control ===== */
+
+.queueContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.queueButton {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base);
+  border-radius: var(--radius-md);
+}
+
+.queueButton:hover {
+  color: var(--text-primary);
+  background: var(--white-10);
+}
+
+.queueButton--active {
+  color: var(--color-primary-500);
+  background: var(--primary-15);
+}
+
+.queueButton__count {
+  font-size: var(--text-13);
+  font-weight: var(--font-medium);
+  color: inherit;
+  line-height: 1;
+}
+
+/* ===== Inline Video (replaces cover in player) ===== */
+
+.videoInline {
+  position: relative;
+  width: 150px;
+  height: 52px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #000;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.videoInlinePlayer {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  outline: none;
+  pointer-events: none;
+}
+
+/* Hide native controls completely */
+.videoInlinePlayer::-webkit-media-controls {
+  display: none;
+}
+
+/* ===== Video Button (Desktop) ===== */
+
+.videoButton {
+  background: transparent;
+  border: none;
+  color: var(--color-primary-500);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    opacity var(--transition-base),
+    background-color var(--transition-base),
+    transform var(--transition-base);
+  border-radius: var(--radius-full);
+  opacity: 0.8;
+}
+
+.videoButton:hover {
+  opacity: 1;
+  background: var(--primary-15);
+  transform: scale(1.05);
+}
+
+.videoButtonActive {
+  opacity: 1;
+  color: var(--color-primary-500);
+}
+
+/* ===== Expand Button (Desktop) ===== */
+
+.expandButton {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    transform var(--transition-base);
+  border-radius: var(--radius-full);
+}
+
+.expandButton:hover {
+  color: var(--text-primary);
+  background: var(--white-10);
+  transform: scale(1.05);
+}
+
+.expandButton:active {
+  transform: scale(0.95);
+}
+
+/* ===== Live Indicator (Radio) ===== */
+
+.liveIndicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius-sm);
+  margin-right: var(--space-3);
+  white-space: nowrap;
+}
+
+/* Signal status variants */
+.liveIndicator--good {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.liveIndicator--good .liveAntenna {
+  color: #22c55e; /* Verde - buena señal */
+  animation: pulse-antenna 2s ease-in-out infinite;
+}
+
+.liveIndicator--good .liveText {
+  color: #22c55e;
+}
+
+.liveIndicator--weak {
+  background: rgba(234, 179, 8, 0.08);
+  border-color: rgba(234, 179, 8, 0.2);
+}
+
+.liveIndicator--weak .liveAntenna {
+  color: #eab308; /* Amarillo - señal débil */
+  animation: pulse-weak 1.5s ease-in-out infinite;
+}
+
+.liveIndicator--weak .liveText {
+  color: #eab308;
+}
+
+.liveIndicator--error {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: var(--error-20);
+}
+
+.liveIndicator--error .liveAntenna {
+  color: var(--color-error); /* Rojo - sin señal */
+  animation: none;
+}
+
+.liveIndicator--error .liveText {
+  color: var(--color-error);
+}
+
+.liveAntenna {
+  flex-shrink: 0;
+}
+
+.liveText {
+  font-size: var(--text-11);
+  font-weight: var(--font-semibold);
+  color: #22c55e;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+@keyframes pulse-antenna {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes pulse-weak {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ===== Responsive - iOS Style Compact Player ===== */
+
+@media (max-width: 768px) {
+  .player {
+    /* Spotify-like compact player */
+    position: fixed;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    height: auto;
+    padding: 10px 14px 0; /* Sin padding inferior - progress bar va pegado */
+    /* Position above bottom tab bar (50px) + safe area + margin */
+    bottom: calc(50px + env(safe-area-inset-bottom, 0) + 12px);
+    left: 12px;
+    right: 12px;
+    border-radius: var(--radius-lg); /* iOS rounded */
+    /* Glassmorphism style con color dominante sutil */
+    background: linear-gradient(
+      135deg,
+      rgba(var(--player-color), 0.25) 0%,
+      rgba(var(--player-color), 0.35) 30%,
+      var(--black-70) 100%
+    );
+    backdrop-filter: blur(60px) saturate(150%);
+    -webkit-backdrop-filter: blur(60px) saturate(150%);
+    border: 1px solid var(--white-08);
+    box-shadow:
+      0 8px 32px var(--black-40),
+      inset 0 1px 1px var(--white-05);
+    z-index: calc(var(--z-nav-mobile) - 10); /* Justo debajo de la bottom nav */
+    overflow: hidden; /* Clip swipe animation */
+    /* Disable transitions on mobile to prevent trembling from safe-area changes */
+    transition: none;
+    transform: none;
+  }
+
+  /* On mobile, player hides only when NowPlayingView is open */
+  .player--hidden {
+    transform: translateY(120px);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Progress bar super fina abajo - pegada al borde inferior */
+  .progressContainer {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: block;
+    padding: 0;
+    margin: 8px 0 0 0; /* Solo margen superior para separar del contenido */
+    height: 3px;
+    width: 100%;
+  }
+
+  .timeLabel {
+    display: none; /* Ocultar tiempos en móvil */
+  }
+
+  .progressBar {
+    height: 3px;
+    border-radius: 0;
+    background: var(--white-15);
+    cursor: default;
+    width: 100%;
+    /* No usar position relative/absolute - causa bugs con backdrop-filter */
+  }
+
+  .progressBar:hover {
+    height: 3px;
+  }
+
+  .progressBar:active {
+    height: 3px;
+  }
+
+  .progressFill {
+    height: 100%;
+    background: var(--color-primary-500);
+    transition: none;
+    border-radius: 0;
+    /* Flujo normal, sin position absolute - evita bugs de renderizado */
+  }
+
+  .progressHandle {
+    display: none; /* Sin handle en móvil */
+  }
+
+  /* Layout horizontal compacto - izquierda (grid col 1, row 1) */
+  .trackInfo {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden; /* Clip text animation */
+  }
+
+  .trackInfo--clickable {
+    cursor: pointer;
+  }
+
+  .trackInfo--clickable:active {
+    opacity: 0.7;
+  }
+
+  .trackCoverContainer {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-base);
+    z-index: 2; /* Cover stays above text */
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .trackDetails {
+    flex: 1;
+    min-width: 0;
+    z-index: 1; /* Text goes behind cover */
+    position: relative;
+  }
+
+  .trackTitle {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .trackArtist {
+    display: none; /* Hide artist on mobile, show album instead */
+  }
+
+  .trackAlbum {
+    display: block; /* Always show album on mobile */
+    font-size: var(--text-12);
+    margin-top: 0;
+    color: var(--text-secondary); /* Más visible sobre fondos de colores */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: default; /* No clickable on mobile */
+    pointer-events: none; /* Prevent any interaction */
+  }
+
+  .trackAlbum:hover {
+    color: var(--text-secondary); /* No highlight on mobile */
+    text-decoration: none; /* No underline on mobile */
+  }
+
+  /* Cover container not clickable on mobile */
+  .trackCoverContainer--clickable {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .trackMetadata {
+    font-size: var(--text-11);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Solo botón play/pause - derecha (grid col 2, row 1) */
+  .playerControls {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .controlButtons {
+    display: flex;
+    gap: 0;
+  }
+
+  /* Ocultar todos los controles excepto play */
+  .controlButton {
+    display: none;
+  }
+
+  .playButton {
+    display: flex;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    color: var(--color-text-primary);
+    transition:
+      background-color var(--transition-base),
+      transform var(--transition-base);
+  }
+
+  .playButton:hover {
+    background: var(--white-10);
+    transform: scale(1);
+  }
+
+  .playButton:active {
+    transform: scale(0.95);
+  }
+
+  .volumeControl {
+    display: none;
+  }
+
+  /* Live indicator más compacto */
+  .liveIndicator {
+    position: relative;
+    padding: 3px 8px;
+    font-size: 10px;
+    margin-right: 8px;
+  }
+
+  .liveText {
+    font-size: 10px;
+  }
+
+  .liveAntenna {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .player {
+    bottom: calc(50px + env(safe-area-inset-bottom, 0) + 10px);
+    left: 10px;
+    right: 10px;
+    border-radius: 14px;
+    padding: 8px 12px 0;
+    transition: none;
+    transform: none;
+  }
+
+  /* On small mobile, player hides only when NowPlayingView is open */
+  .player--hidden {
+    transform: translateY(120px);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .trackInfo {
+    gap: 10px;
+  }
+
+  .trackCoverContainer {
+    width: 40px;
+    height: 40px;
+  }
+
+  .trackTitle {
+    font-size: var(--text-13);
+  }
+
+  .trackArtist {
+    font-size: var(--text-11);
+  }
+
+  .trackAlbum {
+    font-size: 10px;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .trackMetadata {
+    font-size: 10px;
+    margin-top: 1px;
+  }
+
+  .playButton {
+    width: 36px;
+    height: 36px;
+  }
+
+  .playerControls {
+    right: 12px;
+  }
+
+  .liveIndicator {
+    right: 54px;
+    padding: 2px 6px;
+  }
+}
+
+/* ===== Light Theme: player keeps dark background, force light text/icons ===== */
+:root[data-theme='light'] .player {
+  background: linear-gradient(to bottom, rgba(15, 15, 15, 0.95), rgba(10, 10, 10, 0.98));
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Light + mobile: use dominant color with dark overlay for text legibility */
+@media (max-width: 768px) {
+  :root[data-theme='light'] .player {
+    background:
+      linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.5) 100%),
+      linear-gradient(
+        135deg,
+        rgba(var(--player-color), 0.9) 0%,
+        rgba(var(--player-color), 0.95) 100%
+      );
+  }
+}
+
+:root[data-theme='light'] .trackTitle {
+  color: #ffffff;
+}
+
+:root[data-theme='light'] .trackArtist,
+:root[data-theme='light'] .trackAlbum {
+  color: #d1d5db;
+}
+
+:root[data-theme='light'] .trackArtist--clickable:hover {
+  color: var(--color-primary-500);
+}
+
+:root[data-theme='light'] .trackMetadata {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .controlButton {
+  color: #d1d5db;
+}
+
+:root[data-theme='light'] .controlButton:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .playButton {
+  color: #ffffff;
+}
+
+:root[data-theme='light'] .controlButton.active {
+  color: var(--color-primary-500);
+}
+
+:root[data-theme='light'] .controlButtonSmall {
+  color: #b0b5bd;
+}
+
+:root[data-theme='light'] .timeLabel {
+  color: #b0b5bd;
+}
+
+:root[data-theme='light'] .progressBar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+:root[data-theme='light'] .volumeButton {
+  color: #d1d5db;
+}
+
+:root[data-theme='light'] .volumeButton:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .trackCoverFallback {
+  background: linear-gradient(135deg, #1f2937, #111827);
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .volumeSlider::-webkit-slider-thumb {
+  background: #f3f4f6;
+}
+
+:root[data-theme='light'] .volumeSlider::-moz-range-thumb {
+  background: #f3f4f6;
+}
+
+:root[data-theme='light'] .volumeSlider::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--color-primary-500) 0%,
+    var(--color-primary-500) var(--volume-percent),
+    rgba(255, 255, 255, 0.2) var(--volume-percent),
+    rgba(255, 255, 255, 0.2) 100%
+  );
+}
+
+:root[data-theme='light'] .volumeSlider::-moz-range-track {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+:root[data-theme='light'] .queueButton {
+  color: #d1d5db;
+}
+
+:root[data-theme='light'] .queueButton:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .expandButton {
+  color: #d1d5db;
+}
+
+:root[data-theme='light'] .expandButton:hover {
+  color: #ffffff;
+}

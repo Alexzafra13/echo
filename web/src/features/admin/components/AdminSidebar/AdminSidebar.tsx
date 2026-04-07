@@ -1,0 +1,50 @@
+import { Link } from 'wouter';
+import { MiniPlayer, usePageEndDetection } from '@features/player';
+import styles from './AdminSidebar.module.css';
+
+interface Tab {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+}
+
+interface AdminSidebarProps {
+  activeTab: string;
+  onTabChange: (tabId: string) => void;
+  tabs: Tab[];
+}
+
+export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps) {
+  const isMiniMode = usePageEndDetection(120);
+
+  const handleNavClick = (itemId: string) => {
+    onTabChange(itemId);
+  };
+
+  return (
+    <aside className={styles.sidebar}>
+      <Link href="/home" className={styles.sidebar__logoContainer}>
+        <img
+          src="/images/logos/echo_dark.svg"
+          alt="Echo"
+          className={styles.sidebar__logo}
+        />
+      </Link>
+
+      <nav className={styles.sidebar__nav}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`${styles.sidebar__navItem} ${activeTab === tab.id ? styles['sidebar__navItem--active'] : ''}`}
+            onClick={() => handleNavClick(tab.id)}
+          >
+            <div className={styles.sidebar__navIcon}>{tab.icon}</div>
+            <span className={styles.sidebar__navLabel}>{tab.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <MiniPlayer isVisible={isMiniMode} />
+    </aside>
+  );
+}

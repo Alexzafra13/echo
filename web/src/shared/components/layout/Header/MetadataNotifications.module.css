@@ -1,0 +1,477 @@
+/* MetadataNotifications Component Styles - BEM Naming Convention */
+
+/* Block: notifications */
+.notifications {
+  position: relative;
+}
+
+/* Bell Button */
+.notifications__button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--white-05);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition:
+    background-color var(--transition-slow),
+    color var(--transition-slow),
+    transform var(--transition-slow);
+}
+
+.notifications__button:hover {
+  background: var(--white-10);
+  color: var(--color-text-primary);
+  transform: scale(1.05);
+}
+
+.notifications__button:active {
+  transform: scale(0.95);
+}
+
+/* Badge para contador de notificaciones */
+.notifications__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: var(--text-11);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-bg-primary);
+  animation: badgePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes badgePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Dropdown - Se despliega desde el bottom del header completo */
+.notifications__dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 24px; /* Un poco más abajo */
+  width: 380px;
+  max-height: 500px;
+  background: rgba(15, 18, 28, 0.95); /* Color oscuro menos transparente */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 4px 6px -1px var(--black-10),
+    0 10px 25px -3px var(--black-30),
+    0 0 0 1px var(--white-15);
+  overflow: hidden;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+
+  /* Animación de entrada - crece desde el header */
+  transform-origin: top right;
+  animation: dropdownSlideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Animación de salida */
+  opacity: 1;
+  transition:
+    opacity var(--transition-base),
+    transform 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Estado al cerrarse (React lo remueve del DOM antes de completar, pero se ve el inicio) */
+.notifications__dropdown:not(:hover) {
+  animation-fill-mode: both;
+}
+
+@keyframes dropdownSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Estado al cerrarse con animación */
+.notifications__dropdown--closing {
+  animation: dropdownSlideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes dropdownSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+}
+
+/* Header del dropdown */
+.notifications__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--white-10);
+}
+
+.notifications__title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.notifications__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.notifications__action {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--white-05);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.notifications__action:hover {
+  background: var(--white-10);
+  color: var(--color-text-primary);
+  transform: scale(1.1);
+}
+
+.notifications__action:active {
+  transform: scale(0.9);
+}
+
+/* Lista de notificaciones */
+.notifications__list {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 450px;
+}
+
+/* Scrollbar custom - Moderno y suave */
+.notifications__list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notifications__list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notifications__list::-webkit-scrollbar-thumb {
+  background: var(--white-20);
+  border-radius: 3px;
+  transition: background var(--transition-base);
+}
+
+.notifications__list::-webkit-scrollbar-thumb:hover {
+  background: var(--white-35);
+}
+
+/* Empty state */
+.notifications__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.notifications__emptyIcon {
+  color: var(--color-text-tertiary);
+  opacity: 0.5;
+  margin-bottom: 12px;
+}
+
+.notifications__emptyText {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+/* Item de notificación */
+.notifications__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-base),
+    transform var(--transition-base);
+  border-bottom: 1px solid var(--white-05);
+}
+
+.notifications__item:last-child {
+  border-bottom: none;
+}
+
+.notifications__item:hover {
+  background: var(--white-05);
+  transform: translateX(4px);
+}
+
+.notifications__item:active {
+  transform: translateX(2px);
+}
+
+/* Item no leído */
+.notifications__item--unread {
+  background: var(--primary-05);
+}
+
+.notifications__item--unread:hover {
+  background: var(--primary-10);
+}
+
+/* Item de error (alertas críticas del sistema) */
+.notifications__item--error {
+  background: var(--error-08);
+  border-left: 3px solid var(--color-error);
+}
+
+.notifications__item--error:hover {
+  background: var(--error-12);
+}
+
+.notifications__item--error .notifications__itemIcon {
+  color: var(--color-error);
+  background: var(--error-10);
+}
+
+/* Item de solicitud de amistad */
+.notifications__item--friendRequest {
+  background: var(--info-05);
+  cursor: pointer;
+}
+
+.notifications__item--friendRequest:hover {
+  background: var(--info-10);
+}
+
+.notifications__itemIcon--friendRequest {
+  color: var(--color-info);
+  background: var(--info-15);
+}
+
+/* Icon del item */
+.notifications__itemIcon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-base);
+  background: var(--white-10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+/* Content del item */
+.notifications__itemContent {
+  flex: 1;
+  min-width: 0; /* Para que el text-overflow funcione */
+}
+
+.notifications__itemTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notifications__itemMessage {
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+  margin: 0 0 4px 0;
+}
+
+.notifications__itemTime {
+  font-size: var(--text-12);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+/* Unread dot indicator */
+.notifications__itemUnreadDot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  margin-top: 4px;
+}
+
+/* ===== Light Theme ===== */
+:global([data-theme='light']) .notifications__dropdown {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 10px 25px -3px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+:global([data-theme='light']) .notifications__header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme='light']) .notifications__item {
+  border-bottom-color: rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme='light']) .notifications__item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:global([data-theme='light']) .notifications__action {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme='light']) .notifications__action:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+:global([data-theme='light']) .notifications__button {
+  background: rgba(209, 213, 219, 0.45);
+  color: #374151;
+}
+
+:global([data-theme='light']) .notifications__button:hover {
+  background: rgba(209, 213, 219, 0.65);
+  color: #111827;
+}
+
+/* Responsive Design */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .notifications__dropdown {
+    width: 360px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .notifications__button {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Dropdown como modal full-width en móvil */
+  .notifications__dropdown {
+    position: fixed;
+    top: 48px; /* Pegado al bottom del header */
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: calc(100vh - 48px);
+    margin-top: 0; /* Sin margen en móvil */
+    background: rgba(15, 18, 28, 0.95); /* Mismo color que desktop */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 0; /* Sin bordes redondeados */
+    box-shadow: 0 4px 20px var(--black-30);
+    animation: slideDown 0.3s ease;
+    z-index: var(--z-popover);
+  }
+
+  /* Light theme para dropdown móvil */
+  [data-theme='light'] .notifications__dropdown {
+    background: rgba(240, 242, 245, 0.95); /* Light theme */
+  }
+
+  /* Animación de cierre en móvil - sube hacia el header */
+  .notifications__dropdown--closing {
+    animation: slideUp 0.2s ease forwards;
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+
+  .notifications__header {
+    padding: 16px;
+  }
+
+  .notifications__title {
+    font-size: var(--text-lg);
+  }
+
+  .notifications__list {
+    max-height: calc(100vh - 160px);
+  }
+
+  .notifications__item {
+    padding: 14px 16px;
+  }
+
+  .notifications__itemTitle {
+    font-size: 15px;
+  }
+
+  .notifications__itemMessage {
+    font-size: var(--text-sm);
+  }
+
+  .notifications__badge {
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+}

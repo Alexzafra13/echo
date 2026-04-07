@@ -1,0 +1,263 @@
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Play, Sparkles, RefreshCw, Info } from 'lucide-react';
+import { Sidebar } from '@shared/components/layout/Sidebar';
+import { Header } from '@shared/components/layout/Header';
+import { TrackList } from '@shared/components/TrackList';
+import { Button } from '@shared/components/ui';
+import { useQueue, usePlayback } from '@features/player';
+import { formatDuration } from '@shared/utils/format';
+import {
+  getDailyMix,
+  type DailyMix,
+  type ScoredTrack,
+} from '@shared/services/recommendations.service';
+import type { Track } from '@shared/types/track.types';
+import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
+import styles from './DailyMixPage.module.css';
+
+/**
+ * DailyMixPage Component
+ * Muestra un Daily Mix personalizado basado en los hábitos de escucha del usuario
+ */
+export function DailyMixPage() {
+  const { t, i18n } = useTranslation();
+  const { playQueue } = useQueue();
+  const { currentTrack } = usePlayback();
+  const [dailyMix, setDailyMix] = useState<DailyMix | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showInfo, setShowInfo] = useState(false);
+
+  const loadDailyMix = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const mix = await getDailyMix();
+      logger.debug('[DailyMix] Received:', mix);
+      logger.debug('[DailyMix] Tracks count:', mix.tracks?.length || 0);
+      setDailyMix(mix);
+    } catch (err) {
+      logger.error('[DailyMix] Failed to load:', err);
+      setError(getApiErrorMessage(err, t('recommendations.errorLoadingDailyMix')));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDailyMix();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handlePlayAll = () => {
+    if (!dailyMix?.tracks || dailyMix.tracks.length === 0) return;
+
+    const tracks = convertScoredTracksToPlayerTracks(dailyMix.tracks);
+    playQueue(tracks, 0, 'recommendation');
+  };
+
+  const handlePlayTrack = (track: Track) => {
+    if (!dailyMix?.tracks) return;
+
+    const tracks = convertScoredTracksToPlayerTracks(dailyMix.tracks);
+    const index = tracks.findIndex((t) => t.id === track.id);
+    playQueue(tracks, index, 'recommendation');
+  };
+
+  const handleRefresh = () => {
+    loadDailyMix();
+  };
+
+  // Convertir ScoredTrack[] a Track[] para el reproductor
+  const convertScoredTracksToPlayerTracks = (scoredTracks: ScoredTrack[]): Track[] => {
+    return scoredTracks
+      .filter((st) => st.track) // Solo incluir tracks con datos
+      .map(
+        (st) =>
+          ({
+            id: st.track!.id,
+            title: st.track!.title,
+            artistName: st.track!.artistName || 'Unknown Artist',
+            albumName: st.track!.albumName,
+            albumId: st.track!.albumId,
+            artistId: st.track!.artistId,
+            duration: st.track!.duration || 0,
+            // Datos de normalización de audio (LUFS)
+            rgTrackGain: st.track!.rgTrackGain,
+            rgTrackPeak: st.track!.rgTrackPeak,
+          }) as Track
+      );
+  };
+
+  const tracks = dailyMix ? convertScoredTracksToPlayerTracks(dailyMix.tracks) : [];
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(i18n.language, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+  };
+
+  const totalDuration = tracks.reduce((sum, track) => sum + (track.duration || 0), 0);
+
+  return (
+    <div className={styles.dailyMixPage}>
+      <Sidebar />
+
+      <main className={styles.dailyMixPage__main}>
+        <Header />
+
+        <div className={styles.dailyMixPage__content}>
+          {/* Hero Section */}
+          <div className={styles.dailyMixPage__hero}>
+            <div className={styles.dailyMixPage__heroIcon}>
+              <Sparkles size={64} />
+            </div>
+            <div className={styles.dailyMixPage__heroInfo}>
+              <p className={styles.dailyMixPage__heroLabel}>
+                {t('recommendations.personalizedPlaylist')}
+              </p>
+              <h1 className={styles.dailyMixPage__heroTitle}>
+                {t('recommendations.dailyMixTitle')}
+              </h1>
+              <p className={styles.dailyMixPage__heroDescription}>
+                {t('recommendations.dailyMixSubtitle')}
+              </p>
+              {dailyMix && (
+                <div className={styles.dailyMixPage__heroMeta}>
+                  <span>{t('playlists.songs', { count: dailyMix.metadata.totalTracks })}</span>
+                  <span className={styles.dailyMixPage__separator}>•</span>
+                  <span>{formatDuration(totalDuration)}</span>
+                  <span className={styles.dailyMixPage__separator}>•</span>
+                  <span className={styles.dailyMixPage__generatedDate}>
+                    {formatDate(dailyMix.createdAt)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className={styles.dailyMixPage__actions}>
+            <Button
+              variant="primary"
+              onClick={handlePlayAll}
+              disabled={isLoading || !dailyMix || tracks.length === 0}
+              className={styles.dailyMixPage__playButton}
+            >
+              <Play size={20} fill="currentColor" />
+              {t('recommendations.playAll')}
+            </Button>
+            <Button variant="secondary" onClick={handleRefresh} disabled={isLoading}>
+              <RefreshCw size={18} className={isLoading ? styles.spinning : ''} />
+              {isLoading ? t('recommendations.generating') : t('recommendations.regenerate')}
+            </Button>
+            <button
+              className={styles.dailyMixPage__infoButton}
+              onClick={() => setShowInfo(!showInfo)}
+              title={t('recommendations.howItWorks')}
+            >
+              <Info size={20} />
+            </button>
+          </div>
+
+          {/* Info Panel */}
+          {showInfo && (
+            <div className={styles.dailyMixPage__infoPanel}>
+              <h3>{t('recommendations.howItWorksTitle')}</h3>
+              <p>{t('recommendations.howItWorksDescription')}</p>
+              <ul>
+                <li>
+                  <strong>{t('recommendations.infoLikes')}</strong>{' '}
+                  {t('recommendations.infoLikesDesc')}
+                </li>
+                <li>
+                  <strong>{t('recommendations.infoHistory')}</strong>{' '}
+                  {t('recommendations.infoHistoryDesc')}
+                </li>
+                <li>
+                  <strong>{t('recommendations.infoPatterns')}</strong>{' '}
+                  {t('recommendations.infoPatternsDesc')}
+                </li>
+                <li>
+                  <strong>{t('recommendations.infoDiversity')}</strong>{' '}
+                  {t('recommendations.infoDiversityDesc')}
+                </li>
+              </ul>
+              {dailyMix && dailyMix.metadata && (
+                <div className={styles.dailyMixPage__infoBreakdown}>
+                  <p>
+                    <strong>{t('recommendations.statsTitle')}</strong>
+                  </p>
+                  <ul>
+                    <li>
+                      {t('recommendations.avgScore', {
+                        score: dailyMix.metadata.avgScore.toFixed(1),
+                      })}
+                    </li>
+                    <li>
+                      {t('recommendations.topArtists', {
+                        artists: dailyMix.metadata.topArtists.slice(0, 3).join(', '),
+                      })}
+                    </li>
+                    {dailyMix.metadata.topGenres.length > 0 && (
+                      <li>
+                        {t('recommendations.topGenres', {
+                          genres: dailyMix.metadata.topGenres.slice(0, 3).join(', '),
+                        })}
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className={styles.dailyMixPage__loading}>
+              <div className={styles.dailyMixPage__loadingSpinner}>
+                <Sparkles size={48} className={styles.spinning} />
+              </div>
+              <p>{t('recommendations.generatingDailyMix')}</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !isLoading && (
+            <div className={styles.dailyMixPage__error}>
+              <p>{error}</p>
+              <Button variant="secondary" onClick={handleRefresh}>
+                {t('common.tryAgain')}
+              </Button>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && !error && dailyMix && tracks.length === 0 && (
+            <div className={styles.dailyMixPage__emptyState}>
+              <Sparkles size={64} />
+              <h2>{t('recommendations.noDataTitle')}</h2>
+              <p>{t('recommendations.noDataHint')}</p>
+            </div>
+          )}
+
+          {/* Track List */}
+          {!isLoading && !error && dailyMix && tracks.length > 0 && (
+            <div className={styles.dailyMixPage__tracks}>
+              <TrackList
+                tracks={tracks}
+                onTrackPlay={handlePlayTrack}
+                currentTrackId={currentTrack?.id}
+              />
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}

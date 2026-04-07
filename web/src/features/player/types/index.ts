@@ -1,0 +1,83 @@
+import type { Track, TrackAlbum } from '@shared/types/track.types';
+import type { RadioStation, RadioMetadata } from '@shared/types/radio.types';
+
+export type { Track, TrackAlbum };
+export type { RadioStation, RadioMetadata };
+
+/** Volumen por defecto del reproductor (0-1) */
+export const DEFAULT_VOLUME = 0.7;
+
+export interface CrossfadeSettings {
+  enabled: boolean;
+  duration: number; // Duración en segundos (1-12)
+  smartMode: boolean; // Usa outroStart del track para temporizar el crossfade
+  tempoMatch: boolean; // Ajusta gradualmente el BPM de salida al de entrada
+}
+
+export interface AutoplaySettings {
+  enabled: boolean;
+}
+
+export interface PlayerState {
+  currentTrack: Track | null;
+  queue: Track[];
+  currentIndex: number;
+  isPlaying: boolean;
+  volume: number;
+  currentTime: number;
+  duration: number;
+  isShuffle: boolean;
+  repeatMode: 'off' | 'all' | 'one';
+
+  crossfade: CrossfadeSettings;
+  isCrossfading: boolean;
+  volumeControlSupported: boolean;
+
+  currentRadioStation: RadioStation | null;
+  isRadioMode: boolean;
+  radioMetadata: RadioMetadata | null;
+  radioSignalStatus: 'good' | 'weak' | 'error' | null;
+
+  // Autoplay: continúa con artistas similares al terminar la cola
+  autoplay: AutoplaySettings;
+  isAutoplayActive: boolean;
+  autoplaySourceArtist: string | null;
+}
+
+export type PlayContext =
+  | 'direct'
+  | 'album'
+  | 'playlist'
+  | 'artist'
+  | 'shuffle'
+  | 'radio'
+  | 'recommendation'
+  | 'search'
+  | 'queue';
+
+export interface PlayerContextValue extends PlayerState {
+  play: (track?: Track) => void;
+  pause: () => void;
+  togglePlayPause: () => void;
+  stop: () => void;
+
+  playNext: () => void;
+  playPrevious: () => void;
+  addToQueue: (track: Track | Track[]) => void;
+  removeFromQueue: (index: number) => void;
+  clearQueue: () => void;
+  playQueue: (tracks: Track[], startIndex?: number, context?: PlayContext) => void | Promise<void>;
+
+  playRadio: (station: RadioStation) => void;
+  stopRadio: () => void;
+
+  seek: (time: number) => void;
+  setVolume: (volume: number) => void;
+  toggleShuffle: () => void;
+  setShuffle: (enabled: boolean) => void;
+  toggleRepeat: () => void;
+
+  setCrossfadeEnabled: (enabled: boolean) => void;
+
+  setAutoplayEnabled: (enabled: boolean) => void;
+}

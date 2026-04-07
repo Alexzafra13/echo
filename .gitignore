@@ -1,0 +1,47 @@
+# Build output
+dist/
+build/
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Music files
+music/
+musica/
+
+# Environment variables
+.env
+.env.*
+!.env*.example
+
+# Generated Prisma client (Prisma 7)
+server/src/generated/
+
+# Uploads & temp files
+uploads/
+*.log
+
+# Testing
+/coverage
+.nyc_output
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+# Lighthouse CI
+.lighthouseci/
+
+.claude/

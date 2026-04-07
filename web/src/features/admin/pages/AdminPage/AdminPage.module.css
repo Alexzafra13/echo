@@ -1,0 +1,155 @@
+/* AdminPage Component Styles */
+
+.tabLoading {
+  min-height: 200px;
+}
+
+/* Layout */
+.adminPage {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  background-image: var(--gradient-textured);
+  max-width: 100vw;
+}
+
+.adminPage__main {
+  flex: 1;
+  margin-left: 200px; /* Compensate for fixed sidebar width */
+  display: flex;
+  flex-direction: column;
+  position: relative; /* Creates stacking context for sticky header */
+  min-width: 0; /* Allows flex child to shrink below content size */
+}
+
+.adminPage__content {
+  flex: 1 1 0;
+  min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
+  margin-top: -84px; /* Content starts behind header */
+  padding: 124px 48px calc(40px + var(--player-bottom-spacer, 0px)); /* Top for header + base padding + player spacer */
+  width: 100%;
+  overflow-y: auto; /* Enable scroll */
+  scrollbar-width: none; /* Firefox */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center children horizontally */
+}
+
+/* Center content while allowing full-width scroll */
+.adminPage__content > * {
+  width: 100%;
+  max-width: 1400px; /* Limit content width */
+}
+
+.adminPage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.header {
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  width: 100%; /* Match container width */
+  gap: 24px;
+}
+
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 600px; /* Ensures consistent height across all tabs */
+  width: 100%; /* Ensures full width utilization */
+}
+
+/* Placeholder for empty tabs */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+  color: var(--color-text-tertiary);
+  gap: 16px;
+}
+
+.placeholder h3 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.placeholder p {
+  font-size: 15px;
+  margin: 0;
+  max-width: 400px;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .adminPage__main {
+    margin-left: 180px; /* Adjusted for tablet sidebar width */
+  }
+
+  .adminPage__content {
+    padding: 116px 32px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 32px + base padding + player spacer */
+  }
+
+  .title {
+    font-size: 28px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .adminPage {
+    overflow: visible; /* Allow bottom nav to be visible */
+  }
+
+  .adminPage__main {
+    margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
+  }
+
+  .adminPage__content {
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: 52px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* 52px top for header + base padding + player spacer */
+  }
+
+  .title {
+    font-size: var(--text-2xl);
+  }
+
+  .subtitle {
+    font-size: var(--text-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .adminPage__content {
+    padding: 52px 16px calc(60px + var(--player-bottom-spacer, 0px));
+  }
+}
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme='light'] .adminPage {
+  background: var(--bg-base);
+  background-image: var(--gradient-textured);
+}

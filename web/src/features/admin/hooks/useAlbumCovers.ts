@@ -1,0 +1,25 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { albumCoversApi, ApplyAlbumCoverRequest } from '../api/album-covers.service';
+
+// Búsqueda de carátulas de álbum
+export function useSearchAlbumCovers(albumId: string | null) {
+  return useQuery({
+    queryKey: ['albumCovers', albumId],
+    queryFn: () => albumCoversApi.searchCovers(albumId!),
+    enabled: !!albumId,
+  });
+}
+
+// Aplica una carátula seleccionada al álbum
+export function useApplyAlbumCover() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: ApplyAlbumCoverRequest) => albumCoversApi.applyCover(request),
+    onSuccess: (_data, variables) => {
+      // Invalidación local inmediata (WebSocket también invalida, pero esto da feedback instantáneo)
+      queryClient.invalidateQueries({ queryKey: ['albums', variables.albumId] });
+      queryClient.invalidateQueries({ queryKey: ['albums'] });
+    },
+  });
+}

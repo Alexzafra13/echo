@@ -1,0 +1,367 @@
+/* RadioPage Component Styles - BEM Naming Convention */
+
+/* Layout */
+.radioPage {
+  display: flex;
+  height: 100vh;
+  background: var(--bg-base);
+  background-image: var(--gradient-textured);
+  overflow-x: hidden; /* Evitar desbordamiento horizontal */
+}
+
+.radioPage__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 200px;
+  position: relative;
+  transition: margin-left var(--transition-slow);
+  max-width: 100%;
+  height: 100vh;
+  overflow-x: hidden;
+}
+
+.radioPage__content {
+  flex: 1 1 0;
+  min-height: 0;
+  margin-top: -84px; /* Content starts behind header for glass effect */
+  overflow-y: auto;
+  padding: 108px 40px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 24px */
+  width: 100%;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.radioPage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Top bar - Search + Country selector - Ahora en el header */
+.radioPage__topBar {
+  display: none; /* Contenido movido al header como customSearch y customContent */
+}
+
+/* Page Header */
+.radioPage__pageHeader {
+  margin-bottom: 32px;
+}
+
+.radioPage__pageTitle {
+  font-size: var(--text-4xl);
+  font-weight: var(--font-extrabold);
+  color: var(--color-text-primary);
+  margin: 0 0 8px 0;
+}
+
+.radioPage__pageSubtitle {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Filters */
+.radioPage__filters {
+  margin-bottom: var(--space-6);
+}
+
+/* Genre button */
+.radioPage__genreButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.radioPage__genreButton:hover {
+  background: var(--white-08);
+  border-color: var(--color-primary-alpha);
+  transform: translateY(-1px);
+}
+
+.radioPage__genreButtonArrow {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  transition: transform var(--transition-base);
+}
+
+.radioPage__genreButton:hover .radioPage__genreButtonArrow {
+  transform: translateY(2px);
+}
+
+/* Section */
+.radioPage__section {
+  margin-bottom: var(--space-10);
+}
+
+/* Grid wrapper - mantener paginación en posición fija */
+.radioPage__gridWrapper {
+  min-height: 70vh; /* Altura mínima del contenedor completo */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Grid arriba, paginación abajo */
+}
+
+/* Pagination spacing */
+.radioPage__gridWrapper > :global(.pagination) {
+  margin-top: 48px;
+  flex-shrink: 0; /* Evitar que la paginación se comprima */
+}
+
+/* Top pagination - only visible on mobile */
+.radioPage__paginationTop {
+  display: none;
+}
+
+.radioPage__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-6) 0;
+}
+
+/* Grid */
+.radioPage__grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(200px, 100%), 1fr)
+  ); /* auto-fill con min() para evitar overflow */
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+  width: 100%;
+  /* NO min-height aquí - el grid debe ocupar solo lo necesario */
+}
+
+/* Loading state */
+.radioPage__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+}
+
+/* Empty state */
+.radioPage__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  color: var(--text-secondary);
+  gap: var(--space-4);
+}
+
+.radioPage__empty svg {
+  color: var(--text-tertiary);
+  opacity: 0.5;
+}
+
+.radioPage__empty p {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.radioPage__empty .radioPage__emptyHint {
+  font-size: var(--text-sm);
+  font-weight: var(--font-normal);
+  color: var(--text-secondary);
+}
+
+/* ===== Responsive Design ===== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .radioPage__main {
+    margin-left: 180px;
+  }
+
+  .radioPage__grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
+    gap: var(--space-4);
+  }
+
+  .radioPage__title {
+    font-size: var(--text-2xl);
+  }
+}
+
+/* Mobile - iOS Style */
+@media (max-width: 768px) {
+  .radioPage__main {
+    margin-left: 0; /* No sidebar en mobile */
+  }
+
+  .radioPage__content {
+    margin-top: -52px; /* Content behind header for glass effect */
+    overflow-x: hidden;
+    padding: 68px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .radioPage__pageHeader {
+    margin-bottom: 16px;
+  }
+
+  .radioPage__pageTitle {
+    font-size: 28px;
+  }
+
+  .radioPage__pageSubtitle {
+    font-size: var(--text-sm);
+  }
+
+  /* Remove grid layout on mobile for natural content flow */
+  .radioPage__gridWrapper {
+    display: block; /* Override grid layout */
+    min-height: 0;
+  }
+
+  /* Hide bottom pagination on mobile */
+  .radioPage__gridWrapper > :global(.pagination) {
+    display: none;
+  }
+
+  /* Show top pagination on mobile */
+  .radioPage__paginationTop {
+    display: block;
+    margin-bottom: var(--space-6);
+    margin-top: var(--space-4);
+  }
+
+  .radioPage__title {
+    margin-bottom: 0; /* Reduced since pagination is below */
+  }
+
+  .radioPage__topBar {
+    top: 52px; /* Altura del header mobile */
+    padding: var(--space-3) var(--space-4);
+    margin: -68px -16px 16px; /* Negative margin para que esté en el top */
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .radioPage__grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
+    gap: var(--space-3);
+    min-height: 0; /* Eliminar min-height en mobile para flujo natural */
+  }
+
+  .radioPage__title {
+    font-size: var(--text-xl);
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  .radioPage__title svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .radioPage__section {
+    margin-bottom: var(--space-8);
+  }
+
+  .radioPage__genreButton {
+    width: 100%;
+    justify-content: center;
+    border-radius: var(--radius-xl);
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .radioPage__main {
+    margin-left: 0;
+  }
+
+  .radioPage__content {
+    padding: 68px var(--space-3) calc(60px + var(--player-bottom-spacer, 0px));
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .radioPage__pageTitle {
+    font-size: var(--text-2xl);
+  }
+
+  .radioPage__topBar {
+    padding: 10px var(--space-3);
+    margin: -16px calc(-1 * var(--space-3)) 16px;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .radioPage__grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
+    gap: var(--space-2);
+  }
+
+  .radioPage__title {
+    font-size: var(--text-lg);
+  }
+
+  .radioPage__empty {
+    min-height: 300px;
+  }
+
+  .radioPage__empty svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .radioPage__empty p {
+    font-size: var(--text-base);
+  }
+
+  .radioPage__empty .radioPage__emptyHint {
+    font-size: var(--text-xs);
+  }
+}
+
+/* ===== Light Theme ===== */
+:root[data-theme='light'] .radioPage__pageTitle {
+  color: #111827;
+}
+
+:root[data-theme='light'] .radioPage__pageSubtitle {
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .radioPage__genreButton {
+  background: rgba(156, 163, 175, 0.2);
+  border-color: rgba(156, 163, 175, 0.35);
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .radioPage__genreButton:hover {
+  background: rgba(156, 163, 175, 0.3);
+  border-color: rgba(194, 65, 12, 0.4);
+}
+
+:root[data-theme='light'] .radioPage__genreButtonArrow {
+  color: #6b7280;
+}

@@ -1,0 +1,26 @@
+.validationMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-13);
+  font-weight: var(--font-medium);
+  margin-top: 8px;
+}
+
+.validationMessage.valid {
+  background-color: var(--success-10);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.validationMessage.invalid {
+  background-color: var(--error-10);
+  color: #ef4444;
+  border: 1px solid var(--error-20);
+}
+
+.validationMessage svg {
+  flex-shrink: 0;
+}

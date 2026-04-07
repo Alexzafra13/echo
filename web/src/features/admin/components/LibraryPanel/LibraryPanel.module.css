@@ -1,0 +1,589 @@
+/* LibraryPanel Component Styles */
+
+.panel {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  border: none;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.loading {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 40px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.headerLeft {
+  flex: 1;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.headerIcon {
+  color: #f59e0b;
+}
+
+.title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Path Card */
+.pathCard {
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.pathHeader {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pathIcon {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.pathInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pathLabel {
+  font-size: var(--text-12);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pathValue {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.pathStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #22c55e;
+  font-size: var(--text-13);
+  background: rgba(34, 197, 94, 0.1);
+  padding: 6px 12px;
+  border-radius: var(--radius-xl);
+}
+
+.pathStatusError {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-error);
+  font-size: var(--text-13);
+  background: var(--error-10);
+  padding: 6px 12px;
+  border-radius: var(--radius-xl);
+}
+
+.changeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--text-13);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.changeButton:hover {
+  background: var(--white-08);
+  border-color: var(--white-15);
+  color: var(--color-text-primary);
+  transform: translateY(-1px);
+}
+
+/* Messages */
+.errorMessage,
+.successMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-base);
+  font-size: var(--text-sm);
+  margin-bottom: 16px;
+}
+
+.errorMessage {
+  background: var(--error-10);
+  color: var(--color-error);
+  border: 1px solid var(--error-20);
+}
+
+.successMessage {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+/* Browser */
+.browser {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--white-08);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-top: 16px;
+  box-shadow: 0 8px 32px var(--black-30);
+}
+
+.browserHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.browserTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.browserClose {
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
+  color: var(--color-text-secondary);
+  padding: 8px 16px;
+  border-radius: var(--radius-base);
+  font-size: var(--text-13);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.browserClose:hover {
+  background: var(--white-10);
+  border-color: var(--white-15);
+  color: var(--color-text-primary);
+}
+
+.browserPath {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--white-04);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--white-08);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+}
+
+.browserPathLabel {
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-medium);
+}
+
+.browserPathValue {
+  font-size: var(--text-13);
+  color: var(--color-secondary-400);
+  background: var(--black-25);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+}
+
+.browserNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--white-05);
+  border: 1px solid var(--white-08);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-base);
+  font-size: var(--text-13);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.navButton:hover:not(:disabled) {
+  background: var(--white-10);
+  border-color: var(--white-12);
+  color: var(--color-text-primary);
+}
+
+.navButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.navButtonActive {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+/* Directory List */
+.directoryList {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--white-06);
+  border-radius: var(--radius-md);
+  background: var(--black-15);
+}
+
+.directoryList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.directoryList::-webkit-scrollbar-track {
+  background: var(--white-02);
+}
+
+.directoryList::-webkit-scrollbar-thumb {
+  background: var(--white-10);
+  border-radius: 3px;
+}
+
+.directoryList::-webkit-scrollbar-thumb:hover {
+  background: var(--white-15);
+}
+
+.browserLoading,
+.browserEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.browserLoading svg {
+  color: var(--color-text-secondary);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.directoryItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.directoryItem:hover {
+  background: var(--white-04);
+}
+
+.directoryItemDisabled {
+  opacity: 0.5;
+}
+
+.directoryButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-base);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease;
+}
+
+.directoryButton:hover:not(:disabled) {
+  color: #fbbf24;
+}
+
+.directoryButton:disabled {
+  cursor: not-allowed;
+}
+
+.directoryButton svg {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.directoryName {
+  flex: 1;
+}
+
+.musicIcon {
+  color: #34d399;
+  opacity: 0.7;
+}
+
+.chevron {
+  color: var(--color-text-tertiary);
+}
+
+.selectButton {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--white-08);
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-11);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    opacity var(--transition-fast);
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.directoryItem:hover .selectButton {
+  opacity: 1;
+}
+
+.selectButton:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+.selectButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Browser Actions */
+.browserActions {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--white-08);
+}
+
+.selectCurrentButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 28px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition:
+    background var(--transition-slow),
+    border-color var(--transition-slow),
+    color var(--transition-slow),
+    transform var(--transition-slow);
+}
+
+.selectCurrentButton:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #c7d2fe;
+  transform: translateY(-1px);
+}
+
+.selectCurrentButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.selectCurrentButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .panel {
+    padding: 20px;
+  }
+
+  .pathCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pathHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .changeButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme='light'] .panel {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+:root[data-theme='light'] .panel:hover {
+  background: transparent;
+  border: none;
+}
+
+:root[data-theme='light'] .pathCard {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .changeButton {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--text-secondary);
+}
+
+:root[data-theme='light'] .changeButton:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] .browser {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme='light'] .browserPath {
+  background: rgba(31, 41, 55, 0.04);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme='light'] .browserPathValue {
+  background: rgba(31, 41, 55, 0.08);
+  color: var(--color-secondary-600);
+}
+
+:root[data-theme='light'] .navButton {
+  background: rgba(31, 41, 55, 0.05);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme='light'] .navButton:hover:not(:disabled) {
+  background: rgba(31, 41, 55, 0.08);
+  border-color: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme='light'] .directoryList {
+  background: rgba(31, 41, 55, 0.04);
+  border-color: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme='light'] .directoryButton {
+  background: rgba(31, 41, 55, 0.03);
+  border-color: rgba(31, 41, 55, 0.06);
+}
+
+:root[data-theme='light'] .directoryButton:hover:not(:disabled) {
+  background: rgba(31, 41, 55, 0.08);
+  border-color: rgba(31, 41, 55, 0.12);
+}
+
+:root[data-theme='light'] .browserClose {
+  background: rgba(31, 41, 55, 0.05);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme='light'] .browserClose:hover {
+  background: rgba(31, 41, 55, 0.1);
+  border-color: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme='light'] .browserActions {
+  border-top-color: rgba(31, 41, 55, 0.1);
+}

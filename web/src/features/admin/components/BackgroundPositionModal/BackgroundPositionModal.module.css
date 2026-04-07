@@ -1,0 +1,199 @@
+.modal__overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.modal__content {
+  background: rgba(20, 20, 30, 0.75);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--white-05);
+}
+
+.modal__title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  margin: 0;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal__closeButton {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-base);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal__closeButton:hover {
+  background: var(--white-10);
+  color: var(--color-text-primary);
+}
+
+.modal__body {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal__description {
+  margin: 0 0 1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* Preview container — simulates the hero viewport */
+.preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2.5 / 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: #0a0a0a;
+  touch-action: none;
+  user-select: none;
+  border: 1px solid var(--white-10);
+}
+
+.preview__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--color-text-secondary);
+}
+
+/* Draggable image */
+.preview__image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  transition: none;
+}
+
+.preview__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.preview__instructions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--white-05);
+  gap: 0.5rem;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal__content {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .preview {
+    aspect-ratio: 2 / 1;
+  }
+
+  .modal__footer {
+    flex-wrap: wrap;
+  }
+}
+
+/* ===== Light Theme ===== */
+:root[data-theme='light'] .modal__overlay {
+  background-color: rgba(107, 114, 128, 0.9);
+}
+
+:root[data-theme='light'] .modal__content {
+  background: rgba(240, 240, 245, 0.8);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border-color: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme='light'] .modal__header {
+  border-bottom-color: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme='light'] .modal__footer {
+  border-top-color: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme='light'] .preview {
+  border-color: rgba(31, 41, 55, 0.15);
+}

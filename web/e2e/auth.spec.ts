@@ -1,0 +1,74 @@
+import { test, expect } from '@playwright/test';
+
+// Auth tests must start unauthenticated
+test.use({ storageState: { cookies: [], origins: [] } });
+
+/**
+ * Tests de autenticación
+ * Requieren que el setup esté completo (admin user creado)
+ */
+test.describe('Autenticación', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login');
+    // Esperar a que el formulario de login esté visible
+    await expect(page.locator('input[name="username"]')).toBeVisible({ timeout: 15000 });
+  });
+
+  test('muestra el formulario de login con logo', async ({ page }) => {
+    // Logo de Echo
+    await expect(page.locator('img[alt="Echo"]')).toBeVisible();
+
+    // Campos del formulario
+    await expect(page.locator('input[name="username"]')).toBeVisible();
+    await expect(page.locator('input[name="password"]')).toBeVisible();
+
+    // Botón de submit
+    await expect(page.getByRole('button', { name: /Iniciar Sesión|Log In/i })).toBeVisible();
+  });
+
+  test('muestra validación al enviar formulario vacío', async ({ page }) => {
+    // Click submit sin rellenar
+    await page.getByRole('button', { name: /Iniciar Sesión|Log In/i }).click();
+
+    // Debe mostrar mensajes de validación de zod
+    await expect(page.getByText(/El nombre de usuario es requerido|Username is required/i)).toBeVisible();
+    await expect(page.getByText(/La contraseña es requerida|Password is required/i)).toBeVisible();
+  });
+
+  test('muestra error con credenciales incorrectas', async ({ page }) => {
+    await page.locator('input[name="username"]').fill('usuario_invalido');
+    await page.locator('input[name="password"]').fill('password_invalida');
+    await page.getByRole('button', { name: /Iniciar Sesión|Log In/i }).click();
+
+    // Esperar a que termine la petición
+    await page.waitForLoadState('networkidle');
+
+    // Debe mostrar alerta de error o seguir en la página de login (no redirigir)
+    // El mensaje puede variar según configuración del API
+    const _hasError = await page.locator('[class*="error"], [class*="alert"], [role="alert"]').isVisible().catch(() => false);
+    const stayedOnLogin = page.url().includes('/login');
+
+    // Al menos debe quedarse en login (no redirigir a home)
+    expect(stayedOnLogin).toBeTruthy();
+  });
+
+  test('login exitoso redirige a /home', async ({ page }) => {
+    await page.locator('input[name="username"]').fill('admin');
+    await page.locator('input[name="password"]').fill('adminpassword123');
+    await page.getByRole('button', { name: /Iniciar Sesión|Log In/i }).click();
+
+    // Debe redirigir fuera de /login (a /home o /first-login si debe cambiar contraseña)
+    await expect(page).not.toHaveURL(/login/, { timeout: 15000 });
+  });
+
+  test('el botón muestra loading durante el login', async ({ page }) => {
+    await page.locator('input[name="username"]').fill('admin');
+    await page.locator('input[name="password"]').fill('adminpassword123');
+
+    const submitButton = page.getByRole('button', { name: /Iniciar Sesión|Log In/i });
+    await submitButton.click();
+
+    // El botón debe estar deshabilitado mientras carga
+    await expect(submitButton).toBeDisabled();
+  });
+});

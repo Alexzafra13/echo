@@ -1,0 +1,144 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background image */
+.background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.3);
+}
+
+/* Fallback cuando no hay imagen */
+.background:not([style*='background-image']) {
+  background: linear-gradient(135deg, var(--color-slate-900) 0%, var(--color-slate-800) 100%);
+}
+
+/* Content */
+.content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Logo */
+.logoContainer {
+  margin-bottom: -30px;
+  display: flex;
+  justify-content: center;
+  z-index: 1;
+}
+
+.logo {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Login form card - always dark regardless of theme (dark background image) */
+.formCard {
+  width: 100%;
+  background: rgba(15, 18, 30, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-md);
+  padding: 50px 60px 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  --input-label-bg: rgba(15, 18, 30, 0.85);
+  color-scheme: dark;
+  color: #e2e8f0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.errorAlert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
+  border-radius: var(--radius-base);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+}
+
+.errorAlert svg {
+  flex-shrink: 0;
+}
+
+.forgotPassword {
+  text-align: center;
+  margin-top: 25px;
+}
+
+.forgotPasswordLink {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-slow);
+}
+
+.forgotPasswordLink:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+}
+
+/* Force dark appearance on login card in light theme */
+:root[data-theme='light'] .formCard {
+  background: rgba(15, 18, 30, 0.85);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  --input-label-bg: rgba(15, 18, 30, 0.85);
+  --color-text-primary: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --bg-elevated: rgba(15, 18, 30, 0.85);
+  --white-02: rgba(255, 255, 255, 0.02);
+  --white-05: rgba(255, 255, 255, 0.05);
+  --white-08: rgba(255, 255, 255, 0.08);
+  --white-10: rgba(255, 255, 255, 0.1);
+  --white-15: rgba(255, 255, 255, 0.15);
+  --white-20: rgba(255, 255, 255, 0.2);
+  --white-25: rgba(255, 255, 255, 0.25);
+  color: #e2e8f0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .container {
+    padding: 20px;
+  }
+
+  .formCard {
+    padding: 40px 30px;
+  }
+
+  .logo {
+    width: 150px;
+    height: 150px;
+  }
+}

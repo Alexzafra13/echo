@@ -1,0 +1,225 @@
+/* MetadataSettingsPanel Component Styles */
+/* Enhanced visual design with modern effects */
+
+.panel {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.3) 100%);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  border: 1px solid var(--white-08);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  transition:
+    border-color var(--transition-slow),
+    box-shadow var(--transition-slow),
+    transform var(--transition-slow);
+  position: relative;
+}
+
+.panel::before {
+  display: none;
+}
+
+.panel:hover {
+  border-color: var(--white-12);
+  box-shadow: 0 8px 32px var(--black-20);
+  transform: translateY(-2px);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.headerLeft {
+  flex: 1;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 10px 0;
+  background: linear-gradient(135deg, #ffffff 0%, #b8bcc8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Tab Navigation */
+.tabNav {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 28px;
+  padding: 6px;
+  background: var(--white-03);
+  border-radius: 14px;
+  border: 1px solid var(--white-08);
+  position: relative;
+}
+
+/* Animated sliding indicator */
+.tabIndicator {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-radius: var(--radius-md);
+  transition:
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+.tabButton:hover {
+  color: var(--color-text-primary);
+}
+
+.tabButtonActive {
+  color: #ffffff;
+}
+
+.tabButtonActive svg {
+  filter: drop-shadow(0 0 8px var(--white-40));
+}
+
+/* Tab Content */
+.tabContent {
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 400px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .panel {
+    padding: 20px 16px;
+    border-radius: var(--radius-lg);
+  }
+
+  .panel::before {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .panel:hover {
+    transform: none;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .title {
+    font-size: var(--text-xl);
+  }
+
+  .description {
+    font-size: var(--text-13);
+  }
+
+  /* Tab navigation - horizontal segmented control on mobile */
+  .tabNav {
+    padding: 4px;
+    gap: 2px;
+    margin-bottom: 20px;
+  }
+
+  .tabButton {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: var(--text-13);
+    gap: 6px;
+  }
+
+  .tabButton svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  .tabContent {
+    min-height: auto;
+  }
+}
+
+/* Light Theme */
+:root[data-theme='light'] .panel {
+  background: linear-gradient(135deg, var(--white-80) 0%, rgba(248, 250, 252, 0.6) 100%);
+}
+
+:root[data-theme='light'] .panel::before {
+  opacity: 0.6;
+}
+
+:root[data-theme='light'] .title {
+  background: linear-gradient(135deg, #1f2937 0%, #4b5563 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+:root[data-theme='light'] .tabNav {
+  background: var(--black-04);
+}
+
+:root[data-theme='light'] .tabIndicator {
+  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.25);
+}
+
+:root[data-theme='light'] .tabButton {
+  color: #4b5563;
+}
+
+:root[data-theme='light'] .tabButton:hover {
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .tabButtonActive {
+  color: #ffffff;
+}

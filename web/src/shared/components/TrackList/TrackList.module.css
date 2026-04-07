@@ -1,0 +1,456 @@
+/* TrackList Component Styles - BEM Naming Convention */
+
+/* Block: trackList */
+.trackList {
+  width: 100%;
+  margin-top: 32px;
+}
+
+.trackList__emptyState {
+  padding: 40px;
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+}
+
+/* Header */
+.trackList__header {
+  display: grid;
+  grid-template-columns: 40px 1fr 140px 80px 200px 40px;
+  gap: 16px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--white-08);
+  font-size: var(--text-12);
+  font-weight: var(--font-medium);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Grid adjustments when hiding rating and/or options columns */
+.trackList--hideRating .trackList__header,
+.trackList--hideRating .trackList__track {
+  grid-template-columns: 40px 1fr 140px 80px 40px;
+}
+
+.trackList--hideOptions .trackList__header,
+.trackList--hideOptions .trackList__track {
+  grid-template-columns: 40px 1fr 140px 80px 200px;
+}
+
+.trackList--hideRating.trackList--hideOptions .trackList__header,
+.trackList--hideRating.trackList--hideOptions .trackList__track {
+  grid-template-columns: 40px 1fr 140px 80px;
+}
+
+.trackList__headerNumber {
+  text-align: center;
+}
+
+.trackList__headerTitle {
+  padding-left: 8px;
+}
+
+.trackList__headerFormat {
+  text-align: right;
+}
+
+.trackList__headerDuration {
+  text-align: right;
+}
+
+.trackList__headerRating {
+  text-align: center;
+}
+
+.trackList__headerReorder {
+  text-align: center;
+}
+
+/* Header with reorder column */
+.trackList__header--reorderable {
+  grid-template-columns: 40px 50px 1fr 140px 80px 200px 40px;
+}
+
+/* Tracks Container */
+.trackList__tracks {
+  margin-top: 8px;
+}
+
+/* Disc Separator */
+.trackList__discSeparator {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 16px 12px;
+  margin-top: 8px;
+}
+
+.trackList__discSeparator:first-child {
+  margin-top: 0;
+  padding-top: 12px;
+}
+
+.trackList__discLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.trackList__discLabel svg {
+  color: var(--color-primary-500);
+}
+
+.trackList__discLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--white-15) 0%, var(--white-05) 100%);
+}
+
+/* Track Item */
+.trackList__track {
+  display: grid;
+  grid-template-columns: 40px 1fr 140px 80px 200px 40px;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+}
+
+.trackList__track:hover {
+  background: var(--white-05);
+}
+
+/* Track row with reorder column */
+.trackList__track--reorderable {
+  grid-template-columns: 40px 50px 1fr 140px 80px 200px 40px;
+}
+
+/* Reorder buttons container */
+.trackList__reorderButtons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.trackList__reorderButton {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.trackList__reorderButton:hover:not(:disabled) {
+  color: var(--color-primary);
+  background: var(--white-10);
+}
+
+.trackList__reorderButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.trackList__track:hover .trackList__trackNumber {
+  display: none;
+}
+
+.trackList__track:hover .trackList__playButton {
+  display: flex;
+}
+
+/* Show options menu button on hover */
+.trackList__track:hover :global(.trackOptionsMenu__trigger) {
+  opacity: 1;
+}
+
+/* Active/Playing Track - Using BEM modifier syntax */
+.trackList__track--active {
+  background: var(--primary-15);
+}
+
+.trackList__track--active .trackList__trackTitle {
+  color: var(--color-primary-500);
+}
+
+.trackList__track--active .trackList__trackNumber {
+  display: none;
+}
+
+.trackList__track--active .trackList__playButton {
+  display: flex;
+}
+
+/* Missing Track (ghost track) - Using BEM modifier syntax */
+.trackList__track--missing {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.trackList__track--missing:hover {
+  background: var(--white-03);
+}
+
+.trackList__track--missing .trackList__trackTitle {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.trackList__track--missing .trackList__trackArtist {
+  color: var(--color-text-tertiary);
+}
+
+.trackList__track--missing .trackList__trackCover {
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+.trackList__ghostIcon {
+  color: var(--color-text-tertiary);
+}
+
+/* Number cell - contains both track number and play button */
+.trackList__numberCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.trackList__trackNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.trackList__trackInfo {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+  min-width: 0; /* Allow text truncation */
+}
+
+.trackList__trackCover {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.trackList__trackText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.trackList__trackTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trackList__videoIcon {
+  color: var(--color-primary-500);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.trackList__trackArtist {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackList__trackFormat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-end;
+  padding-right: 8px;
+}
+
+.trackList__format {
+  font-size: var(--text-12);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.trackList__bitrate {
+  font-size: var(--text-11);
+  color: var(--color-text-tertiary);
+}
+
+.trackList__playButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary-500);
+  border: none;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition:
+    transform var(--transition-base),
+    background-color var(--transition-base);
+  position: absolute;
+}
+
+.trackList__playButton:hover {
+  transform: scale(1.1);
+  background: var(--color-primary-600);
+}
+
+.trackList__trackDuration {
+  text-align: right;
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.trackList__trackRating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* ===== Responsive Design - Spotify-style Mobile ===== */
+
+/* Mobile */
+@media (max-width: 768px) {
+  .trackList {
+    margin-top: 24px;
+  }
+
+  .trackList__header {
+    display: none; /* Ocultar header en móvil */
+  }
+
+  .trackList__discSeparator {
+    padding: 16px 12px 10px;
+    gap: 12px;
+  }
+
+  .trackList__discLabel {
+    font-size: var(--text-12);
+  }
+
+  .trackList__track {
+    grid-template-columns: 1fr 40px; /* Spotify-style: info | menú */
+    gap: 8px;
+    padding: 8px 4px;
+    border-radius: var(--radius-base);
+  }
+
+  /* Hide number cell, format, rating, duration columns on mobile */
+  .trackList__numberCell,
+  .trackList__trackFormat,
+  .trackList__trackRating,
+  .trackList__trackDuration {
+    display: none;
+  }
+
+  /* Mobile reorderable track - same layout as normal tracks */
+  .trackList__track--reorderable {
+    grid-template-columns: 1fr 40px; /* Same as non-reorderable: info | menú */
+  }
+
+  /* Hide reorder buttons on mobile - not usable on touch */
+  .trackList__reorderButtons {
+    display: none;
+  }
+
+  .trackList__trackInfo {
+    gap: 12px;
+  }
+
+  .trackList__trackCover {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+  }
+
+  .trackList__trackTitle {
+    font-size: 15px;
+    font-weight: var(--font-medium);
+  }
+
+  .trackList__trackArtist {
+    font-size: var(--text-13);
+    color: var(--color-text-tertiary);
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .trackList {
+    margin-top: 20px;
+  }
+
+  .trackList__track {
+    grid-template-columns: 1fr 36px; /* Spotify-style: info | menú */
+    gap: 6px;
+    padding: 6px 2px;
+  }
+
+  /* Small mobile reorderable track - same as non-reorderable */
+  .trackList__track--reorderable {
+    grid-template-columns: 1fr 36px;
+  }
+
+  .trackList__trackInfo {
+    gap: 10px;
+  }
+
+  .trackList__trackCover {
+    width: 40px;
+    height: 40px;
+  }
+
+  .trackList__trackTitle {
+    font-size: var(--text-sm);
+  }
+
+  .trackList__trackArtist {
+    font-size: var(--text-12);
+  }
+}

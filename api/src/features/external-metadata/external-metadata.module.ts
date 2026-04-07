@@ -1,0 +1,249 @@
+import { Module, OnModuleInit } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
+import { ConfigModule } from '@nestjs/config';
+import { QueueModule } from '@infrastructure/queue/queue.module';
+import { NotificationsModule } from '@features/notifications/notifications.module';
+
+// Domain
+// (Interfaces and entities are imported as needed, no providers for them)
+
+// Infrastructure - Services
+import { AgentRegistryService } from './infrastructure/services/agent-registry.service';
+import { MetadataCacheService } from './infrastructure/services/metadata-cache.service';
+import { MbidSearchCacheService } from './infrastructure/services/mbid-search-cache.service';
+import { RateLimiterService } from './infrastructure/services/rate-limiter.service';
+import { StorageService } from './infrastructure/services/storage.service';
+import { ImageDownloadService } from './infrastructure/services/image-download.service';
+import { CleanupService } from './infrastructure/services/cleanup.service';
+import { OrphanedFileCleanerService, StorageStatsService } from './infrastructure/services/cleanup';
+import { MetadataConflictService } from './infrastructure/services/metadata-conflict.service';
+import {
+  ConflictChangeApplierService,
+  ConflictEnrichmentService,
+} from './infrastructure/services/conflicts';
+import { MbidAutoSearchService } from './infrastructure/services/mbid-auto-search.service';
+import {
+  MbidSearchExecutorService,
+  MbidConfidenceStrategyService,
+} from './infrastructure/services/mbid-search';
+import { MaintenanceSchedulerService } from './infrastructure/services/maintenance-scheduler.service';
+import { EnrichmentQueueService } from './infrastructure/services/enrichment-queue.service';
+
+// Infrastructure - Agents
+import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.agent';
+import { LastfmAgent } from './infrastructure/agents/lastfm.agent';
+import { FanartTvAgent } from './infrastructure/agents/fanart-tv.agent';
+import { MusicBrainzAgent } from './infrastructure/agents/musicbrainz.agent';
+import { WikipediaAgent } from './infrastructure/agents/wikipedia.agent';
+
+// Infrastructure - Persistence
+
+// Application
+import { ExternalMetadataService } from './application/external-metadata.service';
+import { ImageService } from './application/services/image.service';
+import { LocalImageProvider } from './application/services/local-image-provider.service';
+import { ImageSearchOrchestratorService } from './application/services/image-search-orchestrator.service';
+import {
+  MbidSearchService,
+  GenreEnrichmentService,
+  EnrichmentLogService,
+  ArtistEnrichmentService,
+  AlbumEnrichmentService,
+} from './application/services';
+import {
+  ArtistBioEnrichmentService,
+  ArtistImageEnrichmentService,
+} from './application/services/artist';
+import {
+  ImageCacheService,
+  ImageResizeService,
+  ArtistImageService,
+  AlbumCoverService,
+} from './application/services/images';
+
+// Presentation
+import { ExternalMetadataController } from './presentation/external-metadata.controller';
+import { ImagesController } from './presentation/images.controller';
+import { AdminSettingsController } from './presentation/admin-settings.controller';
+import { StorageMaintenanceController } from './presentation/storage-maintenance.controller';
+import { EnrichmentQueueController } from './presentation/enrichment-queue.controller';
+import { DataSyncController } from './presentation/data-sync.controller';
+import { MetadataConflictsController } from './presentation/metadata-conflicts.controller';
+import { MusicBrainzSearchController } from './presentation/musicbrainz-search.controller';
+import { MbidAutoSearchController } from './presentation/mbid-auto-search.controller';
+import { MetadataEventsService } from './infrastructure/services/metadata-events.service';
+
+// Domain ports
+import { STORAGE_SERVICE } from './domain/ports';
+
+// DrizzleService is provided globally via DrizzleModule
+
+/**
+ * External Metadata Module
+ * Handles external metadata enrichment from multiple sources
+ *
+ * Features:
+ * - Artist biographies from Last.fm
+ * - Artist images (profiles, backgrounds, banners, logos) from Fanart.tv and Last.fm
+ * - Album covers from Cover Art Archive
+ * - Metadata caching to reduce API calls
+ * - Rate limiting for API compliance
+ * - WebSocket notifications for real-time progress
+ * - Manual enrichment endpoints
+ *
+ * Configuration priority: Database (UI settings) > Environment variables (.env)
+ *
+ * Database settings (via admin panel):
+ * - api.lastfm.api_key - Last.fm API key
+ * - api.lastfm.enabled - Enable/disable Last.fm agent (default: true)
+ * - api.fanart.api_key - Fanart.tv API key
+ * - api.fanart.enabled - Enable/disable Fanart.tv agent (default: true)
+ *
+ * Fallback environment variables (.env):
+ * - LASTFM_API_KEY - Last.fm API key
+ * - LASTFM_ENABLED - Enable/disable Last.fm agent
+ * - FANART_API_KEY - Fanart.tv API key
+ * - FANART_ENABLED - Enable/disable Fanart.tv agent
+ * - COVERART_ENABLED - Enable/disable Cover Art Archive agent (default: true)
+ */
+@Module({
+  imports: [
+    ConfigModule,
+    QueueModule, // For BullMQ enrichment queue
+    NotificationsModule,
+  ],
+  providers: [
+    // Core services
+    AgentRegistryService,
+    MetadataCacheService,
+    MbidSearchCacheService,
+    RateLimiterService,
+    StorageService,
+    { provide: STORAGE_SERVICE, useClass: StorageService },
+    ImageDownloadService,
+    CleanupService,
+    OrphanedFileCleanerService,
+    StorageStatsService,
+    MetadataConflictService,
+    ConflictChangeApplierService,
+    ConflictEnrichmentService,
+    MbidAutoSearchService,
+    MbidSearchExecutorService,
+    MbidConfidenceStrategyService,
+    MaintenanceSchedulerService,
+    EnrichmentQueueService,
+
+    // Agents
+    CoverArtArchiveAgent,
+    LastfmAgent,
+    FanartTvAgent,
+    MusicBrainzAgent,
+    WikipediaAgent,
+
+    // Application services - Enrichment
+    MbidSearchService,
+    GenreEnrichmentService,
+    EnrichmentLogService,
+    ArtistEnrichmentService,
+    AlbumEnrichmentService,
+
+    // Artist enrichment services (SRP extraction)
+    ArtistBioEnrichmentService,
+    ArtistImageEnrichmentService,
+
+    // Image services (SRP extraction)
+    ImageCacheService,
+    ImageResizeService,
+    ArtistImageService,
+    AlbumCoverService,
+
+    // Application services - Facade & Images
+    ExternalMetadataService,
+    ImageService,
+    LocalImageProvider,
+    ImageSearchOrchestratorService,
+
+    // WebSocket gateway
+    MetadataEventsService,
+  ],
+  controllers: [
+    ExternalMetadataController,
+    ImagesController,
+    AdminSettingsController,
+    StorageMaintenanceController,
+    EnrichmentQueueController,
+    DataSyncController,
+    MetadataConflictsController,
+    MusicBrainzSearchController,
+    MbidAutoSearchController,
+  ],
+  exports: [
+    ExternalMetadataService,
+    ImageService,
+    LocalImageProvider,
+    ImageSearchOrchestratorService,
+    AgentRegistryService,
+    MetadataCacheService,
+    MbidSearchCacheService,
+    StorageService,
+    STORAGE_SERVICE,
+    ImageDownloadService,
+    MetadataConflictService,
+    MbidAutoSearchService,
+    MetadataEventsService,
+    EnrichmentQueueService,
+    EnrichmentLogService,
+    // Agents (for direct use in other modules)
+    LastfmAgent,
+  ],
+})
+export class ExternalMetadataModule implements OnModuleInit {
+  constructor(
+    @InjectPinoLogger(ExternalMetadataModule.name)
+    private readonly logger: PinoLogger,
+    private readonly agentRegistry: AgentRegistryService,
+    private readonly storageService: StorageService,
+    private readonly coverArtAgent: CoverArtArchiveAgent,
+    private readonly lastfmAgent: LastfmAgent,
+    private readonly fanartAgent: FanartTvAgent,
+    private readonly musicbrainzAgent: MusicBrainzAgent,
+    private readonly wikipediaAgent: WikipediaAgent
+  ) {}
+
+  /**
+   * Register all agents when module initializes
+   */
+  async onModuleInit() {
+    this.logger.info('Initializing External Metadata Module...');
+
+    // Initialize storage
+    try {
+      await this.storageService.initialize();
+    } catch (error) {
+      this.logger.error(
+        `Failed to initialize storage: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+    }
+
+    // Register all agents
+    this.agentRegistry.register(this.coverArtAgent);
+    this.agentRegistry.register(this.lastfmAgent);
+    this.agentRegistry.register(this.fanartAgent);
+    this.agentRegistry.register(this.musicbrainzAgent);
+    this.agentRegistry.register(this.wikipediaAgent);
+
+    // Log agent status
+    const allAgents = this.agentRegistry.getAllAgents();
+    const enabledAgents = allAgents.filter((agent) => agent.isEnabled());
+
+    this.logger.info(`Registered ${allAgents.length} agents (${enabledAgents.length} enabled):`);
+
+    allAgents.forEach((agent) => {
+      const status = agent.isEnabled() ? '✓' : '✗';
+      this.logger.info(`  ${status} ${agent.name.padEnd(15)} (priority: ${agent.priority})`);
+    });
+
+    this.logger.info('External Metadata Module initialized successfully');
+  }
+}

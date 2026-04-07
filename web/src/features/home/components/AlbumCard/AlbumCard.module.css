@@ -1,0 +1,160 @@
+/* AlbumCard Component Styles - BEM Naming Convention */
+
+/* Block: albumCard */
+.albumCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  cursor: pointer;
+  transition: transform var(--transition-slow);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.albumCard:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Elements */
+.albumCard__coverContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 4px 12px var(--black-30);
+  transition: box-shadow var(--transition-slow);
+  background: var(--bg-surface);
+}
+
+.albumCard:hover .albumCard__coverContainer {
+  box-shadow: 0 8px 24px var(--black-50);
+}
+
+.albumCard__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures all images (including placeholder) maintain square aspect ratio */
+  transition: transform var(--transition-slow);
+}
+
+.albumCard:hover .albumCard__cover {
+  transform: scale(1.03);
+}
+
+.albumCard__overlay {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+  transition: background var(--transition-base);
+}
+
+.albumCard:hover .albumCard__overlay {
+  background: var(--black-20);
+}
+
+.albumCard__playButton {
+  position: absolute;
+  bottom: var(--space-2);
+  right: var(--space-2);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 2px;
+  cursor: pointer;
+  transition:
+    background var(--transition-slow),
+    box-shadow var(--transition-slow),
+    opacity var(--transition-slow),
+    transform var(--transition-slow);
+  color: var(--text-on-primary);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: auto;
+  box-shadow: 0 4px 12px var(--primary-30);
+}
+
+.albumCard:hover .albumCard__playButton {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.albumCard__playButton:hover {
+  background: var(--color-primary-hover);
+  transform: scale(1.1);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.albumCard__playButton:active {
+  transform: scale(1.05);
+}
+
+.albumCard__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.albumCard__artist {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== Responsive Design ===== */
+
+/* Mobile */
+@media (max-width: 768px) {
+  .albumCard {
+    gap: var(--space-2);
+    padding: 0; /* Sin padding para que el cover ocupe todo el espacio del grid */
+  }
+
+  .albumCard__coverContainer {
+    border-radius: var(--radius-base);
+  }
+
+  .albumCard__title {
+    font-size: var(--text-sm);
+  }
+
+  .albumCard__artist {
+    font-size: var(--text-xs);
+  }
+
+  .albumCard__playButton {
+    width: 36px;
+    height: 36px;
+    bottom: var(--space-1);
+    right: var(--space-1);
+  }
+
+  .albumCard__playButton svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Touch devices: show play button on hover/tap */
+@media (hover: none) {
+  .albumCard__playButton {
+    opacity: 0;
+  }
+
+  .albumCard:active .albumCard__playButton {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,188 @@
+/* Pagination Styles */
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  background: var(--white-02);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--white-08);
+}
+
+.paginationInfo {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  justify-content: center;
+}
+
+.paginationPages {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.paginationButton {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--white-10);
+  border-radius: var(--radius-sm);
+  background: var(--white-05);
+  color: var(--text-secondary);
+  font-size: var(--text-13);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background: var(--white-08);
+  border-color: var(--white-20);
+  color: var(--text-primary);
+}
+
+.paginationButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.paginationButtonActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.paginationButtonActive:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.paginationSize {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.paginationSize label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.paginationSelect {
+  padding: var(--space-2) var(--space-3);
+  padding-right: var(--space-8);
+  border: 1px solid var(--white-20);
+  border-radius: var(--radius-sm);
+  background: var(--white-08);
+  color: var(--text-primary);
+  font-size: var(--text-13);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    outline var(--transition-base);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-2) center;
+}
+
+.paginationSelect:hover {
+  background-color: var(--white-12);
+  border-color: var(--white-30);
+}
+
+.paginationSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background-color: var(--white-12);
+}
+
+.paginationSelect option {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  padding: var(--space-2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pagination {
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+
+  .paginationControls {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .paginationPages {
+    display: flex;
+    gap: var(--space-1);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: var(--space-1) 0;
+  }
+
+  .paginationInfo,
+  .paginationSize {
+    font-size: var(--text-13);
+    justify-content: center;
+    width: 100%;
+  }
+
+  .paginationButton {
+    min-width: 36px;
+    height: 36px;
+    font-size: var(--text-13);
+  }
+}
+
+/* Light Theme */
+:root[data-theme='light'] .pagination {
+  background: rgba(31, 41, 55, 0.03);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme='light'] .paginationButton {
+  background: rgba(31, 41, 55, 0.05);
+  border-color: rgba(31, 41, 55, 0.12);
+}
+
+:root[data-theme='light'] .paginationButton:hover:not(:disabled) {
+  background: rgba(31, 41, 55, 0.08);
+  border-color: rgba(31, 41, 55, 0.2);
+}
+
+:root[data-theme='light'] .paginationSelect {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.15);
+  color: var(--text-primary);
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%231f2937' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+:root[data-theme='light'] .paginationSelect option {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}

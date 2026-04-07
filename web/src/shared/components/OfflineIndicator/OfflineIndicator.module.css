@@ -1,0 +1,85 @@
+/* OfflineIndicator Component Styles */
+
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.indicator {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-error);
+  color: white;
+  animation: pulse 2s infinite;
+  cursor: default;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--error-30);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 12px;
+  background: rgba(15, 18, 28, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-base);
+  padding: 8px 14px;
+  font-size: var(--text-13);
+  font-weight: var(--font-medium);
+  color: var(--color-error);
+  white-space: nowrap;
+  box-shadow:
+    0 4px 6px -1px var(--black-10),
+    0 10px 25px -3px var(--black-30),
+    0 0 0 1px var(--white-15);
+  z-index: var(--z-popover);
+  animation: tooltipIn 0.15s ease;
+  pointer-events: none;
+}
+
+@keyframes tooltipIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Light Theme ===== */
+:global([data-theme='light']) .tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 10px 25px -3px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .indicator {
+    width: 24px;
+    height: 24px;
+  }
+}

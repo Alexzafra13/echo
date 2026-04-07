@@ -1,0 +1,329 @@
+/* Album Cover Upload Tab Styles */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px 0;
+  height: 100%;
+}
+
+/* Upload Section */
+.uploadSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.uploadButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--white-02);
+  color: var(--color-primary-500);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.uploadButton:hover:not(:disabled) {
+  border-color: var(--color-primary-500);
+  background: rgba(237, 104, 66, 0.05);
+}
+
+.uploadButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.uploadText {
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.uploadHint {
+  font-size: var(--text-13);
+  color: var(--color-text-tertiary);
+}
+
+/* Preview */
+.previewContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--white-02);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.removeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--black-60);
+  border: none;
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    transform var(--transition-base);
+  z-index: 10;
+}
+
+.removeButton:hover {
+  background: var(--black-80);
+  transform: scale(1.05);
+}
+
+.previewImage {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: var(--radius-base);
+  background: var(--black-30);
+}
+
+.fileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.fileName {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  margin: 0;
+  word-break: break-word;
+}
+
+.fileSize {
+  font-size: var(--text-12);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+/* Error Message */
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
+  border-radius: var(--radius-base);
+  color: var(--color-error);
+  font-size: var(--text-13);
+}
+
+/* Gallery Section */
+.gallerySection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+.galleryTitle {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: var(--color-primary-500);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.emptyGallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-text-tertiary);
+}
+
+.emptyGallery p {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.emptyGallery span {
+  font-size: var(--text-13);
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  overflow-y: auto;
+  padding-right: 4px;
+  max-height: 400px;
+}
+
+/* Custom Scrollbar */
+.gallery::-webkit-scrollbar {
+  width: 8px;
+}
+
+.gallery::-webkit-scrollbar-track {
+  background: var(--white-05);
+  border-radius: var(--radius-sm);
+}
+
+.gallery::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.gallery::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-500);
+}
+
+.coverCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--white-02);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.coverCard:hover {
+  background: var(--white-04);
+  border-color: var(--color-primary-500);
+}
+
+.coverCardActive {
+  border-color: var(--color-success);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.activeBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--color-success);
+  color: #ffffff;
+  font-size: var(--text-11);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  z-index: 10;
+}
+
+.coverImageWrapper {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--black-30);
+}
+
+.coverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.coverInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coverName {
+  font-size: var(--text-12);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coverSize {
+  font-size: var(--text-11);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.coverActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deleteButton {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: var(--error-10);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.deleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

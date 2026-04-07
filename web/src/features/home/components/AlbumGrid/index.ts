@@ -1,0 +1,1 @@
+export { AlbumGrid } from './AlbumGrid';

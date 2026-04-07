@@ -1,0 +1,93 @@
+/* BackButton Component Styles - BEM Naming Convention */
+
+.backButton {
+  position: relative;
+  height: 40px;
+  padding: 0 14px 0 12px;
+  background: var(--white-03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-slow),
+    color var(--transition-slow),
+    transform var(--transition-slow),
+    box-shadow var(--transition-slow);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px var(--black-10);
+}
+
+.backButton:hover {
+  background: var(--white-06);
+  color: var(--text-primary);
+  transform: translateX(-3px);
+  box-shadow: 0 4px 12px var(--black-15);
+}
+
+.backButton:active {
+  transform: translateX(-3px) scale(0.97);
+}
+
+.backButton__iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.backButton__icon {
+  transition: transform var(--transition-slow);
+  stroke-width: 2.5;
+}
+
+.backButton:hover .backButton__icon {
+  transform: translateX(-3px);
+}
+
+.backButton__text {
+  white-space: nowrap;
+  transition: opacity var(--transition-slow);
+  letter-spacing: 0.01em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .backButton {
+    height: 36px;
+    padding: 0 12px;
+    font-size: var(--text-13);
+    gap: 6px;
+  }
+
+  .backButton__iconContainer {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .backButton {
+    height: 32px;
+    padding: 0 10px;
+    font-size: var(--text-12);
+  }
+
+  .backButton__iconContainer {
+    width: 16px;
+    height: 16px;
+  }
+
+  .backButton__icon {
+    width: 16px;
+    height: 16px;
+  }
+}

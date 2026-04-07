@@ -1,0 +1,232 @@
+/* ===== Player Menu Component ===== */
+
+.menuContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  z-index: var(--z-sticky);
+}
+
+.menuButton {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 6px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base),
+    opacity var(--transition-base);
+}
+
+.menuButton:hover {
+  background: var(--white-10);
+  color: var(--text-primary);
+}
+
+.menuButton--active {
+  opacity: 1;
+  background: var(--white-15);
+  color: var(--text-primary);
+}
+
+.menuDropdown {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  background: rgba(15, 15, 15, 0.98);
+  border: 1px solid var(--white-15);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  min-width: 180px;
+  box-shadow: 0 -8px 32px var(--black-60);
+  backdrop-filter: blur(16px);
+  animation: menuSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom right;
+  z-index: var(--z-dropdown);
+}
+
+/* Close animation */
+.menuDropdown--closing {
+  animation: menuSlideDown 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes menuSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menuSlideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+}
+
+.menuOption {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: var(--text-13);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.menuOption:hover {
+  background: var(--white-10);
+  color: var(--text-primary);
+}
+
+.menuOption--active {
+  background: var(--primary-15);
+  color: var(--color-primary-500);
+}
+
+.menuOption--active:hover {
+  background: var(--primary-20);
+}
+
+.menuSeparator {
+  height: 1px;
+  background: var(--white-10);
+  margin: 4px 8px;
+}
+
+.menuOptionToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: var(--text-13);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.menuOptionToggle:hover {
+  background: var(--white-10);
+  color: var(--text-primary);
+}
+
+.menuOptionToggle--active {
+  color: var(--color-primary-500);
+}
+
+.toggleIndicator {
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--white-15);
+  position: relative;
+  transition:
+    background var(--transition-base),
+    transform var(--transition-base);
+}
+
+.toggleIndicator::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  top: 2px;
+  left: 2px;
+  transition:
+    background var(--transition-base),
+    transform var(--transition-base);
+}
+
+.toggleIndicator--active {
+  background: var(--primary-30);
+}
+
+.toggleIndicator--active::after {
+  background: var(--color-primary);
+  transform: translateX(14px);
+}
+
+/* DJ Flow label with icon */
+.djFlowLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== Light Theme: menu appears over dark player, force light colors ===== */
+:root[data-theme='light'] .menuButton {
+  color: #d1d5db;
+}
+
+:root[data-theme='light'] .menuButton:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .menuButton--active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme='light'] .menuDropdown {
+  background: rgba(15, 15, 15, 0.98);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+:root[data-theme='light'] .menuOption {
+  color: #d1d5db;
+}
+
+:root[data-theme='light'] .menuOption:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme='light'] .menuOptionToggle {
+  color: #d1d5db;
+}
+
+:root[data-theme='light'] .menuOptionToggle:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme='light'] .menuSeparator {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .toggleIndicator {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme='light'] .toggleIndicator::after {
+  background: #9ca3af;
+}

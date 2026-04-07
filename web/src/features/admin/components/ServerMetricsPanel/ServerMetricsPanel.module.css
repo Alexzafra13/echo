@@ -1,0 +1,432 @@
+/* ServerMetricsPanel */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--white-06);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--text-primary);
+}
+
+.headerLeft > svg {
+  color: var(--color-text-secondary);
+}
+
+.title {
+  font-size: 22px;
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin: var(--space-1) 0 0 0;
+  font-weight: var(--font-normal);
+}
+
+.connectionBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-12);
+  font-weight: var(--font-medium);
+}
+
+.connectionBadge.connected {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.connectionBadge.disconnected {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.connected .dot {
+  background: #34d399;
+}
+
+.disconnected .dot {
+  background: #f87171;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Section */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sectionTitle {
+  font-size: var(--text-11);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: var(--font-semibold);
+  color: var(--text-tertiary);
+  margin: 0 0 8px 0;
+}
+
+/* Grid layouts */
+.gridTwo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.gridThree {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.gridFour {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* Metric Card */
+.metricCard {
+  background: var(--white-02);
+  border: 1px solid var(--white-06);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: border-color var(--transition-base);
+}
+
+.metricCard:hover {
+  border-color: var(--white-10);
+}
+
+.metricLabel {
+  font-size: var(--text-11);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: var(--font-medium);
+  color: var(--text-tertiary);
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metricLabel svg {
+  flex-shrink: 0;
+}
+
+.metricValue {
+  font-size: 26px;
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  line-height: 1;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.metricUnit {
+  font-size: var(--text-13);
+  font-weight: var(--font-normal);
+  color: var(--text-tertiary);
+  margin-left: 2px;
+}
+
+.metricSubtext {
+  font-size: var(--text-12);
+  color: var(--text-tertiary);
+  margin: 6px 0 0 0;
+}
+
+/* Progress Bar */
+.progressContainer {
+  margin-top: 10px;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 6px;
+  background: var(--white-06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.progressFill.ok {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.progressFill.warning {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.progressFill.critical {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: var(--text-11);
+  color: var(--text-tertiary);
+}
+
+/* System Info Card */
+.systemInfoCard {
+  background: var(--white-02);
+  border: 1px solid var(--white-06);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.systemInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.systemInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.systemInfoItemLabel {
+  font-size: var(--text-11);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: var(--font-medium);
+}
+
+.systemInfoItemValue {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Queue Table */
+.queueCard {
+  background: var(--white-02);
+  border: 1px solid var(--white-06);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.queueTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-13);
+}
+
+.queueTable th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: var(--text-11);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: var(--font-semibold);
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--white-06);
+}
+
+.queueTable td {
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid var(--white-04);
+}
+
+.queueTable tr:last-child td {
+  border-bottom: none;
+}
+
+.queueName {
+  font-weight: var(--font-semibold);
+  font-family: var(--font-mono);
+  font-size: var(--text-12);
+}
+
+.queueBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-12);
+  font-weight: var(--font-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.queueBadge.waiting {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+}
+
+.queueBadge.active {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+
+.queueBadge.completed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+}
+
+.queueBadge.failed {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+.queueBadge.delayed {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+}
+
+/* Color accents for specific cards */
+.cardStreaming {
+  background: rgba(6, 182, 212, 0.04);
+  border-color: rgba(6, 182, 212, 0.12);
+}
+
+.cardStreaming .metricLabel {
+  color: #67e8f9;
+}
+
+.cardStreaming .metricValue {
+  color: #a5f3fc;
+}
+
+/* Waiting State */
+.waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px var(--space-5);
+  gap: var(--space-4);
+}
+
+.waitingIcon {
+  color: var(--color-text-secondary);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.waiting p {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .gridFour {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gridThree {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .gridFour,
+  .gridThree,
+  .gridTwo {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .systemInfoGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Light theme */
+:root[data-theme='light'] .metricCard {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .metricCard:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme='light'] .cardStreaming {
+  background: rgba(6, 182, 212, 0.06);
+  border-color: rgba(6, 182, 212, 0.15);
+}
+
+:root[data-theme='light'] .cardStreaming .metricLabel {
+  color: #0891b2;
+}
+
+:root[data-theme='light'] .cardStreaming .metricValue {
+  color: #0e7490;
+}
+
+:root[data-theme='light'] .queueTable {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .queueTable th {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme='light'] .queueTable td {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}

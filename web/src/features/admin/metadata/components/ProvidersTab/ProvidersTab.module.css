@@ -1,0 +1,266 @@
+.container {
+  padding: 24px;
+  max-width: 900px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: var(--white-50);
+  font-size: var(--text-base);
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px;
+  color: #ef4444;
+  font-size: var(--text-base);
+}
+
+.providersSection {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--white-95);
+  margin: 0 0 6px 0;
+}
+
+.sectionDescription {
+  font-size: var(--text-sm);
+  color: var(--white-50);
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.providersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 14px;
+}
+
+/* Radio Favicon Sources */
+.radioFaviconSection {
+  margin-bottom: 24px;
+  padding: 20px;
+  background-color: var(--white-04);
+  border: 1px solid var(--white-08);
+  border-radius: 14px;
+}
+
+.radioFaviconHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.radioFaviconHeader > svg {
+  color: var(--white-40);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.radioFaviconHeader .sectionTitle {
+  margin-bottom: 2px;
+}
+
+.radioFaviconHeader .sectionDescription {
+  margin-bottom: 0;
+}
+
+.radioSourcesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.radioSource {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background-color: var(--white-04);
+  border: 1px solid var(--white-06);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-base);
+}
+
+.radioSource:hover {
+  border-color: var(--white-12);
+}
+
+.radioSourceIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-base);
+  background-color: var(--white-06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--white-50);
+}
+
+.radioSourceLogo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.radioSourceInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radioSourceName {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--white-90);
+}
+
+.radioSourceDesc {
+  font-size: var(--text-12);
+  color: var(--white-45);
+  line-height: 1.4;
+}
+
+.radioSourcePriority {
+  font-size: var(--text-11);
+  font-weight: var(--font-semibold);
+  color: var(--white-35);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background-color: var(--white-06);
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.radioSourceCount {
+  font-size: var(--text-12);
+  font-weight: var(--font-semibold);
+  color: var(--white-60);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background-color: var(--white-08);
+  flex-shrink: 0;
+}
+
+.radioFaviconStats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background-color: var(--white-06);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+
+.radioFaviconStatItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radioFaviconStatLabel {
+  font-size: var(--text-11);
+  color: var(--white-40);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.radioFaviconStatValue {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--white-90);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.footer > button {
+  flex-shrink: 0;
+}
+
+.infoBox {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: var(--white-04);
+  border: 1px solid var(--white-08);
+  border-radius: var(--radius-md);
+}
+
+.infoBox svg {
+  color: var(--white-40);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.infoBox p {
+  margin: 0;
+  font-size: var(--text-13);
+  color: var(--white-60);
+  line-height: 1.5;
+}
+
+.infoBox strong {
+  color: var(--white-80);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .providersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Light theme */
+:root[data-theme='light'] .sectionTitle {
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] .sectionDescription {
+  color: var(--text-secondary);
+}
+
+:root[data-theme='light'] .infoBox {
+  background-color: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme='light'] .infoBox svg {
+  color: var(--text-tertiary);
+}
+
+:root[data-theme='light'] .infoBox p {
+  color: var(--text-secondary);
+}
+
+:root[data-theme='light'] .infoBox strong {
+  color: var(--text-primary);
+}

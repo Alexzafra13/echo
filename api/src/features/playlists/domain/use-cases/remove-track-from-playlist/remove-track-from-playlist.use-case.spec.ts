@@ -1,0 +1,257 @@
+import { NotFoundError, ForbiddenError } from '@shared/errors';
+import { RemoveTrackFromPlaylistUseCase } from './remove-track-from-playlist.use-case';
+import { Playlist } from '../../entities';
+import { IPlaylistRepository, ICollaboratorRepository } from '../../ports';
+import { Track } from '@features/tracks/domain/entities/track.entity';
+import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
+
+describe('RemoveTrackFromPlaylistUseCase', () => {
+  let useCase: RemoveTrackFromPlaylistUseCase;
+  let mockPlaylistRepository: {
+    findById: jest.Mock;
+    removeTrack: jest.Mock;
+    isTrackInPlaylist: jest.Mock;
+    update: jest.Mock;
+    recalculateMetadata: jest.Mock;
+  };
+  let collaboratorRepository: jest.Mocked<ICollaboratorRepository>;
+  let mockTrackRepository: {
+    findById: jest.Mock;
+  };
+
+  const createMockPlaylist = (overrides = {}): Playlist => {
+    return Playlist.fromPrimitives({
+      id: 'playlist-123',
+      name: 'Test Playlist',
+      description: 'Test description',
+      coverImageUrl: undefined,
+      duration: 3600,
+      size: 1024000,
+      ownerId: 'user-123',
+      public: false,
+      songCount: 10,
+      path: undefined,
+      sync: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    });
+  };
+
+  const createMockTrack = (overrides = {}): Track => {
+    return Track.reconstruct({
+      id: 'track-456',
+      title: 'Test Track',
+      path: '/music/test.mp3',
+      duration: 180,
+      discNumber: 1,
+      compilation: false,
+      size: 5000000,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    });
+  };
+
+  beforeEach(() => {
+    mockPlaylistRepository = {
+      findById: jest.fn(),
+      removeTrack: jest.fn(),
+      isTrackInPlaylist: jest.fn(),
+      update: jest.fn(),
+      recalculateMetadata: jest
+        .fn()
+        .mockResolvedValue({ duration: 180, size: 5242880, songCount: 1 }),
+    };
+
+    collaboratorRepository = {
+      create: jest.fn(),
+      findById: jest.fn(),
+      findByPlaylistAndUser: jest.fn(),
+      findByPlaylistId: jest.fn(),
+      findByUserId: jest.fn(),
+      updateStatus: jest.fn(),
+      updateRole: jest.fn(),
+      delete: jest.fn(),
+      deleteByPlaylistAndUser: jest.fn(),
+      isCollaborator: jest.fn(),
+      isEditor: jest.fn(),
+      hasAccess: jest.fn(),
+    } as unknown as jest.Mocked<ICollaboratorRepository>;
+
+    collaboratorRepository.isEditor.mockResolvedValue(false);
+
+    mockTrackRepository = {
+      findById: jest.fn(),
+    };
+
+    useCase = new RemoveTrackFromPlaylistUseCase(
+      mockPlaylistRepository as unknown as IPlaylistRepository,
+      collaboratorRepository,
+      mockTrackRepository as unknown as ITrackRepository
+    );
+  });
+
+  describe('execute', () => {
+    it('debería eliminar un track de la playlist correctamente', async () => {
+      // Arrange
+      const mockPlaylist = createMockPlaylist();
+      const mockTrack = createMockTrack();
+      mockPlaylistRepository.findById.mockResolvedValue(mockPlaylist);
+      mockTrackRepository.findById.mockResolvedValue(mockTrack);
+      mockPlaylistRepository.isTrackInPlaylist.mockResolvedValue(true);
+      mockPlaylistRepository.removeTrack.mockResolvedValue(true);
+
+      // Act
+      const result = await useCase.execute({
+        playlistId: 'playlist-123',
+        trackId: 'track-456',
+        userId: 'user-123',
+      });
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('removed from playlist');
+      expect(mockPlaylistRepository.removeTrack).toHaveBeenCalledWith('playlist-123', 'track-456');
+    });
+
+    it('debería lanzar error si la playlist no existe', async () => {
+      // Arrange
+      mockPlaylistRepository.findById.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          playlistId: 'nonexistent',
+          trackId: 'track-456',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow(NotFoundError);
+      await expect(
+        useCase.execute({
+          playlistId: 'nonexistent',
+          trackId: 'track-456',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow('Playlist with id nonexistent not found');
+    });
+
+    it('debería lanzar error si usuario no es el propietario', async () => {
+      // Arrange
+      const mockPlaylist = createMockPlaylist({
+        ownerId: 'other-user',
+      });
+      mockPlaylistRepository.findById.mockResolvedValue(mockPlaylist);
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          playlistId: 'playlist-123',
+          trackId: 'track-456',
+          userId: 'user-123', // Different from owner
+        })
+      ).rejects.toThrow(ForbiddenError);
+      await expect(
+        useCase.execute({
+          playlistId: 'playlist-123',
+          trackId: 'track-456',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow('You do not have permission to modify this playlist');
+    });
+
+    it('debería lanzar error si el track no existe', async () => {
+      // Arrange
+      const mockPlaylist = createMockPlaylist();
+      mockPlaylistRepository.findById.mockResolvedValue(mockPlaylist);
+      mockTrackRepository.findById.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          playlistId: 'playlist-123',
+          trackId: 'nonexistent-track',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow(NotFoundError);
+      await expect(
+        useCase.execute({
+          playlistId: 'playlist-123',
+          trackId: 'nonexistent-track',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow('Track with id nonexistent-track not found');
+    });
+
+    it('debería lanzar error si el track no está en la playlist', async () => {
+      // Arrange
+      const mockPlaylist = createMockPlaylist();
+      const mockTrack = createMockTrack();
+      mockPlaylistRepository.findById.mockResolvedValue(mockPlaylist);
+      mockTrackRepository.findById.mockResolvedValue(mockTrack);
+      mockPlaylistRepository.isTrackInPlaylist.mockResolvedValue(false);
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          playlistId: 'playlist-123',
+          trackId: 'track-456',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow(NotFoundError);
+      await expect(
+        useCase.execute({
+          playlistId: 'playlist-123',
+          trackId: 'track-456',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow('track-456 is not in playlist playlist-123');
+    });
+
+    it('debería actualizar metadata de la playlist después de eliminar', async () => {
+      // Arrange
+      const mockPlaylist = createMockPlaylist({
+        duration: 500,
+        size: 10000000,
+        songCount: 5,
+      });
+      const mockTrack = createMockTrack({
+        duration: 180,
+        size: 5000000,
+      });
+      mockPlaylistRepository.findById.mockResolvedValue(mockPlaylist);
+      mockTrackRepository.findById.mockResolvedValue(mockTrack);
+      mockPlaylistRepository.isTrackInPlaylist.mockResolvedValue(true);
+      mockPlaylistRepository.removeTrack.mockResolvedValue(true);
+
+      // Act
+      await useCase.execute({
+        playlistId: 'playlist-123',
+        trackId: 'track-456',
+        userId: 'user-123',
+      });
+
+      // Assert
+      expect(mockPlaylistRepository.recalculateMetadata).toHaveBeenCalledWith('playlist-123');
+    });
+
+    it('debería lanzar error si removeTrack retorna false', async () => {
+      // Arrange
+      const mockPlaylist = createMockPlaylist();
+      const mockTrack = createMockTrack();
+      mockPlaylistRepository.findById.mockResolvedValue(mockPlaylist);
+      mockTrackRepository.findById.mockResolvedValue(mockTrack);
+      mockPlaylistRepository.isTrackInPlaylist.mockResolvedValue(true);
+      mockPlaylistRepository.removeTrack.mockResolvedValue(false);
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          playlistId: 'playlist-123',
+          trackId: 'track-456',
+          userId: 'user-123',
+        })
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+});

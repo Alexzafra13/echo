@@ -1,0 +1,526 @@
+/* AlbumPage Component Styles - BEM Naming Convention */
+
+/* Block: albumPage */
+.albumPage {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  background-image: var(--gradient-textured);
+}
+
+.albumPage__main {
+  flex: 1;
+  margin-left: 200px; /* Ajustado de 230px → 200px (coincide con sidebar) */
+  display: flex;
+  flex-direction: column;
+  position: relative; /* Creates stacking context for sticky header */
+  /* No overflow-x to allow sticky header to work */
+}
+
+.albumPage__content {
+  flex: 1 1 0;
+  min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
+  margin-top: -84px; /* Content starts behind header */
+  padding: 108px 40px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 24px for header glassmorphism + dynamic bottom for player */
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  transition: background 0.5s ease;
+}
+
+.albumPage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Back Button */
+.albumPage__backButton {
+  margin-bottom: 24px;
+}
+
+/* Album Hero Section */
+.albumPage__hero {
+  display: flex;
+  gap: 32px;
+  padding: 32px;
+  background: var(--black-20);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-md);
+  margin-bottom: 32px;
+  overflow: hidden; /* Prevent any scroll bars in hero section */
+}
+
+.albumPage__heroCover {
+  width: 240px;
+  height: 240px;
+  border-radius: var(--radius-base);
+  box-shadow: 0 8px 32px var(--black-60);
+  object-fit: cover;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.albumPage__heroCover:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 40px var(--black-80);
+}
+
+.albumPage__heroInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0; /* Allow flex item to shrink below content size */
+}
+
+.albumPage__heroType {
+  font-size: var(--text-12);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-secondary);
+}
+
+.albumPage__heroTitle {
+  font-size: 56px;
+  font-weight: var(--font-black);
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.albumPage__heroMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.albumPage__heroArtist {
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.albumPage__heroArtistButton {
+  background: none;
+  border: none;
+  padding: 0;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    text-decoration 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.albumPage__heroArtistButton:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.albumPage__heroArtistAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.albumPage__heroDivider {
+  color: var(--color-text-tertiary);
+}
+
+.albumPage__heroActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  position: relative; /* Establish positioning context for dropdown */
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+.albumPage__heroMoreButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.albumPage__heroMoreButton:hover {
+  background: var(--white-05);
+  border-color: var(--white-30);
+  color: var(--color-text-primary);
+}
+
+/* Track Section */
+.albumPage__trackSection {
+  padding: 0 32px;
+}
+
+/* More from Artist Section */
+.albumPage__moreFromArtist {
+  margin-top: 48px;
+  padding: 0 32px;
+}
+
+.albumPage__moreFromArtistTitle {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 24px 0;
+}
+
+.albumPage__moreFromArtistGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 24px;
+}
+
+/* Loading and Error States */
+.albumPage__loadingState,
+.albumPage__errorState,
+.albumPage__loadingTracks,
+.albumPage__emptyTracks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 400px;
+  color: var(--color-text-tertiary);
+}
+
+.albumPage__errorState {
+  min-height: 60vh;
+}
+
+/* ===== Responsive Design ===== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .albumPage__main {
+    margin-left: 200px;
+  }
+
+  .albumPage__content {
+    padding: 20px 32px calc(40px + var(--player-bottom-spacer, 0px));
+  }
+
+  .albumPage__hero {
+    gap: 24px;
+    padding: 24px;
+  }
+
+  .albumPage__heroCover {
+    width: 200px;
+    height: 200px;
+  }
+
+  .albumPage__heroTitle {
+    font-size: var(--text-5xl);
+  }
+
+  .albumPage__trackSection {
+    padding: 0 24px;
+  }
+
+  .albumPage__moreFromArtist {
+    margin-top: 40px;
+    padding: 0 24px;
+  }
+
+  .albumPage__moreFromArtistTitle {
+    font-size: 22px;
+  }
+
+  .albumPage__moreFromArtistGrid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+  }
+}
+
+/* Mobile - iOS Style */
+@media (max-width: 768px) {
+  .albumPage__main {
+    margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
+  }
+
+  .albumPage__content {
+    overflow-y: auto; /* Permitir scroll vertical */
+    overflow-x: hidden; /* Evitar scroll horizontal */
+    margin-top: -52px; /* Content behind header for glass effect */
+    padding: 72px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* 52px + 20px top + bottom nav + player */
+  }
+
+  .albumPage__hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    padding: 20px;
+    background: transparent; /* Sin fondo translúcido en móvil */
+    backdrop-filter: none;
+  }
+
+  .albumPage__heroCover {
+    width: 320px;
+    height: 320px;
+    border-radius: var(--radius-base);
+    box-shadow: 0 12px 40px var(--black-50);
+  }
+
+  .albumPage__heroInfo {
+    align-items: center;
+    gap: 10px;
+  }
+
+  .albumPage__heroTitle {
+    font-size: 28px;
+    -webkit-line-clamp: 3; /* Más líneas en móvil */
+  }
+
+  .albumPage__heroMeta {
+    justify-content: center;
+    font-size: var(--text-13);
+  }
+
+  .albumPage__heroActions {
+    justify-content: center;
+    margin-top: 16px;
+    gap: 12px;
+    width: 100%;
+  }
+
+  /* Botones más cuadrados y prominentes en móvil (excluye botón de opciones) */
+  .albumPage__heroActions > button {
+    padding: 12px 24px;
+    font-size: 15px;
+    border-radius: var(--radius-sm); /* Más cuadrado */
+    flex: 1;
+    max-width: 160px;
+  }
+
+  .albumPage__trackSection {
+    padding: 0;
+  }
+
+  .albumPage__moreFromArtist {
+    margin-top: 32px;
+    padding: 0 12px;
+  }
+
+  .albumPage__moreFromArtistTitle {
+    font-size: var(--text-xl);
+    margin-bottom: 20px;
+  }
+
+  .albumPage__moreFromArtistGrid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+  }
+
+  .albumPage__backButton {
+    font-size: var(--text-13);
+    padding: 6px 12px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .albumPage__main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
+  .albumPage__content {
+    padding: 68px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* 52px header + 16px + bottom nav + player */
+  }
+
+  .albumPage__hero {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .albumPage__heroCover {
+    width: 280px;
+    height: 280px;
+    border-radius: var(--radius-sm);
+  }
+
+  .albumPage__heroTitle {
+    font-size: var(--text-2xl);
+  }
+
+  .albumPage__heroMeta {
+    font-size: var(--text-12);
+  }
+
+  .albumPage__heroActions {
+    gap: 10px;
+  }
+
+  /* Botones cuadrados en móvil pequeño (excluye botón de opciones) */
+  .albumPage__heroActions > button {
+    padding: 10px 20px;
+    font-size: var(--text-sm);
+    border-radius: var(--radius-sm);
+  }
+
+  .albumPage__trackSection {
+    padding: 0;
+  }
+
+  .albumPage__moreFromArtist {
+    margin-top: 28px;
+    padding: 0 8px;
+  }
+
+  .albumPage__moreFromArtistTitle {
+    font-size: var(--text-lg);
+    margin-bottom: 16px;
+  }
+
+  .albumPage__moreFromArtistGrid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+
+  .albumPage__backButton {
+    padding: 4px 10px;
+    font-size: var(--text-12);
+  }
+}
+
+/* Image Modal/Lightbox */
+.albumPage__imageModal {
+  position: fixed;
+  inset: 0;
+  background: var(--black-92);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  cursor: pointer;
+  animation: fadeIn 0.2s ease;
+  padding: 40px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.albumPage__imageModalContent {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 90vw;
+  max-height: 90vh;
+  animation: zoomIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.albumPage__imageModalImage {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  border-radius: var(--radius-md);
+  box-shadow: 0 20px 60px var(--black-90);
+  object-fit: contain;
+}
+
+.albumPage__imageDimensions {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--black-80);
+  backdrop-filter: blur(10px);
+  padding: 8px 16px;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px var(--black-50);
+}
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme='light'] .albumPage__hero {
+  background: rgba(180, 190, 205, 0.35);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+  box-shadow: 0 2px 16px rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme='light'] .albumPage__heroType {
+  color: #6b7280;
+}
+
+:root[data-theme='light'] .albumPage__heroTitle {
+  color: #111827;
+}
+
+:root[data-theme='light'] .albumPage__heroArtistButton {
+  color: #1f2937;
+}
+
+:root[data-theme='light'] .albumPage__heroMeta {
+  color: #4b5563;
+}
+
+:root[data-theme='light'] .albumPage__heroDivider {
+  color: #9ca3af;
+}
+
+:root[data-theme='light'] .albumPage__imageModal {
+  background: rgba(229, 231, 235, 0.95); /* Light gray modal background */
+}
+
+:root[data-theme='light'] .albumPage__imageDimensions {
+  background: rgba(209, 213, 219, 0.85); /* Light gray for image info */
+  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.25);
+}

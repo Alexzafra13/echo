@@ -1,0 +1,51 @@
+{
+  "name": "echo-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Echo Music Server - Self-hosted music streaming",
+  "license": "GPL-3.0",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "quickstart": "bash scripts/quickstart.sh",
+    "setup": "bash scripts/quickstart.sh",
+    "dev": "pnpm --filter echo-api dev",
+    "dev:all": "concurrently -n server,client -c blue,magenta \"pnpm --filter echo-api dev\" \"pnpm --filter echo-web dev\"",
+    "build": "pnpm --filter echo-web build && pnpm --filter echo-api build",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up -d",
+    "docker:dev:down": "docker compose -f docker-compose.dev.yml down",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "db:reset": "pnpm --filter echo-api db:reset",
+    "db:migrate": "pnpm --filter echo-api db:migrate",
+    "clean": "pnpm -r exec rm -rf node_modules dist",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "lighthouse": "lhci autorun",
+    "lighthouse:view": "lhci open",
+    "prepare": "husky || true"
+  },
+  "lint-staged": {
+    "api/src/**/*.ts": [
+      "prettier --write"
+    ],
+    "web/src/**/*.{ts,tsx}": [
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "concurrently": "^9.2.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.2.5"
+  }
+}

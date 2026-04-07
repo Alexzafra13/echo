@@ -1,0 +1,91 @@
+.notification {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-base);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.message {
+  flex: 1;
+}
+
+.dismissButton {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.dismissButton:hover {
+  opacity: 1;
+}
+
+/* Success variant */
+.success {
+  background-color: var(--success-10);
+  border: 1px solid var(--success-30);
+  color: var(--color-success);
+}
+
+.success .dismissButton {
+  color: var(--color-success);
+}
+
+/* Error variant */
+.error {
+  background-color: var(--error-10);
+  border: 1px solid var(--error-30);
+  color: var(--color-error);
+}
+
+.error .dismissButton {
+  color: var(--color-error);
+}
+
+/* Warning variant */
+.warning {
+  background-color: var(--warning-10);
+  border: 1px solid var(--warning-20);
+  color: var(--color-warning);
+}
+
+.warning .dismissButton {
+  color: var(--color-warning);
+}
+
+/* Info variant */
+.info {
+  background-color: var(--info-10);
+  border: 1px solid var(--info-30);
+  color: var(--color-info);
+}
+
+.info .dismissButton {
+  color: var(--color-info);
+}

@@ -1,0 +1,151 @@
+/* SearchResults Component Styles - BEM Naming Convention */
+
+.searchResults {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  max-height: 500px;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px var(--black-40);
+  border: 1px solid var(--white-10);
+  z-index: var(--z-dropdown);
+  padding: var(--space-2);
+}
+
+/* Hint / Loading / Empty states */
+.searchResults__hint,
+.searchResults__loading,
+.searchResults__empty {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.searchResults__loading {
+  color: var(--color-primary);
+}
+
+/* Section */
+.searchResults__section {
+  margin-bottom: var(--space-3);
+}
+
+.searchResults__section:last-child {
+  margin-bottom: 0;
+}
+
+.searchResults__sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Result Item */
+.searchResults__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 10px var(--space-3);
+  background: none;
+  border: none;
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  transition: background var(--transition-base);
+  text-align: left;
+}
+
+.searchResults__item:hover {
+  background: var(--white-05);
+}
+
+.searchResults__item:active {
+  background: var(--white-08);
+}
+
+/* Avatar (circular for artists) */
+.searchResults__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--white-05);
+}
+
+/* Cover (square for albums/tracks) */
+.searchResults__cover {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--white-05);
+}
+
+/* Playlist Cover (mosaic container) */
+.searchResults__playlistCover {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--white-05);
+}
+
+/* Info */
+.searchResults__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.searchResults__name {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.searchResults__meta {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Scrollbar */
+.searchResults::-webkit-scrollbar {
+  width: 8px;
+}
+
+.searchResults::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.searchResults::-webkit-scrollbar-thumb {
+  background: var(--white-20);
+  border-radius: var(--radius-sm);
+}
+
+.searchResults::-webkit-scrollbar-thumb:hover {
+  background: var(--white-30);
+}

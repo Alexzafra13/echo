@@ -1,0 +1,1 @@
+export { AlbumInfoModal } from './AlbumInfoModal';

@@ -1,0 +1,144 @@
+/* ArtistCard Component Styles */
+
+.artistCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  position: relative;
+  overflow: hidden;
+}
+
+.artistCard:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-base);
+}
+
+/* Hidden probe image to detect load errors */
+.artistCard__bgProbe {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Background image with diagonal fade (like ActionCard / Wave Mix) */
+.artistCard__background {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.2;
+  mask-image: linear-gradient(
+    -60deg,
+    var(--black-80) 0%,
+    var(--black-50) 30%,
+    var(--black-20) 50%,
+    transparent 70%
+  );
+  -webkit-mask-image: linear-gradient(
+    -60deg,
+    var(--black-80) 0%,
+    var(--black-50) 30%,
+    var(--black-20) 50%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.artistCard__avatarContainer {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.artistCard__avatar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  box-shadow: 0 4px 12px var(--black-30);
+}
+
+.artistCard__fallback {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-on-primary);
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px var(--black-30);
+}
+
+.artistCard__info {
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
+  position: relative;
+  z-index: 1;
+}
+
+.artistCard__name {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1) 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artistCard__meta {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .artistCard {
+    padding: var(--space-2);
+    gap: var(--space-3);
+  }
+
+  .artistCard__avatarContainer {
+    width: 56px;
+    height: 56px;
+  }
+
+  .artistCard__fallback {
+    font-size: var(--text-xl);
+  }
+
+  .artistCard__name {
+    font-size: var(--text-sm);
+  }
+
+  .artistCard__meta {
+    font-size: var(--text-xs);
+  }
+}

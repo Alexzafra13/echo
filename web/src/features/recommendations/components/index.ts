@@ -1,0 +1,1 @@
+export { PlaylistCover } from './PlaylistCover';

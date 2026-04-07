@@ -1,0 +1,203 @@
+import { useSearch, useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
+import { Disc, User as UserIcon, Music } from 'lucide-react';
+import { Header } from '@shared/components/layout/Header';
+import { useArtistMetadataSync, useAlbumMetadataSync, useDocumentTitle } from '@shared/hooks';
+import { Sidebar } from '../../components';
+import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
+import { useArtistSearch } from '@features/artists/hooks';
+import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
+import { handleAvatarError } from '@shared/utils/avatar.utils';
+import { getArtistImageUrl } from '@features/home/hooks';
+import type { Artist } from '@features/artists/types/artist.types';
+import type { Album } from '@features/home/types/album.types';
+import type { Track } from '@shared/types/track.types';
+import styles from './SearchResultsPage.module.css';
+
+/**
+ * SearchResultsPage Component
+ * Full page displaying all search results organized by category
+ * Follows the same layout pattern as HomePage and AlbumPage
+ */
+export function SearchResultsPage() {
+  const { t } = useTranslation();
+  const [, setLocation] = useLocation();
+  const searchParams = new URLSearchParams(useSearch());
+  const query = searchParams.get('q') || '';
+  useDocumentTitle(query ? `${t('search.placeholder')}: ${query}` : t('search.placeholder'));
+
+  // Fetch results from all three sources
+  const { data: artistData, isLoading: loadingArtists } = useArtistSearch(query, { take: 20 });
+  const { data: albums = [], isLoading: loadingAlbums } = useAlbumSearch(query);
+  const { data: tracks = [], isLoading: loadingTracks } = useTrackSearch(query, { take: 50 });
+
+  // Real-time synchronization via WebSocket for artist and album images
+  useArtistMetadataSync();
+  useAlbumMetadataSync();
+
+  // Extract artists array from paginated response
+  const artists = artistData?.data || [];
+
+  const isLoading = loadingArtists || loadingAlbums || loadingTracks;
+  const hasResults = artists.length > 0 || albums.length > 0 || tracks.length > 0;
+
+  // Render content based on state
+  const renderContent = () => {
+    if (!query || query.length < 2) {
+      return (
+        <div className={styles.searchResultsPage__empty}>
+          <Music size={64} />
+          <h2>{t('search.placeholder')}</h2>
+          <p>{t('search.minChars')}</p>
+        </div>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <div className={styles.searchResultsPage__loading}>
+          <p>{t('search.searching', { query })}</p>
+        </div>
+      );
+    }
+
+    if (!hasResults) {
+      return (
+        <div className={styles.searchResultsPage__empty}>
+          <Music size={64} />
+          <h2>{t('search.noResults', { query })}</h2>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className={styles.searchResultsPage__header}>
+          <h1>{t('search.resultsTitle')}</h1>
+          <p className={styles.searchResultsPage__query}>"{query}"</p>
+        </div>
+
+        <div className={styles.searchResultsPage__sections}>
+          {/* Artists Section */}
+          {artists.length > 0 && (
+            <section className={styles.searchResultsPage__section}>
+              <h2 className={styles.searchResultsPage__sectionTitle}>
+                <UserIcon size={24} />
+                {t('search.artists')}
+                <span className={styles.searchResultsPage__count}>({artists.length})</span>
+              </h2>
+              <div className={styles.searchResultsPage__grid}>
+                {artists.map((artist: Artist) => (
+                  <button
+                    key={artist.id}
+                    className={styles.searchResultsPage__card}
+                    onClick={() => setLocation(`/artists/${artist.id}`)}
+                  >
+                    <img
+                      src={getArtistImageUrl(artist.id, 'profile', artist.updatedAt)}
+                      alt={artist.name}
+                      className={styles.searchResultsPage__cardImage_round}
+                      onError={handleAvatarError}
+                    />
+                    <div className={styles.searchResultsPage__cardInfo}>
+                      <p className={styles.searchResultsPage__cardTitle}>{artist.name}</p>
+                      <p className={styles.searchResultsPage__cardMeta}>{t('search.artist')}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Albums Section */}
+          {albums.length > 0 && (
+            <section className={styles.searchResultsPage__section}>
+              <h2 className={styles.searchResultsPage__sectionTitle}>
+                <Disc size={24} />
+                {t('search.albumsLabel')}
+                <span className={styles.searchResultsPage__count}>({albums.length})</span>
+              </h2>
+              <div className={styles.searchResultsPage__grid}>
+                {albums.map((album: Album) => (
+                  <button
+                    key={album.id}
+                    className={styles.searchResultsPage__card}
+                    onClick={() => setLocation(`/album/${album.id}`)}
+                  >
+                    <img
+                      src={getCoverUrl(album.coverImage)}
+                      alt={album.title}
+                      className={styles.searchResultsPage__cardImage}
+                      onError={handleImageError}
+                    />
+                    <div className={styles.searchResultsPage__cardInfo}>
+                      <p className={styles.searchResultsPage__cardTitle}>{album.title}</p>
+                      <p className={styles.searchResultsPage__cardMeta}>{album.artist}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Tracks Section */}
+          {tracks.length > 0 && (
+            <section className={styles.searchResultsPage__section}>
+              <h2 className={styles.searchResultsPage__sectionTitle}>
+                <Music size={24} />
+                {t('search.songsLabel')}
+                <span className={styles.searchResultsPage__count}>({tracks.length})</span>
+              </h2>
+              <div className={styles.searchResultsPage__list}>
+                {tracks.map((track: Track, index: number) => (
+                  <button
+                    key={track.id}
+                    className={styles.searchResultsPage__listItem}
+                    onClick={() => setLocation(`/album/${track.albumId}`)}
+                  >
+                    <span className={styles.searchResultsPage__listNumber}>{index + 1}</span>
+                    <img
+                      src={getCoverUrl(
+                        track.albumId ? `/api/albums/${track.albumId}/cover` : undefined
+                      )}
+                      alt={track.title}
+                      className={styles.searchResultsPage__listImage}
+                      onError={handleImageError}
+                    />
+                    <div className={styles.searchResultsPage__listInfo}>
+                      <p className={styles.searchResultsPage__listTitle}>{track.title}</p>
+                      <p className={styles.searchResultsPage__listMeta}>
+                        {track.artistName || track.artist}
+                        {(track.albumTitle || track.albumName) && (
+                          <> • {track.albumTitle || track.albumName}</>
+                        )}
+                      </p>
+                    </div>
+                    {track.duration && (
+                      <span className={styles.searchResultsPage__listDuration}>
+                        {Math.floor(track.duration / 60)}:
+                        {String(track.duration % 60).padStart(2, '0')}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <div className={styles.searchResultsPage}>
+      <Sidebar />
+
+      <main className={styles.searchResultsPage__main}>
+        <Header showBackButton />
+
+        <div className={styles.searchResultsPage__content}>{renderContent()}</div>
+      </main>
+    </div>
+  );
+}

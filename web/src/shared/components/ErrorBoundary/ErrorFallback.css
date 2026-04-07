@@ -1,0 +1,133 @@
+/* ErrorFallback Component Styles - Using CSS Variables */
+
+.error-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-5);
+  background: var(--gradient-primary);
+}
+
+.error-fallback__container {
+  max-width: 600px;
+  width: 100%;
+  background: var(--color-bg-primary, white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10);
+  box-shadow: var(--shadow-2xl);
+  text-align: center;
+}
+
+.error-fallback__icon {
+  font-size: var(--text-6xl);
+  margin-bottom: var(--space-5);
+}
+
+.error-fallback__title {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.error-fallback__message {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-8) 0;
+  line-height: var(--leading-relaxed);
+}
+
+.error-fallback__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-fallback__button {
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-base),
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.error-fallback__button--primary {
+  background: var(--color-primary-500);
+  color: white;
+}
+
+.error-fallback__button--primary:hover {
+  background: var(--color-primary-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.error-fallback__button--secondary {
+  background: var(--color-slate-200);
+  color: var(--color-slate-700);
+}
+
+.error-fallback__button--secondary:hover {
+  background: var(--color-slate-300);
+  transform: translateY(-1px);
+}
+
+.error-fallback__details {
+  margin-top: var(--space-8);
+  text-align: left;
+  background: var(--color-bg-secondary, var(--color-slate-50));
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.error-fallback__details-summary {
+  cursor: pointer;
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  user-select: none;
+}
+
+.error-fallback__details-summary:hover {
+  color: var(--color-primary-500);
+}
+
+.error-fallback__details-content {
+  margin-top: var(--space-4);
+}
+
+.error-fallback__error,
+.error-fallback__stack {
+  margin-bottom: var(--space-4);
+}
+
+.error-fallback__error strong,
+.error-fallback__stack strong {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--color-text-primary);
+}
+
+.error-fallback__error pre,
+.error-fallback__stack pre {
+  background: var(--color-bg-primary, white);
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  overflow-x: auto;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--color-error);
+  margin: 0;
+}
+
+.error-fallback__stack pre {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}

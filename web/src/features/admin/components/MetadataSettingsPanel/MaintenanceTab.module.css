@@ -1,0 +1,365 @@
+/* MaintenanceTab Component Styles */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%; /* Ensure full width in admin container */
+  max-width: 100%; /* Prevent overflow */
+  box-sizing: border-box; /* Include padding/borders in width */
+  overflow-x: hidden; /* Clip overflowing content */
+}
+
+.loading {
+  text-align: center;
+  padding: 48px;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.error {
+  text-align: center;
+  padding: 32px;
+  color: var(--color-error);
+  font-size: var(--text-sm);
+}
+
+/* Section */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.sectionDescription {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: var(--radius-md);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.statCard:hover {
+  background: var(--white-05);
+  border-color: var(--white-12);
+}
+
+.statCardWarning {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.statCardWarning:hover {
+  background: var(--warning-10);
+}
+
+.statIcon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.statCardWarning .statIcon {
+  color: var(--color-warning);
+}
+
+.statContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.statLabel {
+  font-size: var(--text-12);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px 0;
+}
+
+.statValue {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* Actions Grid */
+.actionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.actionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-base);
+}
+
+.actionCard:hover {
+  border-color: var(--white-12);
+}
+
+.actionHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.actionIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.actionInfo {
+  flex: 1;
+}
+
+.actionTitle {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 4px 0;
+}
+
+.actionDescription {
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Result Box */
+.resultBox {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: var(--success-10);
+  border: 1px solid var(--success-30);
+  border-radius: var(--radius-md);
+}
+
+.resultIcon {
+  color: var(--color-success);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.resultContent {
+  flex: 1;
+}
+
+.resultTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 8px 0;
+}
+
+.resultStats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+}
+
+.resultStats strong {
+  color: var(--color-text-primary);
+  font-weight: var(--font-semibold);
+}
+
+.resultDivider {
+  color: var(--color-text-tertiary);
+}
+
+.resultBoxError {
+  border-color: var(--color-error);
+}
+
+.resultBoxError .resultTitle {
+  color: var(--color-error);
+}
+
+.resultIconError {
+  color: var(--color-error);
+}
+
+.resultDescription {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.resultWarning {
+  color: var(--color-warning);
+}
+
+.resultWarning strong {
+  color: var(--color-warning);
+}
+
+/* Paths List */
+.pathsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--white-02);
+  border: 1px solid var(--white-06);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.pathItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--white-02);
+  border-radius: var(--radius-base);
+  transition: background var(--transition-base);
+}
+
+.pathItem:hover {
+  background: var(--white-04);
+}
+
+.pathIcon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
+.pathInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pathLabel {
+  font-size: var(--text-13);
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pathValue {
+  font-size: var(--text-13);
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  background: var(--black-20);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  word-break: break-all;
+}
+
+.pathBadge {
+  font-size: 10px;
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning);
+  border-radius: var(--radius-sm);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actionsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .resultStats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .resultDivider {
+    display: none;
+  }
+}
+
+/* Light theme */
+:root[data-theme='light'] .statCard {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .statCard:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme='light'] .actionCard {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .actionCard:hover {
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme='light'] .pathItem {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+:root[data-theme='light'] .pathValue {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-primary);
+}

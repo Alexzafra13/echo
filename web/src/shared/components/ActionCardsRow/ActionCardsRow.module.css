@@ -1,0 +1,53 @@
+/* ActionCardsRow Container Styles */
+/* Responsive row of action cards */
+
+.actionCardsRow {
+  display: flex;
+  gap: 16px;
+  padding: 24px 20px 32px;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Spinning animation for loading states */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ===== Responsive ===== */
+
+/* Large screens - 3 cards in row with comfortable spacing */
+@media (min-width: 1201px) {
+  .actionCardsRow {
+    gap: 20px;
+  }
+}
+
+/* Tablet - slightly tighter spacing */
+@media (max-width: 1200px) {
+  .actionCardsRow {
+    gap: 14px;
+    padding: 20px 16px 28px;
+  }
+}
+
+/* Mobile - tighter but still horizontal */
+@media (max-width: 768px) {
+  .actionCardsRow {
+    gap: 12px;
+    padding: 16px 12px 24px;
+  }
+}
+
+/* Small mobile - keep horizontal, tighter spacing */
+@media (max-width: 480px) {
+  .actionCardsRow {
+    gap: 8px;
+    padding: 12px 10px 20px;
+  }
+}

@@ -1,0 +1,525 @@
+/* SharedAlbumGrid Component Styles - BEM Naming Convention */
+
+/* Block: sharedAlbumGrid */
+.sharedAlbumGrid {
+  margin-bottom: 40px;
+}
+
+.sharedAlbumGrid__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0 20px;
+}
+
+.sharedAlbumGrid__title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.sharedAlbumGrid__viewAllButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-xl);
+  transition:
+    background var(--transition-slow),
+    color var(--transition-slow),
+    left var(--transition-slow);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.sharedAlbumGrid__viewAllButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--primary-15),
+    var(--primary-25),
+    var(--primary-15),
+    transparent
+  );
+  transition: left 0.4s ease;
+  border-radius: var(--radius-xl);
+}
+
+.sharedAlbumGrid__viewAllButton:hover {
+  color: var(--color-primary);
+  background: var(--primary-10);
+}
+
+.sharedAlbumGrid__viewAllButton:hover::before {
+  left: 100%;
+}
+
+.sharedAlbumGrid__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 0 20px;
+}
+
+/* Album Card */
+.sharedAlbumGrid__card {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: transform var(--transition-base);
+}
+
+.sharedAlbumGrid__card:hover {
+  transform: translateY(-4px);
+}
+
+.sharedAlbumGrid__coverWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-base);
+  overflow: hidden;
+  background: var(--surface-secondary, var(--white-05));
+  margin-bottom: 12px;
+}
+
+.sharedAlbumGrid__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sharedAlbumGrid__coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-5xl);
+  background: linear-gradient(
+    135deg,
+    var(--surface-secondary) 0%,
+    var(--surface-tertiary, var(--white-10)) 100%
+  );
+}
+
+.sharedAlbumGrid__serverBadge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: var(--black-75);
+  backdrop-filter: blur(4px);
+  color: var(--text-primary);
+  font-size: 10px;
+  font-weight: var(--font-semibold);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  max-width: calc(100% - 16px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Import button */
+.sharedAlbumGrid__importButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--black-75);
+  backdrop-filter: blur(4px);
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    background var(--transition-base),
+    color var(--transition-base),
+    opacity var(--transition-base),
+    transform var(--transition-base);
+}
+
+.sharedAlbumGrid__card:hover .sharedAlbumGrid__importButton,
+.sharedAlbumGrid__card:focus-within .sharedAlbumGrid__importButton {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.sharedAlbumGrid__importButton:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.sharedAlbumGrid__importButton:disabled {
+  cursor: default;
+}
+
+.sharedAlbumGrid__importButton--success {
+  opacity: 1;
+  transform: scale(1);
+  background: var(--color-success);
+  color: white;
+}
+
+.sharedAlbumGrid__importButton--success:hover {
+  background: var(--color-success);
+}
+
+.sharedAlbumGrid__importButton--inProgress {
+  opacity: 1;
+  transform: scale(1);
+  background: rgba(239, 68, 68, 0.85);
+  color: white;
+}
+
+.sharedAlbumGrid__importButton--inProgress:hover {
+  background: rgba(239, 68, 68, 1);
+}
+
+/* Spinner animation */
+.sharedAlbumGrid__spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sharedAlbumGrid__info {
+  padding: 0 4px;
+}
+
+.sharedAlbumGrid__albumTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sharedAlbumGrid__artist {
+  font-size: var(--text-13);
+  color: var(--text-secondary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== Responsive Design ===== */
+
+/* Tablet */
+@media (max-width: 1200px) {
+  .sharedAlbumGrid__grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .sharedAlbumGrid__title {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+}
+
+/* Mobile - Horizontal scroll carousel */
+@media (max-width: 768px) {
+  .sharedAlbumGrid {
+    margin-bottom: 28px;
+  }
+
+  .sharedAlbumGrid__header {
+    padding: 0 16px;
+    margin-bottom: 12px;
+  }
+
+  .sharedAlbumGrid__title {
+    font-size: var(--text-xl);
+  }
+
+  .sharedAlbumGrid__grid {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 12px;
+    padding: 0 16px;
+    padding-bottom: 8px;
+
+    /* Hide scrollbar but keep functionality */
+    scrollbar-width: none;
+  }
+
+  .sharedAlbumGrid__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Fixed width for carousel items */
+  .sharedAlbumGrid__grid > * {
+    flex-shrink: 0;
+    width: 140px;
+    scroll-snap-align: start;
+  }
+
+  .sharedAlbumGrid__coverPlaceholder {
+    font-size: var(--text-4xl);
+  }
+
+  .sharedAlbumGrid__serverBadge {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .sharedAlbumGrid__header {
+    padding: 0 12px;
+  }
+
+  .sharedAlbumGrid__title {
+    font-size: var(--text-lg);
+  }
+
+  .sharedAlbumGrid__grid {
+    gap: 10px;
+    padding: 0 12px;
+    padding-bottom: 6px;
+  }
+
+  .sharedAlbumGrid__grid > * {
+    width: 130px;
+  }
+
+  .sharedAlbumGrid__albumTitle {
+    font-size: var(--text-13);
+  }
+
+  .sharedAlbumGrid__artist {
+    font-size: var(--text-12);
+  }
+
+  /* Keep grid layout on mobile when modifier is applied */
+  .sharedAlbumGrid__grid--mobileGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    overflow-x: visible;
+    scroll-snap-type: none;
+    padding-bottom: 0;
+  }
+
+  .sharedAlbumGrid__grid--mobileGrid > * {
+    width: auto;
+    flex-shrink: unset;
+    scroll-snap-align: unset;
+  }
+}
+
+/* Keep grid layout on mobile (768px) when modifier is applied */
+@media (max-width: 768px) {
+  .sharedAlbumGrid__grid--mobileGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    overflow-x: visible;
+    scroll-snap-type: none;
+    padding-bottom: 0;
+  }
+
+  .sharedAlbumGrid__grid--mobileGrid > * {
+    width: auto;
+    flex-shrink: unset;
+    scroll-snap-align: unset;
+  }
+}
+
+/* ===== Error Banner ===== */
+.sharedAlbumGrid__errorBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  margin: 0 20px 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.08) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  color: #fca5a5;
+  animation: errorBannerSlideIn 0.3s ease-out;
+}
+
+.sharedAlbumGrid__errorBanner--dismissing {
+  animation: errorBannerFadeOut 0.4s ease-out forwards;
+}
+
+@keyframes errorBannerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes errorBannerFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.sharedAlbumGrid__errorBanner > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.sharedAlbumGrid__errorContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.sharedAlbumGrid__errorMessage {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: #fecaca;
+}
+
+.sharedAlbumGrid__errorClose {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white-10);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fca5a5;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+}
+
+.sharedAlbumGrid__errorClose:hover {
+  background: var(--white-20);
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .sharedAlbumGrid__errorBanner {
+    margin: 0 16px 12px;
+    padding: 12px 16px;
+  }
+
+  .sharedAlbumGrid__errorMessage {
+    font-size: var(--text-13);
+  }
+}
+
+/* ===== Empty State ===== */
+.sharedAlbumGrid__emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--surface-secondary, var(--white-03));
+  border-radius: var(--radius-md);
+  margin: 0 20px;
+}
+
+.sharedAlbumGrid__emptyIcon {
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.sharedAlbumGrid__emptyState h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.sharedAlbumGrid__emptyState p {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0 0 20px 0;
+  max-width: 280px;
+}
+
+.sharedAlbumGrid__emptyButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    transform var(--transition-base);
+}
+
+.sharedAlbumGrid__emptyButton:hover {
+  background: var(--color-primary-hover);
+  transform: scale(1.02);
+}
+
+@media (max-width: 768px) {
+  .sharedAlbumGrid__emptyState {
+    padding: 32px 16px;
+    margin: 0 16px;
+  }
+
+  .sharedAlbumGrid__emptyIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .sharedAlbumGrid__emptyState h3 {
+    font-size: var(--text-base);
+  }
+
+  .sharedAlbumGrid__emptyState p {
+    font-size: var(--text-13);
+  }
+}

@@ -1,0 +1,402 @@
+/* Federation Modal & Form Styles
+   Shared by ConnectServerModal and CreateInvitationModal */
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  padding: 20px;
+}
+
+.modal {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--white-10);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.modalSmall {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--white-10);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 400px;
+  padding: 32px;
+  text-align: center;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--white-06);
+}
+
+.modalTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.modalClose {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-base);
+  background: var(--white-05);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+}
+
+.modalClose:hover {
+  background: var(--white-10);
+  color: var(--color-text-primary);
+}
+
+.modalContent {
+  padding: 24px 28px 28px;
+  overflow-y: auto;
+}
+
+.modalDescription {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--white-06);
+}
+
+/* Confirm Dialog */
+.confirmIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--warning-15);
+  color: var(--color-warning);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.confirmTitle {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 12px 0;
+}
+
+.confirmMessage {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Form */
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formGroup label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--white-12);
+  border-radius: var(--radius-md);
+  background: var(--white-05);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    outline 0.15s ease;
+}
+
+.input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.input:hover {
+  border-color: var(--white-20);
+  background: var(--white-08);
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: var(--white-08);
+  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.12);
+}
+
+.select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.select:hover {
+  border-color: var(--white-20);
+  background-color: var(--white-08);
+}
+
+.hint {
+  display: block;
+  font-size: var(--text-12);
+  color: var(--color-text-secondary);
+  margin-top: 6px;
+}
+
+.mutualToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--white-03);
+  border: 1px solid var(--white-10);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  margin-bottom: 20px;
+}
+
+.mutualToggle:hover {
+  background: var(--white-05);
+  border-color: var(--white-15);
+}
+
+.mutualToggleActive {
+  background: rgba(237, 104, 66, 0.06);
+  border-color: rgba(237, 104, 66, 0.3);
+}
+
+.mutualToggleActive:hover {
+  background: rgba(237, 104, 66, 0.1);
+}
+
+.mutualToggleLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--color-text-secondary);
+}
+
+.mutualToggleActive .mutualToggleLeft {
+  color: var(--color-primary);
+}
+
+.mutualToggleTitle {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.mutualToggleHint {
+  display: block;
+  font-size: var(--text-12);
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--white-25);
+  border-radius: var(--radius-sm);
+  background: var(--white-05);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.checkbox:hover {
+  border-color: var(--color-primary);
+  background: rgba(237, 104, 66, 0.1);
+}
+
+.checkbox:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--error-10);
+  border-radius: var(--radius-base);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  margin-bottom: 20px;
+}
+
+.successMessage {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.successMessage p {
+  margin: 0 0 8px 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.successMessage p:first-child {
+  color: var(--color-success);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-base);
+}
+
+.tokenDisplay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.tokenLarge {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  color: var(--color-primary);
+  background: var(--primary-10);
+  padding: 12px 20px;
+  border-radius: var(--radius-base);
+  letter-spacing: 2px;
+}
+
+.copyButtonLarge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border: 1px solid var(--white-20);
+  border-radius: var(--radius-base);
+  background: var(--white-08);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+
+.copyButtonLarge:hover {
+  background: var(--white-12);
+}
+
+.tokenInfo {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.tokenInfo p {
+  margin: 0 0 4px 0;
+  font-size: var(--text-13);
+  color: var(--color-text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    max-width: 100%;
+    margin: 10px;
+  }
+}

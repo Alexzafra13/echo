@@ -1,0 +1,198 @@
+.avatarUpload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatarUpload__input {
+  display: none;
+}
+
+.avatarUpload__container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatarUpload__avatarWrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid var(--color-primary);
+  transition:
+    box-shadow var(--transition-slow),
+    opacity var(--transition-slow),
+    transform var(--transition-slow);
+}
+
+.avatarUpload__avatarWrapper:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(198, 64, 29, 0.4);
+}
+
+.avatarUpload__avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarUpload__avatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  background: linear-gradient(135deg, rgba(198, 64, 29, 0.25) 0%, rgba(198, 64, 29, 0.1) 100%);
+  text-transform: uppercase;
+}
+
+/* Hover overlay */
+.avatarUpload__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--black-70);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+  color: white;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.avatarUpload__avatarWrapper:hover .avatarUpload__overlay {
+  opacity: 1;
+}
+
+/* Action buttons (when file is selected) */
+.avatarUpload__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.avatarUpload__actionButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c6401d 0%, #a33518 100%);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+  box-shadow: 0 4px 12px rgba(198, 64, 29, 0.3);
+}
+
+.avatarUpload__actionButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d4481f 0%, #b83a1a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(198, 64, 29, 0.4);
+}
+
+.avatarUpload__actionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.avatarUpload__actionCancel {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--white-10);
+  border: 2px solid var(--white-20);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.avatarUpload__actionCancel:hover:not(:disabled) {
+  background: var(--white-15);
+  border-color: var(--white-30);
+  color: var(--text-primary);
+}
+
+.avatarUpload__actionCancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Delete button */
+.avatarUpload__deleteButton {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--error-color);
+  border: 3px solid var(--bg-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+  box-shadow: 0 4px 12px var(--error-30);
+}
+
+.avatarUpload__deleteButton:hover:not(:disabled) {
+  background: #dc2626;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.avatarUpload__deleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Helper text */
+.avatarUpload__helper {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin: 0;
+  text-align: center;
+}
+
+/* Error message */
+.avatarUpload__error {
+  padding: 0.75rem 1rem;
+  background: var(--error-10);
+  border: 1px solid var(--error-color);
+  border-radius: var(--radius-base);
+  color: var(--error-color);
+  font-size: var(--text-sm);
+  text-align: center;
+  max-width: 300px;
+}

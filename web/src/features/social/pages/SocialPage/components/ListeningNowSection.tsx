@@ -1,0 +1,113 @@
+import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Headphones, Music } from 'lucide-react';
+import { UserAvatar } from '@shared/components/ui';
+import { Equalizer } from '../../../components/Equalizer';
+import type { ListeningUser } from '../../../services/social.service';
+import styles from './ListeningNowSection.module.css';
+
+interface ListeningNowSectionProps {
+  listeningUsers: ListeningUser[];
+  onUserClick: (userId: string) => void;
+}
+
+export const ListeningNowSection = memo(function ListeningNowSection({
+  listeningUsers,
+  onUserClick,
+}: ListeningNowSectionProps) {
+  const { t } = useTranslation();
+  if (listeningUsers.length === 0) return null;
+
+  return (
+    <section className={styles.listeningSection}>
+      <div className={styles.listeningSection__header}>
+        <div className={styles.listeningSection__titleWrapper}>
+          <div className={styles.listeningSection__iconPulse}>
+            <Headphones size={22} />
+          </div>
+          <div>
+            <h2 className={styles.listeningSection__title}>{t('social.listeningNow')}</h2>
+            <p className={styles.listeningSection__subtitle}>{t('social.listeningNowSubtitle')}</p>
+          </div>
+        </div>
+        <span className={styles.listeningSection__count}>
+          <span className={styles.listeningSection__countDot} />
+          {t('social.friendCount', { count: listeningUsers.length })}
+        </span>
+      </div>
+
+      <div className={styles.listeningGrid}>
+        {listeningUsers.map((user) => (
+          <div key={user.id} className={styles.listeningCard} onClick={() => onUserClick(user.id)}>
+            {/* Album art background */}
+            {user.currentTrack?.coverUrl && (
+              <div className={styles.listeningCard__bg}>
+                <img
+                  src={user.currentTrack.coverUrl}
+                  alt=""
+                  className={styles.listeningCard__bgImg}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            )}
+
+            <div className={styles.listeningCard__content}>
+              {/* User Avatar */}
+              <div className={styles.listeningCard__avatarWrapper}>
+                <UserAvatar
+                  userId={user.id}
+                  avatarUrl={user.avatarUrl}
+                  username={user.username}
+                  className={styles.listeningCard__avatar}
+                />
+                {user.isPlaying && <span className={styles.listeningCard__avatarDot} />}
+              </div>
+
+              {/* Album Cover */}
+              <div className={styles.listeningCard__coverWrapper}>
+                {user.currentTrack?.coverUrl ? (
+                  <img
+                    src={user.currentTrack.coverUrl}
+                    alt={user.currentTrack.albumName}
+                    className={styles.listeningCard__cover}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className={styles.listeningCard__coverPlaceholder}>
+                    <Music size={20} />
+                  </div>
+                )}
+              </div>
+
+              {/* Info */}
+              <div className={styles.listeningCard__info}>
+                <span className={styles.listeningCard__name}>{user.name || user.username}</span>
+                {user.currentTrack ? (
+                  <>
+                    <span className={styles.listeningCard__trackTitle}>
+                      {user.currentTrack.title}
+                    </span>
+                    <span className={styles.listeningCard__trackArtist}>
+                      {user.currentTrack.artistName}
+                    </span>
+                  </>
+                ) : (
+                  <span className={styles.listeningCard__offline}>{t('social.notPlaying')}</span>
+                )}
+              </div>
+
+              {/* Equalizer */}
+              {user.isPlaying && (
+                <div className={styles.listeningCard__equalizer}>
+                  <Equalizer size="sm" />
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+});

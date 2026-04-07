@@ -1,0 +1,120 @@
+/* Tabs Component Styles */
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Tab Navigation */
+.tabs__nav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--white-10);
+  margin-bottom: 32px;
+  position: relative;
+}
+
+/* Tab Button */
+.tabs__button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+  white-space: nowrap;
+  position: relative;
+}
+
+.tabs__button:hover {
+  color: var(--color-text-primary);
+  background: var(--white-03);
+}
+
+.tabs__button__active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.tabs__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tabs__label {
+  font-family: var(--font-display);
+}
+
+/* Tab Content */
+.tabs__content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tabs__nav {
+    gap: 4px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    scrollbar-width: none; /* Firefox */
+    /* Add padding to prevent cut-off */
+    padding-bottom: 2px;
+  }
+
+  /* Gradient indicator for more content on the right */
+  .tabs__nav::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 2px;
+    width: 40px;
+    background: linear-gradient(to right, transparent, var(--color-bg-primary));
+    pointer-events: none;
+  }
+
+  .tabs__nav::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
+  .tabs__button {
+    padding: 12px 16px;
+    font-size: var(--text-sm);
+    flex-shrink: 0; /* Prevent buttons from shrinking */
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs__button {
+    padding: 10px 14px;
+    font-size: var(--text-13);
+  }
+
+  .tabs__nav {
+    gap: 2px;
+  }
+}

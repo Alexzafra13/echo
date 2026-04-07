@@ -1,0 +1,476 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Tests & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: music_admin
+          POSTGRES_PASSWORD: music_password
+          POSTGRES_DB: music_server
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate migrations are registered
+        run: ./api/scripts/check-migrations.sh
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create music directory for scanner tests
+        run: sudo mkdir -p /music && sudo chmod 777 /music
+
+      - name: Create test databases
+        env:
+          PGPASSWORD: music_password
+        run: |
+          echo "=== Checking PostgreSQL connection ==="
+          psql -h localhost -U music_admin -d postgres -c "SELECT current_user, version();"
+
+          for i in {1..4}; do
+            psql -h localhost -U music_admin -d postgres -c "CREATE DATABASE music_server_test_$i;" || true
+          done
+
+      - name: Apply database schema
+        working-directory: api
+        env:
+          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
+        run: pnpm db:push --force
+
+      - name: Apply schema to test DBs
+        working-directory: api
+        run: |
+          for i in {1..4}; do
+            echo "Applying schema to music_server_test_$i..."
+            env DATABASE_URL="postgresql://music_admin:music_password@localhost:5432/music_server_test_$i" pnpm db:push --force
+          done
+
+      # Unit tests: Fast, use mocks, NO DB connection needed
+      - name: Run unit tests with coverage
+        working-directory: api
+        run: pnpm test:unit --coverage --coverageReporters=text --coverageReporters=lcov
+
+      # Integration tests: Test real DB/Redis operations
+      - name: Run integration tests
+        working-directory: api
+        env:
+          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server_test_1
+          JWT_SECRET: test-jwt-secret-for-ci-pipeline-min-32-chars
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-min-32
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: pnpm test:integration
+
+      # E2E tests: Full HTTP requests with real app
+      - name: Run E2E tests
+        working-directory: api
+        env:
+          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server_test_1
+          JWT_SECRET: test-jwt-secret-for-ci-pipeline-min-32-chars
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-min-32
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: pnpm test:e2e
+
+      # Web tests: React components and hooks
+      - name: Run web tests with coverage
+        working-directory: web
+        run: pnpm test:cov --run
+
+      - name: Build API
+        working-directory: api
+        run: pnpm build
+
+      - name: Build Web
+        working-directory: web
+        run: pnpm build
+
+      # Upload build artifacts for downstream jobs (Playwright, Lighthouse)
+      - name: Upload API build
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-build
+          path: api/dist/
+          retention-days: 1
+
+      - name: Upload Web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: web/dist/
+          retention-days: 1
+
+      # Upload coverage reports
+      - name: Upload API coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-coverage-report
+          path: api/coverage/
+          retention-days: 7
+
+      - name: Upload Web coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-coverage-report
+          path: web/coverage/
+          retention-days: 7
+
+  # Playwright E2E: Browser tests against running app
+  e2e-web:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: test
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: music_admin
+          POSTGRES_PASSWORD: music_password
+          POSTGRES_DB: music_server
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Cache Playwright browsers (~200MB download avoided on cache hit)
+      - name: Get Playwright version
+        id: playwright-version
+        working-directory: web
+        run: echo "version=$(pnpm exec playwright --version | tr ' ' '-')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install Playwright system deps (on cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: web
+        run: pnpm exec playwright install-deps chromium
+
+      # Download pre-built artifacts instead of rebuilding
+      - name: Download API build
+        uses: actions/download-artifact@v4
+        with:
+          name: api-build
+          path: api/dist/
+
+      - name: Download Web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: web/dist/
+
+      - name: Apply database schema
+        working-directory: api
+        env:
+          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
+        run: pnpm db:push --force
+
+      - name: Start API server
+        working-directory: api
+        env:
+          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
+          JWT_SECRET: test-jwt-secret-for-ci-pipeline-min-32-chars
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-min-32
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          PORT: 3000
+          DATA_PATH: /tmp/echo-data
+        run: |
+          mkdir -p /tmp/echo-data
+          node dist/src/main.js &
+          echo "Waiting for API to start..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "API is ready!"
+              break
+            fi
+            echo "Attempt $i: API not ready yet..."
+            sleep 2
+          done
+
+      - name: Create music directory for E2E tests
+        run: sudo mkdir -p /music && sudo chmod 777 /music
+
+      - name: Setup app for E2E tests
+        run: |
+          # Check setup status first
+          echo "Checking setup status..."
+          curl -s http://localhost:3000/api/setup/status | head -100
+
+          # Step 1: Create admin user
+          echo ""
+          echo "Step 1: Creating admin user..."
+          ADMIN_RESULT=$(curl -s -X POST http://localhost:3000/api/setup/admin \
+            -H "Content-Type: application/json" \
+            -d '{"username":"admin","password":"adminpassword123"}')
+          echo "Admin result: $ADMIN_RESULT"
+
+          # Step 2: Configure music library
+          echo ""
+          echo "Step 2: Configuring music library..."
+          LIBRARY_RESULT=$(curl -s -X POST http://localhost:3000/api/setup/library \
+            -H "Content-Type: application/json" \
+            -d '{"path":"/music"}')
+          echo "Library result: $LIBRARY_RESULT"
+
+          # Step 3: Complete setup
+          echo ""
+          echo "Step 3: Completing setup..."
+          COMPLETE_RESULT=$(curl -s -X POST http://localhost:3000/api/setup/complete)
+          echo "Complete result: $COMPLETE_RESULT"
+
+          # Verify setup is complete
+          echo ""
+          echo "Verifying setup status..."
+          FINAL_STATUS=$(curl -s http://localhost:3000/api/setup/status)
+          echo "Final status: $FINAL_STATUS"
+
+          # Check if setup is complete
+          if echo "$FINAL_STATUS" | grep -q '"setupCompleted":true'; then
+            echo "✅ Setup completed successfully!"
+          else
+            echo "❌ Setup may not be complete"
+            echo "This could mean:"
+            echo "  - Admin creation failed"
+            echo "  - Library configuration failed"
+            echo "  - Complete setup failed"
+            exit 1
+          fi
+
+      - name: Seed test data for E2E
+        env:
+          PGPASSWORD: music_password
+        run: |
+          echo "Seeding test data for E2E..."
+          psql -v ON_ERROR_STOP=1 -h localhost -U music_admin -d music_server <<'SQL'
+            -- Artists
+            INSERT INTO artists (id, name, album_count, song_count)
+            VALUES
+              ('a0000000-0000-0000-0000-000000000001', 'Alpha Artist', 2, 4),
+              ('a0000000-0000-0000-0000-000000000002', 'Beta Band', 1, 2);
+
+            -- Albums
+            INSERT INTO albums (id, name, artist_id, album_artist_id, year, song_count, duration)
+            VALUES
+              ('b0000000-0000-0000-0000-000000000001', 'Alpha Album', 'a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 2024, 2, 600),
+              ('b0000000-0000-0000-0000-000000000002', 'Alternate Reality', 'a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 2023, 2, 500),
+              ('b0000000-0000-0000-0000-000000000003', 'Beta Beats', 'a0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000002', 2024, 2, 480);
+
+            -- Tracks (path is required and unique)
+            INSERT INTO tracks (id, title, album_id, artist_id, album_name, artist_name, path, duration, track_number)
+            VALUES
+              ('c0000000-0000-0000-0000-000000000001', 'Alright', 'b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Alpha Album', 'Alpha Artist', '/music/alpha/alright.mp3', 300, 1),
+              ('c0000000-0000-0000-0000-000000000002', 'Always', 'b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Alpha Album', 'Alpha Artist', '/music/alpha/always.mp3', 300, 2),
+              ('c0000000-0000-0000-0000-000000000003', 'Alternate Way', 'b0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'Alternate Reality', 'Alpha Artist', '/music/alpha/alternate.mp3', 250, 1),
+              ('c0000000-0000-0000-0000-000000000004', 'Almost There', 'b0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'Alternate Reality', 'Alpha Artist', '/music/alpha/almost.mp3', 250, 2),
+              ('c0000000-0000-0000-0000-000000000005', 'Bright Lights', 'b0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000002', 'Beta Beats', 'Beta Band', '/music/beta/bright.mp3', 240, 1),
+              ('c0000000-0000-0000-0000-000000000006', 'Blue Sky', 'b0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000002', 'Beta Beats', 'Beta Band', '/music/beta/blue.mp3', 240, 2);
+          SQL
+          echo "✅ Test data seeded successfully"
+
+          echo "Verifying seed data..."
+          TRACK_COUNT=$(psql -t -h localhost -U music_admin -d music_server -c "SELECT count(*) FROM tracks;")
+          echo "Tracks in database: $TRACK_COUNT"
+          if [ "$(echo $TRACK_COUNT | tr -d ' ')" -lt 1 ]; then
+            echo "❌ No tracks found in database after seeding!"
+            exit 1
+          fi
+
+          echo "Verifying search works..."
+          curl -s http://localhost:3000/api/tracks/search/al | head -200
+          echo ""
+
+      - name: Run Playwright tests
+        working-directory: web
+        env:
+          E2E_BASE_URL: http://localhost:5173
+        run: pnpm e2e --project=chromium
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: web/playwright-report/
+          retention-days: 7
+
+      - name: Upload Playwright test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results
+          path: web/test-results/
+          retention-days: 7
+
+  # Lighthouse CI: Performance metrics (reuses web build artifact)
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Download pre-built web instead of rebuilding
+      - name: Download Web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: web/dist/
+
+      - name: Run Lighthouse CI
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        run: |
+          pnpm exec lhci autorun --config=lighthouserc.js \
+            --collect.startServerCommand="cd web && pnpm preview --port 5173" \
+            --collect.url="http://localhost:5173/login" \
+            --collect.numberOfRuns=1 || true
+
+      - name: Upload Lighthouse report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 7

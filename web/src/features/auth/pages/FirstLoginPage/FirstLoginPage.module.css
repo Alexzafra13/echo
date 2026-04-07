@@ -1,0 +1,277 @@
+/* FirstLoginPage Component Styles */
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px) brightness(0.3);
+  z-index: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.logo {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Always dark card regardless of theme (dark background image) */
+.card {
+  background: rgba(15, 18, 30, 0.85);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  --input-label-bg: rgba(15, 18, 30, 0.85);
+  color-scheme: dark;
+  color: #e2e8f0;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+  font-weight: var(--font-medium);
+}
+
+.info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
+  border-radius: var(--radius-base);
+  margin-bottom: 24px;
+}
+
+.infoIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.errorAlert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
+  border-radius: var(--radius-base);
+  color: var(--color-error);
+  margin-bottom: 24px;
+  font-size: var(--text-sm);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.optional {
+  font-size: var(--text-12);
+  font-weight: var(--font-normal);
+  color: var(--color-text-tertiary);
+}
+
+.required {
+  color: var(--color-primary);
+}
+
+.hint {
+  font-size: var(--text-12);
+  color: var(--color-text-tertiary);
+  margin: 0 0 4px 0;
+}
+
+.hint strong {
+  color: var(--color-text-secondary);
+}
+
+.requirements {
+  padding: 16px;
+  background: var(--white-02);
+  border-radius: var(--radius-base);
+  border: 1px solid var(--white-05);
+}
+
+.requirementsTitle {
+  font-size: var(--text-13);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-secondary);
+  margin: 0 0 12px 0;
+}
+
+.requirementsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.requirement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-13);
+  color: var(--color-text-tertiary);
+  transition: color var(--transition-base);
+}
+
+.requirementMet {
+  color: var(--color-success);
+}
+
+.requirementIcon {
+  flex-shrink: 0;
+}
+
+.requirement.requirementMet .requirementIcon {
+  color: var(--color-success);
+}
+
+.requirement:not(.requirementMet) .requirementIcon {
+  color: var(--color-text-tertiary);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.footer {
+  text-align: center;
+  font-size: var(--text-12);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+/* Force dark appearance on card in light theme */
+:root[data-theme='light'] .card {
+  background: rgba(15, 18, 30, 0.85);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  --input-label-bg: rgba(15, 18, 30, 0.85);
+  --color-text-primary: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --bg-elevated: rgba(15, 18, 30, 0.85);
+  --white-02: rgba(255, 255, 255, 0.02);
+  --white-05: rgba(255, 255, 255, 0.05);
+  --white-08: rgba(255, 255, 255, 0.08);
+  --white-10: rgba(255, 255, 255, 0.1);
+  --white-15: rgba(255, 255, 255, 0.15);
+  --white-20: rgba(255, 255, 255, 0.2);
+  --white-25: rgba(255, 255, 255, 0.25);
+  color: #e2e8f0;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 32px 24px;
+  }
+
+  .title {
+    font-size: var(--text-2xl);
+  }
+
+  .subtitle {
+    font-size: var(--text-sm);
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .card {
+    padding: 24px 20px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .logo {
+    width: 90px;
+  }
+}

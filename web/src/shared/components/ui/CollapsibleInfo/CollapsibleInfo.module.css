@@ -1,0 +1,124 @@
+/* CollapsibleInfo Component Styles */
+
+.infoBox {
+  background: var(--info-05);
+  border: 1px solid var(--info-30);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition:
+    background-color var(--transition-slow),
+    border-color var(--transition-slow);
+}
+
+.infoBox:hover {
+  background: var(--info-10);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.infoBox__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+}
+
+.infoBox__header:hover {
+  background: var(--info-05);
+}
+
+.infoBox__headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.infoBox__icon {
+  color: var(--color-info);
+  flex-shrink: 0;
+}
+
+.infoBox__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+  text-align: left;
+}
+
+.infoBox__toggle {
+  color: var(--color-info);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform var(--transition-base);
+}
+
+.infoBox__content {
+  padding: 0 20px 20px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  animation: slideDown 0.3s ease;
+}
+
+.infoBox__content p {
+  margin: 0 0 12px 0;
+}
+
+.infoBox__content p:last-child {
+  margin-bottom: 0;
+}
+
+.infoBox__content ul,
+.infoBox__content ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.infoBox__content li {
+  margin-bottom: 6px;
+}
+
+.infoBox__content code {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--white-10);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-13);
+  color: var(--color-info);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .infoBox__header {
+    padding: 14px 16px;
+  }
+
+  .infoBox__content {
+    padding: 0 16px 16px;
+    font-size: var(--text-13);
+  }
+
+  .infoBox__title {
+    font-size: var(--text-13);
+  }
+}

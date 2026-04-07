@@ -1,0 +1,15 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Solid background for maskable icon -->
+<rect width="512" height="512" fill="#0a0f1a"/>
+<!-- Vinyl disc scaled to ~80% safe zone (centered, ~410px diameter → r=154 scaled from original r=146 in 300) -->
+<g transform="translate(256, 256) scale(1.32) translate(-150, -150)">
+  <circle cx="150" cy="150" r="146" stroke="#1A3A52" stroke-width="8"/>
+  <circle cx="150" cy="150" r="145" fill="#1A3A52"/>
+  <circle cx="150" cy="150" r="59.5" fill="#E04D28" stroke="#E04D28"/>
+  <circle cx="150" cy="150" r="25" fill="#010101"/>
+  <path d="M34.0292 177.431C29.1008 165.222 27.4701 150.779 29.3392 135.557C31.2082 120.335 36.5077 104.899 44.7089 90.8169C52.91 76.7351 63.7113 64.5261 76.0085 55.4226C88.3067 46.3184 101.645 40.6575 114.661 38.9755" stroke="black" stroke-width="2"/>
+  <path opacity="0.7" d="M60.5096 181.356C50.036 157.934 50.0116 133.001 60.4017 110.964C70.7967 88.9168 90.976 71.1287 117.424 60.8155" stroke="black" stroke-width="2"/>
+  <path opacity="0.7" d="M246.564 126.372C253.936 146.448 252.485 167.154 242.471 185.195C232.449 203.249 214.396 217.645 191.142 226.008" stroke="black" stroke-width="2"/>
+  <path d="M269.373 118.122C274.464 130.205 276.275 144.566 274.583 159.762C272.892 174.956 267.76 190.422 259.701 204.585C251.641 218.748 240.949 231.088 228.718 240.358C216.486 249.629 203.168 255.486 190.124 257.373" stroke="black" stroke-width="2"/>
+</g>
+</svg>

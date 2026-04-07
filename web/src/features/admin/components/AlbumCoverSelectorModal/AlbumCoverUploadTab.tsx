@@ -1,0 +1,237 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Upload, X, Check, AlertCircle, Loader, Trash2 } from 'lucide-react';
+import { Button } from '@shared/components/ui';
+import { useFileUpload } from '@shared/hooks/useFileUpload';
+import { formatFileSize } from '@shared/utils/format';
+import {
+  useUploadCustomCover,
+  useListCustomCovers,
+  useApplyCustomCover,
+  useDeleteCustomCover,
+} from '../../hooks/useAlbumCoversCustom';
+import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
+import styles from './AlbumCoverUploadTab.module.css';
+
+interface AlbumCoverUploadTabProps {
+  albumId: string;
+  onSuccess?: () => void;
+}
+
+export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabProps) {
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const { t } = useTranslation();
+  const {
+    selectedFile,
+    previewUrl,
+    error: fileError,
+    handleFileSelect,
+    resetInput,
+    fileInputRef,
+  } = useFileUpload({
+    onError: setUploadError,
+  });
+
+  const { mutate: uploadCover, isPending: isUploading } = useUploadCustomCover();
+  const { mutate: applyCover, isPending: isApplying } = useApplyCustomCover();
+  const { mutate: deleteCover, isPending: isDeleting } = useDeleteCustomCover();
+  const { data: customCoversData, isLoading: isLoadingCovers } = useListCustomCovers(albumId);
+
+  const customCovers = (customCoversData?.customCovers || []).filter(
+    (cover) => cover.albumId === albumId
+  );
+
+  const displayError = uploadError || fileError;
+
+  const handleUpload = () => {
+    if (!selectedFile) return;
+
+    setUploadError(null);
+
+    uploadCover(
+      { albumId, file: selectedFile },
+      {
+        onSuccess: (data) => {
+          applyCover(
+            {
+              albumId,
+              customCoverId: data.customCoverId,
+            },
+            {
+              onSuccess: () => {
+                resetInput();
+                onSuccess?.();
+              },
+              onError: (err) => {
+                if (import.meta.env.DEV) {
+                  logger.error('[AlbumCoverUpload] ❌ Error applying cover:', err);
+                }
+                setUploadError(getApiErrorMessage(err, t('albums.errorApplyingCover')));
+              },
+            }
+          );
+        },
+        onError: (err) => {
+          if (import.meta.env.DEV) {
+            logger.error('[AlbumCoverUpload] ❌ Error uploading cover:', err);
+          }
+          setUploadError(getApiErrorMessage(err, t('albums.errorApplyingCover')));
+        },
+      }
+    );
+  };
+
+  const handleDelete = (coverId: string) => {
+    if (!confirm(t('common.confirm'))) return;
+
+    deleteCover({ albumId, customCoverId: coverId });
+  };
+
+  const handleApply = (coverId: string) => {
+    applyCover(
+      { albumId, customCoverId: coverId },
+      {
+        onSuccess: () => {
+          onSuccess?.();
+        },
+        onError: (err) => {
+          if (import.meta.env.DEV) {
+            logger.error('[AlbumCoverUpload] ❌ Error applying cover:', err);
+          }
+          setUploadError(getApiErrorMessage(err, 'Error al aplicar la portada'));
+        },
+      }
+    );
+  };
+
+  const handleCancelSelection = () => {
+    resetInput();
+    setUploadError(null);
+  };
+
+  const isProcessing = isUploading || isApplying;
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.uploadSection}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          onChange={handleFileSelect}
+          disabled={isProcessing}
+          style={{ display: 'none' }}
+        />
+
+        {!selectedFile ? (
+          <button
+            className={styles.uploadButton}
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isProcessing}
+          >
+            <Upload size={48} />
+            <p className={styles.uploadText}>{t('albums.selectCover')}</p>
+            <span className={styles.uploadHint}>JPG, PNG, WebP (max. 10MB)</span>
+          </button>
+        ) : (
+          <div className={styles.previewContainer}>
+            <button className={styles.removeButton} onClick={handleCancelSelection}>
+              <X size={20} />
+            </button>
+            <img src={previewUrl!} alt="Preview" className={styles.previewImage} />
+            <div className={styles.fileInfo}>
+              <p className={styles.fileName}>{selectedFile.name}</p>
+              <p className={styles.fileSize}>{formatFileSize(selectedFile.size)}</p>
+            </div>
+            <Button
+              variant="primary"
+              onClick={handleUpload}
+              disabled={isProcessing}
+              loading={isProcessing}
+              fullWidth
+            >
+              {isUploading ? 'Subiendo...' : isApplying ? 'Aplicando...' : 'Subir y aplicar'}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {displayError && (
+        <div className={styles.errorMessage}>
+          <AlertCircle size={16} />
+          <span>{displayError}</span>
+        </div>
+      )}
+
+      <div className={styles.gallerySection}>
+        <h3 className={styles.galleryTitle}>Portadas subidas</h3>
+
+        {isLoadingCovers ? (
+          <div className={styles.loading}>
+            <Loader className={styles.spinner} size={32} />
+          </div>
+        ) : customCovers.length === 0 ? (
+          <div className={styles.emptyGallery}>
+            <p>No hay portadas personalizadas</p>
+            <span>Sube una portada desde tu PC para empezar</span>
+          </div>
+        ) : (
+          <div className={styles.gallery}>
+            {customCovers.map((cover) => (
+              <div
+                key={cover.id}
+                className={`${styles.coverCard} ${cover.isActive ? styles.coverCardActive : ''}`}
+              >
+                {cover.isActive && (
+                  <div className={styles.activeBadge}>
+                    <Check size={14} />
+                    Activa
+                  </div>
+                )}
+
+                <div className={styles.coverImageWrapper}>
+                  <img
+                    src={`/api/images/albums/${albumId}/custom/${cover.id}`}
+                    alt="Custom cover"
+                    className={styles.coverImage}
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder-album.png';
+                    }}
+                  />
+                </div>
+
+                <div className={styles.coverInfo}>
+                  <p className={styles.coverName}>{cover.fileName}</p>
+                  <p className={styles.coverSize}>{formatFileSize(Number(cover.fileSize))}</p>
+                </div>
+
+                <div className={styles.coverActions}>
+                  {!cover.isActive && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleApply(cover.id)}
+                      disabled={isApplying}
+                    >
+                      {t('common.accept')}
+                    </Button>
+                  )}
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => handleDelete(cover.id)}
+                    disabled={isDeleting}
+                    title={t('common.delete')}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

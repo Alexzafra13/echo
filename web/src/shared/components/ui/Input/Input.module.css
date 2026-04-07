@@ -1,0 +1,256 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+/* Wave group container */
+.waveGroup {
+  position: relative;
+}
+
+.inputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  background: transparent;
+  border: 2px solid var(--white-15);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition-slow);
+  outline: none;
+  box-shadow: none;
+}
+
+.input::placeholder {
+  color: transparent;
+}
+
+.input:hover:not(:disabled) {
+  border-color: var(--white-25);
+}
+
+.input:focus,
+.input:focus-visible {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: none;
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Floating label with wave animation */
+.label {
+  color: var(--text-tertiary);
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  position: absolute;
+  pointer-events: none;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  transition:
+    top var(--transition-slow),
+    transform var(--transition-slow),
+    left var(--transition-slow),
+    font-size var(--transition-slow),
+    color var(--transition-slow);
+  background: transparent;
+  padding: 0 var(--space-1);
+}
+
+.labelChar {
+  transition:
+    transform 0.3s ease,
+    font-size 0.3s ease,
+    color 0.3s ease;
+  transition-delay: calc(var(--index) * 0.03s);
+}
+
+/* Label moves up when input is focused or has value */
+.input:focus ~ .label,
+.input:not(:placeholder-shown) ~ .label {
+  top: 0;
+  transform: translateY(-50%);
+  left: var(--space-3);
+  font-size: var(--text-sm);
+  background: var(--input-label-bg, var(--bg-elevated));
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.input:focus ~ .label .labelChar {
+  color: var(--color-primary);
+}
+
+.input:not(:focus):not(:placeholder-shown) ~ .label .labelChar {
+  color: var(--text-secondary);
+}
+
+/* Bar element - hidden in this style */
+.bar {
+  display: none;
+}
+
+/* Error state */
+.error .input {
+  border-color: var(--color-error);
+}
+
+.error .input:focus ~ .label .labelChar,
+.error .input:not(:placeholder-shown) ~ .label .labelChar {
+  color: var(--color-error);
+}
+
+/* With icon adjustments */
+.withLeftIcon .input {
+  padding-left: var(--space-12);
+}
+
+.withLeftIcon .label {
+  left: var(--space-12);
+}
+
+.withLeftIcon .input:focus ~ .label,
+.withLeftIcon .input:not(:placeholder-shown) ~ .label {
+  left: var(--space-3);
+}
+
+.withLeftIcon.hasValue .label {
+  left: var(--space-3);
+}
+
+.withRightIcon .input {
+  padding-right: var(--space-11);
+}
+
+.leftIcon,
+.rightIcon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  transition: color var(--transition-slow);
+  z-index: 1;
+}
+
+.leftIcon {
+  left: var(--space-4);
+}
+
+.rightIcon {
+  right: var(--space-4);
+}
+
+/* Icon color changes on focus */
+.waveGroup:has(.input:focus) .leftIcon {
+  color: var(--color-primary);
+}
+
+/* Password toggle button */
+.passwordToggle {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-base);
+  pointer-events: auto;
+}
+
+.passwordToggle:hover {
+  color: var(--text-secondary);
+}
+
+.passwordToggle:focus {
+  outline: none;
+  color: var(--color-primary);
+}
+
+/* Helper text */
+.helperText {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin-top: var(--space-1);
+}
+
+.errorText {
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+/* Sizes */
+.sm .input {
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.sm .label {
+  font-size: var(--text-sm);
+  left: var(--space-3);
+}
+
+.sm .input:focus ~ .label,
+.sm .input:not(:placeholder-shown) ~ .label {
+  font-size: var(--text-xs);
+}
+
+.lg .input {
+  padding: var(--space-5);
+  font-size: var(--text-lg);
+}
+
+.lg .label {
+  font-size: var(--text-lg);
+  left: var(--space-5);
+}
+
+.lg .input:focus ~ .label,
+.lg .input:not(:placeholder-shown) ~ .label {
+  font-size: var(--text-sm);
+}
+
+/* hasValue class - fallback for controlled inputs */
+.hasValue .label {
+  top: 0;
+  transform: translateY(-50%);
+  left: var(--space-3);
+  font-size: var(--text-sm);
+  background: var(--input-label-bg, var(--bg-elevated));
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.hasValue .label .labelChar {
+  color: var(--text-secondary);
+}
+
+.hasValue:focus-within .label .labelChar {
+  color: var(--color-primary);
+}
+
+.withLeftIcon.hasValue .label {
+  left: var(--space-3);
+}
