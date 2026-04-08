@@ -61,7 +61,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
   private poolReady = false;
   private shuttingDown = false;
 
-  private static readonly RESTART_THRESHOLD = 500;
+  private static readonly RESTART_THRESHOLD = 250;
   private static readonly MAX_STDERR_BUFFER = 64 * 1024;
 
   constructor(
