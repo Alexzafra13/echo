@@ -19,7 +19,12 @@ interface DjAnalysisJob {
 const DJ_ANALYSIS_QUEUE = 'dj-analysis-queue';
 const DJ_ANALYSIS_JOB = 'analyze-track';
 const ANALYSIS_TIMEOUT_MS = 120_000; // 2 minutes max per track
-const DJ_JOB_OPTS = { attempts: 1, removeOnComplete: true, removeOnFail: true };
+const DJ_JOB_OPTS = {
+  attempts: 3,
+  removeOnComplete: true,
+  removeOnFail: true,
+  backoff: { type: 'exponential' as const, delay: 5000 },
+};
 
 @Injectable()
 export class DjAnalysisQueueService implements OnModuleInit {
@@ -48,13 +53,36 @@ export class DjAnalysisQueueService implements OnModuleInit {
   }
 
   onModuleInit() {
-    this.bullmq.registerProcessor(
+    const worker = this.bullmq.registerProcessor(
       DJ_ANALYSIS_QUEUE,
       async (job) => {
         return this.processAnalysisJob(job.data as DjAnalysisJob);
       },
       { concurrency: this.concurrency }
     );
+
+    // Cuando se agotan todos los reintentos, marcar definitivamente como failed
+    worker.on('failed', async (job, err) => {
+      if (job && job.attemptsMade >= (job.opts?.attempts ?? 1)) {
+        const data = job.data as DjAnalysisJob;
+        try {
+          await this.drizzle.db
+            .update(djAnalysis)
+            .set({
+              status: 'failed',
+              analysisError: err.message,
+              updatedAt: new Date(),
+            })
+            .where(eq(djAnalysis.trackId, data.trackId));
+          this.logger.warn(
+            { trackId: data.trackId, attempts: job.attemptsMade },
+            'DJ analysis failed after all retries'
+          );
+        } catch {
+          // best-effort
+        }
+      }
+    });
 
     // Resume any pending/stale analyses from a previous run (e.g. after restart or Redis flush)
     setTimeout(() => this.resumePendingAnalyses(), 5000);
@@ -322,24 +350,15 @@ export class DjAnalysisQueueService implements OnModuleInit {
       const finalBpm = trackBpm > 0 ? trackBpm : analyzedBpm;
       const finalKey = trackKey && trackKey !== 'Unknown' ? trackKey : analyzedKey;
 
-      // If no useful data from any source, mark as failed so it gets retried
+      // Si no hay datos útiles de ninguna fuente, lanzar error para que BullMQ reintente.
+      // En el último intento el catch externo lo marcará como failed definitivamente.
       const hasUsefulData = finalBpm > 0 || (finalKey && finalKey !== 'Unknown');
       if (!hasUsefulData) {
-        await this.drizzle.db
-          .update(djAnalysis)
-          .set({
-            status: 'failed',
-            analysisError: 'No BPM or key detected from analysis or ID3 tags',
-            updatedAt: new Date(),
-          })
-          .where(eq(djAnalysis.id, analysisId));
-
-        this.advanceProgress(Date.now() - startTime);
         this.logger.warn(
           { trackId: job.trackId },
-          'DJ analysis produced no useful data, marked as failed for retry'
+          'DJ analysis produced no useful data, will retry'
         );
-        return;
+        throw new Error('No BPM or key detected from analysis or ID3 tags');
       }
 
       // Convert key to Camelot
@@ -388,12 +407,12 @@ export class DjAnalysisQueueService implements OnModuleInit {
         'DJ analysis failed'
       );
 
-      // Update status to failed
+      // Resetear a pending para que BullMQ pueda reintentar
       try {
         await this.drizzle.db
           .update(djAnalysis)
           .set({
-            status: 'failed',
+            status: 'pending',
             analysisError: error instanceof Error ? error.message : 'Unknown error',
             updatedAt: new Date(),
           })
@@ -401,11 +420,14 @@ export class DjAnalysisQueueService implements OnModuleInit {
       } catch (dbError) {
         this.logger.error(
           { trackId: job.trackId, error: dbError instanceof Error ? dbError.message : 'Unknown' },
-          'Failed to update analysis status to failed'
+          'Failed to update analysis status'
         );
       }
 
       this.advanceProgress(Date.now() - startTime);
+
+      // Re-throw para que BullMQ reintente con backoff exponencial
+      throw error;
     }
   }
 

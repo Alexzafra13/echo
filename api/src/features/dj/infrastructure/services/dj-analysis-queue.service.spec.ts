@@ -7,8 +7,9 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
+const mockWorker = { on: jest.fn() };
 const mockBullmq = {
-  registerProcessor: jest.fn(),
+  registerProcessor: jest.fn().mockReturnValue(mockWorker),
   addJob: jest.fn().mockResolvedValue(undefined),
   drainQueue: jest.fn().mockResolvedValue(undefined),
 };
@@ -200,7 +201,7 @@ describe('DjAnalysisQueueService', () => {
         'dj-analysis-queue',
         'analyze-track',
         { trackId: 't1', trackTitle: 'Track 1', filePath: '/music/t1.mp3' },
-        { attempts: 1, removeOnComplete: true, removeOnFail: true }
+        { attempts: 3, removeOnComplete: true, removeOnFail: true, backoff: { type: 'exponential', delay: 5000 } }
       );
     });
 
@@ -225,7 +226,7 @@ describe('DjAnalysisQueueService', () => {
         'dj-analysis-queue',
         'analyze-track',
         { trackId: 't1', trackTitle: 'Track 1', filePath: '/music/t1.mp3' },
-        { attempts: 1, removeOnComplete: true, removeOnFail: true }
+        { attempts: 3, removeOnComplete: true, removeOnFail: true, backoff: { type: 'exponential', delay: 5000 } }
       );
     });
   });
