@@ -58,15 +58,46 @@ echo "✅ Secrets loaded"
 # ============================================
 echo ""
 echo "⏳ Waiting for PostgreSQL..."
-until nc -z -v -w30 postgres 5432 2>/dev/null; do
-  echo "   Waiting for database connection..."
+RETRIES=0
+MAX_RETRIES=60
+until nc -z -v -w5 postgres 5432 2>/dev/null; do
+  RETRIES=$((RETRIES + 1))
+  if [ $RETRIES -ge $MAX_RETRIES ]; then
+    echo ""
+    echo "❌ PostgreSQL not reachable after ${MAX_RETRIES}s"
+    echo ""
+    echo "   Troubleshooting:"
+    echo "   1. Check that the postgres container is running:"
+    echo "      docker ps | grep postgres"
+    echo "   2. Check PostgreSQL logs:"
+    echo "      docker logs echo-postgres"
+    echo "   3. On Synology NAS, ensure Container Manager allows"
+    echo "      inter-container networking (bridge mode)."
+    echo ""
+    exit 1
+  fi
+  echo "   Waiting for database connection... (${RETRIES}/${MAX_RETRIES})"
   sleep 1
 done
 echo "✅ PostgreSQL is ready!"
 
 echo "⏳ Waiting for Redis..."
-until nc -z -v -w30 redis 6379 2>/dev/null; do
-  echo "   Waiting for Redis connection..."
+RETRIES=0
+until nc -z -v -w5 redis 6379 2>/dev/null; do
+  RETRIES=$((RETRIES + 1))
+  if [ $RETRIES -ge $MAX_RETRIES ]; then
+    echo ""
+    echo "❌ Redis not reachable after ${MAX_RETRIES}s"
+    echo ""
+    echo "   Troubleshooting:"
+    echo "   1. Check that the redis container is running:"
+    echo "      docker ps | grep redis"
+    echo "   2. Check Redis logs:"
+    echo "      docker logs echo-redis"
+    echo ""
+    exit 1
+  fi
+  echo "   Waiting for Redis connection... (${RETRIES}/${MAX_RETRIES})"
   sleep 1
 done
 echo "✅ Redis is ready!"
