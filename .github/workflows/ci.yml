@@ -290,14 +290,20 @@ jobs:
           mkdir -p /tmp/echo-data
           node dist/src/main.js &
           echo "Waiting for API to start..."
+          API_READY=false
           for i in $(seq 1 30); do
             if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
               echo "API is ready!"
+              API_READY=true
               break
             fi
-            echo "Attempt $i: API not ready yet..."
+            echo "Attempt $i/30: API not ready yet..."
             sleep 2
           done
+          if [ "$API_READY" = false ]; then
+            echo "❌ API failed to start after 60s"
+            exit 1
+          fi
 
       - name: Create music directory for E2E tests
         run: sudo mkdir -p /music && sudo chmod 777 /music
