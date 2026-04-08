@@ -8,7 +8,7 @@ import { useDominantColor } from '@shared/hooks/useDominantColor';
 import { Sidebar } from '@shared/components/layout/Sidebar';
 import { Header } from '@shared/components/layout/Header';
 import { Button, UserAvatar } from '@shared/components/ui';
-import { getUserAvatarUrl } from '@shared/utils/avatar.utils';
+import { getUserAvatarUrl, getAvatarColor } from '@shared/utils/avatar.utils';
 import { useAuthStore } from '@shared/store';
 import {
   useSocialOverview,
@@ -46,11 +46,26 @@ export default function SocialPage() {
 
   const currentUser = useAuthStore((s) => s.user);
 
+  // URL del avatar real (null si no tiene foto subida)
   const avatarUrl = useMemo(
-    () => (currentUser ? getUserAvatarUrl(currentUser.id, currentUser.hasAvatar) : null),
+    () =>
+      currentUser?.hasAvatar
+        ? getUserAvatarUrl(currentUser.id, true)
+        : null,
     [currentUser]
   );
-  const dominantColor = useDominantColor(avatarUrl);
+
+  // Color de fondo del hero: extraer del avatar real, o usar el color determinista del userId
+  const avatarFallbackColor = useMemo(() => {
+    if (!currentUser?.id) return undefined;
+    const hex = getAvatarColor(currentUser.id);
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `${r}, ${g}, ${b}`;
+  }, [currentUser?.id]);
+
+  const dominantColor = useDominantColor(avatarUrl, avatarFallbackColor);
 
   // Debounce del query de búsqueda para no disparar una request por cada tecla
   useEffect(() => {
