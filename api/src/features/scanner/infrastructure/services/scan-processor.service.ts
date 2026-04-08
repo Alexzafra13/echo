@@ -207,24 +207,29 @@ export class ScanProcessorService implements OnModuleInit {
       throw new ScannerError('SCAN_ALREADY_RUNNING');
     }
 
-    const libraryPath = await this.getMusicLibraryPath();
-    await this.bullmq.addJob(
-      this.QUEUE_NAME,
-      'scan',
-      {
-        scanId,
-        path: options?.path || libraryPath,
-        recursive: options?.recursive !== false,
-        pruneDeleted: options?.pruneDeleted !== false,
-      },
-      {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
+    try {
+      const libraryPath = await this.getMusicLibraryPath();
+      await this.bullmq.addJob(
+        this.QUEUE_NAME,
+        'scan',
+        {
+          scanId,
+          path: options?.path || libraryPath,
+          recursive: options?.recursive !== false,
+          pruneDeleted: options?.pruneDeleted !== false,
         },
-      }
-    );
+        {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 2000,
+          },
+        }
+      );
+    } catch (error) {
+      await this.redis.del(lockKey);
+      throw error;
+    }
   }
 
   /**
