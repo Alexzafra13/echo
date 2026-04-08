@@ -21,53 +21,34 @@ mkdir -p "$DATA_DIR/logs"
 echo "📁 Data directory: $DATA_DIR"
 
 # ============================================
-# 1. Auto-generate ALL secrets (Jellyfin-style)
+# 1. Secrets Management
 # ============================================
-# Generate secrets if they don't exist (FIRST RUN ONLY)
-if [ ! -f "$SECRETS_FILE" ]; then
-  echo "🔐 First run detected - generating secure secrets..."
+# Secrets come from .env via docker-compose environment variables.
+# For backwards compatibility, also check secrets.env from data volume.
+# If JWT secrets are missing from both sources, auto-generate them.
 
-  # Generate cryptographically secure secrets
-  JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
-  JWT_REFRESH_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
-
-  # Auto-generate DB and Redis passwords if not provided via environment
-  if [ -z "$POSTGRES_PASSWORD" ]; then
-    POSTGRES_PASSWORD=$(head -c 32 /dev/urandom | base64 | tr -d '\n/+=')
-    echo "🔑 Auto-generated PostgreSQL password"
-  fi
-  if [ -z "$REDIS_PASSWORD" ]; then
-    REDIS_PASSWORD=$(head -c 32 /dev/urandom | base64 | tr -d '\n/+=')
-    echo "🔑 Auto-generated Redis password"
-  fi
-
-  # Save to persistent volume with restricted permissions
-  cat > "$SECRETS_FILE" << EOF
-# Auto-generated secrets (DO NOT EDIT MANUALLY)
-# Generated on: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-JWT_SECRET="$JWT_SECRET"
-JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET"
-POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
-REDIS_PASSWORD="$REDIS_PASSWORD"
-EOF
-  chmod 600 "$SECRETS_FILE"
-
-  echo "✅ Secure secrets generated and saved"
-  echo ""
-else
-  echo "ℹ️  Using existing secrets"
-  echo ""
+if [ -f "$SECRETS_FILE" ] && { [ -z "$JWT_SECRET" ] || [ -z "$JWT_REFRESH_SECRET" ]; }; then
+  echo "ℹ️  Loading secrets from $SECRETS_FILE (legacy)"
+  set -a
+  . "$SECRETS_FILE"
+  set +a
 fi
 
-# Load secrets into environment
-set -a
-. "$SECRETS_FILE"
-set +a
-
-# Verify critical secrets are loaded
+# Auto-generate JWT secrets if still missing (e.g. user didn't run install.sh)
 if [ -z "$JWT_SECRET" ] || [ -z "$JWT_REFRESH_SECRET" ]; then
-  echo "❌ ERROR: JWT secrets failed to load from $SECRETS_FILE"
-  exit 1
+  echo "🔐 JWT secrets not found — generating..."
+  JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
+  JWT_REFRESH_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
+  export JWT_SECRET JWT_REFRESH_SECRET
+
+  # Persist for next restart
+  cat > "$SECRETS_FILE" << EOF
+# Auto-generated secrets — $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+JWT_SECRET="$JWT_SECRET"
+JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET"
+EOF
+  chmod 600 "$SECRETS_FILE"
+  echo "✅ JWT secrets generated and saved to $SECRETS_FILE"
 fi
 
 echo "✅ Secrets loaded"

@@ -34,7 +34,7 @@ describe('validateEnvironment', () => {
 
   it('should default VERSION to 1.0.0', () => {
     const result = validateEnvironment(validConfig);
-    expect(result.VERSION).toBe('1.0.0');
+    expect(result.VERSION).toBe('1.0.1');
   });
 
   it('should reject invalid NODE_ENV', () => {

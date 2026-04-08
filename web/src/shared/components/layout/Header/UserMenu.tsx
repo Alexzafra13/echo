@@ -20,7 +20,7 @@ interface UserMenuProps {
 
 export function UserMenu({
   user,
-  avatarTimestamp: _avatarTimestamp,
+  avatarTimestamp,
   isOpen,
   onOpenChange,
   onLogout,
@@ -68,6 +68,7 @@ export function UserMenu({
           hasAvatar={user?.hasAvatar}
           username={user?.username || 'User'}
           className={styles.header__userAvatar}
+          cacheBuster={avatarTimestamp}
         />
       </button>
 
@@ -86,6 +87,7 @@ export function UserMenu({
               hasAvatar={user?.hasAvatar}
               username={user?.username || 'User'}
               className={styles.header__userAvatarLarge}
+              cacheBuster={avatarTimestamp}
             />
             <div>
               <p className={styles.header__userName}>{user?.username || 'User'}</p>

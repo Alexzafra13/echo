@@ -115,19 +115,22 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
     weightedPlay: number,
     completionRate: number
   ): Promise<void> {
-    const skipIncrement = completionRate < 0.5 ? 1 : 0;
+    const isSkip = completionRate < 0.5;
+    const playIncrement = isSkip ? 0 : 1;
+    const skipIncrement = isSkip ? 1 : 0;
+    const initialPlayCount = isSkip ? 0 : 1;
 
     await tx.execute(sql`
       INSERT INTO user_play_stats (user_id, item_id, item_type, play_count, weighted_play_count, last_played_at, avg_completion_rate, skip_count)
-      VALUES (${userId}, ${itemId}, ${itemType}, 1, ${weightedPlay}, NOW(), ${completionRate}, ${skipIncrement})
+      VALUES (${userId}, ${itemId}, ${itemType}, ${initialPlayCount}, ${weightedPlay}, NOW(), ${completionRate}, ${skipIncrement})
       ON CONFLICT (user_id, item_id, item_type)
       DO UPDATE SET
-        play_count = user_play_stats.play_count + 1,
+        play_count = user_play_stats.play_count + ${playIncrement},
         weighted_play_count = user_play_stats.weighted_play_count + ${weightedPlay},
         last_played_at = NOW(),
         avg_completion_rate = (
-          COALESCE(user_play_stats.avg_completion_rate, 0) * user_play_stats.play_count + ${completionRate}
-        ) / (user_play_stats.play_count + 1),
+          COALESCE(user_play_stats.avg_completion_rate, 0) * (user_play_stats.play_count + user_play_stats.skip_count) + ${completionRate}
+        ) / (user_play_stats.play_count + user_play_stats.skip_count + 1),
         skip_count = user_play_stats.skip_count + ${skipIncrement}
     `);
   }

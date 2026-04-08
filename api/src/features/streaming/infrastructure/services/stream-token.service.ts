@@ -71,8 +71,8 @@ export class StreamTokenService {
       return null;
     }
 
-    // 3. Cache the validated userId with 5 min TTL
-    await this.cache.set(cacheKey, streamToken.token.userId, 300);
+    // Cache 1h — el token expira a las 24h, no tiene sentido consultar DB cada 5min
+    await this.cache.set(cacheKey, streamToken.token.userId, 3600);
 
     // 4. Update lastUsedAt fire-and-forget (not critical)
     this.drizzle.db

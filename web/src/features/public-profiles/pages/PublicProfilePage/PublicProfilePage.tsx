@@ -120,8 +120,9 @@ export default function PublicProfilePage() {
 
   const { user, topTracks, topArtists, topAlbums, playlists, settings, social } = profile;
 
-  // Private profile view
-  if (!user.isPublicProfile) {
+  // Private profile view (pero el dueño siempre ve su perfil completo)
+  const isOwnProfile = social.friendshipStatus === 'self';
+  if (!user.isPublicProfile && !isOwnProfile) {
     return (
       <div className={styles.publicProfilePage}>
         <Sidebar />

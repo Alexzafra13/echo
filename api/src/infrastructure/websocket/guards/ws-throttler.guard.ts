@@ -41,7 +41,7 @@ export class WsThrottlerGuard implements OnModuleInit, OnModuleDestroy {
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   // Configuración
-  private readonly limit = 20; // Eventos por ventana
+  private readonly limit = 10; // Eventos por ventana
   private readonly windowMs = 1000; // Ventana de 1 segundo
   private readonly cleanupIntervalMs = 5 * 60 * 1000; // Limpieza cada 5 minutos
 

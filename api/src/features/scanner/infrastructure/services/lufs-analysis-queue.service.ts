@@ -328,8 +328,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     } catch (error) {
       this.logger.error(`❌ Error analyzing ${job.trackTitle}: ${(error as Error).message}`);
 
-      // Mark as analyzed to avoid re-processing on next scan
-      // Leave gain/peak null to indicate no data available
+      // Marcar como analizado para no reprocesar en el siguiente scan
       await this.drizzle.db
         .update(tracks)
         .set({
@@ -339,6 +338,20 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         .where(eq(tracks.id, job.trackId));
 
       this.processedInSession++;
+      this.emitProgress();
+
+      // Si era el último track, finalizar igualmente (calcular album gains)
+      if (this.processedInSession >= this.totalToProcess && !this.isFinishing) {
+        this.isFinishing = true;
+        const duration = this.sessionStartedAt ? Date.now() - this.sessionStartedAt.getTime() : 0;
+        this.logger.info(
+          `LUFS analysis finished (with errors). ${this.processedInSession} tracks in ${formatDuration(duration)}`
+        );
+        await this.calculateAlbumGains();
+        this.isRunning = false;
+        this.isFinishing = false;
+        this.emitProgress();
+      }
     }
   }
 

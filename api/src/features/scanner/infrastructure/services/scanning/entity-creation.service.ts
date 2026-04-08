@@ -132,8 +132,24 @@ export class EntityCreationService {
     const pid = generateAlbumPid(metadata.mbzAlbumId, artistId, normalizedName, metadata.year);
 
     // Check album cache (key = PID)
+    // Si el album está cacheado CON cover, devolver directo.
+    // Si no tiene cover, intentar extraerlo de este track antes de devolver.
     const cachedAlbum = this.albumCache.get(pid);
-    if (cachedAlbum) return cachedAlbum;
+    if (cachedAlbum) {
+      if (cachedAlbum.coverExtracted) return cachedAlbum;
+
+      // Intentar extraer cover del track actual
+      const coverPath = await this.coverArtService.extractAndCacheCover(cachedAlbum.id, trackPath);
+      if (coverPath) {
+        await this.drizzle.db
+          .update(albums)
+          .set({ coverArtPath: coverPath, updatedAt: new Date() })
+          .where(eq(albums.id, cachedAlbum.id));
+        cachedAlbum.coverExtracted = true;
+        this.logger.info(`Extracted cover for cached album "${cachedAlbum.name}": ${coverPath}`);
+      }
+      return cachedAlbum;
+    }
 
     // Strategy 1: Search by PID (most reliable, handles metadata changes)
     let existingAlbum = await this.drizzle.db

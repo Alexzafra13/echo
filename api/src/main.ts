@@ -85,7 +85,10 @@ async function bootstrap() {
         connectSrc: ["'self'", 'ws:', 'wss:', 'https://ipapi.co'],
         fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
         objectSrc: ["'none'"],
-        mediaSrc: ["'self'", 'blob:', 'http:', 'https:'],
+        mediaSrc:
+          process.env.NODE_ENV === 'production'
+            ? ["'self'", 'blob:', 'https:']
+            : ["'self'", 'blob:', 'http:', 'https:'],
         frameSrc: ["'none'"],
         upgradeInsecureRequests: null,
       },

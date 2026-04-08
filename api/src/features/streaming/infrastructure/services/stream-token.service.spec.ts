@@ -166,7 +166,7 @@ describe('StreamTokenService', () => {
       expect(mockCache.set).toHaveBeenCalledWith(
         expect.stringContaining('stream-token:'),
         userId,
-        300
+        3600
       );
     });
 

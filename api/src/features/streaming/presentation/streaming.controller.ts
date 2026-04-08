@@ -223,7 +223,7 @@ export class StreamingController implements OnModuleDestroy {
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
 
-      if (start >= fileSize || end >= fileSize || start > end) {
+      if (isNaN(start) || isNaN(end) || start < 0 || end < 0 || start >= fileSize || end >= fileSize || start > end) {
         res.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
         res.header('Content-Range', `bytes */${fileSize}`);
         res.send();
