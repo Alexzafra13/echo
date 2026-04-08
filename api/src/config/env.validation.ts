@@ -84,6 +84,6 @@ export function validateEnvironment(config: Record<string, unknown>): Record<str
     PORT: config.PORT ? Number(config.PORT) : 4567,
     REDIS_HOST: config.REDIS_HOST || 'localhost',
     REDIS_PORT: config.REDIS_PORT ? Number(config.REDIS_PORT) : 6379,
-    VERSION: config.VERSION || '1.0.0',
+    VERSION: config.VERSION || '1.0.1',
   };
 }
