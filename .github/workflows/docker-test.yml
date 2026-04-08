@@ -75,19 +75,33 @@ jobs:
             -e NODE_ENV=production \
             echo-music-server:test
 
-          # Dar tiempo al contenedor para inicializar
-          echo "⏳ Waiting for container to initialize..."
-          sleep 15
+          # Esperar a que el contenedor esté healthy (max 60s)
+          echo "⏳ Waiting for container to be ready..."
+          READY=false
+          for i in $(seq 1 60); do
+            # Primero verificar que no ha crasheado
+            if ! docker ps | grep -q test-echo; then
+              echo "❌ Container crashed during startup"
+              docker logs test-echo
+              exit 1
+            fi
+            # Intentar health check
+            if docker exec test-echo wget -qO- http://localhost:4567/api/health 2>/dev/null | grep -q '"status"'; then
+              echo "✅ Container is healthy (${i}s)"
+              READY=true
+              break
+            fi
+            echo "   Attempt $i/60: waiting..."
+            sleep 1
+          done
 
-          # Verificar que el contenedor sigue corriendo (no crasheó)
-          if docker ps | grep -q test-echo; then
-            echo "✅ Container is running"
-            docker logs test-echo --tail 20
-          else
-            echo "❌ Container failed to start"
-            docker logs test-echo
+          if [ "$READY" = false ]; then
+            echo "❌ Container not healthy after 60s"
+            docker logs test-echo --tail 40
             exit 1
           fi
+
+          docker logs test-echo --tail 20
 
           # Cleanup
           docker stop test-echo test-postgres test-redis || true
