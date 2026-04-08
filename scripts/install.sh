@@ -8,16 +8,16 @@
 # Supported: Debian/Ubuntu, Fedora/RHEL, Arch Linux
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/Alexzafra13/echo/main/scripts/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Alexzafra13/echo/main/scripts/install.sh | sudo bash
 #
 # Or locally:
-#   ./scripts/install.sh
+#   sudo ./scripts/install.sh
 #
 # Update:
-#   ./scripts/install.sh --update
+#   sudo ./scripts/install.sh --update
 #
 # Uninstall:
-#   ./scripts/install.sh --uninstall
+#   sudo ./scripts/install.sh --uninstall
 # ============================================
 
 set -euo pipefail
@@ -25,14 +25,21 @@ set -euo pipefail
 # ============================================
 # Configuration
 # ============================================
-ECHO_USER="echo"
-ECHO_GROUP="echo"
+# Run as the user who invoked sudo (not root)
+ECHO_USER="${SUDO_USER:-$(whoami)}"
+ECHO_GROUP="$(id -gn "$ECHO_USER")"
 INSTALL_DIR="/opt/echo"
 DATA_DIR="/var/lib/echo"
 MUSIC_DIR="/srv/music"
 PORT=4567
 NODE_MAJOR=22
 PNPM_VERSION="10.18.3"
+
+# Generated during install
+DB_PASSWORD=""
+REDIS_PASSWORD=""
+JWT_SECRET=""
+JWT_REFRESH_SECRET=""
 
 # Colors
 RED='\033[0;31m'
@@ -67,7 +74,6 @@ need_root() {
 preflight_checks() {
   log_info "Running preflight checks..."
 
-  # Architecture
   local arch
   arch=$(uname -m)
   case "$arch" in
@@ -76,7 +82,6 @@ preflight_checks() {
   esac
   log_success "Architecture: $arch"
 
-  # Disk space (need at least 1GB for install dir, 500MB for data)
   local install_parent
   install_parent=$(dirname "$INSTALL_DIR")
   local available_kb
@@ -86,7 +91,6 @@ preflight_checks() {
   fi
   log_success "Disk space: $((available_kb / 1024))MB available"
 
-  # RAM (warn if less than 1GB)
   local total_mem_kb
   total_mem_kb=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}')
   if [ -n "$total_mem_kb" ] && [ "$total_mem_kb" -lt 1048576 ]; then
@@ -94,6 +98,8 @@ preflight_checks() {
   else
     log_success "Memory: $((total_mem_kb / 1024))MB"
   fi
+
+  log_success "Will run as user: $ECHO_USER ($ECHO_GROUP)"
 }
 
 # ============================================
@@ -104,30 +110,24 @@ detect_distro() {
     . /etc/os-release
     DISTRO_ID="$ID"
     DISTRO_LIKE="${ID_LIKE:-$ID}"
-    DISTRO_VERSION="${VERSION_ID:-}"
     DISTRO_NAME="${PRETTY_NAME:-$ID}"
   else
     abort "Cannot detect Linux distribution. /etc/os-release not found."
   fi
 
-  # Normalize to package manager family
   case "$DISTRO_ID" in
     ubuntu|debian|raspbian|linuxmint|pop)
-      PKG_FAMILY="debian"
-      ;;
+      PKG_FAMILY="debian" ;;
     fedora|rhel|centos|rocky|alma)
-      PKG_FAMILY="fedora"
-      ;;
+      PKG_FAMILY="fedora" ;;
     arch|manjaro|endeavouros)
-      PKG_FAMILY="arch"
-      ;;
+      PKG_FAMILY="arch" ;;
     *)
-      # Try ID_LIKE as fallback
       case "$DISTRO_LIKE" in
         *debian*|*ubuntu*) PKG_FAMILY="debian" ;;
         *fedora*|*rhel*)   PKG_FAMILY="fedora" ;;
         *arch*)            PKG_FAMILY="arch" ;;
-        *) abort "Unsupported distribution: $DISTRO_NAME. Supported: Debian/Ubuntu, Fedora/RHEL, Arch." ;;
+        *) abort "Unsupported distribution: $DISTRO_NAME" ;;
       esac
       ;;
   esac
@@ -140,15 +140,21 @@ detect_distro() {
 # ============================================
 install_deps_debian() {
   log_info "Installing system packages (apt)..."
-
   apt-get update -qq
 
-  # Node.js repo
-  if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt "$NODE_MAJOR" ]; then
+  # Node.js 22 repo (nodesource)
+  local node_version=""
+  if command -v node &>/dev/null; then
+    node_version=$(node -v | cut -d. -f1 | tr -d v)
+  fi
+
+  if [ -z "$node_version" ] || [ "$node_version" -lt "$NODE_MAJOR" ]; then
     apt-get install -y -qq ca-certificates curl gnupg
     mkdir -p /etc/apt/keyrings
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg 2>/dev/null
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+      | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg 2>/dev/null
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" \
+      > /etc/apt/sources.list.d/nodesource.list
     apt-get update -qq
   fi
 
@@ -160,52 +166,54 @@ install_deps_debian() {
     git \
     build-essential
 
-  log_success "System packages installed"
+  # Verify Node.js version
+  local installed_version
+  installed_version=$(node -v | cut -d. -f1 | tr -d v)
+  if [ "$installed_version" -lt "$NODE_MAJOR" ]; then
+    abort "Node.js $NODE_MAJOR required but got v$(node -v). Remove old Node.js and retry."
+  fi
+
+  log_success "System packages installed (Node.js $(node -v))"
 }
 
 install_deps_fedora() {
   log_info "Installing system packages (dnf)..."
 
-  # Node.js repo
   if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt "$NODE_MAJOR" ]; then
     dnf install -y -q https://rpm.nodesource.com/pub_${NODE_MAJOR}.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm 2>/dev/null || true
   fi
 
   dnf install -y -q \
     nodejs \
-    postgresql-server \
-    postgresql \
+    postgresql-server postgresql \
     redis \
     ffmpeg \
     git \
     gcc-c++ make
 
-  # Initialize PostgreSQL if needed
   if [ ! -f /var/lib/pgsql/data/PG_VERSION ]; then
     postgresql-setup --initdb 2>/dev/null || true
   fi
 
-  log_success "System packages installed"
+  log_success "System packages installed (Node.js $(node -v))"
 }
 
 install_deps_arch() {
   log_info "Installing system packages (pacman)..."
 
   pacman -Sy --noconfirm --needed \
-    nodejs \
-    npm \
+    nodejs npm \
     postgresql \
     redis \
     ffmpeg \
     git \
     base-devel
 
-  # Initialize PostgreSQL if needed
   if [ ! -d /var/lib/postgres/data/base ]; then
     su - postgres -c "initdb -D /var/lib/postgres/data" 2>/dev/null || true
   fi
 
-  log_success "System packages installed"
+  log_success "System packages installed (Node.js $(node -v))"
 }
 
 install_system_deps() {
@@ -221,9 +229,7 @@ install_system_deps() {
 # ============================================
 install_pnpm() {
   if command -v pnpm &>/dev/null; then
-    local current_version
-    current_version=$(pnpm -v 2>/dev/null)
-    log_info "pnpm $current_version already installed"
+    log_info "pnpm $(pnpm -v) already installed"
     return
   fi
 
@@ -233,15 +239,13 @@ install_pnpm() {
 }
 
 # ============================================
-# Start and configure PostgreSQL
+# Configure PostgreSQL
 # ============================================
 setup_postgresql() {
   log_info "Configuring PostgreSQL..."
 
-  # Start PostgreSQL
   systemctl enable postgresql --now 2>/dev/null || systemctl start postgresql 2>/dev/null
 
-  # Wait for PostgreSQL to be ready
   local retries=0
   while ! su - postgres -c "pg_isready" &>/dev/null; do
     retries=$((retries + 1))
@@ -251,10 +255,8 @@ setup_postgresql() {
     sleep 1
   done
 
-  # Generate secure password
   DB_PASSWORD=$(head -c 32 /dev/urandom | base64 | tr -d '\n/+=')
 
-  # Create user and database (ignore errors if already exist)
   su - postgres -c "psql -v ON_ERROR_STOP=0" <<SQL 2>/dev/null
 DO \$\$
 BEGIN
@@ -266,22 +268,33 @@ BEGIN
 END
 \$\$;
 
-SELECT 'CREATE DATABASE ${ECHO_USER} OWNER ${ECHO_USER}'
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${ECHO_USER}')\gexec
+SELECT 'CREATE DATABASE echo OWNER ${ECHO_USER}'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'echo')\gexec
 SQL
 
-  log_success "PostgreSQL configured (user: $ECHO_USER, db: $ECHO_USER)"
+  # Ensure pg_hba.conf allows password auth for local connections
+  local pg_hba
+  pg_hba=$(su - postgres -c "psql -t -c 'SHOW hba_file'" 2>/dev/null | tr -d ' ')
+  if [ -n "$pg_hba" ] && [ -f "$pg_hba" ]; then
+    if ! grep -q "host.*echo.*${ECHO_USER}.*md5\|host.*echo.*${ECHO_USER}.*scram" "$pg_hba" 2>/dev/null; then
+      # Add password auth rule before the first existing rule
+      sed -i "1s|^|host echo ${ECHO_USER} 127.0.0.1/32 scram-sha-256\nhost echo ${ECHO_USER} ::1/128 scram-sha-256\n|" "$pg_hba"
+      systemctl reload postgresql 2>/dev/null || true
+    fi
+  fi
+
+  export DATABASE_URL="postgresql://${ECHO_USER}:${DB_PASSWORD}@localhost:5432/echo"
+  log_success "PostgreSQL configured (user: $ECHO_USER, db: echo)"
 }
 
 # ============================================
-# Start and configure Redis
+# Configure Redis
 # ============================================
 setup_redis() {
   log_info "Configuring Redis..."
 
   REDIS_PASSWORD=$(head -c 32 /dev/urandom | base64 | tr -d '\n/+=')
 
-  # Set Redis password
   local redis_conf=""
   for path in /etc/redis/redis.conf /etc/redis.conf /etc/redis/6379.conf; do
     if [ -f "$path" ]; then
@@ -291,31 +304,15 @@ setup_redis() {
   done
 
   if [ -n "$redis_conf" ]; then
-    # Remove existing requirepass lines and add new one
     sed -i '/^requirepass /d' "$redis_conf"
     echo "requirepass ${REDIS_PASSWORD}" >> "$redis_conf"
   fi
 
-  # Start Redis
-  systemctl enable redis-server --now 2>/dev/null || \
-  systemctl enable redis --now 2>/dev/null || \
-  systemctl start redis 2>/dev/null
+  # Enable and restart (not just start) to apply new password
+  systemctl enable redis-server 2>/dev/null || systemctl enable redis 2>/dev/null || true
+  systemctl restart redis-server 2>/dev/null || systemctl restart redis 2>/dev/null || true
 
   log_success "Redis configured"
-}
-
-# ============================================
-# Create system user
-# ============================================
-create_user() {
-  if id "$ECHO_USER" &>/dev/null; then
-    log_info "User '$ECHO_USER' already exists"
-    return
-  fi
-
-  log_info "Creating system user '$ECHO_USER'..."
-  useradd --system --shell /usr/sbin/nologin --home-dir "$INSTALL_DIR" --create-home "$ECHO_USER"
-  log_success "User created"
 }
 
 # ============================================
@@ -326,17 +323,17 @@ build_app() {
 
   if [ -d "$INSTALL_DIR/.git" ]; then
     cd "$INSTALL_DIR"
-    su -s /bin/bash "$ECHO_USER" -c "git pull --quiet"
+    git pull --quiet
   else
-    # Clone into temp and move (in case INSTALL_DIR already exists as home dir)
     local tmp_dir
     tmp_dir=$(mktemp -d)
     git clone --quiet --depth 1 https://github.com/Alexzafra13/echo.git "$tmp_dir"
+    mkdir -p "$INSTALL_DIR"
     cp -a "$tmp_dir/." "$INSTALL_DIR/"
     rm -rf "$tmp_dir"
-    chown -R "$ECHO_USER":"$ECHO_GROUP" "$INSTALL_DIR"
   fi
 
+  chown -R "$ECHO_USER":"$ECHO_GROUP" "$INSTALL_DIR"
   log_success "Source code ready"
 
   log_info "Installing dependencies (this may take a few minutes)..."
@@ -355,54 +352,35 @@ build_app() {
 configure_app() {
   log_info "Configuring Echo..."
 
-  # Create data directories
   mkdir -p "$DATA_DIR"/{metadata,covers,uploads,logs}
   mkdir -p "$MUSIC_DIR"
   chown -R "$ECHO_USER":"$ECHO_GROUP" "$DATA_DIR"
 
-  # Generate JWT secrets
   JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
   JWT_REFRESH_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
 
-  # Create .env for the API
   cat > "$INSTALL_DIR/api/.env" <<EOF
-# ============================================
-# Echo Music Server - Production Configuration
-# ============================================
-# Auto-generated by install.sh on $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+# Echo Music Server — Auto-generated $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
 NODE_ENV=production
 PORT=${PORT}
-API_PREFIX=api
 
 # Database
-DATABASE_URL=postgresql://${ECHO_USER}:${DB_PASSWORD}@localhost:5432/${ECHO_USER}
+DATABASE_URL=postgresql://${ECHO_USER}:${DB_PASSWORD}@localhost:5432/echo
 
 # Redis
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=${REDIS_PASSWORD}
 
-# JWT (auto-generated)
+# Auth
 JWT_SECRET=${JWT_SECRET}
 JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-JWT_EXPIRATION=7d
-JWT_REFRESH_EXPIRATION=30d
-
-# Security
-BCRYPT_ROUNDS=12
-
-# CORS (auto-detected at startup, set explicitly if behind a reverse proxy)
-# CORS_ORIGINS=https://music.example.com
 
 # Storage
 DATA_PATH=${DATA_DIR}
-UPLOAD_PATH=${DATA_DIR}/uploads
-COVERS_PATH=${DATA_DIR}/covers
-METADATA_PATH=${DATA_DIR}/metadata
 
-# Music library
-LIBRARY_PATH=${MUSIC_DIR}
+# Music library (edit to add your paths)
 ALLOWED_MUSIC_PATHS=${MUSIC_DIR},/mnt,/media
 EOF
 
@@ -411,10 +389,9 @@ EOF
 
   log_success "Configuration created"
 
-  # Run migrations
   log_info "Running database migrations..."
   cd "$INSTALL_DIR/api"
-  su -s /bin/bash "$ECHO_USER" -c "node scripts/run-migrations.js"
+  su -s /bin/bash "$ECHO_USER" -c "DATABASE_URL='${DATABASE_URL}' node scripts/run-migrations.js"
   log_success "Database ready"
 }
 
@@ -436,35 +413,18 @@ Type=simple
 User=${ECHO_USER}
 Group=${ECHO_GROUP}
 WorkingDirectory=${INSTALL_DIR}/api
+EnvironmentFile=${INSTALL_DIR}/api/.env
 ExecStart=/usr/bin/node ${INSTALL_DIR}/api/dist/src/main.js
 Restart=on-failure
 RestartSec=5
 
-# Environment
-Environment=NODE_ENV=production
-Environment=PORT=${PORT}
-EnvironmentFile=${INSTALL_DIR}/api/.env
-
 # Security hardening
 NoNewPrivileges=true
 ProtectSystem=strict
-ProtectHome=true
 PrivateTmp=true
 PrivateDevices=true
-ProtectClock=true
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectKernelLogs=true
-ProtectControlGroups=true
-RestrictNamespaces=true
-RestrictRealtime=true
-RestrictSUIDSGID=true
-CapabilityBoundingSet=
-LockPersonality=true
-SystemCallFilter=@system-service
-SystemCallErrorNumber=EPERM
 ReadWritePaths=${DATA_DIR}
-ReadOnlyPaths=${INSTALL_DIR} ${MUSIC_DIR} /mnt /media
+ReadOnlyPaths=${INSTALL_DIR} ${MUSIC_DIR}
 
 [Install]
 WantedBy=multi-user.target
@@ -473,7 +433,14 @@ EOF
   systemctl daemon-reload
   systemctl enable echo --now
 
-  log_success "Service created and started"
+  # Wait and verify
+  sleep 3
+  if systemctl is-active echo &>/dev/null; then
+    log_success "Service started"
+  else
+    log_warn "Service may not have started correctly"
+    log_info "Check: sudo journalctl -u echo -n 20"
+  fi
 }
 
 # ============================================
@@ -491,7 +458,6 @@ uninstall() {
   echo "This will remove:"
   echo "  - Systemd service"
   echo "  - Application files ($INSTALL_DIR)"
-  echo "  - System user ($ECHO_USER)"
   echo ""
   echo "This will NOT remove:"
   echo "  - Your data ($DATA_DIR)"
@@ -506,7 +472,6 @@ uninstall() {
 
   echo ""
 
-  # Stop and remove service
   if systemctl is-active echo &>/dev/null; then
     systemctl stop echo
     log_success "Service stopped"
@@ -516,16 +481,10 @@ uninstall() {
   systemctl daemon-reload
   log_success "Service removed"
 
-  # Remove app directory
   rm -rf "$INSTALL_DIR"
   log_success "Application files removed"
 
-  # Remove user
-  userdel "$ECHO_USER" 2>/dev/null || true
-  log_success "User removed"
-
-  # Drop database and user
-  su - postgres -c "psql -c 'DROP DATABASE IF EXISTS ${ECHO_USER}'" 2>/dev/null || true
+  su - postgres -c "psql -c 'DROP DATABASE IF EXISTS echo'" 2>/dev/null || true
   su - postgres -c "psql -c 'DROP ROLE IF EXISTS ${ECHO_USER}'" 2>/dev/null || true
   log_success "Database removed"
 
@@ -549,14 +508,13 @@ update() {
   echo ""
 
   if [ ! -d "$INSTALL_DIR/.git" ]; then
-    abort "Echo is not installed at $INSTALL_DIR or was not installed via git."
+    abort "Echo is not installed at $INSTALL_DIR"
   fi
 
   log_info "Checking for updates..."
   cd "$INSTALL_DIR"
 
-  # Fetch latest changes
-  su -s /bin/bash "$ECHO_USER" -c "git fetch --quiet origin main"
+  git fetch --quiet origin main
 
   local local_hash remote_hash
   local_hash=$(git rev-parse HEAD)
@@ -567,45 +525,31 @@ update() {
     exit 0
   fi
 
-  local commits_behind
-  commits_behind=$(git rev-list --count HEAD..origin/main)
-  log_info "$commits_behind new commit(s) available"
-  echo ""
+  log_info "$(git rev-list --count HEAD..origin/main) new commit(s) available"
 
-  # Stop service
   log_info "Stopping Echo..."
   systemctl stop echo
-  log_success "Service stopped"
 
-  # Pull changes
   log_info "Downloading update..."
-  su -s /bin/bash "$ECHO_USER" -c "git pull --quiet origin main"
-  log_success "Source updated"
+  git pull --quiet origin main
+  chown -R "$ECHO_USER":"$ECHO_GROUP" "$INSTALL_DIR"
 
-  # Rebuild
   log_info "Installing dependencies..."
   su -s /bin/bash "$ECHO_USER" -c "pnpm install --frozen-lockfile --silent 2>/dev/null || pnpm install --silent"
-  log_success "Dependencies installed"
 
   log_info "Building application..."
   su -s /bin/bash "$ECHO_USER" -c "pnpm build"
-  log_success "Build complete"
 
-  # Run migrations
   log_info "Running database migrations..."
   cd "$INSTALL_DIR/api"
-  su -s /bin/bash "$ECHO_USER" -c "node scripts/run-migrations.js"
-  log_success "Database ready"
+  su -s /bin/bash "$ECHO_USER" -c ". ${INSTALL_DIR}/api/.env && node scripts/run-migrations.js"
 
-  # Restart service
   log_info "Starting Echo..."
   systemctl start echo
-  log_success "Service started"
 
   echo ""
   log_success "Update complete!"
   log_info "Check status: sudo systemctl status echo"
-  log_info "View logs: sudo journalctl -u echo -f"
 }
 
 # ============================================
@@ -633,20 +577,16 @@ print_summary() {
   echo "    Or edit $INSTALL_DIR/api/.env to change paths"
   echo ""
   echo "  Manage the service:"
-  echo "    sudo systemctl status echo      # Check status"
-  echo "    sudo systemctl restart echo     # Restart"
-  echo "    sudo systemctl stop echo        # Stop"
-  echo "    sudo journalctl -u echo -f      # View logs"
+  echo "    sudo systemctl status echo"
+  echo "    sudo systemctl restart echo"
+  echo "    sudo journalctl -u echo -f"
   echo ""
-  echo "  Update:"
-  echo "    sudo $INSTALL_DIR/scripts/install.sh --update"
+  echo "  Update:    sudo $0 --update"
+  echo "  Uninstall: sudo $0 --uninstall"
   echo ""
-  echo "  Uninstall:"
-  echo "    sudo $INSTALL_DIR/scripts/install.sh --uninstall"
-  echo ""
-  echo "  Config file: $INSTALL_DIR/api/.env"
-  echo "  Data:        $DATA_DIR"
-  echo "  Music:       $MUSIC_DIR"
+  echo "  Config: $INSTALL_DIR/api/.env"
+  echo "  Data:   $DATA_DIR"
+  echo "  Music:  $MUSIC_DIR"
   echo ""
 }
 
@@ -654,7 +594,6 @@ print_summary() {
 # Main
 # ============================================
 main() {
-  # Handle flags
   case "${1:-}" in
     --uninstall) uninstall; exit 0 ;;
     --update)    update; exit 0 ;;
@@ -681,7 +620,6 @@ main() {
   echo "  - Node.js ${NODE_MAJOR}, PostgreSQL, Redis, FFmpeg"
   echo "  - Install to: $INSTALL_DIR"
   echo "  - Data in: $DATA_DIR"
-  echo "  - Music in: $MUSIC_DIR"
   echo "  - Port: $PORT"
   echo ""
   read -p "Continue? (Y/n): " -r
@@ -697,7 +635,6 @@ main() {
 
   install_system_deps
   install_pnpm
-  create_user
   setup_postgresql
   setup_redis
   build_app
