@@ -4,14 +4,13 @@
 #
 # QUICK START:
 #
-#   1. Set your music paths below (look for ">>> YOUR MUSIC")
-#   2. Run: docker compose up -d
-#      (Passwords are auto-generated on first start)
-#   3. Open: http://localhost:4567
-#
-# DOWNLOAD THIS FILE:
 #   mkdir echo && cd echo
 #   curl -O https://raw.githubusercontent.com/Alexzafra13/echo/main/docker-compose.yml
+#   docker compose up -d
+#   Open: http://localhost:4567
+#
+# That's it. No .env needed — passwords and secrets are
+# auto-generated on first start.
 #
 # SUPPORTED PLATFORMS:
 #   - Linux (x86_64, ARM64)
@@ -28,7 +27,7 @@ services:
     ports:
       - "${ECHO_PORT:-4567}:4567"
     volumes:
-      - ./data:/app/data
+      - echo_data:/app/data
 
       # ===========================================
       #       >>> YOUR MUSIC - EDIT HERE <<<
@@ -51,9 +50,9 @@ services:
 
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-echo}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-echo}
+      DATABASE_URL: postgresql://echo:${POSTGRES_PASSWORD:-echo-internal-db}@postgres:5432/echo
       REDIS_HOST: redis
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-echo-internal-cache}
       DATA_PATH: /app/data
       ALLOWED_MUSIC_PATHS: /mnt,/media
     depends_on:
@@ -64,7 +63,6 @@ services:
     restart: unless-stopped
     networks:
       - echo-network
-    # Prevent infinite logs on disk
     logging:
       driver: "json-file"
       options:
@@ -74,16 +72,15 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: echo-postgres
-    # Shared memory for better performance with complex operations
     shm_size: 128mb
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-echo}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-echo}
+      POSTGRES_USER: echo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-echo-internal-db}
+      POSTGRES_DB: echo
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-echo}"]
+      test: ["CMD-SHELL", "pg_isready -U echo"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -99,11 +96,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: echo-redis
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD:-echo-internal-cache}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD:-echo-internal-cache}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -121,5 +118,6 @@ networks:
     name: echo-network
 
 volumes:
+  echo_data:
   postgres_data:
   redis_data:
