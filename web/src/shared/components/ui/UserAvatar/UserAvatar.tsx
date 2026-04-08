@@ -15,6 +15,8 @@ interface UserAvatarProps {
   className?: string;
   /** When true, shows user initials instead of the default silhouette icon */
   showInitials?: boolean;
+  /** Cache-buster timestamp to force reload after avatar change */
+  cacheBuster?: number;
 }
 
 export function UserAvatar({
@@ -25,6 +27,7 @@ export function UserAvatar({
   size,
   className,
   showInitials = false,
+  cacheBuster,
 }: UserAvatarProps) {
   const isDefault = !avatarUrl && hasAvatar !== true;
 
@@ -44,7 +47,7 @@ export function UserAvatar({
     );
   }
 
-  const src = avatarUrl || getUserAvatarUrl(userId, hasAvatar);
+  const src = avatarUrl || getUserAvatarUrl(userId, hasAvatar, cacheBuster);
 
   return (
     <img
