@@ -37,15 +37,14 @@ services:
       # The :ro means read-only (recommended)
       #
       # EXAMPLES:
-      # - /home/user/Music:/music:ro            # Linux
-      # - /volume1/music:/music:ro              # Synology NAS
-      # - /volume1/Media/Music:/media-music:ro  # Synology NAS
-      # - /media/usb-drive:/usb:ro              # USB drive
-      # - "D:/My Music:/music:ro"               # Windows
+      #   - /home/user/Music:/music:ro            # Linux
+      #   - /volume1/music:/music:ro              # Synology NAS
+      #   - /volume1/Media/Music:/media-music:ro  # Synology NAS
+      #   - /media/usb-drive:/usb:ro              # USB drive
+      #   - "D:/My Music:/music:ro"               # Windows
       #
-      # By default /mnt and /media are mounted:
-      - /mnt:/mnt:ro
-      - /media:/media:ro
+      # Uncomment and edit the line below:
+      # - /your/music/folder:/music:ro
       # ===========================================
 
     environment:
@@ -54,7 +53,6 @@ services:
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD:-echo-internal-cache}
       DATA_PATH: /app/data
-      ALLOWED_MUSIC_PATHS: /mnt,/media
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,16 +61,10 @@ services:
     restart: unless-stopped
     networks:
       - echo-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   postgres:
     image: postgres:16-alpine
     container_name: echo-postgres
-    shm_size: 128mb
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -82,16 +74,11 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U echo"]
       interval: 5s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
     restart: unless-stopped
     networks:
       - echo-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   redis:
     image: redis:7-alpine
@@ -102,16 +89,11 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD:-echo-internal-cache}", "ping"]
       interval: 5s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
     restart: unless-stopped
     networks:
       - echo-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
 networks:
   echo-network:
