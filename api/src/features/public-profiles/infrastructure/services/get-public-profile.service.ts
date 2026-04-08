@@ -70,8 +70,11 @@ export class GetPublicProfileUseCase {
       listeningNow,
     };
 
-    // If profile is private, return minimal info with social data
-    if (!user.isPublicProfile) {
+    // El dueño del perfil siempre ve su propio perfil completo
+    const isOwnProfile = input.requesterId === input.userId;
+
+    // If profile is private and viewer is NOT the owner, return minimal info
+    if (!user.isPublicProfile && !isOwnProfile) {
       return {
         user: publicUser,
         settings: {
