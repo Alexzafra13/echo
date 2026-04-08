@@ -23,12 +23,16 @@ import { FastifyReply } from 'fastify';
 import { createReadStream } from 'fs';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { Public } from '@shared/decorators/public.decorator';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ImageService, ArtistImageType } from '../application/services/image.service';
 import { ArtistImagesDto } from './dtos/artist-images.dto';
 
 // Servir imágenes con cache HTTP (ETag, 304 Not Modified)
+// SkipThrottle: las imágenes son archivos estáticos del disco, no deben contar
+// contra el rate limit global (una página puede cargar 20+ imágenes simultáneas)
 @ApiTags('images')
 @Controller('images')
+@SkipThrottle()
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ImagesController {

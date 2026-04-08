@@ -53,6 +53,7 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser, ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
 import { JwtUser } from '@shared/types/request.types';
 import { CacheControl } from '@shared/interceptors';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('albums')
 @Controller('albums')
@@ -430,6 +431,7 @@ export class AlbumsController {
   }
 
   @Get(':id/cover')
+  @SkipThrottle()
   @ApiCommonErrors()
   @ApiNotFoundError('Álbum')
   @ApiOperation({
