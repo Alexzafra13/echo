@@ -4,11 +4,14 @@
   flex-shrink: 0;
 }
 
-/* Default: SVG silhouette with colored background */
+/* Default: SVG silhouette with colored background.
+   No usar padding en % porque se calcula sobre el ancho del padre,
+   no del propio img — rompe en contextos con padre ancho (dropdown). */
 img.userAvatar--default {
   object-fit: contain;
-  padding: 18%;
+  object-position: center;
   box-sizing: border-box;
+  padding: 5px;
 }
 
 /* Initials mode: colored circle with text */
