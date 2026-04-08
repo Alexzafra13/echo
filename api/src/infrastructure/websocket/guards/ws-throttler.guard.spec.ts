@@ -69,16 +69,16 @@ describe('WsThrottlerGuard', () => {
     });
 
     it('should allow requests under the limit', async () => {
-      // Hacer 19 requests (bajo el límite de 20)
-      for (let i = 0; i < 19; i++) {
+      // Hacer 9 requests (bajo el límite de 10)
+      for (let i = 0; i < 9; i++) {
         const result = await guard.canActivate(mockContext);
         expect(result).toBe(true);
       }
     });
 
     it('should block request when limit is exceeded', async () => {
-      // Hacer 20 requests (límite exacto)
-      for (let i = 0; i < 20; i++) {
+      // Hacer 10 requests (límite exacto)
+      for (let i = 0; i < 10; i++) {
         await guard.canActivate(mockContext);
       }
 
@@ -88,8 +88,8 @@ describe('WsThrottlerGuard', () => {
     });
 
     it('should reset counter after time window passes', async () => {
-      // Hacer 20 requests (alcanzar límite)
-      for (let i = 0; i < 20; i++) {
+      // Hacer 10 requests (alcanzar límite)
+      for (let i = 0; i < 10; i++) {
         await guard.canActivate(mockContext);
       }
 
@@ -114,7 +114,7 @@ describe('WsThrottlerGuard', () => {
       } as unknown as ExecutionContext;
 
       // Cliente 1 alcanza límite
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 10; i++) {
         await guard.canActivate(mockContext);
       }
 
