@@ -63,8 +63,15 @@ jobs:
             --network echo-test-net \
             redis:7-alpine redis-server
 
-          # Esperar a que los servicios estén listos
-          sleep 5
+          # Wait for PostgreSQL to be ready
+          echo "⏳ Waiting for PostgreSQL..."
+          for i in $(seq 1 30); do
+            if docker exec test-postgres pg_isready -U test 2>/dev/null; then
+              echo "✅ PostgreSQL ready (${i}s)"
+              break
+            fi
+            sleep 1
+          done
 
           # Ejecutar el contenedor de echo con timeout
           # Solo verificamos que arranca y responde, no que funcione completamente
