@@ -22,6 +22,8 @@ REDIS_PASSWORD=another_secure_password
 CORS_ORIGINS=https://music.yourdomain.com
 ```
 
+> All passwords and secrets are auto-generated on first run if not set. You only need a `.env` file if you want to customize values.
+
 ### Full Reference
 
 | Variable | Default | Description |
@@ -32,9 +34,11 @@ CORS_ORIGINS=https://music.yourdomain.com
 | `POSTGRES_DB` | `echo` | Database name |
 | `REDIS_PASSWORD` | auto-generated | Redis password |
 | `DATA_PATH` | `/app/data` | Internal data path |
-| `LIBRARY_PATH` | `/music` | Primary music directory |
-| `ALLOWED_MUSIC_PATHS` | `/mnt,/media` | Directories the scanner can access |
+| `LIBRARY_PATH` | `/music` | Primary music directory inside the container |
+| `ALLOWED_MUSIC_PATHS` | `/mnt,/media` | Extra directories the scanner can access |
 | `CORS_ORIGINS` | auto-detected | Allowed CORS origins |
+| `PUID` | `1001` | Container user ID (for NAS permission mapping) |
+| `PGID` | `1001` | Container group ID (for NAS permission mapping) |
 
 ### Development (api/.env)
 
@@ -54,10 +58,10 @@ REDIS_PASSWORD=dev_redis_password
 
 | Volume | Description | Backup |
 |--------|-------------|--------|
-| `./data:/app/data` | Covers, metadata, config | Yes |
+| `echo_data` | Covers, metadata, config | Yes |
 | `postgres_data` | Database | Yes |
 | `redis_data` | Cache | No (regenerated) |
-| `/mnt:/mnt:ro` | Music (read-only) | No |
+| `/your/music:/music:ro` | Music (read-only) | No |
 
 ## Ports
 
@@ -73,18 +77,54 @@ REDIS_PASSWORD=dev_redis_password
 
 ## Music Paths
 
-Add read-only volumes:
+Add read-only volumes in `docker-compose.yml`:
 
 ```yaml
 services:
   echo:
     volumes:
-      - ./data:/app/data
-      - /mnt/nas/music:/music:ro
-      - /home/user/Music:/local:ro
+      - echo_data:/app/data
+      - /home/user/Music:/music:ro            # Linux
+      - /volume1/music:/music:ro              # Synology NAS
+      - /media/usb-drive:/usb:ro              # USB drive
 ```
 
 Paths will appear in the admin panel for library configuration.
+
+## NAS Permissions (PUID/PGID)
+
+On Synology, QNAP, and other NAS devices, file permissions may not match the container user. Set `PUID` and `PGID` to match your NAS user:
+
+```bash
+# Find your IDs on the NAS:
+id $(whoami)
+# uid=1000(youruser) gid=1000(users)
+```
+
+Then in `docker-compose.yml`:
+
+```yaml
+services:
+  echo:
+    environment:
+      PUID: 1000
+      PGID: 1000
+```
+
+If not set, the container defaults to UID/GID 1001.
+
+## Docker Tuning
+
+The default `docker-compose.yml` includes settings optimized for NAS and low-memory devices:
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| PostgreSQL `shm_size` | `256m` | Prevents shared memory crashes during library scanning |
+| Redis `maxmemory` | `128mb` | Caps memory usage with LRU eviction |
+| Log rotation | `10m × 3` (Echo), `5m × 3` (PG/Redis) | Prevents filling up disk with logs |
+| `stop_grace_period` | `15s` | Clean shutdown on NAS power events |
+
+These are already configured in the default `docker-compose.yml` — no action needed unless you want to adjust them.
 
 ## Security
 

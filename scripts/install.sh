@@ -46,6 +46,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+ORANGE='\033[38;5;209m'
 BOLD='\033[1m'
 NC='\033[0m'
 
@@ -66,6 +67,10 @@ need_root() {
   if [ "$(id -u)" -ne 0 ]; then
     abort "This script must be run as root. Use: sudo $0"
   fi
+}
+
+gen_password() {
+  head -c 32 /dev/urandom | base64 | tr -d '\n/+='
 }
 
 # ============================================
@@ -225,17 +230,17 @@ install_system_deps() {
 }
 
 # ============================================
-# Install pnpm
+# Install pnpm (via corepack, built into Node 22)
 # ============================================
 install_pnpm() {
-  if command -v pnpm &>/dev/null; then
-    log_info "pnpm $(pnpm -v) already installed"
-    return
-  fi
-
-  log_info "Installing pnpm $PNPM_VERSION..."
-  npm install -g "pnpm@${PNPM_VERSION}" --silent
-  log_success "pnpm installed"
+  log_info "Enabling pnpm $PNPM_VERSION via corepack..."
+  corepack enable 2>/dev/null || true
+  corepack prepare "pnpm@${PNPM_VERSION}" --activate 2>/dev/null || {
+    # Fallback: npm global install if corepack is not available
+    log_warn "corepack not available, installing pnpm via npm..."
+    npm install -g "pnpm@${PNPM_VERSION}" --silent
+  }
+  log_success "pnpm $(pnpm -v) ready"
 }
 
 # ============================================
@@ -249,13 +254,13 @@ setup_postgresql() {
   local retries=0
   while ! su - postgres -c "pg_isready" &>/dev/null; do
     retries=$((retries + 1))
-    if [ $retries -gt 15 ]; then
-      abort "PostgreSQL failed to start"
+    if [ $retries -gt 30 ]; then
+      abort "PostgreSQL failed to start. Check: sudo journalctl -u postgresql -n 20"
     fi
     sleep 1
   done
 
-  DB_PASSWORD=$(head -c 32 /dev/urandom | base64 | tr -d '\n/+=')
+  DB_PASSWORD=$(gen_password)
 
   su - postgres -c "psql -v ON_ERROR_STOP=0" <<SQL 2>/dev/null
 DO \$\$
@@ -293,7 +298,7 @@ SQL
 setup_redis() {
   log_info "Configuring Redis..."
 
-  REDIS_PASSWORD=$(head -c 32 /dev/urandom | base64 | tr -d '\n/+=')
+  REDIS_PASSWORD=$(gen_password)
 
   local redis_conf=""
   for path in /etc/redis/redis.conf /etc/redis.conf /etc/redis/6379.conf; do
@@ -306,6 +311,12 @@ setup_redis() {
   if [ -n "$redis_conf" ]; then
     sed -i '/^requirepass /d' "$redis_conf"
     echo "requirepass ${REDIS_PASSWORD}" >> "$redis_conf"
+
+    # Limit memory usage (same as Docker config)
+    if ! grep -q '^maxmemory ' "$redis_conf"; then
+      echo "maxmemory 128mb" >> "$redis_conf"
+      echo "maxmemory-policy allkeys-lru" >> "$redis_conf"
+    fi
   fi
 
   # Enable and restart (not just start) to apply new password
@@ -359,33 +370,43 @@ configure_app() {
   JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
   JWT_REFRESH_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
 
-  cat > "$INSTALL_DIR/api/.env" <<EOF
+  local env_file="$INSTALL_DIR/api/.env"
+
+  # Backup existing .env if present
+  if [ -f "$env_file" ]; then
+    cp "$env_file" "${env_file}.bak.$(date +%Y%m%d%H%M%S)"
+    log_info "Previous config backed up to ${env_file}.bak.*"
+  fi
+
+  cat > "$env_file" <<EOF
 # Echo Music Server — Auto-generated $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+# All values are auto-configured. Edit only if needed.
 
 NODE_ENV=production
 PORT=${PORT}
 
-# Database
+# Database (auto-generated, do not share)
 DATABASE_URL=postgresql://${ECHO_USER}:${DB_PASSWORD}@localhost:5432/echo
 
-# Redis
+# Redis (auto-generated)
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=${REDIS_PASSWORD}
 
-# Auth
+# Auth (auto-generated, do not share)
 JWT_SECRET=${JWT_SECRET}
 JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
 
 # Storage
 DATA_PATH=${DATA_DIR}
 
-# Music library (edit to add your paths)
-ALLOWED_MUSIC_PATHS=${MUSIC_DIR},/mnt,/media
+# Music library
+LIBRARY_PATH=${MUSIC_DIR}
+ALLOWED_MUSIC_PATHS=${MUSIC_DIR},/mnt,/media,/home
 EOF
 
-  chmod 600 "$INSTALL_DIR/api/.env"
-  chown "$ECHO_USER":"$ECHO_GROUP" "$INSTALL_DIR/api/.env"
+  chmod 600 "$env_file"
+  chown "$ECHO_USER":"$ECHO_GROUP" "$env_file"
 
   log_success "Configuration created"
 
@@ -401,12 +422,19 @@ EOF
 create_service() {
   log_info "Creating systemd service..."
 
+  # Detect redis service name for this distro
+  local redis_service="redis-server.service"
+  if systemctl list-unit-files redis.service &>/dev/null && ! systemctl list-unit-files redis-server.service &>/dev/null; then
+    redis_service="redis.service"
+  fi
+
   cat > /etc/systemd/system/echo.service <<EOF
 [Unit]
 Description=Echo Music Server
 Documentation=https://github.com/Alexzafra13/echo
-After=network.target postgresql.service redis-server.service redis.service
+After=network.target postgresql.service ${redis_service}
 Requires=postgresql.service
+Wants=${redis_service}
 
 [Service]
 Type=simple
@@ -416,7 +444,14 @@ WorkingDirectory=${INSTALL_DIR}/api
 EnvironmentFile=${INSTALL_DIR}/api/.env
 ExecStart=/usr/bin/node ${INSTALL_DIR}/api/dist/src/main.js
 Restart=on-failure
-RestartSec=5
+RestartSec=10
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=echo
 
 # Security hardening
 NoNewPrivileges=true
@@ -424,7 +459,7 @@ ProtectSystem=strict
 PrivateTmp=true
 PrivateDevices=true
 ReadWritePaths=${DATA_DIR}
-ReadOnlyPaths=${INSTALL_DIR} ${MUSIC_DIR}
+ReadOnlyPaths=${INSTALL_DIR} ${MUSIC_DIR} /mnt /media /home
 
 [Install]
 WantedBy=multi-user.target
@@ -434,13 +469,18 @@ EOF
   systemctl enable echo --now
 
   # Wait and verify
-  sleep 3
-  if systemctl is-active echo &>/dev/null; then
-    log_success "Service started"
-  else
-    log_warn "Service may not have started correctly"
-    log_info "Check: sudo journalctl -u echo -n 20"
-  fi
+  local retries=0
+  while [ $retries -lt 10 ]; do
+    if systemctl is-active echo &>/dev/null; then
+      log_success "Service started"
+      return
+    fi
+    retries=$((retries + 1))
+    sleep 1
+  done
+
+  log_warn "Service may not have started correctly"
+  log_info "Check: sudo journalctl -u echo -n 20"
 }
 
 # ============================================
@@ -511,6 +551,11 @@ update() {
     abort "Echo is not installed at $INSTALL_DIR"
   fi
 
+  local env_file="$INSTALL_DIR/api/.env"
+  if [ ! -f "$env_file" ]; then
+    abort "Configuration not found at $env_file"
+  fi
+
   log_info "Checking for updates..."
   cd "$INSTALL_DIR"
 
@@ -527,6 +572,18 @@ update() {
 
   log_info "$(git rev-list --count HEAD..origin/main) new commit(s) available"
 
+  # Backup current build before updating
+  log_info "Backing up current build..."
+  local backup_dir="$INSTALL_DIR/.build-backup"
+  rm -rf "$backup_dir"
+  mkdir -p "$backup_dir"
+  if [ -d "$INSTALL_DIR/api/dist" ]; then
+    cp -a "$INSTALL_DIR/api/dist" "$backup_dir/api-dist"
+  fi
+  if [ -d "$INSTALL_DIR/web/dist" ]; then
+    cp -a "$INSTALL_DIR/web/dist" "$backup_dir/web-dist"
+  fi
+
   log_info "Stopping Echo..."
   systemctl stop echo
 
@@ -538,11 +595,32 @@ update() {
   su -s /bin/bash "$ECHO_USER" -c "pnpm install --frozen-lockfile --silent 2>/dev/null || pnpm install --silent"
 
   log_info "Building application..."
-  su -s /bin/bash "$ECHO_USER" -c "pnpm build"
+  if ! su -s /bin/bash "$ECHO_USER" -c "pnpm build"; then
+    log_error "Build failed! Restoring previous build..."
+    if [ -d "$backup_dir/api-dist" ]; then
+      rm -rf "$INSTALL_DIR/api/dist"
+      cp -a "$backup_dir/api-dist" "$INSTALL_DIR/api/dist"
+    fi
+    if [ -d "$backup_dir/web-dist" ]; then
+      rm -rf "$INSTALL_DIR/web/dist"
+      cp -a "$backup_dir/web-dist" "$INSTALL_DIR/web/dist"
+    fi
+    systemctl start echo
+    abort "Update failed but previous version has been restored. Echo is running."
+  fi
+
+  # Clean up backup
+  rm -rf "$backup_dir"
 
   log_info "Running database migrations..."
   cd "$INSTALL_DIR/api"
-  su -s /bin/bash "$ECHO_USER" -c ". ${INSTALL_DIR}/api/.env && node scripts/run-migrations.js"
+  # Read DATABASE_URL from .env safely (grep + cut, no shell eval)
+  local db_url
+  db_url=$(grep '^DATABASE_URL=' "$env_file" | cut -d= -f2-)
+  if [ -z "$db_url" ]; then
+    abort "DATABASE_URL not found in $env_file"
+  fi
+  su -s /bin/bash "$ECHO_USER" -c "DATABASE_URL='${db_url}' node scripts/run-migrations.js"
 
   log_info "Starting Echo..."
   systemctl start echo
@@ -601,13 +679,14 @@ main() {
 
   need_root
 
-  echo -e "${BLUE}"
-  echo "  ███████╗ ██████╗██╗  ██╗ ██████╗ "
-  echo "  ██╔════╝██╔════╝██║  ██║██╔═══██╗"
-  echo "  █████╗  ██║     ███████║██║   ██║"
-  echo "  ██╔══╝  ██║     ██╔══██║██║   ██║"
-  echo "  ███████╗╚██████╗██║  ██║╚██████╔╝"
-  echo "  ╚══════╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝ "
+  echo -e "${ORANGE}"
+  echo "                                          ▄▄█████████████▄▄"
+  echo "  ███████╗ ██████╗██╗  ██╗ ██████╗      ▄█▀░░░░░░░░░░░░░░░▀█▄"
+  echo "  ██╔════╝██╔════╝██║  ██║██╔═══██╗    ██░░░▄███████████▄░░░██"
+  echo "  █████╗  ██║     ███████║██║   ██║    ██░░░██░░░░●░░░░██░░░██"
+  echo "  ██╔══╝  ██║     ██╔══██║██║   ██║    ██░░░▀███████████▀░░░██"
+  echo "  ███████╗╚██████╗██║  ██║╚██████╔╝     ▀█▄░░░░░░░░░░░░░░░▄█▀"
+  echo "  ╚══════╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝       ▀▀█████████████▀▀"
   echo -e "${NC}"
   echo -e "  ${BOLD}Bare-Metal Installer${NC}"
   echo ""
@@ -621,6 +700,8 @@ main() {
   echo "  - Install to: $INSTALL_DIR"
   echo "  - Data in: $DATA_DIR"
   echo "  - Port: $PORT"
+  echo ""
+  echo "  All passwords and secrets are generated automatically."
   echo ""
   read -p "Continue? (Y/n): " -r
   REPLY=${REPLY:-Y}
