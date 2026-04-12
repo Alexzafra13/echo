@@ -10,7 +10,7 @@ jobs:
   test:
     name: Tests & Build
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
 
     services:
       postgres:
@@ -80,7 +80,6 @@ jobs:
         run: |
           echo "=== Checking PostgreSQL connection ==="
           psql -h localhost -U music_admin -d postgres -c "SELECT current_user, version();"
-
           for i in {1..4}; do
             psql -h localhost -U music_admin -d postgres -c "CREATE DATABASE music_server_test_$i;" || true
           done
@@ -105,21 +104,25 @@ jobs:
         run: pnpm test:unit --coverage --coverageReporters=text --coverageReporters=lcov
 
       # Integration tests: Test real DB/Redis operations
+      # DATABASE_URL intentionally omitted — setup-test-db.ts assigns
+      # a per-worker DB (music_server_test_{1..4}) for parallel safety
       - name: Run integration tests
         working-directory: api
         env:
-          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server_test_1
+          TEST_DB_USER: music_admin
+          TEST_DB_PASSWORD: music_password
           JWT_SECRET: test-jwt-secret-for-ci-pipeline-min-32-chars
           JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-min-32
           REDIS_HOST: localhost
           REDIS_PORT: 6379
         run: pnpm test:integration
 
-      # E2E tests: Full HTTP requests with real app
-      - name: Run E2E tests
+      # API E2E tests: Full HTTP requests against real endpoints (no browser)
+      - name: Run API E2E tests
         working-directory: api
         env:
-          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server_test_1
+          TEST_DB_USER: music_admin
+          TEST_DB_PASSWORD: music_password
           JWT_SECRET: test-jwt-secret-for-ci-pipeline-min-32-chars
           JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-min-32
           REDIS_HOST: localhost
@@ -145,14 +148,14 @@ jobs:
         with:
           name: api-build
           path: api/dist/
-          retention-days: 1
+          retention-days: 7
 
       - name: Upload Web build
         uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: web/dist/
-          retention-days: 1
+          retention-days: 7
 
       # Upload coverage reports
       - name: Upload API coverage report
@@ -171,9 +174,9 @@ jobs:
           path: web/coverage/
           retention-days: 7
 
-  # Playwright E2E: Browser tests against running app
+  # Browser E2E: Full UI tests with Playwright (requires running app)
   e2e-web:
-    name: Playwright E2E
+    name: Browser E2E (Playwright)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: test
@@ -248,14 +251,8 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: web
         run: pnpm exec playwright install --with-deps chromium
-
-      - name: Install Playwright system deps (on cache hit)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        working-directory: web
-        run: pnpm exec playwright install-deps chromium
 
       # Download pre-built artifacts instead of rebuilding
       - name: Download API build
