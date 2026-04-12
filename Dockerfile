@@ -102,10 +102,12 @@ ENV NODE_ENV=production
 
 # Install runtime dependencies in single layer
 # FFmpeg: audio analysis (LUFS) and format conversion
+# shadow: usermod/groupmod for PUID/PGID support (NAS compatibility)
 RUN apk add --no-cache \
     netcat-openbsd \
     dumb-init \
     su-exec \
+    shadow \
     ffmpeg
 
 # Create non-root user
@@ -138,9 +140,41 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
 RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs && \
     chown -R echoapp:nodejs /app/data
 
-# Create wrapper script for proper permissions
-RUN printf '#!/bin/sh\nset -e\n\n# Fix data directory permissions\nchown -R echoapp:nodejs /app/data 2>/dev/null || true\n\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
-    > /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
+# Create wrapper script with PUID/PGID support (NAS compatibility)
+COPY <<'WRAPPER' /entrypoint-wrapper.sh
+#!/bin/sh
+set -e
+
+# ── PUID/PGID support ──────────────────────────────────
+# Match container user to host user (avoids permission issues
+# on Synology NAS, QNAP, and other NAS devices).
+#
+# Usage in docker-compose.yml:
+#   environment:
+#     PUID: 1000
+#     PGID: 1000
+#
+# Find your IDs: id $(whoami)
+# ────────────────────────────────────────────────────────
+TARGET_GID=${PGID:-1001}
+TARGET_UID=${PUID:-1001}
+
+if [ "$TARGET_GID" != "1001" ]; then
+  echo "⚙️  Adjusting group ID to $TARGET_GID"
+  groupmod -o -g "$TARGET_GID" nodejs 2>/dev/null || true
+fi
+
+if [ "$TARGET_UID" != "1001" ]; then
+  echo "⚙️  Adjusting user ID to $TARGET_UID"
+  usermod -o -u "$TARGET_UID" echoapp 2>/dev/null || true
+fi
+
+# Fix data directory ownership
+chown -R echoapp:nodejs /app/data 2>/dev/null || true
+
+exec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"
+WRAPPER
+RUN chmod +x /entrypoint-wrapper.sh
 
 # Default port
 ENV PORT=4567

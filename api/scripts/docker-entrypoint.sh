@@ -59,12 +59,13 @@ echo "✅ Secrets loaded"
 echo ""
 echo "⏳ Waiting for PostgreSQL..."
 RETRIES=0
-MAX_RETRIES=60
+MAX_RETRIES=90
+DELAY=1
 until nc -z -v -w5 postgres 5432 2>/dev/null; do
   RETRIES=$((RETRIES + 1))
   if [ $RETRIES -ge $MAX_RETRIES ]; then
     echo ""
-    echo "❌ PostgreSQL not reachable after ${MAX_RETRIES}s"
+    echo "❌ PostgreSQL not reachable after ${MAX_RETRIES} attempts"
     echo ""
     echo "   Troubleshooting:"
     echo "   1. Check that the postgres container is running:"
@@ -73,21 +74,27 @@ until nc -z -v -w5 postgres 5432 2>/dev/null; do
     echo "      docker logs echo-postgres"
     echo "   3. On Synology NAS, ensure Container Manager allows"
     echo "      inter-container networking (bridge mode)."
+    echo "   4. On NAS devices with slow disks, PostgreSQL may need"
+    echo "      extra time to initialize. Try restarting:"
+    echo "      docker compose restart"
     echo ""
     exit 1
   fi
   echo "   Waiting for database connection... (${RETRIES}/${MAX_RETRIES})"
-  sleep 1
+  sleep $DELAY
+  # Back off: 1s, 1s, 1s, 2s, 2s, 2s, 3s... (max 5s)
+  [ $((RETRIES % 3)) -eq 0 ] && DELAY=$((DELAY < 5 ? DELAY + 1 : 5))
 done
 echo "✅ PostgreSQL is ready!"
 
 echo "⏳ Waiting for Redis..."
 RETRIES=0
+DELAY=1
 until nc -z -v -w5 redis 6379 2>/dev/null; do
   RETRIES=$((RETRIES + 1))
   if [ $RETRIES -ge $MAX_RETRIES ]; then
     echo ""
-    echo "❌ Redis not reachable after ${MAX_RETRIES}s"
+    echo "❌ Redis not reachable after ${MAX_RETRIES} attempts"
     echo ""
     echo "   Troubleshooting:"
     echo "   1. Check that the redis container is running:"
@@ -98,7 +105,8 @@ until nc -z -v -w5 redis 6379 2>/dev/null; do
     exit 1
   fi
   echo "   Waiting for Redis connection... (${RETRIES}/${MAX_RETRIES})"
-  sleep 1
+  sleep $DELAY
+  [ $((RETRIES % 3)) -eq 0 ] && DELAY=$((DELAY < 5 ? DELAY + 1 : 5))
 done
 echo "✅ Redis is ready!"
 echo ""

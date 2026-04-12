@@ -8,16 +8,17 @@ Install Echo directly on Linux without Docker. Supports Debian/Ubuntu, Fedora/RH
 curl -fsSL https://raw.githubusercontent.com/Alexzafra13/echo/main/scripts/install.sh | sudo bash
 ```
 
+Everything is automatic — passwords, secrets, database, and service are configured for you. No `.env` editing needed.
+
 The script will:
 
 1. Detect your distribution
 2. Check system requirements (architecture, disk space, RAM)
 3. Install Node.js 22, PostgreSQL, Redis, and FFmpeg
-4. Create a system user (`echo`)
+4. Generate secure passwords and JWT secrets
 5. Build the application
-6. Generate secure passwords and JWT secrets
-7. Run database migrations
-8. Create and start a systemd service
+6. Run database migrations
+7. Create and start a systemd service
 
 Once complete, open **http://localhost:4567** and follow the setup wizard to create your admin account.
 
@@ -36,7 +37,7 @@ Once complete, open **http://localhost:4567** and follow the setup wizard to cre
 sudo /opt/echo/scripts/install.sh --update
 ```
 
-This pulls the latest code, rebuilds, runs new migrations, and restarts the service. Your data and configuration are preserved.
+This pulls the latest code, rebuilds, runs new migrations, and restarts the service. Your data and configuration are preserved. If the build fails, the previous version is automatically restored.
 
 ## Uninstall
 
@@ -44,7 +45,7 @@ This pulls the latest code, rebuilds, runs new migrations, and restarts the serv
 sudo /opt/echo/scripts/install.sh --uninstall
 ```
 
-This removes the application, systemd service, system user, and database. Your music and data directory (`/var/lib/echo`) are preserved.
+This removes the application, systemd service, and database. Your music and data directory (`/var/lib/echo`) are preserved.
 
 ## Managing the Service
 
@@ -60,7 +61,7 @@ sudo journalctl -u echo -f        # View logs
 | Path | Description |
 |------|-------------|
 | `/opt/echo` | Application files |
-| `/opt/echo/api/.env` | Configuration |
+| `/opt/echo/api/.env` | Configuration (auto-generated) |
 | `/var/lib/echo` | Data (covers, metadata, uploads) |
 | `/srv/music` | Default music directory |
 
@@ -71,30 +72,33 @@ By default, the installer creates `/srv/music` and configures the following allo
 - `/srv/music`
 - `/mnt`
 - `/media`
+- `/home`
 
 Copy or symlink your music into any of these locations. To add custom paths, edit `/opt/echo/api/.env`:
 
 ```bash
 LIBRARY_PATH=/srv/music
-ALLOWED_MUSIC_PATHS=/srv/music,/mnt,/media,/home/user/Music
+ALLOWED_MUSIC_PATHS=/srv/music,/mnt,/media,/home,/path/to/your/music
 ```
 
 Then restart: `sudo systemctl restart echo`
 
 ## Configuration
 
-Edit `/opt/echo/api/.env` to change settings. Key variables:
+All configuration is auto-generated during installation. Edit `/opt/echo/api/.env` only if you need to change defaults:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `4567` | Server port |
-| `DATABASE_URL` | auto-configured | PostgreSQL connection string |
+| `DATABASE_URL` | auto-generated | PostgreSQL connection string |
 | `REDIS_HOST` | `localhost` | Redis host |
 | `LIBRARY_PATH` | `/srv/music` | Primary music directory |
-| `ALLOWED_MUSIC_PATHS` | `/srv/music,/mnt,/media` | Directories the scanner can access |
+| `ALLOWED_MUSIC_PATHS` | `/srv/music,/mnt,/media,/home` | Directories the scanner can access |
 | `CORS_ORIGINS` | auto-detected | Set explicitly if behind a reverse proxy |
 
 After editing, restart the service: `sudo systemctl restart echo`
+
+> If you reinstall, your previous `.env` is backed up automatically (`.env.bak.*`).
 
 ## Reverse Proxy
 
@@ -109,6 +113,12 @@ CORS_ORIGINS=https://music.yourdomain.com
 **Service won't start:**
 ```bash
 sudo journalctl -u echo --no-pager -n 50
+```
+
+**Service keeps restarting:**
+The service has crash-loop protection (max 5 restarts in 5 minutes). Check logs for the root cause:
+```bash
+sudo journalctl -u echo --no-pager -n 100
 ```
 
 **Database connection issues:**
@@ -127,7 +137,7 @@ sudo systemctl status redis           # Fedora/Arch
 ```bash
 sudo systemctl stop echo
 cd /opt/echo
-sudo -u echo pnpm install
-sudo -u echo pnpm build
+sudo -u $(stat -c '%U' /opt/echo) pnpm install
+sudo -u $(stat -c '%U' /opt/echo) pnpm build
 sudo systemctl start echo
 ```

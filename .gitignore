@@ -45,3 +45,7 @@ Thumbs.db
 .lighthouseci/
 
 .claude/
+
+skills-lock.json
+
+.agents
