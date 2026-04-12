@@ -62,7 +62,7 @@ COPY api/package.json ./api/
 # These are only needed for local dev; in Docker we use system ffmpeg from apk
 ARG TARGETARCH
 RUN --mount=type=cache,id=pnpm-${TARGETARCH},target=/root/.local/share/pnpm/store \
-    pnpm --filter=echo-api deploy --prod --no-optional /prod
+    pnpm --filter=echo-api deploy --prod --no-optional --legacy /prod
 
 # Clean up unnecessary files from node_modules
 RUN find /prod/node_modules -type f \( \
