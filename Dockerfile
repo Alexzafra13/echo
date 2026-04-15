@@ -182,7 +182,9 @@ ENV PORT=4567
 EXPOSE ${PORT}
 
 # Health check (wget is included in alpine, much lighter than spawning node ~30MB)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+# start-period must exceed worst-case entrypoint wait (90 retries × up to 5s = ~350s)
+# plus migration time. Slow NAS storage (Synology, QNAP) needs the full window.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=5 \
   CMD wget -qO- http://localhost:${PORT:-4567}/api/health || exit 1
 
 # Use dumb-init for proper signal handling
