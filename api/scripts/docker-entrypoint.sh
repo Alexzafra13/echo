@@ -56,12 +56,28 @@ echo "✅ Secrets loaded"
 # ============================================
 # 2. Wait for Dependencies
 # ============================================
+# Derive host/port from env vars so custom compose setups and CI
+# (which may use different container names) keep working.
+DB_URL="${DATABASE_URL:-}"
+if [ -n "$DB_URL" ]; then
+  _hostport="${DB_URL#*@}"
+  _hostport="${_hostport%%/*}"
+  DB_HOST="${_hostport%%:*}"
+  DB_PORT="${_hostport##*:}"
+  [ "$DB_PORT" = "$DB_HOST" ] && DB_PORT=5432
+else
+  DB_HOST=postgres
+  DB_PORT=5432
+fi
+RHOST="${REDIS_HOST:-redis}"
+RPORT="${REDIS_PORT:-6379}"
+
 echo ""
-echo "⏳ Waiting for PostgreSQL..."
+echo "⏳ Waiting for PostgreSQL at ${DB_HOST}:${DB_PORT}..."
 RETRIES=0
 MAX_RETRIES=90
 DELAY=1
-until nc -z -v -w5 postgres 5432 2>/dev/null; do
+until nc -z -v -w5 "$DB_HOST" "$DB_PORT" 2>/dev/null; do
   RETRIES=$((RETRIES + 1))
   if [ $RETRIES -ge $MAX_RETRIES ]; then
     echo ""
@@ -83,8 +99,8 @@ until nc -z -v -w5 postgres 5432 2>/dev/null; do
   echo "   Waiting for database connection... (${RETRIES}/${MAX_RETRIES})"
   # Every 10 attempts, print DNS resolution to help diagnose NAS networking issues
   if [ $((RETRIES % 10)) -eq 0 ]; then
-    RESOLVED=$(getent hosts postgres 2>/dev/null || echo "DNS RESOLUTION FAILED")
-    echo "   ↳ 'postgres' resolves to: ${RESOLVED}"
+    RESOLVED=$(getent hosts "$DB_HOST" 2>/dev/null || echo "DNS RESOLUTION FAILED")
+    echo "   ↳ '${DB_HOST}' resolves to: ${RESOLVED}"
   fi
   sleep $DELAY
   # Back off: 1s, 1s, 1s, 2s, 2s, 2s, 3s... (max 5s)
@@ -116,10 +132,10 @@ until node scripts/wait-for-db.js 2>/dev/null; do
 done
 echo "✅ PostgreSQL is ready and accepting our credentials!"
 
-echo "⏳ Waiting for Redis..."
+echo "⏳ Waiting for Redis at ${RHOST}:${RPORT}..."
 RETRIES=0
 DELAY=1
-until nc -z -v -w5 redis 6379 2>/dev/null; do
+until nc -z -v -w5 "$RHOST" "$RPORT" 2>/dev/null; do
   RETRIES=$((RETRIES + 1))
   if [ $RETRIES -ge $MAX_RETRIES ]; then
     echo ""

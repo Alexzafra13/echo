@@ -135,7 +135,10 @@ COPY --chown=echoapp:nodejs api/scripts/wait-for-db.js ./scripts/
 COPY --chown=echoapp:nodejs api/scripts/reset-admin-password.js ./scripts/
 
 # Fix line endings and permissions
-RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
+    ./scripts/run-migrations.js \
+    ./scripts/wait-for-db.js \
+    ./scripts/reset-admin-password.js && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create unified data directory
@@ -176,7 +179,7 @@ chown -R echoapp:nodejs /app/data 2>/dev/null || true
 
 exec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"
 WRAPPER
-RUN chmod +x /entrypoint-wrapper.sh
+RUN sed -i 's/\r$//' /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
 
 # Default port
 ENV PORT=4567
@@ -186,7 +189,7 @@ EXPOSE ${PORT}
 # start-period must exceed worst-case entrypoint wait (90 retries × up to 5s = ~350s)
 # plus migration time. Slow NAS storage (Synology, QNAP) needs the full window.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=5 \
-  CMD wget -qO- http://localhost:${PORT:-4567}/api/health || exit 1
+  CMD wget -qO- http://127.0.0.1:${PORT:-4567}/api/health || exit 1
 
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
