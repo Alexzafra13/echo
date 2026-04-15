@@ -131,6 +131,7 @@ COPY --from=builder --chown=echoapp:nodejs /build/web/dist ./web/dist
 # Copy scripts (entrypoint + migration runner + admin reset)
 COPY --chown=echoapp:nodejs api/scripts/docker-entrypoint.sh /usr/local/bin/
 COPY --chown=echoapp:nodejs api/scripts/run-migrations.js ./scripts/
+COPY --chown=echoapp:nodejs api/scripts/wait-for-db.js ./scripts/
 COPY --chown=echoapp:nodejs api/scripts/reset-admin-password.js ./scripts/
 
 # Fix line endings and permissions

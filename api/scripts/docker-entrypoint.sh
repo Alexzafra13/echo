@@ -90,7 +90,31 @@ until nc -z -v -w5 postgres 5432 2>/dev/null; do
   # Back off: 1s, 1s, 1s, 2s, 2s, 2s, 3s... (max 5s)
   [ $((RETRIES % 3)) -eq 0 ] && DELAY=$((DELAY < 5 ? DELAY + 1 : 5))
 done
-echo "✅ PostgreSQL is ready!"
+echo "✅ PostgreSQL port is open"
+
+# TCP port being open doesn't mean postgres accepts credentials yet.
+# On slow NAS storage postgres may accept TCP but still be replaying WAL.
+# Verify with a real auth+query using the pg driver already in node_modules.
+echo "⏳ Verifying database credentials..."
+RETRIES=0
+AUTH_MAX=30
+AUTH_DELAY=1
+until node scripts/wait-for-db.js 2>/dev/null; do
+  RETRIES=$((RETRIES + 1))
+  if [ $RETRIES -ge $AUTH_MAX ]; then
+    echo ""
+    echo "❌ PostgreSQL port is open but credentials/database check failed"
+    echo "   after ${AUTH_MAX} attempts."
+    echo ""
+    echo "   Check DATABASE_URL and POSTGRES_PASSWORD are consistent"
+    echo "   between the api and postgres services."
+    exit 1
+  fi
+  echo "   Retrying credentials check... (${RETRIES}/${AUTH_MAX})"
+  sleep $AUTH_DELAY
+  [ $((RETRIES % 5)) -eq 0 ] && AUTH_DELAY=$((AUTH_DELAY < 3 ? AUTH_DELAY + 1 : 3))
+done
+echo "✅ PostgreSQL is ready and accepting our credentials!"
 
 echo "⏳ Waiting for Redis..."
 RETRIES=0
