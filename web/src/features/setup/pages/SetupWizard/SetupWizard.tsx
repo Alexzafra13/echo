@@ -7,6 +7,7 @@
  * 3. Completar configuración
  */
 
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,6 +15,7 @@ import {
   User,
   Lock,
   FolderOpen,
+  FolderPlus,
   ChevronRight,
   ChevronLeft,
   Check,
@@ -21,11 +23,22 @@ import {
   AlertCircle,
   Loader2,
   HardDrive,
+  X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Input } from '@shared/components/ui';
 import { useSetupWizard } from '../../hooks/useSetupWizard';
 import styles from './SetupWizard.module.css';
+
+function scorePassword(pw: string): number {
+  if (!pw) return 0;
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+  if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+  return Math.min(score, 4);
+}
 
 export default function SetupWizard() {
   const { t } = useTranslation();
@@ -57,19 +70,29 @@ export default function SetupWizard() {
     loadDirectory,
     handleAdminSubmit: submitAdmin,
     handleSelectLibrary,
+    handleCreateDirectory,
     handleCompleteSetup,
     handleGoToLogin,
     goToStep,
   } = useSetupWizard();
 
+  // UI-only state for the "New folder" inline form and password strength
+  const [newFolderOpen, setNewFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [newFolderSubmitting, setNewFolderSubmitting] = useState(false);
+
   // Formulario de admin
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<AdminFormData>({
     resolver: zodResolver(adminSchema),
   });
+
+  const passwordValue = watch('password') ?? '';
+  const passwordScore = useMemo(() => scorePassword(passwordValue), [passwordValue]);
 
   const handleAdminSubmit = (data: AdminFormData) => {
     submitAdmin({ username: data.username, password: data.password });
@@ -175,6 +198,35 @@ export default function SetupWizard() {
                     autoComplete="new-password"
                   />
 
+                  {passwordValue && (
+                    <div
+                      className={styles.strengthMeter}
+                      data-score={passwordScore}
+                      aria-live="polite"
+                    >
+                      <div className={styles.strengthBars}>
+                        {[0, 1, 2, 3].map((i) => (
+                          <span
+                            key={i}
+                            className={styles.strengthBar}
+                            data-filled={i < passwordScore}
+                          />
+                        ))}
+                      </div>
+                      <span className={styles.strengthLabel}>
+                        {t(
+                          passwordScore <= 1
+                            ? 'setup.passwordStrengthWeak'
+                            : passwordScore === 2
+                              ? 'setup.passwordStrengthFair'
+                              : passwordScore === 3
+                                ? 'setup.passwordStrengthGood'
+                                : 'setup.passwordStrengthStrong'
+                        )}
+                      </span>
+                    </div>
+                  )}
+
                   <Input
                     {...register('confirmPassword')}
                     type="password"
@@ -246,6 +298,15 @@ export default function SetupWizard() {
                       <HardDrive size={18} />
                       <code>{browseData.currentPath}</code>
                       <Button
+                        onClick={() => setNewFolderOpen((v) => !v)}
+                        variant="secondary"
+                        size="sm"
+                        disabled={isBrowsing || isSubmitting}
+                        leftIcon={<FolderPlus size={14} />}
+                      >
+                        {t('setup.newFolderButton')}
+                      </Button>
+                      <Button
                         onClick={() => handleSelectLibrary(browseData.currentPath)}
                         variant="primary"
                         size="sm"
@@ -254,6 +315,54 @@ export default function SetupWizard() {
                         {t('setup.useFolderButton')}
                       </Button>
                     </div>
+
+                    {newFolderOpen && (
+                      <form
+                        className={styles.newFolderBar}
+                        onSubmit={async (e) => {
+                          e.preventDefault();
+                          const name = newFolderName.trim();
+                          if (!name) return;
+                          setNewFolderSubmitting(true);
+                          const ok = await handleCreateDirectory(name);
+                          setNewFolderSubmitting(false);
+                          if (ok) {
+                            setNewFolderName('');
+                            setNewFolderOpen(false);
+                          }
+                        }}
+                      >
+                        <FolderPlus size={16} />
+                        <input
+                          autoFocus
+                          className={styles.newFolderInput}
+                          placeholder={t('setup.newFolderPlaceholder')}
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          disabled={newFolderSubmitting}
+                        />
+                        <Button
+                          type="submit"
+                          variant="primary"
+                          size="sm"
+                          disabled={!newFolderName.trim() || newFolderSubmitting}
+                          loading={newFolderSubmitting}
+                        >
+                          {t('setup.newFolderCreate')}
+                        </Button>
+                        <button
+                          type="button"
+                          className={styles.newFolderCancel}
+                          onClick={() => {
+                            setNewFolderOpen(false);
+                            setNewFolderName('');
+                          }}
+                          aria-label={t('setup.newFolderCancel')}
+                        >
+                          <X size={16} />
+                        </button>
+                      </form>
+                    )}
 
                     {/* Go up button */}
                     {browseData.canGoUp && (

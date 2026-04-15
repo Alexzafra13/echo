@@ -451,12 +451,15 @@ textarea:focus-visible {
 
 /* ===== Utilities ===== */
 
-/* Reset fieldset styles for use as form grouping without visual chrome */
+/* Reset fieldset styles para usarlo como grouping sin cromo visual */
 .fieldset-reset {
   border: none;
   padding: 0;
   margin: 0;
   min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
 }
 
 /* ===== App Layout ===== */

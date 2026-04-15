@@ -1,6 +1,6 @@
 {
   "name": "echo-monorepo",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "private": true,
   "description": "Echo Music Server - Self-hosted music streaming",
   "license": "GPL-3.0",

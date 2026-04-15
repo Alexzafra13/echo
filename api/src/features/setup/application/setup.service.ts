@@ -187,6 +187,10 @@ export class SetupService {
     return this.directoryBrowser.browseDirectories(targetPath);
   }
 
+  async createDirectory(parentPath: string, name: string) {
+    return this.directoryBrowser.createDirectory(parentPath, name);
+  }
+
   /**
    * Complete setup (step 3 of wizard)
    */
