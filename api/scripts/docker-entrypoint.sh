@@ -81,6 +81,11 @@ until nc -z -v -w5 postgres 5432 2>/dev/null; do
     exit 1
   fi
   echo "   Waiting for database connection... (${RETRIES}/${MAX_RETRIES})"
+  # Every 10 attempts, print DNS resolution to help diagnose NAS networking issues
+  if [ $((RETRIES % 10)) -eq 0 ]; then
+    RESOLVED=$(getent hosts postgres 2>/dev/null || echo "DNS RESOLUTION FAILED")
+    echo "   ↳ 'postgres' resolves to: ${RESOLVED}"
+  fi
   sleep $DELAY
   # Back off: 1s, 1s, 1s, 2s, 2s, 2s, 3s... (max 5s)
   [ $((RETRIES % 3)) -eq 0 ] && DELAY=$((DELAY < 5 ? DELAY + 1 : 5))

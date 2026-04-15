@@ -89,6 +89,8 @@ services:
       interval: 5s
       timeout: 10s
       retries: 10
+      # Slow NAS disks may take 20-30s before accepting connections
+      start_period: 30s
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -109,6 +111,7 @@ services:
       interval: 5s
       timeout: 10s
       retries: 10
+      start_period: 15s
     restart: unless-stopped
     logging:
       driver: "json-file"
