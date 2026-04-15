@@ -93,7 +93,7 @@ jobs:
               exit 1
             fi
             # Intentar health check
-            if docker exec test-echo wget -qO- http://localhost:4567/api/health 2>/dev/null | grep -q '"status"'; then
+            if docker exec test-echo wget -qO- http://127.0.0.1:4567/api/health 2>/dev/null | grep -q '"status"'; then
               echo "✅ Container is healthy (${i}s)"
               READY=true
               break
