@@ -79,6 +79,14 @@ export async function browseDirectories(path: string): Promise<BrowseResult> {
 }
 
 /**
+ * Crear una subcarpeta dentro del path actual
+ */
+export async function createDirectory(path: string, name: string): Promise<DirectoryInfo> {
+  const response = await axios.post<DirectoryInfo>(`${API_BASE}/browse/mkdir`, { path, name });
+  return response.data;
+}
+
+/**
  * Completar configuración
  */
 export async function completeSetup(): Promise<{ success: boolean; message: string }> {

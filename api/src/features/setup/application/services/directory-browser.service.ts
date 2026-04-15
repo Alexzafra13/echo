@@ -112,6 +112,57 @@ export class DirectoryBrowserService {
     };
   }
 
+  async createDirectory(parentPath: string, name: string): Promise<DirectoryInfo> {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      throw new BadRequestException('Folder name cannot be empty');
+    }
+    if (!/^[\p{L}\p{N}._\- ]+$/u.test(trimmed)) {
+      throw new BadRequestException(
+        'Folder name contains invalid characters. Use letters, numbers, spaces, dots, dashes or underscores.'
+      );
+    }
+    if (trimmed === '.' || trimmed === '..' || trimmed.includes('/') || trimmed.includes('\\')) {
+      throw new BadRequestException('Invalid folder name');
+    }
+
+    const normalizedParent = path.normalize(parentPath).replace(/\\/g, '/');
+
+    if (process.env.NODE_ENV !== 'development') {
+      this.validatePathSecurity(normalizedParent);
+    }
+
+    try {
+      await fs.access(normalizedParent, fs.constants.W_OK);
+    } catch {
+      throw new BadRequestException(`Parent directory is not writable: ${normalizedParent}`);
+    }
+
+    const target = path.join(normalizedParent, trimmed).replace(/\\/g, '/');
+
+    if (!target.startsWith(normalizedParent + '/') && target !== normalizedParent) {
+      throw new BadRequestException('Resolved path escapes the parent directory');
+    }
+
+    try {
+      await fs.mkdir(target);
+    } catch (err) {
+      const error = err as NodeJS.ErrnoException;
+      if (error.code === 'EEXIST') {
+        throw new BadRequestException('A folder with that name already exists');
+      }
+      this.logger.warn({ err, target }, 'Failed to create directory');
+      throw new BadRequestException(`Could not create folder: ${error.message}`);
+    }
+
+    return {
+      name: trimmed,
+      path: target,
+      readable: true,
+      hasMusic: false,
+    };
+  }
+
   /**
    * Validate path security in production
    */

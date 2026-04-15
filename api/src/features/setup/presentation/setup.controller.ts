@@ -34,6 +34,15 @@ class BrowseDirectoriesDto {
   path!: string;
 }
 
+class CreateDirectoryDto {
+  @IsString()
+  path!: string;
+
+  @IsString()
+  @MinLength(1)
+  name!: string;
+}
+
 // Setup wizard. Endpoints públicos que se bloquean tras completar la configuración inicial.
 @ApiTags('setup')
 @Controller('setup')
@@ -198,6 +207,32 @@ export class SetupController {
   async browseDirectories(@Body() dto: BrowseDirectoriesDto) {
     await this.ensureSetupNotCompleted();
     return this.setupService.browseDirectories(dto.path);
+  }
+
+  @Post('browse/mkdir')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create a subdirectory',
+    description: 'Creates a new empty folder inside an allowed parent path (setup-only).',
+  })
+  @ApiBody({
+    description: 'Parent path and new folder name',
+    schema: {
+      type: 'object',
+      required: ['path', 'name'],
+      properties: {
+        path: { type: 'string', example: '/mnt/music' },
+        name: { type: 'string', example: 'My Library' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Folder created' })
+  @ApiResponse({ status: 400, description: 'Invalid name or path not writable' })
+  async createDirectory(@Body() dto: CreateDirectoryDto) {
+    await this.ensureSetupNotCompleted();
+    const created = await this.setupService.createDirectory(dto.path, dto.name);
+    this.logger.info(`Directory created via setup wizard: ${created.path}`);
+    return created;
   }
 
   @Post('complete')

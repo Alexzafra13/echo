@@ -164,17 +164,20 @@ export class FederationTokenService implements OnModuleDestroy {
       return null;
     }
 
-    // Invalidar cache para que el próximo request lea permisos actualizados
-    this.invalidateCacheByTokenId(id);
-
     const updatedPermissions: FederationPermissions = {
       ...accessToken.permissions,
       ...permissions,
     };
 
-    return this.repository.updateFederationAccessToken(id, {
+    const updated = await this.repository.updateFederationAccessToken(id, {
       permissions: updatedPermissions,
     });
+
+    // Invalidar cache después del commit para evitar que una request
+    // concurrente cachee el valor viejo durante los ~ms del UPDATE.
+    this.invalidateCacheByTokenId(id);
+
+    return updated;
   }
 
   async getUserInvitationTokens(userId: string): Promise<FederationToken[]> {

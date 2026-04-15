@@ -6,6 +6,7 @@ import {
   createAdmin,
   configureLibrary,
   browseDirectories,
+  createDirectory,
   completeSetup,
   type SetupStatus,
   type BrowseResult,
@@ -187,6 +188,29 @@ export function useSetupWizard() {
     }
   }, []);
 
+  const handleCreateDirectory = useCallback(
+    async (name: string): Promise<boolean> => {
+      if (!state.browseData) return false;
+      dispatch({ type: 'SET_BROWSING', value: true });
+      dispatch({ type: 'SET_ERROR', error: null });
+      try {
+        await createDirectory(state.browseData.currentPath, name);
+        const refreshed = await browseDirectories(state.browseData.currentPath);
+        dispatch({ type: 'SET_BROWSE_DATA', data: refreshed });
+        return true;
+      } catch (error: unknown) {
+        dispatch({
+          type: 'SET_ERROR',
+          error: getApiErrorMessage(error, 'Error al crear la carpeta'),
+        });
+        return false;
+      } finally {
+        dispatch({ type: 'SET_BROWSING', value: false });
+      }
+    },
+    [state.browseData]
+  );
+
   const handleGoToLogin = useCallback(() => {
     setLocation('/login');
   }, [setLocation]);
@@ -201,6 +225,7 @@ export function useSetupWizard() {
     loadDirectory,
     handleAdminSubmit,
     handleSelectLibrary,
+    handleCreateDirectory,
     handleCompleteSetup,
     handleGoToLogin,
     goToStep,
