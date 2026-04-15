@@ -18,6 +18,11 @@
 #   - Synology NAS (DSM 7.2+ Container Manager)
 #   - Windows / macOS (Docker Desktop)
 #
+# SYNOLOGY TROUBLESHOOTING:
+#   If the echo container loops on "Waiting for database connection"
+#   see docs/synology.md — the most common cause is DSM's bridge-network
+#   DNS failing on first start (fix: restart Container Manager).
+#
 # =============================================
 
 services:

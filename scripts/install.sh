@@ -63,6 +63,72 @@ abort() {
   exit 1
 }
 
+# Prompt that works when script is piped via `curl | sudo bash`.
+# Reads from /dev/tty if stdin is not a terminal. Falls back to $2 when
+# no terminal is available (or when ECHO_ASSUME_YES=1 is set).
+prompt_confirm() {
+  local prompt="$1"
+  local default="${2:-}"
+
+  if [ "${ECHO_ASSUME_YES:-0}" = "1" ] && [ -n "$default" ]; then
+    REPLY="$default"
+    echo "${prompt}${default} (ECHO_ASSUME_YES)"
+    return 0
+  fi
+
+  if [ -t 0 ]; then
+    read -p "$prompt" -r
+  elif [ -r /dev/tty ]; then
+    read -p "$prompt" -r < /dev/tty
+  else
+    REPLY="$default"
+    echo "${prompt}${default:-<no default>} (non-interactive)"
+  fi
+  REPLY="${REPLY:-$default}"
+}
+
+# Run a command with a spinner + elapsed-time indicator. Captures output
+# to a temp file and only prints it on failure. Keeps the screen tidy
+# during long pnpm install/build steps.
+run_with_spinner() {
+  local label="$1"; shift
+  local log_file
+  log_file=$(mktemp)
+  local start=$SECONDS
+  local rc=0
+
+  ( "$@" ) >"$log_file" 2>&1 &
+  local pid=$!
+
+  if [ -t 1 ]; then
+    local frames=('-' '\' '|' '/')
+    local i=0
+    while kill -0 "$pid" 2>/dev/null; do
+      local elapsed=$((SECONDS - start))
+      printf "\r\033[K  ${BLUE}[%s]${NC}    %s (%ds)" "${frames[$((i % 4))]}" "$label" "$elapsed"
+      i=$((i + 1))
+      sleep 0.2
+    done
+    printf "\r\033[K"
+  fi
+
+  wait "$pid" || rc=$?
+  local elapsed=$((SECONDS - start))
+
+  if [ $rc -ne 0 ]; then
+    log_error "$label failed after ${elapsed}s"
+    echo "---- output ----" >&2
+    cat "$log_file" >&2
+    echo "----------------" >&2
+    rm -f "$log_file"
+    return $rc
+  fi
+
+  rm -f "$log_file"
+  log_success "$label (${elapsed}s)"
+  return 0
+}
+
 need_root() {
   if [ "$(id -u)" -ne 0 ]; then
     abort "This script must be run as root. Use: sudo $0"
@@ -347,14 +413,12 @@ build_app() {
   chown -R "$ECHO_USER":"$ECHO_GROUP" "$INSTALL_DIR"
   log_success "Source code ready"
 
-  log_info "Installing dependencies (this may take a few minutes)..."
   cd "$INSTALL_DIR"
-  su -s /bin/bash "$ECHO_USER" -c "pnpm install --frozen-lockfile --silent 2>/dev/null || pnpm install --silent"
-  log_success "Dependencies installed"
+  run_with_spinner "Installing dependencies" \
+    su -s /bin/bash "$ECHO_USER" -c "pnpm install --frozen-lockfile --silent 2>/dev/null || pnpm install --silent"
 
-  log_info "Building application..."
-  su -s /bin/bash "$ECHO_USER" -c "pnpm build"
-  log_success "Build complete"
+  run_with_spinner "Building application" \
+    su -s /bin/bash "$ECHO_USER" -c "pnpm build"
 }
 
 # ============================================
@@ -504,7 +568,7 @@ uninstall() {
   echo "  - Your music ($MUSIC_DIR)"
   echo "  - PostgreSQL, Redis, Node.js"
   echo ""
-  read -p "Continue? (yes/NO): " -r
+  prompt_confirm "Continue? (yes/NO): " ""
   if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
     echo "Uninstall cancelled."
     exit 0
@@ -591,11 +655,11 @@ update() {
   git pull --quiet origin main
   chown -R "$ECHO_USER":"$ECHO_GROUP" "$INSTALL_DIR"
 
-  log_info "Installing dependencies..."
-  su -s /bin/bash "$ECHO_USER" -c "pnpm install --frozen-lockfile --silent 2>/dev/null || pnpm install --silent"
+  run_with_spinner "Installing dependencies" \
+    su -s /bin/bash "$ECHO_USER" -c "pnpm install --frozen-lockfile --silent 2>/dev/null || pnpm install --silent"
 
-  log_info "Building application..."
-  if ! su -s /bin/bash "$ECHO_USER" -c "pnpm build"; then
+  if ! run_with_spinner "Building application" \
+    su -s /bin/bash "$ECHO_USER" -c "pnpm build"; then
     log_error "Build failed! Restoring previous build..."
     if [ -d "$backup_dir/api-dist" ]; then
       rm -rf "$INSTALL_DIR/api/dist"
@@ -703,8 +767,7 @@ main() {
   echo ""
   echo "  All passwords and secrets are generated automatically."
   echo ""
-  read -p "Continue? (Y/n): " -r
-  REPLY=${REPLY:-Y}
+  prompt_confirm "Continue? (Y/n): " "Y"
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "Installation cancelled."
     exit 0
