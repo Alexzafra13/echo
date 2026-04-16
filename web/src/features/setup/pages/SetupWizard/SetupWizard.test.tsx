@@ -61,6 +61,9 @@ vi.mock('@shared/components/ui', () => ({
       {error && <span role="alert">{error}</span>}
     </div>
   ),
+  UserAvatar: ({ username }: { username?: string }) => (
+    <div data-testid="user-avatar">{username ?? ''}</div>
+  ),
 }));
 
 // Mock error utils
@@ -246,11 +249,15 @@ describe('SetupWizard', () => {
         expect(screen.getByText('music')).toBeInTheDocument();
       });
 
-      const selectButtons = screen.getAllByRole('button', { name: /seleccionar/i });
+      const selectButtons = screen.getAllByRole('button', { name: /^seleccionar$/i });
       fireEvent.click(selectButtons[0]);
 
+      // Tras el refactor, la CompletedCard usa i18n "musicFilesFound" con el
+      // count en vez de mostrar el validation.message crudo.
       await waitFor(() => {
-        expect(screen.getByText('1000 archivos encontrados')).toBeInTheDocument();
+        expect(
+          screen.getByText(/1000\s+archivos de música detectados/i)
+        ).toBeInTheDocument();
       });
     });
 
@@ -287,9 +294,12 @@ describe('SetupWizard', () => {
 
       render(<SetupWizard />);
 
+      // Hay dos botones que matchean "usar esta" (el quick-select "Usar esta"
+      // y el del browser "Usar esta carpeta"), así que usamos match exacto
+      // para apuntar solo al del quick-select.
       await waitFor(() => {
         expect(screen.getByText(/500/)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /usar esta/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /^usar esta$/i })).toBeInTheDocument();
       });
     });
   });
@@ -301,15 +311,19 @@ describe('SetupWizard', () => {
         hasAdmin: true,
         hasMusicLibrary: true,
         musicLibraryPath: '/mnt/music',
+        adminUsername: 'admin',
       });
     });
 
     it('should display complete step summary', async () => {
       render(<SetupWizard />);
 
+      // El step "Finalizar" ahora pinta una CompletedCard con:
+      //  - primary = el username real (en vez del texto de éxito genérico)
+      //  - secondary = t('setup.adminAlreadyCreated') = "Administrador creado"
       await waitFor(() => {
         expect(screen.getByText('¡Casi listo!')).toBeInTheDocument();
-        expect(screen.getByText('Cuenta de administrador creada')).toBeInTheDocument();
+        expect(screen.getByText('Administrador creado')).toBeInTheDocument();
       });
     });
 
