@@ -8,11 +8,13 @@ import {
   browseDirectories,
   createDirectory,
   completeSetup,
+  resetAdmin,
+  saveApiKeys,
   type SetupStatus,
   type BrowseResult,
 } from '../api/setup.service';
 
-type WizardStep = 'loading' | 'admin' | 'library' | 'complete' | 'done';
+type WizardStep = 'loading' | 'admin' | 'library' | 'api-keys' | 'complete' | 'done';
 
 interface WizardState {
   step: WizardStep;
@@ -21,6 +23,8 @@ interface WizardState {
   isSubmitting: boolean;
   browseData: BrowseResult | null;
   selectedPath: string;
+  adminUsername: string;
+  apiKeys: { lastfm: string; fanart: string };
   libraryValidation: {
     valid: boolean;
     message: string;
@@ -36,6 +40,8 @@ type WizardAction =
   | { type: 'SET_SUBMITTING'; value: boolean }
   | { type: 'SET_BROWSE_DATA'; data: BrowseResult | null }
   | { type: 'SET_SELECTED_PATH'; path: string }
+  | { type: 'SET_ADMIN_USERNAME'; username: string }
+  | { type: 'SET_API_KEY'; provider: 'lastfm' | 'fanart'; value: string }
   | { type: 'SET_LIBRARY_VALIDATION'; validation: WizardState['libraryValidation'] }
   | { type: 'SET_BROWSING'; value: boolean };
 
@@ -46,6 +52,8 @@ const initialState: WizardState = {
   isSubmitting: false,
   browseData: null,
   selectedPath: '/',
+  adminUsername: '',
+  apiKeys: { lastfm: '', fanart: '' },
   libraryValidation: null,
   isBrowsing: false,
 };
@@ -68,6 +76,13 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       };
     case 'SET_SELECTED_PATH':
       return { ...state, selectedPath: action.path };
+    case 'SET_ADMIN_USERNAME':
+      return { ...state, adminUsername: action.username };
+    case 'SET_API_KEY':
+      return {
+        ...state,
+        apiKeys: { ...state.apiKeys, [action.provider]: action.value },
+      };
     case 'SET_LIBRARY_VALIDATION':
       return { ...state, libraryValidation: action.validation };
     case 'SET_BROWSING':
@@ -108,6 +123,9 @@ export function useSetupWizard() {
     try {
       const setupStatus = await getSetupStatus();
       dispatch({ type: 'SET_STATUS', status: setupStatus });
+      if (setupStatus.adminUsername) {
+        dispatch({ type: 'SET_ADMIN_USERNAME', username: setupStatus.adminUsername });
+      }
 
       if (!setupStatus.needsSetup) {
         setLocation('/login');
@@ -139,6 +157,7 @@ export function useSetupWizard() {
       dispatch({ type: 'SET_ERROR', error: null });
       try {
         await createAdmin(data);
+        dispatch({ type: 'SET_ADMIN_USERNAME', username: data.username });
         dispatch({ type: 'SET_STEP', step: 'library' });
         loadDirectory('/');
       } catch (error: unknown) {
@@ -211,13 +230,87 @@ export function useSetupWizard() {
     [state.browseData]
   );
 
+  const setApiKey = useCallback((provider: 'lastfm' | 'fanart', value: string) => {
+    dispatch({ type: 'SET_API_KEY', provider, value });
+  }, []);
+
+  const handleSaveApiKeys = useCallback(
+    async (keys: { lastfm?: string; fanart?: string }): Promise<boolean> => {
+      dispatch({ type: 'SET_SUBMITTING', value: true });
+      dispatch({ type: 'SET_ERROR', error: null });
+      try {
+        await saveApiKeys(keys);
+        // Limpiar los inputs para que al volver al paso se vea el hint
+        // "••••af4" en vez del valor que se acaba de escribir.
+        if (typeof keys.lastfm === 'string') {
+          dispatch({ type: 'SET_API_KEY', provider: 'lastfm', value: '' });
+        }
+        if (typeof keys.fanart === 'string') {
+          dispatch({ type: 'SET_API_KEY', provider: 'fanart', value: '' });
+        }
+        // Refresca hints (últimos 4 chars) desde la DB
+        try {
+          const refreshed = await getSetupStatus();
+          dispatch({ type: 'SET_STATUS', status: refreshed });
+        } catch {
+          // Non-fatal: si falla, el hint anterior sigue siendo válido
+        }
+        return true;
+      } catch (error: unknown) {
+        dispatch({
+          type: 'SET_ERROR',
+          error: getApiErrorMessage(error, 'Error al guardar las claves'),
+        });
+        return false;
+      } finally {
+        dispatch({ type: 'SET_SUBMITTING', value: false });
+      }
+    },
+    []
+  );
+
+  const handleResetAdmin = useCallback(async (): Promise<boolean> => {
+    dispatch({ type: 'SET_SUBMITTING', value: true });
+    dispatch({ type: 'SET_ERROR', error: null });
+    try {
+      await resetAdmin();
+      dispatch({ type: 'SET_ADMIN_USERNAME', username: '' });
+      const refreshed = await getSetupStatus();
+      dispatch({ type: 'SET_STATUS', status: refreshed });
+      return true;
+    } catch (error: unknown) {
+      dispatch({
+        type: 'SET_ERROR',
+        error: getApiErrorMessage(error, 'Error al restablecer el administrador'),
+      });
+      return false;
+    } finally {
+      dispatch({ type: 'SET_SUBMITTING', value: false });
+    }
+  }, []);
+
   const handleGoToLogin = useCallback(() => {
     setLocation('/login');
   }, [setLocation]);
 
-  const goToStep = useCallback((step: WizardStep) => {
-    dispatch({ type: 'SET_STEP', step });
-  }, []);
+  const goToStep = useCallback(
+    (targetStep: WizardStep) => {
+      dispatch({ type: 'SET_STEP', step: targetStep });
+
+      // Al volver al paso de biblioteca con una carpeta ya seleccionada,
+      // carga el directorio padre para que la fila elegida quede visible.
+      if (targetStep === 'library' && state.selectedPath) {
+        const sep = state.selectedPath.lastIndexOf('/');
+        const parent = sep > 0 ? state.selectedPath.substring(0, sep) : '/';
+        const targetDir =
+          state.browseData?.currentPath === state.selectedPath ? state.selectedPath : parent;
+        if (state.browseData?.currentPath !== targetDir) {
+          loadDirectory(targetDir);
+        }
+      }
+    },
+    [state.selectedPath, state.browseData, loadDirectory]
+  );
 
   return {
     ...state,
@@ -226,6 +319,9 @@ export function useSetupWizard() {
     handleAdminSubmit,
     handleSelectLibrary,
     handleCreateDirectory,
+    handleSaveApiKeys,
+    setApiKey,
+    handleResetAdmin,
     handleCompleteSetup,
     handleGoToLogin,
     goToStep,

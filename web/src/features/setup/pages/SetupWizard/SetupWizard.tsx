@@ -7,7 +7,7 @@
  * 3. Completar configuración
  */
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,7 +27,9 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Input } from '@shared/components/ui';
+import { UserAvatar } from '@shared/components/ui';
 import { useSetupWizard } from '../../hooks/useSetupWizard';
+import { ApiKeysStep } from './ApiKeysStep';
 import styles from './SetupWizard.module.css';
 
 function scorePassword(pw: string): number {
@@ -64,6 +66,7 @@ export default function SetupWizard() {
     isSubmitting,
     browseData,
     selectedPath,
+    adminUsername,
     libraryValidation,
     isBrowsing,
     checkStatus,
@@ -71,6 +74,10 @@ export default function SetupWizard() {
     handleAdminSubmit: submitAdmin,
     handleSelectLibrary,
     handleCreateDirectory,
+    handleSaveApiKeys,
+    apiKeys,
+    setApiKey,
+    handleResetAdmin,
     handleCompleteSetup,
     handleGoToLogin,
     goToStep,
@@ -80,6 +87,19 @@ export default function SetupWizard() {
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderSubmitting, setNewFolderSubmitting] = useState(false);
+
+  // Smooth exit→swap→enter transition between steps
+  const [displayStep, setDisplayStep] = useState(step);
+  const [isExiting, setIsExiting] = useState(false);
+  useEffect(() => {
+    if (step === displayStep) return;
+    setIsExiting(true);
+    const t = setTimeout(() => {
+      setDisplayStep(step);
+      setIsExiting(false);
+    }, 180);
+    return () => clearTimeout(t);
+  }, [step, displayStep]);
 
   // Formulario de admin
   const {
@@ -127,36 +147,56 @@ export default function SetupWizard() {
         <div className={styles.wizardCard}>
           {/* Progress indicator */}
           <div className={styles.progressBar}>
-            <div className={`${styles.progressStep} ${styles.active}`}>
-              <div className={styles.stepCircle}>
-                {step === 'admin' ? '1' : <Check size={16} />}
-              </div>
-              <span>{t('setup.adminStep')}</span>
-            </div>
-            <div className={styles.progressLine} />
-            <div
-              className={`${styles.progressStep} ${
-                step === 'library' || step === 'complete' || step === 'done' ? styles.active : ''
-              }`}
-            >
-              <div className={styles.stepCircle}>
-                {step === 'library' ? (
-                  '2'
-                ) : step === 'complete' || step === 'done' ? (
-                  <Check size={16} />
-                ) : (
-                  '2'
-                )}
-              </div>
-              <span>{t('setup.libraryStep')}</span>
-            </div>
-            <div className={styles.progressLine} />
-            <div
-              className={`${styles.progressStep} ${step === 'complete' || step === 'done' ? styles.active : ''}`}
-            >
-              <div className={styles.stepCircle}>{step === 'done' ? <Check size={16} /> : '3'}</div>
-              <span>{t('setup.completeStep')}</span>
-            </div>
+            {(() => {
+              type StepId = 'admin' | 'library' | 'api-keys' | 'complete';
+              const order: StepId[] = ['admin', 'library', 'api-keys', 'complete'];
+              const stepIndex = order.indexOf(
+                (step === 'done' ? 'complete' : step) as StepId
+              );
+              const renderStep = (id: StepId, label: string, number: string) => {
+                const idx = order.indexOf(id);
+                const isActive = stepIndex >= idx;
+                const isCurrent = step === id;
+                const isPast = stepIndex > idx;
+                const canNavigate = isPast && step !== 'done';
+                const showCheck = isPast || (id === 'complete' && step === 'done');
+                return (
+                  <button
+                    type="button"
+                    className={`${styles.progressStep} ${isActive ? styles.active : ''} ${canNavigate ? styles.clickable : ''}`}
+                    onClick={() => canNavigate && goToStep(id)}
+                    disabled={!canNavigate}
+                    aria-current={isCurrent ? 'step' : undefined}
+                  >
+                    <div className={styles.stepCircle}>
+                      {showCheck ? <Check size={16} /> : number}
+                    </div>
+                    <span>{label}</span>
+                  </button>
+                );
+              };
+              const line = (afterIdx: number) => (
+                <div
+                  className={styles.progressLine}
+                  style={
+                    {
+                      '--progress': stepIndex > afterIdx ? 1 : 0,
+                    } as React.CSSProperties
+                  }
+                />
+              );
+              return (
+                <>
+                  {renderStep('admin', t('setup.adminStep'), '1')}
+                  {line(0)}
+                  {renderStep('library', t('setup.libraryStep'), '2')}
+                  {line(1)}
+                  {renderStep('api-keys', t('setup.apiKeysStep'), '3')}
+                  {line(2)}
+                  {renderStep('complete', t('setup.completeStep'), '4')}
+                </>
+              );
+            })()}
           </div>
 
           {/* Error message */}
@@ -167,8 +207,12 @@ export default function SetupWizard() {
             </div>
           )}
 
+          <div
+            className={`${styles.stepSwitcher} ${isExiting ? styles.exiting : ''}`}
+          >
+
           {/* Step 1: Create Admin */}
-          {step === 'admin' && (
+          {displayStep === 'admin' && (
             <div className={styles.stepContent}>
               <h2 className={styles.stepTitle}>
                 <User size={24} />
@@ -176,6 +220,49 @@ export default function SetupWizard() {
               </h2>
               <p className={styles.stepDescription}>{t('setup.adminDescription')}</p>
 
+              {adminUsername ? (
+                <>
+                  <div className={styles.completedCard}>
+                    <UserAvatar
+                      userId={status?.adminUserId ?? undefined}
+                      hasAvatar={status?.adminHasAvatar ?? false}
+                      username={adminUsername}
+                      size={52}
+                      className={styles.completedAvatarImg}
+                    />
+                    <div className={styles.completedBody}>
+                      <span className={styles.completedPrimary}>{adminUsername}</span>
+                      <span className={styles.completedSecondary}>
+                        {t('setup.adminAlreadyCreated')}
+                      </span>
+                    </div>
+                    <Check size={18} className={styles.completedCheck} />
+                  </div>
+                  <div className={styles.actions}>
+                    <Button
+                      onClick={async () => {
+                        if (window.confirm(t('setup.adminResetConfirm'))) {
+                          await handleResetAdmin();
+                        }
+                      }}
+                      variant="outline"
+                      size="lg"
+                      disabled={isSubmitting}
+                    >
+                      {t('setup.adminResetButton')}
+                    </Button>
+                    <Button
+                      onClick={() => goToStep('library')}
+                      variant="primary"
+                      size="lg"
+                      fullWidth
+                      rightIcon={<ChevronRight size={20} />}
+                    >
+                      {t('setup.nextButton')}
+                    </Button>
+                  </div>
+                </>
+              ) : (
               <form onSubmit={handleSubmit(handleAdminSubmit)} className={styles.form}>
                 <fieldset disabled={isSubmitting} className="fieldset-reset">
                   <Input
@@ -249,11 +336,12 @@ export default function SetupWizard() {
                   </Button>
                 </fieldset>
               </form>
+              )}
             </div>
           )}
 
           {/* Step 2: Select Library (Jellyfin-style browser) */}
-          {step === 'library' && (
+          {displayStep === 'library' && (
             <div className={styles.stepContent}>
               <h2 className={styles.stepTitle}>
                 <FolderOpen size={24} />
@@ -262,9 +350,7 @@ export default function SetupWizard() {
               <p className={styles.stepDescription}>{t('setup.libraryDescription')}</p>
 
               {/* Quick select if music was auto-detected */}
-              {status?.mountedLibrary.fileCount &&
-                status.mountedLibrary.fileCount > 0 &&
-                !libraryValidation && (
+              {status && status.mountedLibrary.fileCount > 0 && !libraryValidation && (
                   <div className={`${styles.validationResult} ${styles.valid}`}>
                     <Music size={18} />
                     <div className={styles.quickSelectContent}>
@@ -384,28 +470,40 @@ export default function SetupWizard() {
                       {browseData.directories.length === 0 ? (
                         <div className={styles.emptyDirectory}>{t('setup.noSubdirectories')}</div>
                       ) : (
-                        browseData.directories.map((dir) => (
-                          <div key={dir.path} className={styles.directoryRow}>
-                            <button
-                              className={`${styles.directoryItem} ${!dir.readable ? styles.disabled : ''}`}
-                              onClick={() => dir.readable && loadDirectory(dir.path)}
-                              disabled={!dir.readable || isBrowsing}
+                        browseData.directories.map((dir) => {
+                          const isSelected =
+                            libraryValidation?.valid && selectedPath === dir.path;
+                          return (
+                            <div
+                              key={dir.path}
+                              className={`${styles.directoryRow} ${isSelected ? styles.selectedRow : ''}`}
                             >
-                              <ChevronRight size={16} />
-                              <FolderOpen size={18} />
-                              <span>{dir.name}</span>
-                              {dir.hasMusic && <Music size={14} className={styles.musicIcon} />}
-                            </button>
-                            <Button
-                              onClick={() => handleSelectLibrary(dir.path)}
-                              variant="outline"
-                              size="sm"
-                              disabled={!dir.readable || isSubmitting}
-                            >
-                              {t('setup.selectButton')}
-                            </Button>
-                          </div>
-                        ))
+                              <button
+                                className={`${styles.directoryItem} ${!dir.readable ? styles.disabled : ''}`}
+                                onClick={() => dir.readable && loadDirectory(dir.path)}
+                                disabled={!dir.readable || isBrowsing}
+                              >
+                                <ChevronRight size={16} />
+                                <FolderOpen size={18} />
+                                <span>{dir.name}</span>
+                                {dir.hasMusic && <Music size={14} className={styles.musicIcon} />}
+                                {isSelected && (
+                                  <Check size={14} className={styles.selectedCheck} />
+                                )}
+                              </button>
+                              <Button
+                                onClick={() => handleSelectLibrary(dir.path)}
+                                variant={isSelected ? 'primary' : 'outline'}
+                                size="sm"
+                                disabled={!dir.readable || isSubmitting}
+                              >
+                                {isSelected
+                                  ? t('setup.selectedButton')
+                                  : t('setup.selectButton')}
+                              </Button>
+                            </div>
+                          );
+                        })
                       )}
                     </div>
                   </>
@@ -436,22 +534,42 @@ export default function SetupWizard() {
               </div>
 
               {/* Validation result */}
-              {libraryValidation && (
-                <div
-                  className={`${styles.validationResult} ${
-                    libraryValidation.valid ? styles.valid : styles.invalid
-                  }`}
-                >
-                  {libraryValidation.valid ? <Check size={18} /> : <AlertCircle size={18} />}
-                  <span>{libraryValidation.message}</span>
-                </div>
-              )}
+              {libraryValidation &&
+                (libraryValidation.valid ? (
+                  <div className={styles.completedCard}>
+                    <div className={styles.completedFolderIcon} aria-hidden>
+                      <FolderOpen size={22} strokeWidth={2} />
+                    </div>
+                    <div className={styles.completedBody}>
+                      <span className={styles.completedPrimary}>
+                        {(selectedPath || '').split('/').filter(Boolean).pop() || '/'}
+                      </span>
+                      {selectedPath && (
+                        <span className={styles.completedSecondary}>{selectedPath}</span>
+                      )}
+                      <span className={styles.completedMeta}>
+                        {typeof libraryValidation.fileCount === 'number' &&
+                        libraryValidation.fileCount > 0
+                          ? t('setup.musicFilesFound', { count: libraryValidation.fileCount })
+                          : t('setup.noMusicFilesYet')}
+                      </span>
+                    </div>
+                    <Check size={18} className={styles.completedCheck} />
+                  </div>
+                ) : (
+                  <div className={`${styles.validationResult} ${styles.invalid}`}>
+                    <AlertCircle size={18} />
+                    <div className={styles.validationContent}>
+                      <span>{libraryValidation.message}</span>
+                    </div>
+                  </div>
+                ))}
 
               {/* Next button */}
               {libraryValidation?.valid && (
                 <div className={styles.actions}>
                   <Button
-                    onClick={() => goToStep('complete')}
+                    onClick={() => goToStep('api-keys')}
                     variant="primary"
                     size="lg"
                     fullWidth
@@ -464,8 +582,24 @@ export default function SetupWizard() {
             </div>
           )}
 
-          {/* Step 3: Complete */}
-          {step === 'complete' && (
+          {/* Step 3: API Keys (optional) */}
+          {displayStep === 'api-keys' && (
+            <ApiKeysStep
+              lastfm={apiKeys.lastfm}
+              fanart={apiKeys.fanart}
+              savedHints={status?.apiKeyHints}
+              onChange={setApiKey}
+              onSkip={() => goToStep('complete')}
+              onSave={async (keys) => {
+                const ok = await handleSaveApiKeys(keys);
+                if (ok) goToStep('complete');
+              }}
+              isSubmitting={isSubmitting}
+            />
+          )}
+
+          {/* Step 4: Complete */}
+          {displayStep === 'complete' && (
             <div className={styles.stepContent}>
               <h2 className={styles.stepTitle}>
                 <Check size={24} />
@@ -473,19 +607,52 @@ export default function SetupWizard() {
               </h2>
               <p className={styles.stepDescription}>{t('setup.completeDescription')}</p>
 
-              <div className={styles.summary}>
-                <div className={styles.summaryItem}>
-                  <User size={20} />
-                  <span>{t('setup.adminCreated')}</span>
-                  <Check size={18} className={styles.checkIcon} />
+              <div className={styles.summaryCards}>
+                <div className={styles.completedCard}>
+                  {adminUsername && (
+                    <UserAvatar
+                      userId={status?.adminUserId ?? undefined}
+                      hasAvatar={status?.adminHasAvatar ?? false}
+                      username={adminUsername}
+                      size={52}
+                      className={styles.completedAvatarImg}
+                    />
+                  )}
+                  <div className={styles.completedBody}>
+                    <span className={styles.completedPrimary}>
+                      {adminUsername ?? t('setup.adminCreated')}
+                    </span>
+                    <span className={styles.completedSecondary}>
+                      {t('setup.adminAlreadyCreated')}
+                    </span>
+                  </div>
+                  <Check size={18} className={styles.completedCheck} />
                 </div>
-                <div className={styles.summaryItem}>
-                  <FolderOpen size={20} />
-                  <span>
-                    {t('setup.libraryLabel')}
-                    {selectedPath || status?.musicLibraryPath}
-                  </span>
-                  <Check size={18} className={styles.checkIcon} />
+
+                <div className={styles.completedCard}>
+                  <div className={styles.completedFolderIcon} aria-hidden>
+                    <FolderOpen size={22} strokeWidth={2} />
+                  </div>
+                  <div className={styles.completedBody}>
+                    <span className={styles.completedPrimary}>
+                      {(selectedPath || status?.musicLibraryPath || '')
+                        .split('/')
+                        .filter(Boolean)
+                        .pop() || '/'}
+                    </span>
+                    <span className={styles.completedSecondary}>
+                      {selectedPath || status?.musicLibraryPath}
+                    </span>
+                    {typeof libraryValidation?.fileCount === 'number' &&
+                      libraryValidation.fileCount > 0 && (
+                        <span className={styles.completedMeta}>
+                          {t('setup.musicFilesFound', {
+                            count: libraryValidation.fileCount,
+                          })}
+                        </span>
+                      )}
+                  </div>
+                  <Check size={18} className={styles.completedCheck} />
                 </div>
               </div>
 
@@ -503,7 +670,7 @@ export default function SetupWizard() {
           )}
 
           {/* Done */}
-          {step === 'done' && (
+          {displayStep === 'done' && (
             <div className={styles.stepContent}>
               <div className={styles.successIcon}>
                 <Check size={48} />
@@ -522,6 +689,7 @@ export default function SetupWizard() {
               </Button>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

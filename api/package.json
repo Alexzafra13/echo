@@ -1,6 +1,6 @@
 {
   "name": "echo-api",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Echo Music Server - Backend API",
   "main": "dist/src/main",
   "license": "GPL-3.0",
