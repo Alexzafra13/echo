@@ -11,6 +11,7 @@ import {
   BrowseResult,
   MusicLibraryDetectorService,
 } from './services';
+import { SettingsService } from '@infrastructure/settings/settings.service';
 
 // Re-export types for backwards compatibility
 export type { DirectoryInfo, BrowseResult } from './services';
@@ -31,6 +32,9 @@ interface SetupState {
 export interface SetupStatus {
   needsSetup: boolean;
   hasAdmin: boolean;
+  adminUsername: string | null;
+  adminUserId: string | null;
+  adminHasAvatar: boolean;
   hasMusicLibrary: boolean;
   musicLibraryPath: string | null;
   setupCompleted: boolean;
@@ -39,6 +43,10 @@ export interface SetupStatus {
     isMounted: boolean;
     hasContent: boolean;
     fileCount: number;
+  };
+  apiKeyHints: {
+    lastfm: string | null;
+    fanart: string | null;
   };
 }
 
@@ -65,34 +73,66 @@ export class SetupService {
     private readonly drizzle: DrizzleService,
     private readonly directoryBrowser: DirectoryBrowserService,
     private readonly libraryDetector: MusicLibraryDetectorService,
+    private readonly settingsService: SettingsService,
   ) {
     this.setupFilePath = path.join(this.dataPath, 'setup.json');
+  }
+
+  async saveApiKeys(keys: { lastfm?: string; fanart?: string }): Promise<void> {
+    const updates: Record<string, string> = {};
+    if (typeof keys.lastfm === 'string') {
+      updates['metadata.lastfm.api_key'] = keys.lastfm.trim();
+    }
+    if (typeof keys.fanart === 'string') {
+      updates['metadata.fanart.api_key'] = keys.fanart.trim();
+    }
+    if (Object.keys(updates).length === 0) return;
+    await this.settingsService.setMultiple(updates);
+    this.logger.info(`Setup wizard saved API keys: ${Object.keys(updates).join(', ')}`);
   }
 
   /**
    * Get current setup status
    */
   async getStatus(): Promise<SetupStatus> {
-    const [hasAdmin, setupState, mountedLibrary] = await Promise.all([
-      this.hasAdminUser(),
+    const [adminInfo, setupState, mountedLibrary, apiKeyHints] = await Promise.all([
+      this.getAdminInfo(),
       this.getSetupState(),
       this.libraryDetector.checkMountedLibrary(),
+      this.getApiKeyHints(),
     ]);
 
+    const hasAdmin = adminInfo !== null;
     const hasMusicLibrary = !!setupState.musicLibraryPath;
-
-    // Setup is needed if:
-    // 1. Setup was never completed, OR
-    // 2. Setup was completed but database was reset (no admin user exists)
     const needsSetup = !setupState.completed || !hasAdmin;
 
     return {
       needsSetup,
       hasAdmin,
+      adminUsername: adminInfo?.username ?? null,
+      adminUserId: adminInfo?.id ?? null,
+      adminHasAvatar: adminInfo?.hasAvatar ?? false,
       hasMusicLibrary,
       musicLibraryPath: setupState.musicLibraryPath || null,
       setupCompleted: setupState.completed,
       mountedLibrary,
+      apiKeyHints,
+    };
+  }
+
+  private async getApiKeyHints(): Promise<{ lastfm: string | null; fanart: string | null }> {
+    const maskLast4 = (value: string): string | null => {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      return trimmed.length <= 4 ? trimmed : trimmed.slice(-4);
+    };
+    const [lastfm, fanart] = await Promise.all([
+      this.settingsService.getString('metadata.lastfm.api_key', ''),
+      this.settingsService.getString('metadata.fanart.api_key', ''),
+    ]);
+    return {
+      lastfm: maskLast4(lastfm),
+      fanart: maskLast4(fanart),
     };
   }
 
@@ -240,12 +280,36 @@ export class SetupService {
    * Check if admin user exists
    */
   private async hasAdminUser(): Promise<boolean> {
-    const result = await this.drizzle.db
-      .select({ count: dbCount() })
-      .from(users)
-      .where(eq(users.isAdmin, true));
+    return (await this.getAdminInfo()) !== null;
+  }
 
-    return (result[0]?.count ?? 0) > 0;
+  private async getAdminUsername(): Promise<string | null> {
+    return (await this.getAdminInfo())?.username ?? null;
+  }
+
+  private async getAdminInfo(): Promise<
+    { id: string; username: string; hasAvatar: boolean } | null
+  > {
+    const result = await this.drizzle.db
+      .select({
+        id: users.id,
+        username: users.username,
+        avatarPath: users.avatarPath,
+      })
+      .from(users)
+      .where(eq(users.isAdmin, true))
+      .limit(1);
+    const row = result[0];
+    if (!row) return null;
+    return {
+      id: row.id,
+      username: row.username,
+      hasAvatar: !!row.avatarPath,
+    };
+  }
+
+  async resetAdmin(): Promise<void> {
+    await this.drizzle.db.delete(users).where(eq(users.isAdmin, true));
   }
 
   /**

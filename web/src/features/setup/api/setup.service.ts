@@ -17,10 +17,17 @@ export interface MountedLibraryInfo {
 export interface SetupStatus {
   needsSetup: boolean;
   hasAdmin: boolean;
+  adminUsername: string | null;
+  adminUserId: string | null;
+  adminHasAvatar: boolean;
   hasMusicLibrary: boolean;
   musicLibraryPath: string | null;
   setupCompleted: boolean;
   mountedLibrary: MountedLibraryInfo;
+  apiKeyHints: {
+    lastfm: string | null;
+    fanart: string | null;
+  };
 }
 
 export interface DirectoryInfo {
@@ -87,9 +94,26 @@ export async function createDirectory(path: string, name: string): Promise<Direc
 }
 
 /**
+ * Guardar claves de API externas (ambas opcionales)
+ */
+export async function saveApiKeys(keys: {
+  lastfm?: string;
+  fanart?: string;
+}): Promise<void> {
+  await axios.post(`${API_BASE}/api-keys`, keys);
+}
+
+/**
  * Completar configuración
  */
 export async function completeSetup(): Promise<{ success: boolean; message: string }> {
   const response = await axios.post(`${API_BASE}/complete`);
   return response.data;
+}
+
+/**
+ * Restablecer admin (elimina el admin existente para poder recrearlo)
+ */
+export async function resetAdmin(): Promise<void> {
+  await axios.delete(`${API_BASE}/admin`);
 }

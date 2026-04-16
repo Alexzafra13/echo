@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Post,
   Body,
@@ -10,7 +11,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { IsString, MinLength } from 'class-validator';
+import { IsOptional, IsString, MinLength } from 'class-validator';
 import { SetupService } from '../application/setup.service';
 import { Public } from '@shared/decorators/public.decorator';
 
@@ -41,6 +42,16 @@ class CreateDirectoryDto {
   @IsString()
   @MinLength(1)
   name!: string;
+}
+
+class SaveApiKeysDto {
+  @IsOptional()
+  @IsString()
+  lastfm?: string;
+
+  @IsOptional()
+  @IsString()
+  fanart?: string;
 }
 
 // Setup wizard. Endpoints públicos que se bloquean tras completar la configuración inicial.
@@ -233,6 +244,41 @@ export class SetupController {
     const created = await this.setupService.createDirectory(dto.path, dto.name);
     this.logger.info(`Directory created via setup wizard: ${created.path}`);
     return created;
+  }
+
+  @Post('api-keys')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Save external metadata API keys (optional)',
+    description:
+      'Guarda claves de last.fm y/o fanart.tv. Solo durante setup. Ambos campos son opcionales.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        lastfm: { type: 'string', nullable: true },
+        fanart: { type: 'string', nullable: true },
+      },
+    },
+  })
+  @ApiResponse({ status: 204, description: 'Keys saved (or cleared if empty)' })
+  async saveApiKeys(@Body() dto: SaveApiKeysDto) {
+    await this.ensureSetupNotCompleted();
+    await this.setupService.saveApiKeys({ lastfm: dto.lastfm, fanart: dto.fanart });
+  }
+
+  @Delete('admin')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Reset admin account',
+    description: 'Elimina el admin actual para poder crearlo de nuevo (solo durante setup).',
+  })
+  @ApiResponse({ status: 204, description: 'Admin removed' })
+  async resetAdmin() {
+    await this.ensureSetupNotCompleted();
+    await this.setupService.resetAdmin();
+    this.logger.info('Admin reset via setup wizard');
   }
 
   @Post('complete')
