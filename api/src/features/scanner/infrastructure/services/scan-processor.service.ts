@@ -7,6 +7,7 @@ import { PostScanTasksService } from './post-scan-tasks.service';
 import { ScannerGateway } from '../gateways/scanner.gateway';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
+import { CachedGenreRepository } from '@features/genres/infrastructure/persistence/cached-genre.repository';
 import { SettingsService } from '@infrastructure/settings';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { NotificationsService } from '@features/notifications/application/notifications.service';
@@ -61,6 +62,7 @@ export class ScanProcessorService implements OnModuleInit {
     @Inject(forwardRef(() => ScannerGateway))
     private readonly scannerGateway: ScannerGateway,
     private readonly cachedAlbumRepository: CachedAlbumRepository,
+    private readonly cachedGenreRepository: CachedGenreRepository,
     private readonly settingsService: SettingsService,
     private readonly logService: LogService,
     private readonly trackProcessing: TrackProcessingService,
@@ -401,6 +403,7 @@ export class ScanProcessorService implements OnModuleInit {
 
       // Invalidate cache
       await this.cachedAlbumRepository.invalidateListCaches();
+      await this.cachedGenreRepository.invalidate();
 
       // Post-scan tasks
       await this.postScanTasks.runAll();
@@ -597,6 +600,7 @@ export class ScanProcessorService implements OnModuleInit {
 
       // Invalidate cache
       await this.cachedAlbumRepository.invalidateListCaches();
+      await this.cachedGenreRepository.invalidate();
 
       // Post-scan tasks
       await this.postScanTasks.runAll();

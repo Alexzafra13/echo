@@ -1,6 +1,6 @@
 {
   "name": "echo-web",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "type": "module",
   "description": "Echo Music Server - Frontend",
   "license": "GPL-3.0",

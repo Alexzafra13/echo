@@ -11,3 +11,5 @@ export * from './mime-type.util';
 export * from './pid.util';
 export * from './format-duration.util';
 export * from './encryption.util';
+export * from './slugify.util';
+export * from './genre-color.util';
