@@ -5,6 +5,7 @@ import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { FileScannerService } from './file-scanner.service';
 import { ScannerGateway } from '../gateways/scanner.gateway';
 import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
+import { CachedGenreRepository } from '@features/genres/infrastructure/persistence/cached-genre.repository';
 import { SettingsService } from '@infrastructure/settings';
 import { LogService } from '@features/logs/application/log.service';
 import {
@@ -53,6 +54,7 @@ describe('ScanProcessorService', () => {
       {} as unknown as FileScannerService,
       {} as unknown as ScannerGateway,
       {} as unknown as CachedAlbumRepository,
+      {} as unknown as CachedGenreRepository,
       mockSettingsService as unknown as SettingsService,
       { info: jest.fn() } as unknown as LogService,
       {} as unknown as TrackProcessingService,

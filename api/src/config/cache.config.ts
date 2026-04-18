@@ -14,5 +14,6 @@ export const cacheConfig = {
     count: 1800,
     playStats: 600,
     topItems: 900,
+    genre: 600,
   },
 };

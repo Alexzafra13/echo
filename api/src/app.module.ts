@@ -20,6 +20,7 @@ import { AdminModule } from './features/admin/admin.module';
 import { AlbumsModule } from './features/albums/albums.module';
 import { TracksModule } from './features/tracks/tracks.module';
 import { ArtistsModule } from './features/artists/artists.module';
+import { GenresModule } from './features/genres/genres.module';
 import { StreamingModule } from './features/streaming/streaming.module';
 import { MusicVideosModule } from './features/music-videos/music-videos.module';
 import { PlaylistsModule } from './features/playlists/playlists.module';
@@ -108,6 +109,7 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
     AlbumsModule,
     TracksModule,
     ArtistsModule,
+    GenresModule,
     StreamingModule,
     MusicVideosModule,
     PlaylistsModule,

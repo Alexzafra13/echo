@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { WebSocketModule } from '@infrastructure/websocket';
 import { AlbumsModule } from '@features/albums/albums.module';
+import { GenresModule } from '@features/genres/genres.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 import { DjModule } from '@features/dj';
 import { NotificationsModule } from '@features/notifications/notifications.module';
@@ -56,6 +57,7 @@ import { VideoProcessingService } from './infrastructure/services/scanning/video
     QueueModule,
     WebSocketModule,
     forwardRef(() => AlbumsModule),
+    forwardRef(() => GenresModule),
     ExternalMetadataModule,
     forwardRef(() => DjModule),
     NotificationsModule,
