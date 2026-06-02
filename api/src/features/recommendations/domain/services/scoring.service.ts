@@ -118,7 +118,7 @@ export class ScoringService {
   }
 
   /**
-   * Calculate comprehensive score breakdown for a track
+   * Calculate score breakdown for a track
    */
   async calculateScoreBreakdown(
     userId: string,

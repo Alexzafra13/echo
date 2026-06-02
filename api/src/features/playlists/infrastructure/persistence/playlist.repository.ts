@@ -320,13 +320,13 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
     }
 
     // Use transaction with two-step update to avoid unique constraint violations
-    // Step 1: Offset all track orders to temporary high values
-    // Step 2: Update to final values
+    // Offset all track orders to temporary high values
+    // Update to final values
     return await this.drizzle.db.transaction(async (tx) => {
       const trackIds = trackOrders.map((item) => item.trackId);
       const offset = 100000; // Large offset to avoid conflicts
 
-      // Step 1: Add offset to all tracks being reordered
+      // Add offset to all tracks being reordered
       await tx.execute(sql`
         UPDATE playlist_tracks
         SET track_order = track_order + ${offset}
@@ -337,7 +337,7 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
           )})
       `);
 
-      // Step 2: Update to final values
+      // Update to final values
       const caseWhenClauses = trackOrders.map(
         (item) => sql`WHEN ${item.trackId} THEN ${item.order}`
       );

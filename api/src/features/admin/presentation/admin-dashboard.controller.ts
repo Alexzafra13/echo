@@ -47,7 +47,7 @@ export class AdminDashboardController {
   @ApiOperation({
     summary: 'Get dashboard statistics (Admin)',
     description:
-      'Returns comprehensive dashboard statistics including library stats, storage, health status, enrichment stats, and active alerts. Only accessible by administrators.',
+      'Returns dashboard statistics including library stats, storage, health status, enrichment stats, and active alerts. Only accessible by administrators.',
   })
   @ApiResponse({
     status: 200,

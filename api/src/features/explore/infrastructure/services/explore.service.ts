@@ -157,7 +157,7 @@ export class ExploreService {
    * @param limit Max results
    */
   async getHiddenGems(userId: string, limit: number = 30): Promise<ExploreTrack[]> {
-    // Step 1: Get user's top artists (by total weighted play count)
+    // Get user's top artists (by total weighted play count)
     const topArtists = await this.db
       .select({
         artistId: userPlayStats.itemId,
@@ -175,7 +175,7 @@ export class ExploreService {
 
     const topArtistIds = topArtists.map((a: { artistId: string }) => a.artistId);
 
-    // Step 2: Get tracks from these artists with low or no play count
+    // Get tracks from these artists with low or no play count
     const result = await this.db
       .select({
         id: tracks.id,

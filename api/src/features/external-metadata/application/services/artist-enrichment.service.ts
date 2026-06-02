@@ -77,13 +77,13 @@ export class ArtistEnrichmentService {
 
       this.logger.info(`Enriching artist: ${artist.name} (ID: ${artistId})`);
 
-      // Step 1: Handle MBID search if missing
+      // Handle MBID search if missing
       const mbzArtistId = await this.ensureMbid(artistId, artist, errors);
 
-      // Step 2: Enrich genres
+      // Enrich genres
       await this.enrichGenres(artistId, mbzArtistId, artist.name, errors);
 
-      // Step 3: Enrich biography
+      // Enrich biography
       const bioResult = await this.bioEnrichment.enrichBiography(
         artistId,
         { ...artist, mbzArtistId },
@@ -92,7 +92,7 @@ export class ArtistEnrichmentService {
       );
       bioUpdated = bioResult.updated;
 
-      // Step 4: Enrich images
+      // Enrich images
       const imageResult = await this.imageEnrichment.enrichImages(
         artistId,
         { ...artist, mbzArtistId },

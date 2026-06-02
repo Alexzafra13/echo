@@ -183,20 +183,20 @@ export class WikipediaAgent implements IArtistBioRetriever {
 
       await this.rateLimiter.waitForRateLimit(this.name);
 
-      // Step 1: Search for the article
+      // Search for the article
       const pageTitle = await this.searchArticle(searchQuery, lang);
       if (!pageTitle) {
         continue;
       }
 
-      // Step 2: Get article summary
+      // Get article summary
       await this.rateLimiter.waitForRateLimit(this.name);
       const summary = await this.getArticleSummary(pageTitle, lang);
       if (!summary) {
         continue;
       }
 
-      // Step 3: Verify it's about a musician
+      // Verify it's about a musician
       if (this.isMusicRelatedContent(summary.content)) {
         this.logger.debug(
           `Found music article for "${artistName}" with suffix "${suffix || 'none'}"`

@@ -94,7 +94,7 @@ export class AlbumEnrichmentService {
       const artistName = artistData?.name || 'Unknown Artist';
       this.logger.info(`Enriching album: ${album.name} by ${artistName} (ID: ${albumId})`);
 
-      // Step 1: Handle MBID search if missing
+      // Handle MBID search if missing
       if (!album.mbzAlbumId) {
         await this.handleMbidSearch(albumId, album.name, artistName, errors);
         // Refresh album data after potential MBID update
@@ -108,7 +108,7 @@ export class AlbumEnrichmentService {
         }
       }
 
-      // Step 2: Enrich genres (if MBID available)
+      // Enrich genres (if MBID available)
       if (album.mbzAlbumId) {
         try {
           const genresAdded = await this.genreEnrichment.enrichAlbumGenres(
@@ -126,7 +126,7 @@ export class AlbumEnrichmentService {
         }
       }
 
-      // Step 3: Enrich cover
+      // Enrich cover
       if (album.mbzAlbumId) {
         coverUpdated = await this.enrichCover(
           albumId,
