@@ -68,7 +68,7 @@ export class UpdateArtistBackgroundPositionUseCase {
       updatedAt: new Date(),
     });
 
-    this.logger.info(`✅ Successfully updated background position for ${artist.name}`);
+    this.logger.info(`Successfully updated background position for ${artist.name}`);
 
     return {
       success: true,

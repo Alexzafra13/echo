@@ -124,7 +124,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     this.currentItem = null;
 
     this.logger.info(
-      `🚀 Starting enrichment queue: ${stats.pendingArtists} artists, ${stats.pendingAlbums} albums`
+      `Starting enrichment queue: ${stats.pendingArtists} artists, ${stats.pendingAlbums} albums`
     );
 
     // Emit start event
@@ -151,7 +151,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     this.isRunning = false;
     this.currentItem = null;
 
-    this.logger.info('⏹️ Enrichment queue stopped');
+    this.logger.info('Enrichment queue stopped');
 
     this.gateway.emitQueueStopped({
       processedInSession: this.processedInSession,
@@ -210,7 +210,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     this.currentItem = `${job.type}: ${job.entityName}`;
 
     try {
-      this.logger.info(`📥 Processing ${job.type}: ${job.entityName}`);
+      this.logger.info(`Processing ${job.type}: ${job.entityName}`);
 
       if (job.type === 'artist') {
         await this.externalMetadataService.enrichArtist(job.entityId, false);
@@ -235,11 +235,11 @@ export class EnrichmentQueueService implements OnModuleInit {
       });
 
       this.logger.info(
-        `✅ Completed ${job.type}: ${job.entityName} (${processingTime}ms, ${stats.totalPending} remaining)`
+        `Completed ${job.type}: ${job.entityName} (${processingTime}ms, ${stats.totalPending} remaining)`
       );
     } catch (error) {
       this.logger.error(
-        `❌ Error processing ${job.type} ${job.entityName}: ${(error as Error).message}`
+        `Error processing ${job.type} ${job.entityName}: ${(error as Error).message}`
       );
 
       // Emit error but continue with queue
@@ -295,7 +295,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     const duration = this.sessionStartedAt ? Date.now() - this.sessionStartedAt.getTime() : 0;
 
     this.logger.info(
-      `🎉 Enrichment queue completed! Processed ${this.processedInSession} items in ${formatDuration(duration)}`
+      `Enrichment queue completed! Processed ${this.processedInSession} items in ${formatDuration(duration)}`
     );
 
     this.gateway.emitQueueCompleted({

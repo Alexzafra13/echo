@@ -66,7 +66,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
               },
               onError: (err) => {
                 if (import.meta.env.DEV) {
-                  logger.error('[AlbumCoverUpload] ❌ Error applying cover:', err);
+                  logger.error('[AlbumCoverUpload] Error applying cover:', err);
                 }
                 setUploadError(getApiErrorMessage(err, t('albums.errorApplyingCover')));
               },
@@ -75,7 +75,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
         },
         onError: (err) => {
           if (import.meta.env.DEV) {
-            logger.error('[AlbumCoverUpload] ❌ Error uploading cover:', err);
+            logger.error('[AlbumCoverUpload] Error uploading cover:', err);
           }
           setUploadError(getApiErrorMessage(err, t('albums.errorApplyingCover')));
         },
@@ -98,7 +98,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
         },
         onError: (err) => {
           if (import.meta.env.DEV) {
-            logger.error('[AlbumCoverUpload] ❌ Error applying cover:', err);
+            logger.error('[AlbumCoverUpload] Error applying cover:', err);
           }
           setUploadError(getApiErrorMessage(err, 'Error al aplicar la portada'));
         },

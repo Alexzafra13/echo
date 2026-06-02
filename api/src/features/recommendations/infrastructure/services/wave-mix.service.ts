@@ -174,7 +174,7 @@ export class WaveMixService {
       'Tracks qualified above minimum score'
     );
 
-    // Fallback gradual: minScore → 50% minScore → all tracks
+    // Fallback gradual: minScore -> 50% minScore -> all tracks
     if (qualifiedTracks.length < config.maxTracks && scoredTracks.length > 0) {
       const fallbackMinScore = config.minScore * 0.5;
       qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= fallbackMinScore);

@@ -102,7 +102,7 @@ export class DeleteCustomArtistImageUseCase {
       .where(eq(customArtistImages.id, input.customImageId));
 
     this.logger.info(
-      `✅ Successfully deleted custom ${customImage.imageType} image for ${customImage.artist.name}`
+      `Successfully deleted custom ${customImage.imageType} image for ${customImage.artist.name}`
     );
 
     return {

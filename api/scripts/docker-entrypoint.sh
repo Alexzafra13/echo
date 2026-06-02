@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "🚀 Starting Echo Music Server..."
+echo "Starting Echo Music Server..."
 echo ""
 
 # ============================================
@@ -18,7 +18,7 @@ mkdir -p "$DATA_DIR/covers"
 mkdir -p "$DATA_DIR/uploads"
 mkdir -p "$DATA_DIR/logs"
 
-echo "📁 Data directory: $DATA_DIR"
+echo "Data directory: $DATA_DIR"
 
 # ============================================
 # 1. Secrets Management
@@ -28,7 +28,7 @@ echo "📁 Data directory: $DATA_DIR"
 # If JWT secrets are missing from both sources, auto-generate them.
 
 if [ -f "$SECRETS_FILE" ] && { [ -z "$JWT_SECRET" ] || [ -z "$JWT_REFRESH_SECRET" ]; }; then
-  echo "ℹ️  Loading secrets from $SECRETS_FILE (legacy)"
+  echo "Loading secrets from $SECRETS_FILE (legacy)"
   set -a
   . "$SECRETS_FILE"
   set +a
@@ -36,7 +36,7 @@ fi
 
 # Auto-generate JWT secrets if still missing (e.g. user didn't run install.sh)
 if [ -z "$JWT_SECRET" ] || [ -z "$JWT_REFRESH_SECRET" ]; then
-  echo "🔐 JWT secrets not found — generating..."
+  echo "JWT secrets not found — generating..."
   JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
   JWT_REFRESH_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
   export JWT_SECRET JWT_REFRESH_SECRET
@@ -48,10 +48,10 @@ JWT_SECRET="$JWT_SECRET"
 JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET"
 EOF
   chmod 600 "$SECRETS_FILE"
-  echo "✅ JWT secrets generated and saved to $SECRETS_FILE"
+  echo "JWT secrets generated and saved to $SECRETS_FILE"
 fi
 
-echo "✅ Secrets loaded"
+echo "Secrets loaded"
 
 # ============================================
 # 2. Wait for Dependencies
@@ -73,7 +73,7 @@ RHOST="${REDIS_HOST:-redis}"
 RPORT="${REDIS_PORT:-6379}"
 
 echo ""
-echo "⏳ Waiting for PostgreSQL at ${DB_HOST}:${DB_PORT}..."
+echo "Waiting for PostgreSQL at ${DB_HOST}:${DB_PORT}..."
 RETRIES=0
 MAX_RETRIES=90
 DELAY=1
@@ -81,7 +81,7 @@ until nc -z -v -w5 "$DB_HOST" "$DB_PORT" 2>/dev/null; do
   RETRIES=$((RETRIES + 1))
   if [ $RETRIES -ge $MAX_RETRIES ]; then
     echo ""
-    echo "❌ PostgreSQL not reachable after ${MAX_RETRIES} attempts"
+    echo "PostgreSQL not reachable after ${MAX_RETRIES} attempts"
     echo ""
     echo "   Troubleshooting:"
     echo "   1. Check that the postgres container is running:"
@@ -100,18 +100,18 @@ until nc -z -v -w5 "$DB_HOST" "$DB_PORT" 2>/dev/null; do
   # Every 10 attempts, print DNS resolution to help diagnose NAS networking issues
   if [ $((RETRIES % 10)) -eq 0 ]; then
     RESOLVED=$(getent hosts "$DB_HOST" 2>/dev/null || echo "DNS RESOLUTION FAILED")
-    echo "   ↳ '${DB_HOST}' resolves to: ${RESOLVED}"
+    echo "   -> '${DB_HOST}' resolves to: ${RESOLVED}"
   fi
   sleep $DELAY
   # Back off: 1s, 1s, 1s, 2s, 2s, 2s, 3s... (max 5s)
   [ $((RETRIES % 3)) -eq 0 ] && DELAY=$((DELAY < 5 ? DELAY + 1 : 5))
 done
-echo "✅ PostgreSQL port is open"
+echo "PostgreSQL port is open"
 
 # TCP port being open doesn't mean postgres accepts credentials yet.
 # On slow NAS storage postgres may accept TCP but still be replaying WAL.
 # Verify with a real auth+query using the pg driver already in node_modules.
-echo "⏳ Verifying database credentials..."
+echo "Verifying database credentials..."
 RETRIES=0
 AUTH_MAX=30
 AUTH_DELAY=1
@@ -119,7 +119,7 @@ until node scripts/wait-for-db.js 2>/dev/null; do
   RETRIES=$((RETRIES + 1))
   if [ $RETRIES -ge $AUTH_MAX ]; then
     echo ""
-    echo "❌ PostgreSQL port is open but credentials/database check failed"
+    echo "PostgreSQL port is open but credentials/database check failed"
     echo "   after ${AUTH_MAX} attempts."
     echo ""
     echo "   Check DATABASE_URL and POSTGRES_PASSWORD are consistent"
@@ -130,16 +130,16 @@ until node scripts/wait-for-db.js 2>/dev/null; do
   sleep $AUTH_DELAY
   [ $((RETRIES % 5)) -eq 0 ] && AUTH_DELAY=$((AUTH_DELAY < 3 ? AUTH_DELAY + 1 : 3))
 done
-echo "✅ PostgreSQL is ready and accepting our credentials!"
+echo "PostgreSQL is ready and accepting our credentials!"
 
-echo "⏳ Waiting for Redis at ${RHOST}:${RPORT}..."
+echo "Waiting for Redis at ${RHOST}:${RPORT}..."
 RETRIES=0
 DELAY=1
 until nc -z -v -w5 "$RHOST" "$RPORT" 2>/dev/null; do
   RETRIES=$((RETRIES + 1))
   if [ $RETRIES -ge $MAX_RETRIES ]; then
     echo ""
-    echo "❌ Redis not reachable after ${MAX_RETRIES} attempts"
+    echo "Redis not reachable after ${MAX_RETRIES} attempts"
     echo ""
     echo "   Troubleshooting:"
     echo "   1. Check that the redis container is running:"
@@ -153,7 +153,7 @@ until nc -z -v -w5 "$RHOST" "$RPORT" 2>/dev/null; do
   sleep $DELAY
   [ $((RETRIES % 3)) -eq 0 ] && DELAY=$((DELAY < 5 ? DELAY + 1 : 5))
 done
-echo "✅ Redis is ready!"
+echo "Redis is ready!"
 echo ""
 
 # ============================================
@@ -170,34 +170,34 @@ echo ""
 if [ -f "$SETUP_FILE" ]; then
   SETUP_COMPLETED=$(cat "$SETUP_FILE" | grep -o '"completed":true' || echo "")
   if [ -n "$SETUP_COMPLETED" ]; then
-    echo "✅ Setup completed previously"
+    echo "Setup completed previously"
   else
-    echo "📋 Setup wizard pending - complete at http://localhost:${PORT:-4567}"
+    echo "Setup wizard pending - complete at http://localhost:${PORT:-4567}"
   fi
 else
-  echo "🆕 First run detected!"
-  echo "📋 Complete the setup wizard at http://localhost:${PORT:-4567}"
+  echo "First run detected!"
+  echo "Complete the setup wizard at http://localhost:${PORT:-4567}"
 fi
 
 echo ""
-echo "✅ Initialization complete!"
+echo "Initialization complete!"
 echo ""
 
 # ============================================
 # 5. Start Application
 # ============================================
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🎵 Echo Music Server"
+echo "Echo Music Server"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "   Environment: ${NODE_ENV:-production}"
 echo "   Port: ${PORT:-4567}"
 echo "   Data: $DATA_DIR"
 echo ""
 echo "   Access your server at:"
-echo "   → http://localhost:${PORT:-4567}"
+echo "   -> http://localhost:${PORT:-4567}"
 echo ""
 if [ ! -f "$SETUP_FILE" ] || [ -z "$(cat "$SETUP_FILE" 2>/dev/null | grep -o '"completed":true')" ]; then
-  echo "   ⚠️  FIRST RUN: Complete setup wizard to create admin account"
+  echo "    FIRST RUN: Complete setup wizard to create admin account"
   echo ""
 fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

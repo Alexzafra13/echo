@@ -167,7 +167,7 @@ export class LocalImageProvider {
       if (index !== -1) {
         const foundFile = actualFiles[index];
         const fullPath = path.join(baseFolder, foundFile);
-        this.logger.debug(`Matched ${candidate} → ${foundFile}`);
+        this.logger.debug(`Matched ${candidate} -> ${foundFile}`);
         return fullPath;
       }
     }

@@ -347,7 +347,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       queueContextRef.current = context;
 
       // Parar radio ANTES de setear la queue y reproducir.
-      // Sin esto, playTrack → stopRadio → stopBoth() mata el audio
+      // Sin esto, playTrack -> stopRadio -> stopBoth() mata el audio
       // que playTrack acaba de cargar (race condition).
       if (radio.isRadioMode) {
         await radio.stopRadio();

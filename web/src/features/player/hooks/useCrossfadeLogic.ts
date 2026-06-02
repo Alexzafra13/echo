@@ -82,8 +82,8 @@ export function useCrossfadeLogic({
 
   // Store settings in ref to avoid recreating performCrossfade/checkCrossfadeTiming
   // when settings change. This prevents a cascade of useCallback recreations:
-  // settings change → performCrossfade recreated → crossfade object new ref →
-  // playTrack recreated → handlePlayNext recreated → playNextRef updated (async).
+  // settings change -> performCrossfade recreated -> crossfade object new ref ->
+  // playTrack recreated -> handlePlayNext recreated -> playNextRef updated (async).
   // During that async gap, stale closures can cause the crossfade path to be
   // skipped in playTrack, calling clearCrossfade() while both audios are playing.
   const settingsRef = useRef(settings);
@@ -175,7 +175,7 @@ export function useCrossfadeLogic({
       // Cap fade duration to the actual time remaining in the outgoing track.
       // Critical for smart crossfade: when outroStart is close to track end
       // (e.g., 2s left), a 10s configured fade would barely reduce the outgoing
-      // volume (100% → ~90%) before the track naturally ends, causing both
+      // volume (100% -> ~90%) before the track naturally ends, causing both
       // tracks to mix at high volume instead of smoothly transitioning.
       const activeDur = activeAudio.duration;
       const activeTime = activeAudio.currentTime;
@@ -203,7 +203,7 @@ export function useCrossfadeLogic({
       // Order matters to prevent race conditions:
       // 1. Set final volumes
       // 2. Pause old audio (prevents 'ended' event from firing)
-      // 3. Switch active audio (so even if 'ended' fires, it's from "inactive" → ignored)
+      // 3. Switch active audio (so even if 'ended' fires, it's from "inactive" -> ignored)
       // 4. THEN clear crossfade state (isCrossfading stays true until switch is done)
       //
       // Previously, clearCrossfade() was called first (setting isCrossfading=false),

@@ -106,7 +106,7 @@ export class LibraryCleanupService {
         .where(eq(tracks.id, track[0].id));
 
       result.trackMarkedMissing = true;
-      this.logger.info(`👻 Track marcado como desaparecido: "${track[0].title}" (${filePath})`);
+      this.logger.info(`Track marcado como desaparecido: "${track[0].title}" (${filePath})`);
 
       return result;
     } catch (error) {
@@ -127,7 +127,7 @@ export class LibraryCleanupService {
         .returning({ id: tracks.id });
 
       if (updated.length > 0) {
-        this.logger.info(`✅ Track recuperado: ${filePath}`);
+        this.logger.info(`Track recuperado: ${filePath}`);
         return true;
       }
       return false;
@@ -214,7 +214,7 @@ export class LibraryCleanupService {
     // Delete the track
     await this.drizzle.db.delete(tracks).where(eq(tracks.id, trackId));
     result.trackDeleted = true;
-    this.logger.info(`🗑️  Track eliminado: "${track[0]?.title}"`);
+    this.logger.info(` Track eliminado: "${track[0]?.title}"`);
 
     // Check if album is now orphaned
     if (albumId) {
@@ -237,7 +237,7 @@ export class LibraryCleanupService {
         // Delete orphaned album
         await this.drizzle.db.delete(albums).where(eq(albums.id, albumId));
         result.albumDeleted = true;
-        this.logger.info(`🗑️  Álbum huérfano eliminado (ID: ${albumId})`);
+        this.logger.info(` Álbum huérfano eliminado (ID: ${albumId})`);
 
         // Check if artist is now orphaned
         if (result.artistId) {
@@ -250,7 +250,7 @@ export class LibraryCleanupService {
           if (artistAlbums.length === 0) {
             await this.drizzle.db.delete(artists).where(eq(artists.id, result.artistId));
             result.artistDeleted = true;
-            this.logger.info(`🗑️  Artista huérfano eliminado (ID: ${result.artistId})`);
+            this.logger.info(` Artista huérfano eliminado (ID: ${result.artistId})`);
           }
         }
       }
@@ -300,7 +300,7 @@ export class LibraryCleanupService {
 
     if (deletedCount > 0) {
       this.logger.info(
-        `🗑️  Purgados ${deletedCount} tracks desaparecidos hace más de ${days} días`
+        ` Purgados ${deletedCount} tracks desaparecidos hace más de ${days} días`
       );
       await this.deleteOrphanedAlbums();
       await this.deleteOrphanedArtists();
@@ -327,7 +327,7 @@ export class LibraryCleanupService {
         )})`
       );
 
-      this.logger.info(`🗑️  Eliminados ${missingTracks.length} tracks desaparecidos`);
+      this.logger.info(` Eliminados ${missingTracks.length} tracks desaparecidos`);
       await this.deleteOrphanedAlbums();
       await this.deleteOrphanedArtists();
     }
@@ -492,7 +492,7 @@ export class LibraryCleanupService {
           sql`, `
         )})`
       );
-      this.logger.info(`🗑️  Eliminados ${orphanedAlbums.length} álbumes huérfanos`);
+      this.logger.info(` Eliminados ${orphanedAlbums.length} álbumes huérfanos`);
     }
 
     return orphanedAlbums.length;
@@ -518,7 +518,7 @@ export class LibraryCleanupService {
           sql`, `
         )})`
       );
-      this.logger.info(`🗑️  Eliminados ${orphanedArtists.length} artistas huérfanos`);
+      this.logger.info(` Eliminados ${orphanedArtists.length} artistas huérfanos`);
     }
 
     return orphanedArtists.length;

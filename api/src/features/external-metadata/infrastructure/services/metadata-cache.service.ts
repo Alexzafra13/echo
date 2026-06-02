@@ -50,7 +50,7 @@ export class MetadataCacheService {
       if (!cached) {
         // Use debug level to avoid excessive logging in production
         this.logger.debug(
-          `📭 Cache MISS: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...)`
+          `Cache MISS: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...)`
         );
         return null;
       }
@@ -58,7 +58,7 @@ export class MetadataCacheService {
       // Check if cache is expired
       if (cached.expiresAt && new Date() > cached.expiresAt) {
         this.logger.debug(
-          `⏰ Cache EXPIRED: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...) - expired ${cached.expiresAt.toISOString()}`
+          `Cache EXPIRED: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...) - expired ${cached.expiresAt.toISOString()}`
         );
         await this.delete(entityType, entityId, provider);
         return null;
@@ -69,7 +69,7 @@ export class MetadataCacheService {
         ? Math.round((Date.now() - new Date(cached.fetchedAt).getTime()) / (1000 * 60 * 60))
         : 'unknown';
       this.logger.debug(
-        `✅ Cache HIT: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...) - cached ${cacheAge}h ago`
+        `Cache HIT: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...) - cached ${cacheAge}h ago`
       );
       return JSON.parse(cached.data);
     } catch (error) {

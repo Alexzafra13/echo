@@ -15,7 +15,7 @@ import { ExternalApiError } from '@shared/errors';
  * Authentication: None required (public API)
  *
  * Features:
- * - Multi-language support (Spanish → English fallback)
+ * - Multi-language support (Spanish -> English fallback)
  * - Music-specific disambiguation (searches with "(band)", "(musician)", etc.)
  * - Content validation to ensure result is about a musician
  * - Free, no API key required

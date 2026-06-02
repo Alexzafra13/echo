@@ -91,7 +91,7 @@ export class ApplyCustomAlbumCoverUseCase {
       });
     }
 
-    this.logger.info(`✅ Successfully applied custom cover for ${album.name}`);
+    this.logger.info(`Successfully applied custom cover for ${album.name}`);
 
     return {
       success: true,

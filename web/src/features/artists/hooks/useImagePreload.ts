@@ -56,7 +56,7 @@ export function useImagePreload({
       return;
     }
 
-    logger.debug(`[useImagePreload] 🔄 Preloading ${name}:`, url);
+    logger.debug(`[useImagePreload] Preloading ${name}:`, url);
     setIsLoading(true);
     setIsLoaded(false);
     setHasError(false);
@@ -65,7 +65,7 @@ export function useImagePreload({
     img.src = url;
 
     img.onload = () => {
-      logger.debug(`[useImagePreload] ✅ ${name} preloaded successfully`);
+      logger.debug(`[useImagePreload] ${name} preloaded successfully`);
       setIsLoading(false);
       setIsLoaded(true);
       // Force React to destroy and recreate elements using this image
@@ -74,7 +74,7 @@ export function useImagePreload({
     };
 
     img.onerror = (e) => {
-      logger.error(`[useImagePreload] ❌ Failed to preload ${name}:`, e);
+      logger.error(`[useImagePreload] Failed to preload ${name}:`, e);
       setIsLoading(false);
       setHasError(true);
     };

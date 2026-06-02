@@ -238,10 +238,10 @@ export class EntityCreationService {
           updates.coverArtPath = coverPath;
           coverExtracted = true;
           this.logger.info(
-            `✅ Extracted cover for existing album "${existingAlbum[0].name}": ${coverPath}`
+            `Extracted cover for existing album "${existingAlbum[0].name}": ${coverPath}`
           );
         } else {
-          this.logger.warn(`❌ No cover found for existing album "${existingAlbum[0].name}"`);
+          this.logger.warn(`No cover found for existing album "${existingAlbum[0].name}"`);
         }
       }
 

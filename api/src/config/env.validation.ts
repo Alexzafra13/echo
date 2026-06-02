@@ -69,7 +69,7 @@ export function validateEnvironment(config: Record<string, unknown>): Record<str
     const errorMessages = errors.map((e) => `  - ${e.field}: ${e.message}`).join('\n');
 
     throw new Error(
-      `❌ Environment validation failed:\n${errorMessages}\n\n` +
+      `Environment validation failed:\n${errorMessages}\n\n` +
         `Required variables:\n` +
         `  - DATABASE_URL: PostgreSQL connection string\n` +
         `  - JWT_SECRET: Auto-generated in Docker, or run: openssl rand -base64 64\n` +

@@ -93,7 +93,7 @@ export class TrackProcessingService {
       // Extract metadata
       const metadata = await this.metadataExtractor.extractMetadata(filePath);
       if (!metadata) {
-        this.logger.warn(`⚠️  No se pudieron extraer metadatos de ${filePath}`);
+        this.logger.warn(` No se pudieron extraer metadatos de ${filePath}`);
         await this.logService.error(LogCategory.SCANNER, `Fallo al extraer metadatos del archivo`, {
           details: JSON.stringify({
             filePath,
@@ -297,7 +297,7 @@ export class TrackProcessingService {
 
       return result;
     } catch (error) {
-      this.logger.error(`❌ Error procesando ${filePath}:`, error);
+      this.logger.error(`Error procesando ${filePath}:`, error);
 
       await this.logService.error(
         LogCategory.SCANNER,

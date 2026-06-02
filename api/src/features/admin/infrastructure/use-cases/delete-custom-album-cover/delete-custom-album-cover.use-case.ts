@@ -92,7 +92,7 @@ export class DeleteCustomAlbumCoverUseCase {
     // Invalidate image cache
     this.imageService.invalidateAlbumCache(input.albumId);
 
-    this.logger.info(`✅ Successfully deleted custom cover for ${album.name}`);
+    this.logger.info(`Successfully deleted custom cover for ${album.name}`);
 
     return {
       success: true,

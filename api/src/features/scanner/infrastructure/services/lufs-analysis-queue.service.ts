@@ -119,7 +119,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       this.totalToProcess += newTracks;
 
       this.logger.info(
-        `🎚️ Adding ${newTracks} new tracks to running LUFS queue (total: ${this.totalToProcess})`
+        `Adding ${newTracks} new tracks to running LUFS queue (total: ${this.totalToProcess})`
       );
 
       await this.enqueueTracksInBatches(pendingTracks);
@@ -139,7 +139,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     this.sessionStartedAt = new Date();
 
     this.logger.info(
-      `🎚️ Starting LUFS analysis queue: ${pendingTracks.length} tracks (${this.concurrency} parallel workers)`
+      `Starting LUFS analysis queue: ${pendingTracks.length} tracks (${this.concurrency} parallel workers)`
     );
 
     await this.enqueueTracksInBatches(pendingTracks);
@@ -192,7 +192,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
   async stopLufsAnalysisQueue(): Promise<void> {
     this.isRunning = false;
-    this.logger.info('⏹️ LUFS analysis queue stopped');
+    this.logger.info('LUFS analysis queue stopped');
   }
 
   async getQueueStats(): Promise<LufsQueueStats> {
@@ -241,7 +241,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
         const outroInfo = result.outroStart ? `, outro=${result.outroStart.toFixed(1)}s` : '';
         this.logger.debug(
-          `✅ ${job.trackTitle}: gain=${result.trackGain.toFixed(2)}dB, peak=${result.trackPeak.toFixed(3)}${outroInfo}`
+          `${job.trackTitle}: gain=${result.trackGain.toFixed(2)}dB, peak=${result.trackPeak.toFixed(3)}${outroInfo}`
         );
       } else {
         await this.drizzle.db
@@ -253,7 +253,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
           .where(eq(tracks.id, job.trackId));
 
         this.logger.warn(
-          `⚠️ ${job.trackTitle}: analysis failed, marked as analyzed (no gain data)`
+          `${job.trackTitle}: analysis failed, marked as analyzed (no gain data)`
         );
       }
 
@@ -274,7 +274,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       if (this.processedInSession % 100 === 0) {
         const stats = await this.getQueueStats();
         this.logger.info(
-          `📊 LUFS progress: ${this.processedInSession}/${this.totalToProcess} (${stats.pendingTracks} remaining, ETA: ${stats.estimatedTimeRemaining})`
+          `LUFS progress: ${this.processedInSession}/${this.totalToProcess} (${stats.pendingTracks} remaining, ETA: ${stats.estimatedTimeRemaining})`
         );
       }
 
@@ -293,7 +293,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         if (remainingCount > 0) {
           // There are new tracks to process - continue the queue
           this.logger.info(
-            `🎚️ Found ${remainingCount} new tracks added during processing, continuing...`
+            `Found ${remainingCount} new tracks added during processing, continuing...`
           );
 
           // Re-fetch and enqueue the new tracks
@@ -326,7 +326,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         this.emitProgress();
       }
     } catch (error) {
-      this.logger.error(`❌ Error analyzing ${job.trackTitle}: ${(error as Error).message}`);
+      this.logger.error(`Error analyzing ${job.trackTitle}: ${(error as Error).message}`);
 
       // Marcar como analizado para no reprocesar en el siguiente scan
       await this.drizzle.db
@@ -386,7 +386,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
    * preserving the intended dynamic range between tracks.
    */
   private async calculateAlbumGains(): Promise<void> {
-    this.logger.info('📀 Calculating album gains...');
+    this.logger.info('Calculating album gains...');
 
     try {
       // Un solo UPDATE con subquery en lugar de N updates individuales
@@ -410,10 +410,10 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
       const updatedRows = result.rowCount ?? 0;
       this.logger.info(
-        `📀 Album gains calculated! Updated tracks in ${updatedRows > 0 ? 'all' : '0'} albums`
+        `Album gains calculated! Updated tracks in ${updatedRows > 0 ? 'all' : '0'} albums`
       );
     } catch (error) {
-      this.logger.error(`❌ Error calculating album gains: ${(error as Error).message}`);
+      this.logger.error(`Error calculating album gains: ${(error as Error).message}`);
     }
   }
 }

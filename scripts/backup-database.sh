@@ -87,24 +87,24 @@ done
 # Functions
 log_info() {
   if [ "$AUTO_MODE" = false ]; then
-    echo -e "${BLUE}ℹ️  $1${NC}"
+    echo -e "${BLUE}$1${NC}"
   fi
 }
 
 log_success() {
   if [ "$AUTO_MODE" = false ]; then
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}$1${NC}"
   else
-    echo "✅ $1"
+    echo "$1"
   fi
 }
 
 log_error() {
-  echo -e "${RED}❌ ERROR: $1${NC}" >&2
+  echo -e "${RED}ERROR: $1${NC}" >&2
 }
 
 log_warning() {
-  echo -e "${YELLOW}⚠️  $1${NC}"
+  echo -e "${YELLOW}$1${NC}"
 }
 
 # Check if Docker is running
@@ -224,7 +224,7 @@ list_backups() {
 
   echo ""
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "📦 Available Backups"
+  echo "Available Backups"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   if [ -z "$(ls -A "$BACKUP_DIR"/echo-db-backup-*.sql.gz 2>/dev/null)" ]; then
@@ -242,7 +242,7 @@ main() {
   if [ "$AUTO_MODE" = false ]; then
     echo -e "${BLUE}"
     echo "═══════════════════════════════════════════════════════"
-    echo "  🎵 Echo Music Server - Database Backup"
+    echo "  Echo Music Server - Database Backup"
     echo "═══════════════════════════════════════════════════════"
     echo -e "${NC}"
     echo ""
@@ -263,7 +263,7 @@ main() {
   fi
 
   echo ""
-  log_success "Done! 🎵"
+  log_success "Done!"
 }
 
 main

@@ -104,12 +104,12 @@ export class VideoProcessingService {
       if (match) {
         this.logger.info(
           { filePath, trackId: match.trackId, method: match.method },
-          '🎬 Video matched to track'
+          'Video matched to track'
         );
       } else {
         this.logger.info(
           { filePath, title: metadata.title, artist: metadata.artist },
-          '🎬 Video added (no track match)'
+          'Video added (no track match)'
         );
       }
 
@@ -194,7 +194,7 @@ export class VideoProcessingService {
       for (const result of results) {
         if (result.status === 'fulfilled' && result.value) {
           await this.videoRepository.markMissing(result.value.id);
-          this.logger.info({ path: result.value.path }, '🎬 Video file missing, marked');
+          this.logger.info({ path: result.value.path }, 'Video file missing, marked');
           marked++;
         }
       }

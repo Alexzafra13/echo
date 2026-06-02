@@ -118,7 +118,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    this.logger.info(`👻 File deletion detected: ${filePath}`);
+    this.logger.info(`File deletion detected: ${filePath}`);
 
     try {
       const result = await this.libraryCleanup.handleMissingFile(filePath);
@@ -223,7 +223,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
 
   async pause(): Promise<void> {
     await this.stopWatching();
-    this.logger.info('⏸️ File watcher pausado');
+    this.logger.info('File watcher pausado');
   }
 
   async resume(): Promise<void> {

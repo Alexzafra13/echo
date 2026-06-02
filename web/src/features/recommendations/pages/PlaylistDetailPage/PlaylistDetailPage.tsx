@@ -82,7 +82,7 @@ export function PlaylistDetailPage() {
   const [playlist, setPlaylist] = useState<AutoPlaylist | null>(null);
   const [videoMap, setVideoMap] = useState<Map<string, string>>(new Map());
 
-  // Fetch video IDs for tracks in this playlist (trackId → videoId)
+  // Fetch video IDs for tracks in this playlist (trackId -> videoId)
   useEffect(() => {
     if (!playlist?.tracks) return;
     const trackIds = playlist.tracks.filter((st) => st.track?.id).map((st) => st.track!.id);

@@ -52,7 +52,7 @@ export class MbidAutoSearchService {
 
       if (result.action === 'auto-apply' && result.topMatch) {
         this.logger.info(
-          `High confidence match (${result.topMatch.score}) for artist "${artistName}" → "${result.topMatch.name}" (${result.topMatch.mbid})`
+          `High confidence match (${result.topMatch.score}) for artist "${artistName}" -> "${result.topMatch.name}" (${result.topMatch.mbid})`
         );
 
         await this.drizzle.db
@@ -99,7 +99,7 @@ export class MbidAutoSearchService {
 
       if (result.action === 'auto-apply' && result.topMatch) {
         this.logger.info(
-          `High confidence match (${result.topMatch.score}) for album "${albumName}" → "${result.topMatch.name}" (${result.topMatch.mbid})`
+          `High confidence match (${result.topMatch.score}) for album "${albumName}" -> "${result.topMatch.name}" (${result.topMatch.mbid})`
         );
 
         await this.drizzle.db
@@ -158,7 +158,7 @@ export class MbidAutoSearchService {
 
       if (result.action === 'auto-apply' && result.topMatch) {
         this.logger.info(
-          `High confidence match (${result.topMatch.score}) for track "${params.title}" → "${result.topMatch.name}" (${result.topMatch.mbid})`
+          `High confidence match (${result.topMatch.score}) for track "${params.title}" -> "${result.topMatch.name}" (${result.topMatch.mbid})`
         );
 
         await this.drizzle.db

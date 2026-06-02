@@ -30,59 +30,59 @@ echo ""
 echo -e "${BLUE}[1/5]${NC} Verificando requisitos..."
 
 if ! command -v node &> /dev/null; then
-    echo -e "${RED}✗ Node.js no encontrado. Instala Node.js >= 22${NC}"
+    echo -e "${RED}x Node.js no encontrado. Instala Node.js >= 22${NC}"
     exit 1
 fi
 
 NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
 if [ "$NODE_VERSION" -lt 22 ]; then
-    echo -e "${RED}✗ Node.js $NODE_VERSION encontrado. Se requiere >= 22${NC}"
+    echo -e "${RED}x Node.js $NODE_VERSION encontrado. Se requiere >= 22${NC}"
     exit 1
 fi
-echo -e "  ${GREEN}✓${NC} Node.js $(node -v)"
+echo -e "  ${GREEN}OK${NC} Node.js $(node -v)"
 
 if ! command -v pnpm &> /dev/null; then
-    echo -e "${YELLOW}  → Instalando pnpm...${NC}"
+    echo -e "${YELLOW}  -> Instalando pnpm...${NC}"
     npm install -g pnpm
 fi
-echo -e "  ${GREEN}✓${NC} pnpm $(pnpm -v)"
+echo -e "  ${GREEN}OK${NC} pnpm $(pnpm -v)"
 
 if ! command -v docker &> /dev/null; then
-    echo -e "${RED}✗ Docker no encontrado. Instala Docker Desktop${NC}"
+    echo -e "${RED}x Docker no encontrado. Instala Docker Desktop${NC}"
     exit 1
 fi
-echo -e "  ${GREEN}✓${NC} Docker $(docker -v | cut -d' ' -f3 | cut -d',' -f1)"
+echo -e "  ${GREEN}OK${NC} Docker $(docker -v | cut -d' ' -f3 | cut -d',' -f1)"
 
 if ! docker info &> /dev/null; then
-    echo -e "${RED}✗ Docker no está corriendo. Inicia Docker Desktop${NC}"
+    echo -e "${RED}x Docker no está corriendo. Inicia Docker Desktop${NC}"
     exit 1
 fi
-echo -e "  ${GREEN}✓${NC} Docker está corriendo"
+echo -e "  ${GREEN}OK${NC} Docker está corriendo"
 echo ""
 
 # Instalar dependencias
 echo -e "${BLUE}[2/5]${NC} Instalando dependencias..."
 pnpm install --silent
-echo -e "  ${GREEN}✓${NC} Dependencias instaladas"
+echo -e "  ${GREEN}OK${NC} Dependencias instaladas"
 echo ""
 
 # Levantar PostgreSQL y Redis
 echo -e "${BLUE}[3/5]${NC} Levantando PostgreSQL y Redis..."
 docker compose -f docker-compose.dev.yml up -d --quiet-pull 2>/dev/null
-echo -e "  ${GREEN}✓${NC} Contenedores iniciados"
+echo -e "  ${GREEN}OK${NC} Contenedores iniciados"
 
 # Esperar a que estén listos
-echo -e "  → Esperando a que PostgreSQL esté listo..."
+echo -e "  -> Esperando a que PostgreSQL esté listo..."
 until docker exec echo-postgres-dev pg_isready -U music_user -d music_db &> /dev/null; do
     sleep 1
 done
-echo -e "  ${GREEN}✓${NC} PostgreSQL listo"
+echo -e "  ${GREEN}OK${NC} PostgreSQL listo"
 
-echo -e "  → Esperando a que Redis esté listo..."
+echo -e "  -> Esperando a que Redis esté listo..."
 until docker exec echo-redis-dev redis-cli --pass dev_redis_password ping 2>/dev/null | grep -q PONG; do
     sleep 1
 done
-echo -e "  ${GREEN}✓${NC} Redis listo"
+echo -e "  ${GREEN}OK${NC} Redis listo"
 echo ""
 
 # Generar .env y crear carpetas
@@ -90,7 +90,7 @@ echo -e "${BLUE}[4/5]${NC} Configurando entorno..."
 cd api
 node scripts/generate-env.js
 mkdir -p uploads/covers uploads/metadata
-echo -e "  ${GREEN}✓${NC} Carpetas uploads creadas"
+echo -e "  ${GREEN}OK${NC} Carpetas uploads creadas"
 cd ..
 echo ""
 
@@ -99,12 +99,12 @@ echo -e "${BLUE}[5/5]${NC} Aplicando schema a la base de datos..."
 cd api
 pnpm db:push
 cd ..
-echo -e "  ${GREEN}✓${NC} Base de datos lista"
+echo -e "  ${GREEN}OK${NC} Base de datos lista"
 echo ""
 
 # Resumen
 echo -e "${GREEN}════════════════════════════════════════${NC}"
-echo -e "${GREEN}✓ Setup completado!${NC}"
+echo -e "${GREEN}OK Setup completado!${NC}"
 echo -e "${GREEN}════════════════════════════════════════${NC}"
 echo ""
 echo -e "Para iniciar desarrollo:"

@@ -288,7 +288,7 @@ Some info after
 
     it('should be testable with real FFmpeg if available', async () => {
       if (!ffmpegAvailable) {
-        console.log('⚠️ FFmpeg not available, skipping real integration tests');
+        console.log('FFmpeg not available, skipping real integration tests');
         expect(true).toBe(true); // Skip
         return;
       }

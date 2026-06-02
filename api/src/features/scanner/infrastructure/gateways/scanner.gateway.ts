@@ -63,7 +63,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   private scanTimestamps = new Map<string, number>();
 
   afterInit(_server: Server) {
-    this.logger.info('🔌 ScannerGateway initialized');
+    this.logger.info('ScannerGateway initialized');
     // Periodic cleanup of stale scan progress entries (crashed scans)
     setInterval(
       () => {
@@ -81,7 +81,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
   handleConnection(client: Socket) {
     const userId = client.data?.userId || 'anonymous';
-    this.logger.info(`✅ Client connected to scanner namespace: ${client.id} (User: ${userId})`);
+    this.logger.info(`Client connected to scanner namespace: ${client.id} (User: ${userId})`);
 
     if (this.lufsProgress) {
       client.emit('lufs:progress', this.lufsProgress);
@@ -93,7 +93,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.info(`❌ Client disconnected from scanner namespace: ${client.id}`);
+    this.logger.info(`Client disconnected from scanner namespace: ${client.id}`);
   }
 
   @SubscribeMessage('scanner:subscribe')
@@ -276,7 +276,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   emitLibraryChange(data: LibraryChangeDto): void {
     this.server.emit('library:change', data);
     this.logger.info(
-      `📢 Library change: ${data.type} - ${data.trackTitle || data.trackId || 'unknown'}`
+      `Library change: ${data.type} - ${data.trackTitle || data.trackId || 'unknown'}`
     );
   }
 }

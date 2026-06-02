@@ -12,8 +12,8 @@ const LOG_PAYLOADS = process.env.NODE_ENV !== 'production';
  * WsLoggingInterceptor - Interceptor para logging de eventos WebSocket
  *
  * Responsabilidades:
- * - Log de eventos entrantes (cliente → servidor)
- * - Log de eventos salientes (servidor → cliente)
+ * - Log de eventos entrantes (cliente -> servidor)
+ * - Log de eventos salientes (servidor -> cliente)
  * - Métricas de tiempo de procesamiento
  * - Información de contexto (userId, socketId)
  *

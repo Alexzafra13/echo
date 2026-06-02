@@ -53,7 +53,7 @@ export class ScoringService {
    * Based on user ratings (1-5 stars)
    */
   calculateExplicitFeedback(rating?: number): number {
-    // Rating score (1-5 stars → 20-100 points)
+    // Rating score (1-5 stars -> 20-100 points)
     if (rating !== undefined && rating > 0) {
       return rating * FEEDBACK_SCORES.ratingMultiplier;
     }

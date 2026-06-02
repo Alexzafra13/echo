@@ -108,7 +108,7 @@ export class ScanProcessorService implements OnModuleInit {
     if (!scan || scan.status !== 'running') return false;
 
     this.scanSignals.set(scanId, 'pause');
-    this.logger.info(`⏸️ Señal de pausa enviada al scan ${scanId}`);
+    this.logger.info(`Señal de pausa enviada al scan ${scanId}`);
     return true;
   }
 
@@ -129,7 +129,7 @@ export class ScanProcessorService implements OnModuleInit {
     }
 
     this.logger.info(
-      `🛑 Señal de cancelación enviada al scan ${scanId}${reason ? `: ${reason}` : ''}`
+      `Señal de cancelación enviada al scan ${scanId}${reason ? `: ${reason}` : ''}`
     );
     return true;
   }
@@ -151,7 +151,7 @@ export class ScanProcessorService implements OnModuleInit {
     }
 
     await this.scannerRepository.update(scanId, { status: 'running' });
-    this.logger.info(`▶️ Scan ${scanId} reanudado`);
+    this.logger.info(`Scan ${scanId} reanudado`);
     return true;
   }
 
@@ -173,7 +173,7 @@ export class ScanProcessorService implements OnModuleInit {
       this.emitProgress(scanId, tracker, ScanStatus.PAUSED, 'Scan en pausa');
 
       this.logger.info(
-        `⏸️ Scan ${scanId} pausado en archivo ${tracker.filesScanned}/${tracker.totalFiles}`
+        `Scan ${scanId} pausado en archivo ${tracker.filesScanned}/${tracker.totalFiles}`
       );
 
       // Wait until resumed or cancelled
@@ -242,7 +242,7 @@ export class ScanProcessorService implements OnModuleInit {
     const startTime = Date.now();
     const tracker = new ScanProgressTracker();
 
-    this.logger.info(`📁 Iniciando escaneo ${scanId} en ${scanPath}`);
+    this.logger.info(`Iniciando escaneo ${scanId} en ${scanPath}`);
 
     await this.logService.info(LogCategory.SCANNER, `Scan iniciado: ${scanId}`, {
       entityId: scanId,
@@ -258,10 +258,10 @@ export class ScanProcessorService implements OnModuleInit {
       const lastScanTime = await this.getLastScanTime();
       if (lastScanTime) {
         this.logger.info(
-          `⚡ Scan incremental: solo archivos modificados desde ${lastScanTime.toISOString()}`
+          `Scan incremental: solo archivos modificados desde ${lastScanTime.toISOString()}`
         );
       } else {
-        this.logger.info(`📁 Scan completo: primera vez o sin scans previos`);
+        this.logger.info(`Scan completo: primera vez o sin scans previos`);
       }
 
       // Emit: scan started
@@ -270,7 +270,7 @@ export class ScanProcessorService implements OnModuleInit {
       // Scan directory
       const files = await this.fileScanner.scanDirectory(scanPath, recursive);
       tracker.totalFiles = files.length;
-      this.logger.info(`📁 Encontrados ${files.length} archivos de música`);
+      this.logger.info(`Encontrados ${files.length} archivos de música`);
 
       this.emitProgress(
         scanId,
@@ -368,7 +368,7 @@ export class ScanProcessorService implements OnModuleInit {
         });
 
         this.logger.info(
-          `🛑 Scan ${scanId} cancelado: ${tracker.filesScanned}/${tracker.totalFiles} archivos procesados`
+          `Scan ${scanId} cancelado: ${tracker.filesScanned}/${tracker.totalFiles} archivos procesados`
         );
         return;
       }
@@ -379,7 +379,7 @@ export class ScanProcessorService implements OnModuleInit {
         tracksDeleted = await this.libraryCleanup.pruneDeletedTracks(files);
       }
 
-      this.logger.info(`✅ Álbumes y artistas ya procesados durante el escaneo`);
+      this.logger.info(`Álbumes y artistas ya procesados durante el escaneo`);
 
       // Scan for music videos
       await this.scanVideos(scanPath, recursive, tracker);
@@ -464,13 +464,13 @@ export class ScanProcessorService implements OnModuleInit {
         });
 
       this.logger.info(
-        `✅ Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted} ⏭️${tracker.tracksSkipped} saltados`
+        `Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted} ${tracker.tracksSkipped} saltados`
       );
     } catch (error) {
       // Liberar lock distribuido en caso de error
       await this.redis.releaseLock('scan:lock', scanId);
       this.trackProcessing.clearEntityCache();
-      this.logger.error(`❌ Error en escaneo ${scanId}:`, error);
+      this.logger.error(`Error en escaneo ${scanId}:`, error);
 
       await this.logService.critical(
         LogCategory.SCANNER,
@@ -538,8 +538,8 @@ export class ScanProcessorService implements OnModuleInit {
     const { files, source, timestamp } = data;
     const scanId = generateUuid();
 
-    this.logger.info(`🔍 Iniciando scan incremental de ${files.length} archivo(s)...`);
-    this.logger.info(`📁 Fuente: ${source} | Timestamp: ${timestamp}`);
+    this.logger.info(`Iniciando scan incremental de ${files.length} archivo(s)...`);
+    this.logger.info(`Fuente: ${source} | Timestamp: ${timestamp}`);
 
     this.scannerGateway.emitProgress({
       scanId,
@@ -561,7 +561,7 @@ export class ScanProcessorService implements OnModuleInit {
     try {
       for (const filePath of files) {
         try {
-          this.logger.info(`🎵 Procesando: ${path.basename(filePath)}`);
+          this.logger.info(`Procesando: ${path.basename(filePath)}`);
 
           const result = await this.trackProcessing.processFile(filePath, tracker);
 
@@ -590,7 +590,7 @@ export class ScanProcessorService implements OnModuleInit {
             });
           }
         } catch (error) {
-          this.logger.error(`❌ Error procesando ${filePath}:`, error);
+          this.logger.error(`Error procesando ${filePath}:`, error);
           tracker.errors++;
         }
       }
@@ -619,21 +619,21 @@ export class ScanProcessorService implements OnModuleInit {
         timestamp: new Date().toISOString(),
       });
 
-      this.logger.info(`✅ Auto-scan completado:`);
-      this.logger.info(`   📁 Archivos: ${tracker.filesScanned}/${tracker.totalFiles}`);
-      this.logger.info(`   🎵 Tracks: ${tracker.tracksCreated}`);
-      this.logger.info(`   💿 Álbumes: ${tracker.albumsCreated}`);
-      this.logger.info(`   🎤 Artistas: ${tracker.artistsCreated}`);
-      this.logger.info(`   📸 Covers: ${tracker.coversExtracted}`);
+      this.logger.info(`Auto-scan completado:`);
+      this.logger.info(`   Archivos: ${tracker.filesScanned}/${tracker.totalFiles}`);
+      this.logger.info(`   Tracks: ${tracker.tracksCreated}`);
+      this.logger.info(`   Álbumes: ${tracker.albumsCreated}`);
+      this.logger.info(`   Artistas: ${tracker.artistsCreated}`);
+      this.logger.info(`   Covers: ${tracker.coversExtracted}`);
       if (tracker.videosFound > 0) {
-        this.logger.info(`   🎬 Videos: ${tracker.videosFound}`);
+        this.logger.info(`   Videos: ${tracker.videosFound}`);
       }
       if (tracker.errors > 0) {
-        this.logger.info(`   ⚠️ Errores: ${tracker.errors}`);
+        this.logger.info(`   Errores: ${tracker.errors}`);
       }
     } catch (error) {
       this.trackProcessing.clearEntityCache();
-      this.logger.error(`❌ Error en scan incremental:`, error);
+      this.logger.error(`Error en scan incremental:`, error);
       this.scannerGateway.emitError({
         scanId,
         file: 'incremental-scan',
@@ -656,7 +656,7 @@ export class ScanProcessorService implements OnModuleInit {
 
       // Process video files (add new, update existing without thumbnails)
       if (videoFiles.length > 0) {
-        this.logger.info(`🎬 Found ${videoFiles.length} video files, processing...`);
+        this.logger.info(`Found ${videoFiles.length} video files, processing...`);
 
         for (const videoPath of videoFiles) {
           const result = await this.videoProcessing.processVideoFile(videoPath);
@@ -667,11 +667,11 @@ export class ScanProcessorService implements OnModuleInit {
       // Mark missing video files (same pattern as audio track pruning)
       const videosMissing = await this.videoProcessing.pruneDeletedVideos();
       if (videosMissing > 0) {
-        this.logger.info(`🎬 ${videosMissing} video files marked as missing`);
+        this.logger.info(`${videosMissing} video files marked as missing`);
       }
 
       if (tracker && tracker.videosFound > 0) {
-        this.logger.info(`🎬 ${tracker.videosFound} music videos indexed/updated`);
+        this.logger.info(`${tracker.videosFound} music videos indexed/updated`);
       }
     } catch (error) {
       this.logger.warn({ error }, 'Video scan failed (non-critical)');

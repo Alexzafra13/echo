@@ -78,7 +78,7 @@ describe('ScannerGateway', () => {
   describe('lifecycle', () => {
     it('should log on init', () => {
       gateway.afterInit(mockServer as Server);
-      expect(mockLogger.info).toHaveBeenCalledWith('🔌 ScannerGateway initialized');
+      expect(mockLogger.info).toHaveBeenCalledWith('ScannerGateway initialized');
     });
 
     it('should log on connection', () => {

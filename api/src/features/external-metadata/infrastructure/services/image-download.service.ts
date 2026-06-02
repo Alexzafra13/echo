@@ -223,7 +223,7 @@ export class ImageDownloadService {
       await stream.close();
 
       this.logger.info(
-        `✓ Got dimensions from file: ${result.width}×${result.height} (${result.type}) - ${filePath.substring(filePath.lastIndexOf('/') + 1)}`
+        `Got dimensions from file: ${result.width}×${result.height} (${result.type}) - ${filePath.substring(filePath.lastIndexOf('/') + 1)}`
       );
 
       return {
@@ -234,10 +234,10 @@ export class ImageDownloadService {
     } catch (error) {
       const errorCode = (error as NodeJS.ErrnoException).code;
       if (errorCode === 'ENOENT') {
-        this.logger.warn(`✗ File not found: ${filePath}`);
+        this.logger.warn(`File not found: ${filePath}`);
       } else {
         this.logger.warn(
-          `✗ Failed to get dimensions from file ${filePath}: ${(error as Error).message}`
+          `Failed to get dimensions from file ${filePath}: ${(error as Error).message}`
         );
       }
       return null;
@@ -262,7 +262,7 @@ export class ImageDownloadService {
       });
 
       this.logger.info(
-        `✓ Got dimensions from URL: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`
+        `Got dimensions from URL: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`
       );
 
       return {
@@ -272,7 +272,7 @@ export class ImageDownloadService {
       };
     } catch (error) {
       this.logger.warn(
-        `⚠️ Direct probe failed: ${(error as Error).message} - trying buffer probe fallback...`
+        `Direct probe failed: ${(error as Error).message} - trying buffer probe fallback...`
       );
 
       // Fallback 1: Download first ~50KB and probe the buffer
@@ -330,7 +330,7 @@ export class ImageDownloadService {
         const result = await probe(bufferStream);
 
         this.logger.info(
-          `✓ Got dimensions from buffer probe: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`
+          `Got dimensions from buffer probe: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`
         );
 
         return {
@@ -339,7 +339,7 @@ export class ImageDownloadService {
           type: result.type,
         };
       } catch (bufferError) {
-        this.logger.error(`✗ Buffer probe also failed: ${(bufferError as Error).message}`);
+        this.logger.error(`Buffer probe also failed: ${(bufferError as Error).message}`);
 
         // Fallback 2: make a HEAD request to at least confirm the image exists
         try {
@@ -353,11 +353,11 @@ export class ImageDownloadService {
           if (response.ok) {
             const contentType = response.headers.get('content-type');
             this.logger.warn(
-              `✗ Image exists (${contentType}) but couldn't probe dimensions - ${url.substring(0, 80)}...`
+              `Image exists (${contentType}) but couldn't probe dimensions - ${url.substring(0, 80)}...`
             );
           }
         } catch (fetchError) {
-          this.logger.error(`✗ Image URL not accessible: ${(fetchError as Error).message}`);
+          this.logger.error(`Image URL not accessible: ${(fetchError as Error).message}`);
         }
 
         return null;

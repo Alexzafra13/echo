@@ -8,7 +8,7 @@ DRIZZLE_DIR="$(dirname "$0")/../drizzle"
 JOURNAL_FILE="$DRIZZLE_DIR/meta/_journal.json"
 
 if [ ! -f "$JOURNAL_FILE" ]; then
-  echo "❌ Journal file not found: $JOURNAL_FILE"
+  echo "Journal file not found: $JOURNAL_FILE"
   exit 1
 fi
 
@@ -22,20 +22,20 @@ for sql_file in "$DRIZZLE_DIR"/*.sql; do
 
     # Check if this tag exists in the journal
     if ! grep -q "\"tag\": \"$filename\"" "$JOURNAL_FILE"; then
-      echo "❌ Migration not registered in journal: $filename"
+      echo "Migration not registered in journal: $filename"
       errors=$((errors + 1))
     else
-      echo "✓ $filename"
+      echo "OK $filename"
     fi
   fi
 done
 
 if [ $errors -gt 0 ]; then
   echo ""
-  echo "❌ Found $errors unregistered migration(s)!"
+  echo "Found $errors unregistered migration(s)!"
   echo "   Run 'npx drizzle-kit generate' or manually add entries to $JOURNAL_FILE"
   exit 1
 fi
 
 echo ""
-echo "✅ All migrations are properly registered in the journal"
+echo "All migrations are properly registered in the journal"

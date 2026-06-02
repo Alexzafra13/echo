@@ -24,7 +24,7 @@ export class GenreEnrichmentService {
 
   /**
    * Enrich artist with genre tags
-   * Priority: Last.fm (if configured) → MusicBrainz → Track ID3 tags
+   * Priority: Last.fm (if configured) -> MusicBrainz -> Track ID3 tags
    *
    * @param artistId Internal artist ID
    * @param mbzArtistId MusicBrainz Artist ID

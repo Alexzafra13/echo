@@ -380,7 +380,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
         'Recycling worker for memory health'
       );
       this.killWorkerProcess(worker);
-      // handleWorkerExit → replacement spawn → serve waiters
+      // handleWorkerExit -> replacement spawn -> serve waiters
       return;
     }
 
@@ -586,10 +586,10 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       const meanVolume = meanVolumeMatch ? parseFloat(meanVolumeMatch[1]) : -20;
 
       // Convert dB to 0-1 scale with music-calibrated range
-      // Linear: -35dB (very quiet acoustic) → 0, -5dB (loud mastered) → 1
+      // Linear: -35dB (very quiet acoustic) -> 0, -5dB (loud mastered) -> 1
       const linearEnergy = Math.min(1, Math.max(0, (meanVolume + 35) / 30));
       // Sigmoid contrast to spread values across full 0-1 range
-      // Center 0.50, steepness 6: maps -30dB→0.12, -20dB→0.50, -10dB→0.88
+      // Center 0.50, steepness 6: maps -30dB->0.12, -20dB->0.50, -10dB->0.88
       const energy = 1 / (1 + Math.exp(-6 * (linearEnergy - 0.5)));
 
       return {

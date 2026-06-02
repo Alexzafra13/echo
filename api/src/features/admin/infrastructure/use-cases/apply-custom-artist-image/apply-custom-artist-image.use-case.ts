@@ -110,7 +110,7 @@ export class ApplyCustomArtistImageUseCase {
     });
 
     this.logger.info(
-      `✅ Successfully applied custom ${customImage.imageType} image for ${customImage.artist.name}`
+      `Successfully applied custom ${customImage.imageType} image for ${customImage.artist.name}`
     );
 
     return {

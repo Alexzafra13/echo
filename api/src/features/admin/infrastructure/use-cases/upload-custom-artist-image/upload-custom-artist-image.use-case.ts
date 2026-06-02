@@ -104,7 +104,7 @@ export class UploadCustomArtistImageUseCase {
     const customImage = customImageResult[0];
 
     this.logger.info(
-      `✅ Successfully uploaded custom ${input.imageType} image for ${artist.name} (ID: ${customImage.id})`
+      `Successfully uploaded custom ${input.imageType} image for ${artist.name} (ID: ${customImage.id})`
     );
 
     // Generate URL for the uploaded image

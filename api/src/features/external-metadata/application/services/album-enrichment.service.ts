@@ -422,7 +422,7 @@ export class AlbumEnrichmentService {
     // Create the conflict
     this.logger.info(
       `Cover comparison for "${album.name}": ` +
-        `Current: ${currentResolution || 'none'} → Suggested: ${suggestedResolution}`
+        `Current: ${currentResolution || 'none'} -> Suggested: ${suggestedResolution}`
     );
 
     await this.conflictService.createConflict({

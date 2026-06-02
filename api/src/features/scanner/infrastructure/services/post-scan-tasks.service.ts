@@ -47,9 +47,9 @@ export class PostScanTasksService {
       const result = await this.enrichmentQueueService.startEnrichmentQueue();
 
       if (result.started) {
-        this.logger.info(`🚀 Cola de enriquecimiento iniciada: ${result.pending} items pendientes`);
+        this.logger.info(`Cola de enriquecimiento iniciada: ${result.pending} items pendientes`);
       } else {
-        this.logger.info(`ℹ️ ${result.message}`);
+        this.logger.info(`${result.message}`);
       }
     } catch (error) {
       this.logger.error(
@@ -70,16 +70,16 @@ export class PostScanTasksService {
       );
 
       if (!lufsAnalysisEnabled) {
-        this.logger.info('🎚️ Análisis LUFS deshabilitado en configuración');
+        this.logger.info('Análisis LUFS deshabilitado en configuración');
         return;
       }
 
       const result = await this.lufsAnalysisQueue.startLufsAnalysisQueue();
 
       if (result.started) {
-        this.logger.info(`🎚️ Cola de análisis LUFS iniciada: ${result.pending} tracks pendientes`);
+        this.logger.info(`Cola de análisis LUFS iniciada: ${result.pending} tracks pendientes`);
       } else if (result.pending > 0) {
-        this.logger.info(`ℹ️ ${result.message}`);
+        this.logger.info(`${result.message}`);
       }
     } catch (error) {
       this.logger.error(
@@ -100,16 +100,16 @@ export class PostScanTasksService {
       );
 
       if (!djAnalysisEnabled) {
-        this.logger.info('🎧 Análisis DJ deshabilitado en configuración');
+        this.logger.info('Análisis DJ deshabilitado en configuración');
         return;
       }
 
       const result = await this.djAnalysisQueue.startAnalysisQueue();
 
       if (result.started) {
-        this.logger.info(`🎧 Cola de análisis DJ iniciada: ${result.pending} tracks pendientes`);
+        this.logger.info(`Cola de análisis DJ iniciada: ${result.pending} tracks pendientes`);
       } else if (result.pending > 0) {
-        this.logger.info(`ℹ️ ${result.message}`);
+        this.logger.info(`${result.message}`);
       }
     } catch (error) {
       this.logger.error(

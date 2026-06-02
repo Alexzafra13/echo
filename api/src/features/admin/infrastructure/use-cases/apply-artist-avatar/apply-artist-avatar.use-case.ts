@@ -144,7 +144,7 @@ export class ApplyArtistAvatarUseCase {
     });
 
     this.logger.info(
-      `✅ Successfully applied ${input.type} image for ${artist.name} (tag will change with new timestamp)`
+      `Successfully applied ${input.type} image for ${artist.name} (tag will change with new timestamp)`
     );
 
     return {

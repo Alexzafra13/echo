@@ -227,26 +227,6 @@ curl http://localhost:3000/api/scanner \
   -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
 ```
 
-## Implementación
-
-El módulo está **completamente implementado** con:
-
-✅ Domain Layer - Entities, Ports, Use Cases
-✅ Infrastructure Layer - Repository, File Scanner, Metadata Extractor, BullMQ Processor
-✅ Presentation Layer - Controller, DTOs, Swagger docs
-✅ Integración con BullMQ para procesamiento async
-✅ Añadido a app.module.ts
-
-## Próximos Pasos
-
-Para probarlo:
-
-1. Levantar servicios: `docker-compose up -d` (PostgreSQL + Redis)
-2. Generar migraciones de Drizzle: `pnpm db:generate`
-3. Aplicar migraciones: `pnpm db:push`
-4. Iniciar servidor: `pnpm dev`
-5. Probar endpoints con curl o Postman
-
 ## Notas
 
 - El escaneo puede tardar según la cantidad de archivos

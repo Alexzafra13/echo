@@ -102,7 +102,7 @@ export class UploadCustomAlbumCoverUseCase {
     const customCover = customCoverResult[0];
 
     this.logger.info(
-      `✅ Successfully uploaded custom cover for ${album.name} (ID: ${customCover.id})`
+      `Successfully uploaded custom cover for ${album.name} (ID: ${customCover.id})`
     );
 
     // Generate URL for the uploaded cover

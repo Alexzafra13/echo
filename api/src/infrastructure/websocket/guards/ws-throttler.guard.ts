@@ -103,7 +103,7 @@ export class WsThrottlerGuard implements OnModuleInit, OnModuleDestroy {
 
     // Verificar límite
     if (state.count >= this.limit) {
-      this.logger.warn(`⚠️ Límite de rate excedido para cliente ${clientId}`);
+      this.logger.warn(`Límite de rate excedido para cliente ${clientId}`);
       throw new WsException('Demasiadas solicitudes. Por favor, reduce la velocidad.');
     }
 

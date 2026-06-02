@@ -240,7 +240,7 @@ export class ExternalMetadataModule implements OnModuleInit {
     this.logger.info(`Registered ${allAgents.length} agents (${enabledAgents.length} enabled):`);
 
     allAgents.forEach((agent) => {
-      const status = agent.isEnabled() ? '✓' : '✗';
+      const status = agent.isEnabled() ? '' : '';
       this.logger.info(`  ${status} ${agent.name.padEnd(15)} (priority: ${agent.priority})`);
     });
 

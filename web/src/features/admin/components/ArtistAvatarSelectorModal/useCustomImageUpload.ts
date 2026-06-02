@@ -64,7 +64,7 @@ export function useCustomImageUpload({
               },
               onError: (err) => {
                 if (import.meta.env.DEV) {
-                  logger.error('[FileUpload] ❌ Apply error:', err);
+                  logger.error('[FileUpload] Apply error:', err);
                 }
                 setUploadError(getApiErrorMessage(err, 'Error al aplicar la imagen'));
                 resetInput();
@@ -74,7 +74,7 @@ export function useCustomImageUpload({
         },
         onError: (err) => {
           if (import.meta.env.DEV) {
-            logger.error('[FileUpload] ❌ Upload error:', err);
+            logger.error('[FileUpload] Upload error:', err);
           }
           setUploadError(getApiErrorMessage(err, 'Error al subir la imagen'));
         },
@@ -95,7 +95,7 @@ export function useCustomImageUpload({
           onSuccess: () => onSuccess?.(),
           onError: (err) => {
             if (import.meta.env.DEV) {
-              logger.error('[FileUpload] ❌ Apply error:', err);
+              logger.error('[FileUpload] Apply error:', err);
             }
             setUploadError(getApiErrorMessage(err, 'Error al aplicar la imagen'));
           },
@@ -123,7 +123,7 @@ export function useCustomImageUpload({
           },
           onError: (err) => {
             if (import.meta.env.DEV) {
-              logger.error('[FileUpload] ❌ Delete error:', err);
+              logger.error('[FileUpload] Delete error:', err);
             }
             setUploadError(getApiErrorMessage(err, 'Error al eliminar la imagen'));
           },
