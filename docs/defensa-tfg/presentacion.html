@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Echo — Defensa TFG (DAW)</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+
+    <style>
+      :root {
+        --echo-accent: #7c5cff;
+        --echo-accent2: #00d4ff;
+      }
+      .reveal {
+        font-size: 30px;
+      }
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        color: var(--echo-accent2);
+        text-transform: none;
+        letter-spacing: -0.5px;
+      }
+      .reveal h1 {
+        font-size: 2.4em;
+      }
+      .reveal section img {
+        border: none;
+        box-shadow: none;
+        background: none;
+      }
+      .reveal strong {
+        color: var(--echo-accent);
+      }
+      .reveal em {
+        color: var(--echo-accent2);
+      }
+      .reveal table {
+        font-size: 0.7em;
+      }
+      .reveal table th {
+        color: var(--echo-accent2);
+      }
+      .reveal pre {
+        font-size: 0.55em;
+        width: 100%;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+      }
+      .reveal pre code {
+        max-height: 520px;
+        padding: 18px;
+        border-radius: 8px;
+      }
+      .reveal ul {
+        width: 100%;
+      }
+      .reveal li {
+        margin: 0.35em 0;
+        line-height: 1.3;
+      }
+      .pill {
+        display: inline-block;
+        background: rgba(124, 92, 255, 0.18);
+        border: 1px solid var(--echo-accent);
+        color: #d9d0ff;
+        border-radius: 999px;
+        padding: 4px 14px;
+        margin: 4px;
+        font-size: 0.6em;
+      }
+      .muted {
+        color: #9aa0a6;
+        font-size: 0.7em;
+      }
+      .big-number {
+        font-size: 2.2em;
+        color: var(--echo-accent2);
+        font-weight: 700;
+        display: block;
+        line-height: 1;
+      }
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        margin-top: 24px;
+      }
+      .grid4 .muted {
+        margin-top: 6px;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        text-align: left;
+      }
+      .note {
+        background: rgba(0, 212, 255, 0.08);
+        border-left: 4px solid var(--echo-accent2);
+        padding: 12px 18px;
+        border-radius: 6px;
+        font-size: 0.7em;
+        text-align: left;
+        margin-top: 18px;
+      }
+      .reveal .footer {
+        position: fixed;
+        bottom: 12px;
+        left: 18px;
+        font-size: 13px;
+        color: #6b7075;
+        z-index: 30;
+      }
+      .reveal section.title h1 {
+        background: linear-gradient(90deg, var(--echo-accent), var(--echo-accent2));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- 1. PORTADA -->
+        <section class="title" data-background-gradient="radial-gradient(circle at 30% 30%, #1a1340, #0a0a0f)">
+          <h1>Echo</h1>
+          <h3 style="margin-top: 0">Servidor de streaming musical self-hosted</h3>
+          <p class="muted" style="margin-top: 40px">Trabajo Fin de Grado — Desarrollo de Aplicaciones Web (DAW)</p>
+          <p>
+            <span class="pill">NestJS</span><span class="pill">React</span><span class="pill">PostgreSQL</span
+            ><span class="pill">Redis</span><span class="pill">Docker</span>
+          </p>
+          <p class="muted" style="margin-top: 30px">Alex Zafra · 2026</p>
+          <aside class="notes">
+            Hola, soy [nombre]. Os presento Echo, un servidor de streaming musical que el propio usuario aloja en su
+            máquina. En los próximos minutos os enseñaré qué resuelve, su arquitectura y las funcionalidades que lo hacen
+            especial.
+          </aside>
+        </section>
+
+        <!-- 2. PITCH -->
+        <section data-background-gradient="radial-gradient(circle at 70% 20%, #102a33, #0a0a0f)">
+          <h2>¿Qué es Echo?</h2>
+          <p style="margin-top: 30px">Tu propio <strong>Spotify</strong>, alojado en tu casa.</p>
+          <ul style="margin-top: 20px">
+            <li>📂 Apuntas Echo a tu carpeta de música y la escuchas desde cualquier dispositivo.</li>
+            <li>🔒 <strong>Privacidad total</strong>: todo vive en tu servidor, sin terceros.</li>
+            <li>🤝 <em>Social y conectado</em>: amigos, actividad y <strong>federación</strong> entre servidores.</li>
+            <li>🎚️ <strong>Inteligente</strong>: listas algorítmicas y modo DJ con análisis de audio.</li>
+          </ul>
+          <div class="note">
+            A diferencia de Navidrome o Jellyfin, Echo no es solo funcional: es <strong>social y conectado</strong>.
+          </div>
+          <aside class="notes">
+            La idea es sencilla: es tu propio Spotify, pero en tu casa, respetando tu privacidad. Lo que lo diferencia de
+            otras alternativas self-hosted es la dimensión social y la federación.
+          </aside>
+        </section>
+
+        <!-- 3. PROBLEMA / MOTIVACIÓN -->
+        <section>
+          <h2>El problema que resuelve</h2>
+          <div class="grid2" style="margin-top: 30px">
+            <div>
+              <h3>❌ Servicios comerciales</h3>
+              <ul>
+                <li>No controlas tu biblioteca</li>
+                <li>Las canciones aparecen y desaparecen</li>
+                <li>Venden tus hábitos de escucha</li>
+                <li>No tienen tu música rara / FLAC</li>
+              </ul>
+            </div>
+            <div>
+              <h3>❌ Alternativas self-hosted</h3>
+              <ul>
+                <li>Funcionales pero "frías"</li>
+                <li>No permiten compartir</li>
+                <li>No conectan instancias</li>
+                <li>Sin descubrimiento inteligente</li>
+              </ul>
+            </div>
+          </div>
+          <div class="note">✅ <strong>Echo</strong> cubre ese hueco: propiedad + privacidad + lo social.</div>
+        </section>
+
+        <!-- 4. DIMENSIÓN DEL PROYECTO -->
+        <section data-background-gradient="radial-gradient(circle at 50% 50%, #1a1340, #0a0a0f)">
+          <h2>Dimensión del proyecto</h2>
+          <p class="muted">No es un CRUD de prácticas — es una aplicación de calidad de producción.</p>
+          <div class="grid4">
+            <div><span class="big-number">222k</span><div class="muted">líneas de código</div></div>
+            <div><span class="big-number">43</span><div class="muted">módulos (25 API + 18 web)</div></div>
+            <div><span class="big-number">374</span><div class="muted">archivos de test</div></div>
+            <div><span class="big-number">3</span><div class="muted">idiomas (1.733 claves)</div></div>
+          </div>
+          <p style="margin-top: 40px">
+            <strong>Monorepo</strong> con pnpm workspaces: <code>api/</code> (NestJS) + <code>web/</code> (React)
+          </p>
+          <aside class="notes">
+            Quiero transmitir la escala: más de 220.000 líneas, 43 módulos, casi 400 archivos de test. Está organizado
+            como monorepo con dos paquetes.
+          </aside>
+        </section>
+
+        <!-- 5. STACK -->
+        <section>
+          <h2>Stack tecnológico</h2>
+          <table>
+            <tr>
+              <th>Capa</th>
+              <th>Tecnologías</th>
+            </tr>
+            <tr>
+              <td><strong>Backend</strong></td>
+              <td>NestJS · Fastify · Drizzle ORM · PostgreSQL 16 · Redis 7 · BullMQ</td>
+            </tr>
+            <tr>
+              <td><strong>Frontend</strong></td>
+              <td>React 18 · Vite · TypeScript · Zustand · TanStack Query · Wouter</td>
+            </tr>
+            <tr>
+              <td><strong>Infra</strong></td>
+              <td>Docker · Nginx · GitHub Actions · pnpm</td>
+            </tr>
+          </table>
+          <div class="note">
+            <strong>TypeScript de extremo a extremo</strong> + <strong>Drizzle type-safe</strong>: los errores de BD se
+            detectan en tiempo de compilación, no en producción.
+          </div>
+          <aside class="notes">
+            Stack moderno y tipado. Elijo NestJS por su modularidad e inyección de dependencias; Fastify por rendimiento;
+            Drizzle porque es type-safe; Redis para caché y colas.
+          </aside>
+        </section>
+
+        <!-- 6. ARQUITECTURA SISTEMA -->
+        <section>
+          <h2>Arquitectura del sistema</h2>
+          <pre><code data-trim data-noescape class="language-text">
+   Navegador / PWA
+        │   │
+  REST  │   │  WebSocket (tiempo real)
+        ▼   ▼
+ ┌──────────────────────────────────────────┐
+ │            Contenedor Echo                │
+ │  Fastify · NestJS · Socket.IO · BullMQ    │
+ └──────────────────────────────────────────┘
+        │                         │
+   Drizzle ORM                 ioredis
+        ▼                         ▼
+ ┌──────────────┐         ┌──────────────┐
+ │ PostgreSQL16 │         │   Redis 7    │
+ │ (persistencia)│        │ caché + colas│
+ └──────────────┘         └──────────────┘
+          </code></pre>
+          <p class="muted">Todo orquestado con Docker Compose; el trabajo pesado va a colas en background.</p>
+        </section>
+
+        <!-- 7. HEXAGONAL intro -->
+        <section data-background-gradient="radial-gradient(circle at 30% 70%, #2a1340, #0a0a0f)">
+          <h2>Arquitectura hexagonal</h2>
+          <p class="muted">Puertos y adaptadores · los 25 módulos siguen el mismo patrón</p>
+          <div class="grid2" style="margin-top: 20px; font-size: 0.85em">
+            <div>
+              <h3>Regla de oro</h3>
+              <p>El <strong>dominio</strong> NO depende de la <strong>infraestructura</strong>. Depende de interfaces.</p>
+            </div>
+            <div>
+              <ul>
+                <li><strong>Presentación</strong> — Controllers, DTOs</li>
+                <li><strong>Dominio</strong> — Entidades, casos de uso, <em>puertos</em></li>
+                <li><strong>Infraestructura</strong> — Repos Drizzle, caché, APIs</li>
+              </ul>
+            </div>
+          </div>
+          <div class="note">
+            Ventajas: <strong>testabilidad</strong> (repos en memoria), <strong>intercambiabilidad</strong> (caché como
+            decorador) y <strong>orden a escala</strong>.
+          </div>
+          <aside class="notes">
+            Esta es la parte técnica clave. La arquitectura hexagonal separa la lógica de negocio de la infraestructura. El
+            dominio depende de interfaces, los puertos, no de implementaciones concretas.
+          </aside>
+        </section>
+
+        <!-- 8. HEXAGONAL código: puerto + caso de uso -->
+        <section>
+          <h3>El dominio depende de un puerto (interfaz)</h3>
+          <pre><code data-trim data-line-numbers="1-4|6" class="language-typescript">
+export interface IAlbumRepository {
+  findById(id: string): Promise&lt;Album | null&gt;;
+  create(album: Album): Promise&lt;Album&gt;;
+}
+// Token para la inyección de dependencias de NestJS
+export const ALBUM_REPOSITORY = 'IAlbumRepository';
+          </code></pre>
+          <h3 style="margin-top: 10px">El caso de uso recibe la abstracción inyectada</h3>
+          <pre><code data-trim data-line-numbers="3-5|9-12" class="language-typescript">
+@Injectable()
+export class GetAlbumUseCase {
+  constructor(
+    @Inject(ALBUM_REPOSITORY)
+    private readonly albumRepository: IAlbumRepository,
+  ) {}
+
+  async execute(input: GetAlbumInput): Promise&lt;GetAlbumOutput&gt; {
+    const album = await this.albumRepository.findById(input.id);
+    if (!album) throw new NotFoundError('Album', input.id);
+    return { id: album.id, name: album.name /* ... */ };
+  }
+}
+          </code></pre>
+          <aside class="notes">
+            Fijaos: el caso de uso no conoce PostgreSQL. Solo conoce la interfaz IAlbumRepository. En tests le inyecto un
+            repositorio en memoria; en producción, el de Drizzle. Y la caché es otro adaptador que implementa la misma
+            interfaz.
+          </aside>
+        </section>
+
+        <!-- 9. FUNCIONALIDADES estrella (overview) -->
+        <section data-background-gradient="radial-gradient(circle at 50% 30%, #102a33, #0a0a0f)">
+          <h2>Funcionalidades destacadas</h2>
+          <div class="grid2" style="margin-top: 20px; font-size: 0.8em">
+            <ul>
+              <li>📡 Escáner de biblioteca (asíncrono)</li>
+              <li>🎵 Streaming con HTTP Range</li>
+              <li>🌊 Recomendaciones (Wave Mix)</li>
+            </ul>
+            <ul>
+              <li>🎚️ Modo DJ + análisis de audio</li>
+              <li>🔗 Federación entre servidores</li>
+              <li>🏷️ Enriquecimiento de metadatos</li>
+            </ul>
+          </div>
+          <p class="muted" style="margin-top: 30px">Veamos las cuatro más interesantes técnicamente →</p>
+        </section>
+
+        <!-- 10. ESCANER -->
+        <section>
+          <h2>📡 Escáner de biblioteca</h2>
+          <ul>
+            <li>Recorrido recursivo con <strong>detección de symlinks y bucles</strong>.</li>
+            <li>Extrae metadatos con <strong>FFprobe</strong> + <code>music-metadata</code>.</li>
+            <li>Vigilancia en vivo (<strong>chokidar</strong>) con <em>debounce</em> de 5s.</li>
+            <li>Corre en una <strong>cola BullMQ</strong> y emite progreso por WebSocket.</li>
+          </ul>
+          <div class="note">
+            <strong>Clave:</strong> escanear miles de canciones nunca bloquea la API → la petición responde
+            <code>202</code> y el trabajo va a background.
+          </div>
+          <aside class="notes">
+            El escaneo de una biblioteca grande podría tardar minutos. Por eso no se hace en la petición HTTP: se encola en
+            BullMQ y un worker lo procesa emitiendo progreso en tiempo real.
+          </aside>
+        </section>
+
+        <!-- 11. STREAMING -->
+        <section>
+          <h2>🎵 Streaming de audio</h2>
+          <ul>
+            <li><strong>Peticiones por rango HTTP</strong> (<code>Range</code> → <code>206 Partial Content</code>):
+              permite buscar dentro de la canción sin descargarla entera.</li>
+            <li><strong>Stream tokens</strong>: token de un solo uso, <strong>hasheado (SHA-256)</strong> en BD; la URL
+              de audio no expone el JWT.</li>
+            <li>Defensa <strong>path traversal</strong>: doble validación de ruta + <code>fs.stat()</code>.</li>
+          </ul>
+          <div class="note">Seguridad y eficiencia de streaming a nivel de servicio comercial.</div>
+        </section>
+
+        <!-- 12. RECOMENDACIONES -->
+        <section>
+          <h2>🌊 Recomendaciones — Wave Mix</h2>
+          <pre><code data-trim class="language-text">
+score = 0.30·explícito + 0.50·implícito + 0.18·recencia + 0.02·diversidad
+          </code></pre>
+          <ul style="font-size: 0.85em">
+            <li><strong>Explícito</strong>: tus valoraciones · <strong>Implícito</strong>: reproducciones + finalización</li>
+            <li><strong>Recencia</strong>: decaimiento exponencial · <strong>Diversidad</strong>: evita saturar un artista</li>
+            <li><strong>Balance temporal</strong>: 40% semana / 30% mes / 20% año / 10% antiguo → <em>redescubre joyas olvidadas</em></li>
+          </ul>
+          <div class="note">
+            <strong>Optimización:</strong> en vez de 3 consultas por canción (3·N), precarga en <strong>3 consultas</strong>
+            y puntúa en memoria → de O(3N) a O(N).
+          </div>
+          <aside class="notes">
+            El Wave Mix puntúa tus canciones con una fórmula ponderada y luego equilibra por antigüedad para que no salga
+            siempre lo mismo. Y lo hace de forma eficiente, evitando el problema N+1.
+          </aside>
+        </section>
+
+        <!-- 13. DJ -->
+        <section>
+          <h2>🎚️ Modo DJ + análisis de audio</h2>
+          <ul>
+            <li>Analiza cada canción con <strong>Essentia.js</strong> (WebAssembly): <strong>BPM</strong>, tonalidad,
+              energía, bailabilidad.</li>
+            <li><strong>Mezcla armónica</strong> con la <strong>rueda Camelot</strong> (24 tonalidades), como Rekordbox/Serato.</li>
+            <li><strong>Pool de workers</strong> (núcleos÷2) con <strong>reciclado cada 250 análisis</strong> para controlar
+              la memoria del WASM.</li>
+            <li><em>Fallback</em> a FFmpeg si Essentia no está disponible.</li>
+          </ul>
+          <div class="note">Encadena temas armónicamente compatibles automáticamente, como un DJ real.</div>
+          <aside class="notes">
+            Esta es probablemente la funcionalidad más técnica. Uso teoría musical real: la rueda Camelot que usan los DJs.
+            El reto fue la memoria de WebAssembly, resuelto con un pool de workers reciclables.
+          </aside>
+        </section>
+
+        <!-- 14. FEDERACION -->
+        <section>
+          <h2>🔗 Federación entre servidores</h2>
+          <pre><code data-trim class="language-text">
+Servidor A  ──(token invitación XXXX-XXXX, 1 uso, 7 días)──►  Servidor B
+Servidor A  ◄──(canjea token)───────────────────────────────  Servidor B
+Servidor A  ──(access token + permisos: browse/stream/download)─►  Servidor B
+          </code></pre>
+          <ul style="font-size: 0.85em">
+            <li>Tokens de invitación <strong>de un solo uso</strong> y con caducidad.</li>
+            <li><strong>Permisos granulares</strong> por servidor conectado.</li>
+            <li>Confianza <strong>mutua</strong> opcional (bidireccional).</li>
+          </ul>
+          <div class="note">Reproduce música de la biblioteca de otra persona, con su permiso y control.</div>
+        </section>
+
+        <!-- 15. SEGURIDAD -->
+        <section data-background-gradient="radial-gradient(circle at 30% 30%, #2a1320, #0a0a0f)">
+          <h2>🔐 Seguridad</h2>
+          <div class="grid2" style="font-size: 0.78em; margin-top: 20px">
+            <ul>
+              <li><strong>bcrypt</strong> (coste 12) para contraseñas</li>
+              <li>Mitigación de <strong>timing attacks</strong> (hash dummy)</li>
+              <li><strong>JWT</strong> access (24h) + refresh (7d) con <code>jti</code></li>
+              <li>Blacklist de refresh tokens (anti-replay)</li>
+            </ul>
+            <ul>
+              <li>Roles: <code>JwtAuthGuard</code> + <code>AdminGuard</code></li>
+              <li>Stream tokens <strong>hasheados</strong></li>
+              <li>Defensa <strong>path traversal</strong></li>
+              <li>Rate limiting (HTTP + WebSocket) · Helmet</li>
+            </ul>
+          </div>
+          <aside class="notes">
+            La seguridad se cuida en varias capas: contraseñas con bcrypt, tokens JWT con revocación, tokens de streaming
+            separados y hasheados, protección de rutas y rate limiting.
+          </aside>
+        </section>
+
+        <!-- 16. RENDIMIENTO -->
+        <section>
+          <h2>⚡ Rendimiento y asincronía</h2>
+          <div class="grid2" style="margin-top: 20px">
+            <div>
+              <h3>Caché (cache-aside)</h3>
+              <ul style="font-size: 0.8em">
+                <li>Redis con TTL por tipo de dato</li>
+                <li>Álbum 1h · Artista 2h · Búsqueda 1min</li>
+                <li>Caché como decorador transparente</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Colas BullMQ</h3>
+              <ul style="font-size: 0.8em">
+                <li>Escaneo, LUFS, análisis DJ</li>
+                <li>Concurrencia adaptada a la CPU</li>
+                <li>Nunca bloquean la API</li>
+              </ul>
+            </div>
+          </div>
+          <div class="note">
+            Las operaciones caras (escaneo, audio, APIs externas) nunca degradan la experiencia del usuario.
+          </div>
+        </section>
+
+        <!-- 17. CALIDAD -->
+        <section>
+          <h2>✅ Calidad: testing y CI/CD</h2>
+          <ul>
+            <li><strong>374 archivos de test</strong> (Jest backend · Vitest frontend): unitarios, integración y e2e.</li>
+            <li><strong>GitHub Actions</strong>: lint + tests + build con PostgreSQL y Redis reales en cada PR.</li>
+            <li><strong>Husky + lint-staged</strong>: formato automático antes de cada commit.</li>
+            <li><strong>Swagger/OpenAPI</strong> autogenerado en <code>/api/docs</code>.</li>
+            <li><strong>Lighthouse CI</strong> para auditar rendimiento del frontend.</li>
+          </ul>
+          <div class="note">La arquitectura hexagonal hace que probar el dominio sea fácil y rápido.</div>
+        </section>
+
+        <!-- 18. DESPLIEGUE -->
+        <section>
+          <h2>🐳 Despliegue</h2>
+          <pre><code data-trim class="language-bash">
+# Levantar toda la pila con un comando
+docker compose up -d        # Echo + PostgreSQL + Redis
+
+# Volúmenes
+./data        → datos de la app
+postgres_data → base de datos
+/music:ro     → tu música (SOLO LECTURA, por seguridad)
+          </code></pre>
+          <ul style="font-size: 0.85em">
+            <li>Imagen Docker <strong>multi-stage</strong> publicada en GHCR.</li>
+            <li>Proxy inverso (Nginx/Caddy/Traefik) con HTTPS documentado.</li>
+            <li>Script de instalación bare-metal para Linux.</li>
+          </ul>
+          <aside class="notes">
+            Cualquiera puede autoalojar Echo con un único comando. La música se monta en solo lectura para que la app nunca
+            pueda modificar los archivos originales.
+          </aside>
+        </section>
+
+        <!-- 19. CONCLUSIONES -->
+        <section data-background-gradient="radial-gradient(circle at 50% 50%, #1a1340, #0a0a0f)">
+          <h2>Conclusiones</h2>
+          <ul>
+            <li>✅ Aplicación web <strong>completa y de calidad de producción</strong>.</li>
+            <li>✅ Patrones profesionales: <strong>hexagonal</strong>, cache-aside, colas, tiempo real.</li>
+            <li>✅ Funcionalidades poco comunes: <strong>federación, modo DJ, recomendaciones</strong>.</li>
+          </ul>
+          <h3 style="margin-top: 30px">Líneas futuras</h3>
+          <ul style="font-size: 0.82em">
+            <li>Apps móviles nativas · Transcodificación bajo demanda</li>
+            <li>Más algoritmos de descubrimiento · Escalado horizontal de workers</li>
+          </ul>
+        </section>
+
+        <!-- 20. CIERRE -->
+        <section class="title" data-background-gradient="radial-gradient(circle at 30% 30%, #1a1340, #0a0a0f)">
+          <h1>Gracias</h1>
+          <p class="muted" style="margin-top: 30px">¿Preguntas?</p>
+          <p>
+            <span class="pill">github.com/Alexzafra13/echo</span>
+          </p>
+          <aside class="notes">Muchas gracias. Quedo a vuestra disposición para cualquier pregunta o una demo en vivo.</aside>
+        </section>
+      </div>
+    </div>
+
+    <div class="footer">Echo — TFG DAW</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        transition: 'slide',
+        backgroundTransition: 'fade',
+        plugins: [RevealHighlight, RevealNotes],
+      });
+    </script>
+  </body>
+</html>
