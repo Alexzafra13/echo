@@ -1,0 +1,65 @@
+name: Tag maintenance
+
+# One-off maintenance: re-point release tags onto the rewritten main history
+# and unify the 1.0.4 release under the v-prefixed tag.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  retag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Re-point version tags to clean commits
+        run: |
+          set -euo pipefail
+          git config user.name "Alexzafra13"
+          git config user.email "ale_zafra_13@hotmail.com"
+
+          git tag -f v1.0.3 ea9906a245bbb10b4869b1b5ce139a3d65040e5b
+          git tag -f v1.0.4 94015b71f1781c36cabf9cb410d2769b0333817e
+          git tag -f v1.0.5 4aa2ce38459584b977c6482c39dbb7c47498ce8f
+          git tag -f v1.0.6 95f29ba408410b89b9050fb3790e674fc7909ef3
+          git tag -f v1.0.7 0854e79d9f3b1ae149ef32d5d914b0d81e4e2398
+          git tag -f v1.0.8 c440302bbddfb6803b3f47da12b1c18118b0daee
+          git tag -f v1.1.0 b4270d53e4c25cd6015f60114848bb913b805b60
+
+          git push origin -f \
+            v1.0.3 v1.0.4 v1.0.5 v1.0.6 v1.0.7 v1.0.8 v1.1.0
+
+      - name: Unify 1.0.4 release under v1.0.4 and drop stray tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Move the existing "1.0.4" release onto the v-prefixed tag
+          gh release edit 1.0.4 --repo "$GITHUB_REPOSITORY" --tag v1.0.4
+          # Remove the now-unused non-prefixed tag
+          git push origin :refs/tags/1.0.4
+
+      - name: Verify no tag points at dirty history
+        run: |
+          set -euo pipefail
+          git fetch --prune --tags origin
+          fail=0
+          for t in v1.0.0 v1.0.1 v1.0.2 v1.0.3 v1.0.4 v1.0.5 v1.0.6 v1.0.7 v1.0.8 v1.1.0; do
+            while read -r h; do
+              if git log -1 --format='%B' "$h" | grep -qi 'co-authored-by: claude'; then
+                echo "DIRTY commit $h reachable from $t"
+                fail=1
+              fi
+            done < <(git rev-list "$t")
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "Verification failed: dirty commits still reachable" >&2
+            exit 1
+          fi
+          echo "All tags clean."
+          git ls-remote --tags origin | grep -v '\^{}'
