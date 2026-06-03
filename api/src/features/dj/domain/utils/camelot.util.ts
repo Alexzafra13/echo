@@ -1,16 +1,8 @@
 /**
- * Camelot Wheel Utility
- *
- * Centralized utility for all Camelot wheel operations used in harmonic mixing.
- * The Camelot wheel is a visual representation of musical keys that helps DJs
- * find harmonically compatible tracks for smooth transitions.
- *
- * Wheel structure:
- * - Numbers 1-12 arranged in a circle
- * - Column A = minor keys
- * - Column B = major keys
- * - Adjacent numbers (±1) are harmonically compatible
- * - Same number, different letter (A↔B) = relative major/minor
+ * Utilidades de la rueda de Camelot para mezcla armónica. La rueda coloca las
+ * tonalidades en un círculo (1-12): columna A = menores, B = mayores. Números
+ * adyacentes (±1) son compatibles, y el mismo número con distinta letra es el
+ * relativo mayor/menor.
  */
 
 export interface CamelotParsed {
@@ -18,12 +10,9 @@ export interface CamelotParsed {
   letter: 'A' | 'B';
 }
 
-/**
- * Complete mapping from musical keys to Camelot notation
- * Includes all enharmonic equivalents (e.g., G#m and Abm both map to 1A)
- */
+// Tonalidad → notación Camelot, con enarmónicos (G#m y Abm → 1A)
 const KEY_TO_CAMELOT: Record<string, CamelotParsed> = {
-  // Minor keys (A column)
+  // Menores (columna A)
   'Abm': { number: 1, letter: 'A' }, 'G#m': { number: 1, letter: 'A' },
   'Ebm': { number: 2, letter: 'A' }, 'D#m': { number: 2, letter: 'A' },
   'Bbm': { number: 3, letter: 'A' }, 'A#m': { number: 3, letter: 'A' },
@@ -37,7 +26,7 @@ const KEY_TO_CAMELOT: Record<string, CamelotParsed> = {
   'F#m': { number: 11, letter: 'A' }, 'Gbm': { number: 11, letter: 'A' },
   'C#m': { number: 12, letter: 'A' }, 'Dbm': { number: 12, letter: 'A' },
 
-  // Major keys (B column)
+  // Mayores (columna B)
   'B': { number: 1, letter: 'B' }, 'Cb': { number: 1, letter: 'B' },
   'F#': { number: 2, letter: 'B' }, 'Gb': { number: 2, letter: 'B' },
   'C#': { number: 3, letter: 'B' }, 'Db': { number: 3, letter: 'B' },
@@ -52,9 +41,7 @@ const KEY_TO_CAMELOT: Record<string, CamelotParsed> = {
   'E': { number: 12, letter: 'B' },
 };
 
-/**
- * Reverse mapping from Camelot notation to canonical musical key
- */
+// Camelot → tonalidad canónica
 const CAMELOT_TO_KEY: Record<string, string> = {
   '1A': 'Abm', '1B': 'B',
   '2A': 'Ebm', '2B': 'Gb',
@@ -70,11 +57,7 @@ const CAMELOT_TO_KEY: Record<string, string> = {
   '12A': 'C#m', '12B': 'E',
 };
 
-/**
- * Convert a musical key to Camelot notation string
- * @param key Musical key (e.g., "Am", "C#m", "G")
- * @returns Camelot notation (e.g., "8A", "12A", "9B") or null if invalid
- */
+// Tonalidad → "8A" (null si no es válida)
 export function keyToCamelot(key: string | null | undefined): string | null {
   if (!key || key === 'Unknown') return null;
   const camelot = KEY_TO_CAMELOT[key];
@@ -82,21 +65,13 @@ export function keyToCamelot(key: string | null | undefined): string | null {
   return `${camelot.number}${camelot.letter}`;
 }
 
-/**
- * Convert Camelot notation to musical key
- * @param camelot Camelot notation (e.g., "8A", "9B")
- * @returns Musical key (e.g., "Am", "G") or null if invalid
- */
+// "8A" → tonalidad (null si no es válida)
 export function camelotToKey(camelot: string | null | undefined): string | null {
   if (!camelot) return null;
   return CAMELOT_TO_KEY[camelot] ?? null;
 }
 
-/**
- * Parse Camelot notation into number and letter components
- * @param camelot Camelot notation (e.g., "8A", "12B")
- * @returns Parsed object or null if invalid
- */
+// Separa "8A" en número y letra
 export function parseCamelot(camelot: string): CamelotParsed | null {
   const match = camelot.match(/^(\d{1,2})([AB])$/);
   if (!match) return null;
@@ -110,23 +85,13 @@ export function parseCamelot(camelot: string): CamelotParsed | null {
   };
 }
 
-/**
- * Format CamelotParsed back to string notation
- */
 export function formatCamelot(parsed: CamelotParsed): string {
   return `${parsed.number}${parsed.letter}`;
 }
 
 /**
- * Get all harmonically compatible Camelot keys for a given key
- *
- * Compatible keys follow the Camelot wheel rules:
- * - Same key (perfect match)
- * - Same number, opposite letter (relative major/minor)
- * - ±1 on the wheel (energy change, same mode)
- *
- * @param camelotKey Source Camelot key (e.g., "8A")
- * @returns Array of compatible Camelot keys
+ * Tonalidades compatibles según la rueda: la misma, su relativo (mismo número,
+ * otra letra) y ±1 (cambio de energía, mismo modo).
  */
 export function getCompatibleCamelotKeys(camelotKey: string): string[] {
   const parsed = parseCamelot(camelotKey);
@@ -135,29 +100,24 @@ export function getCompatibleCamelotKeys(camelotKey: string): string[] {
   const { number, letter } = parsed;
   const compatible: string[] = [];
 
-  // Same key (perfect match)
+  // la misma
   compatible.push(camelotKey);
 
-  // Same number, opposite letter (relative major/minor)
+  // relativo mayor/menor
   compatible.push(`${number}${letter === 'A' ? 'B' : 'A'}`);
 
-  // +1 on wheel (same letter) - wraps 12 → 1
+  // +1 en la rueda (12 → 1)
   const plus1 = number === 12 ? 1 : number + 1;
   compatible.push(`${plus1}${letter}`);
 
-  // -1 on wheel (same letter) - wraps 1 → 12
+  // -1 en la rueda (1 → 12)
   const minus1 = number === 1 ? 12 : number - 1;
   compatible.push(`${minus1}${letter}`);
 
   return compatible;
 }
 
-/**
- * Check if two Camelot keys are harmonically compatible
- * @param key1 First Camelot key
- * @param key2 Second Camelot key
- * @returns true if compatible for harmonic mixing
- */
+// ¿Dos tonalidades Camelot son compatibles para mezcla armónica?
 export function areKeysCompatible(key1: string | null | undefined, key2: string | null | undefined): boolean {
   if (!key1 || !key2) return false;
 
@@ -166,30 +126,25 @@ export function areKeysCompatible(key1: string | null | undefined, key2: string 
 
   if (!parsed1 || !parsed2) return false;
 
-  // Same key
+  // misma
   if (key1 === key2) return true;
 
-  // Same number, different letter (relative major/minor)
+  // relativo mayor/menor
   if (parsed1.number === parsed2.number && parsed1.letter !== parsed2.letter) {
     return true;
   }
 
-  // Adjacent numbers on the wheel (same letter)
+  // adyacentes en la rueda (mismo modo)
   if (parsed1.letter === parsed2.letter) {
     const diff = Math.abs(parsed1.number - parsed2.number);
-    // diff === 1 for adjacent, diff === 11 for wrap-around (1 and 12)
+    // 1 = adyacente, 11 = vuelta (1 y 12)
     if (diff === 1 || diff === 11) return true;
   }
 
   return false;
 }
 
-/**
- * Calculate the circular distance on the Camelot wheel
- * @param num1 First number (1-12)
- * @param num2 Second number (1-12)
- * @returns Shortest distance on the circular wheel (0-6)
- */
+// Distancia circular en la rueda (0-6)
 export function getCamelotDistance(num1: number, num2: number): number {
   const directDiff = Math.abs(num1 - num2);
   return Math.min(directDiff, 12 - directDiff);
@@ -203,26 +158,16 @@ export interface HarmonicScoreResult {
 }
 
 /**
- * Calculate detailed harmonic compatibility score between two Camelot keys
- *
- * Scoring:
- * - Same key = 100 (perfect)
- * - ±1 on wheel, same letter = 90 (energy boost/change)
- * - Same number, different letter = 85 (relative major/minor)
- * - ±1 on wheel, different letter = 75 (compatible with mood shift)
- * - ±2 on wheel = 55 (noticeable but usable)
- * - Other = 20-40 (incompatible)
- *
- * @param camelot1 First Camelot key
- * @param camelot2 Second Camelot key
- * @returns Score and compatibility level
+ * Puntúa la compatibilidad armónica entre dos tonalidades Camelot:
+ * misma = 100; ±1 mismo modo = 90; relativo = 85; ±1 distinto modo = 75;
+ * ±2 = 55; resto = 20-40.
  */
 export function calculateHarmonicScore(
   camelot1: string | null | undefined,
   camelot2: string | null | undefined
 ): HarmonicScoreResult {
   if (!camelot1 || !camelot2) {
-    return { score: 50, compatibility: 'compatible' }; // Unknown, neutral
+    return { score: 50, compatibility: 'compatible' }; // desconocida, neutral
   }
 
   const c1 = parseCamelot(camelot1);
@@ -232,7 +177,7 @@ export function calculateHarmonicScore(
     return { score: 50, compatibility: 'compatible' };
   }
 
-  // Same key
+  // misma
   if (c1.number === c2.number && c1.letter === c2.letter) {
     return { score: 100, compatibility: 'perfect' };
   }
@@ -240,12 +185,12 @@ export function calculateHarmonicScore(
   const distance = getCamelotDistance(c1.number, c2.number);
   const sameMode = c1.letter === c2.letter;
 
-  // Same number, different letter (relative major/minor)
+  // relativo mayor/menor
   if (distance === 0) {
     return { score: 85, compatibility: 'compatible' };
   }
 
-  // Adjacent on wheel (±1)
+  // adyacente (±1)
   if (distance === 1) {
     if (sameMode) {
       return { score: 90, compatibility: 'energy_boost' };
@@ -253,19 +198,17 @@ export function calculateHarmonicScore(
     return { score: 75, compatibility: 'compatible' };
   }
 
-  // Two steps away (±2)
+  // a dos pasos (±2)
   if (distance === 2) {
     return { score: 55, compatibility: 'compatible' };
   }
 
-  // Incompatible - score decreases with distance
+  // incompatible: baja con la distancia
   const score = Math.max(20, 50 - distance * 5);
   return { score, compatibility: 'incompatible' };
 }
 
-/**
- * Get a simplified harmonic score (0-100) for sorting purposes
- */
+// Score armónico simple (0-100) para ordenar
 export function getSimpleHarmonicScore(
   camelot1: string | null | undefined,
   camelot2: string | null | undefined
@@ -273,29 +216,17 @@ export function getSimpleHarmonicScore(
   return calculateHarmonicScore(camelot1, camelot2).score;
 }
 
-/**
- * Validate BPM value
- * @param bpm BPM value to validate
- * @returns true if BPM is within reasonable range (30-300)
- */
+// BPM válido (30-300)
 export function isValidBpm(bpm: number | null | undefined): bpm is number {
   return typeof bpm === 'number' && bpm >= 30 && bpm <= 300;
 }
 
-/**
- * Validate energy value
- * @param energy Energy value to validate
- * @returns true if energy is within range (0-1)
- */
+// Energía válida (0-1)
 export function isValidEnergy(energy: number | null | undefined): energy is number {
   return typeof energy === 'number' && energy >= 0 && energy <= 1;
 }
 
-/**
- * Validate Camelot key format
- * @param camelot Camelot notation to validate
- * @returns true if valid Camelot format
- */
+// Formato Camelot válido
 export function isValidCamelotKey(camelot: string | null | undefined): camelot is string {
   if (!camelot) return false;
   return parseCamelot(camelot) !== null;
