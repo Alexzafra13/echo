@@ -4,6 +4,10 @@ name: Tag maintenance
 # and unify the 1.0.4 release under the v-prefixed tag.
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/tag-maintenance.yml'
 
 permissions:
   contents: write
@@ -39,10 +43,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # Move the existing "1.0.4" release onto the v-prefixed tag
-          gh release edit 1.0.4 --repo "$GITHUB_REPOSITORY" --tag v1.0.4
-          # Remove the now-unused non-prefixed tag
-          git push origin :refs/tags/1.0.4
+          # Move the existing "1.0.4" release onto the v-prefixed tag (idempotent)
+          if gh release view 1.0.4 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit 1.0.4 --repo "$GITHUB_REPOSITORY" --tag v1.0.4
+          else
+            echo "Release '1.0.4' already migrated."
+          fi
+          # Remove the now-unused non-prefixed tag (idempotent)
+          git push origin :refs/tags/1.0.4 || echo "Tag '1.0.4' already removed."
 
       - name: Verify no tag points at dirty history
         run: |
