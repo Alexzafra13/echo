@@ -11,16 +11,13 @@ export interface ImageDimensions {
   type: string;
 }
 
-/**
- * Image Download Service
- * Handles downloading images from external URLs and saving them locally
- */
+// Descarga imágenes desde URLs externas y las guarda en local
 @Injectable()
 export class ImageDownloadService {
-  // HTTP timeout for downloads (30 seconds)
+  // Timeout de descarga (30 s)
   private readonly DOWNLOAD_TIMEOUT = 30000;
 
-  // Max image size (10 MB)
+  // Tamaño máximo de imagen (10 MB)
   private readonly MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
   constructor(
@@ -29,11 +26,6 @@ export class ImageDownloadService {
     private readonly storage: StorageService
   ) {}
 
-  /**
-   * Download an image from a URL
-   * @param url Image URL
-   * @returns Image buffer
-   */
   async downloadImage(url: string): Promise<Buffer> {
     try {
       this.logger.debug(`Downloading image from: ${url}`);
@@ -54,28 +46,24 @@ export class ImageDownloadService {
         throw new ExternalApiError('ImageDownload', response.status, response.statusText);
       }
 
-      // Check content type
       const contentType = response.headers.get('content-type');
       if (!contentType?.startsWith('image/')) {
         throw new ImageProcessingError('INVALID_CONTENT_TYPE', contentType || 'unknown');
       }
 
-      // Check content length
       const contentLength = response.headers.get('content-length');
       if (contentLength && parseInt(contentLength) > this.MAX_IMAGE_SIZE) {
         throw new ImageProcessingError('FILE_TOO_LARGE', `${contentLength} bytes`);
       }
 
-      // Download as buffer
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // Validate buffer size
       if (buffer.length > this.MAX_IMAGE_SIZE) {
         throw new ImageProcessingError('FILE_TOO_LARGE', `${buffer.length} bytes`);
       }
 
-      // Validate it's actually an image
+      // Comprueba que de verdad es una imagen
       if (!this.isValidImageBuffer(buffer)) {
         throw new ImageProcessingError('INVALID_IMAGE');
       }
@@ -91,11 +79,6 @@ export class ImageDownloadService {
     }
   }
 
-  /**
-   * Download and save an image directly to a path
-   * @param url Image URL
-   * @param destinationPath Full path where to save
-   */
   async downloadAndSave(url: string, destinationPath: string): Promise<void> {
     try {
       const buffer = await this.downloadImage(url);
@@ -110,15 +93,10 @@ export class ImageDownloadService {
     }
   }
 
-  /**
-   * Download multiple images in parallel
-   * @param urls Array of URLs to download
-   * @returns Map of URL to buffer
-   */
+  // Descarga varias imágenes en paralelo (de 3 en 3)
   async downloadMultiple(urls: string[]): Promise<Map<string, Buffer>> {
     const results = new Map<string, Buffer>();
 
-    // Download in parallel but limit concurrency to 3
     const chunkSize = 3;
     for (let i = 0; i < urls.length; i += chunkSize) {
       const chunk = urls.slice(i, i + chunkSize);
@@ -144,13 +122,7 @@ export class ImageDownloadService {
     return results;
   }
 
-  /**
-   * Download multiple sizes of an image and save them
-   * @param urls Object with small, medium, large URLs
-   * @param basePath Base path (e.g., /storage/metadata/artists/123/)
-   * @param prefix Filename prefix (e.g., "profile" or "cover")
-   * @returns Object with local paths
-   */
+  // Descarga y guarda las distintas tallas (small/medium/large) con el prefijo dado
   async downloadMultipleSizes(
     urls: { small?: string; medium?: string; large?: string },
     basePath: string,
@@ -166,7 +138,6 @@ export class ImageDownloadService {
       largePath: null as string | null,
     };
 
-    // Download small
     if (urls.small) {
       try {
         const path = `${basePath}/${prefix}-small.jpg`;
@@ -177,7 +148,6 @@ export class ImageDownloadService {
       }
     }
 
-    // Download medium
     if (urls.medium) {
       try {
         const path = `${basePath}/${prefix}-medium.jpg`;
@@ -188,7 +158,6 @@ export class ImageDownloadService {
       }
     }
 
-    // Download large
     if (urls.large) {
       try {
         const path = `${basePath}/${prefix}-large.jpg`;
@@ -202,14 +171,9 @@ export class ImageDownloadService {
     return result;
   }
 
-  /**
-   * Get image dimensions from a local file
-   * @param filePath Path to image file
-   * @returns Image dimensions or null if file doesn't exist/invalid
-   */
+  // Dimensiones de una imagen local (null si no existe o no es válida)
   async getImageDimensionsFromFile(filePath: string): Promise<ImageDimensions | null> {
     try {
-      // First, check if file exists
       const stats = await fs.stat(filePath);
       if (!stats.isFile()) {
         this.logger.warn(`Path is not a file: ${filePath}`);
@@ -244,17 +208,13 @@ export class ImageDownloadService {
     }
   }
 
-  /**
-   * Get image dimensions from a URL
-   * @param url Image URL
-   * @returns Image dimensions or null if failed
-   */
+  // Dimensiones de una imagen por URL (null si falla)
   async getImageDimensionsFromUrl(url: string): Promise<ImageDimensions | null> {
     try {
       this.logger.debug(`Probing image dimensions from: ${url}`);
 
       const result = await probe(url, {
-        timeout: 20000, // 20 second timeout (increased for slow servers)
+        timeout: 20000, // 20 s (subido por servidores lentos)
         headers: {
           'User-Agent': 'Echo-Music-Server/1.0.0',
           Accept: 'image/*',
@@ -275,8 +235,7 @@ export class ImageDownloadService {
         `Direct probe failed: ${(error as Error).message} - trying buffer probe fallback...`
       );
 
-      // Fallback 1: Download first ~50KB and probe the buffer
-      // This works better for URLs with redirects or special handling
+      // Fallback 1: descarga ~50KB y analiza el buffer (mejor con redirecciones)
       try {
         this.logger.debug(`Fetching partial content from: ${url.substring(0, 80)}...`);
 
@@ -297,7 +256,7 @@ export class ImageDownloadService {
           throw new ExternalApiError('ImageDownload', response.status, response.statusText);
         }
 
-        // Read first 50KB (enough for dimension detection)
+        // Primeros 50KB (bastan para detectar dimensiones)
         const reader = response.body?.getReader();
         if (!reader) {
           throw new ImageProcessingError('DOWNLOAD_FAILED', 'No response body');
@@ -316,17 +275,14 @@ export class ImageDownloadService {
           }
         }
 
-        // Cancel the rest of the download
+        // Cancela el resto de la descarga
         reader.cancel();
 
-        // Combine chunks into single buffer
         const buffer = Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)));
 
-        // Create a stream from the buffer
         const { Readable } = await import('stream');
         const bufferStream = Readable.from(buffer);
 
-        // Probe the buffer stream
         const result = await probe(bufferStream);
 
         this.logger.info(
@@ -341,7 +297,7 @@ export class ImageDownloadService {
       } catch (bufferError) {
         this.logger.error(`Buffer probe also failed: ${(bufferError as Error).message}`);
 
-        // Fallback 2: make a HEAD request to at least confirm the image exists
+        // Fallback 2: un HEAD para al menos confirmar que la imagen existe
         try {
           const response = await fetch(url, {
             method: 'HEAD',
@@ -365,25 +321,12 @@ export class ImageDownloadService {
     }
   }
 
-  /**
-   * Check if an image should be considered "high quality"
-   * Based on minimum resolution threshold
-   * @param dimensions Image dimensions
-   * @param minWidth Minimum width (default 1000px)
-   * @param minHeight Minimum height (default 1000px)
-   * @returns true if high quality
-   */
+  // "Alta calidad" = supera la resolución mínima (por defecto 1000x1000)
   isHighQuality(dimensions: ImageDimensions, minWidth = 1000, minHeight = 1000): boolean {
     return dimensions.width >= minWidth && dimensions.height >= minHeight;
   }
 
-  /**
-   * Compare two images and determine if the new one is significantly better
-   * @param currentDimensions Current image dimensions
-   * @param newDimensions New image dimensions
-   * @param improvementThreshold Minimum improvement percentage (default 50%)
-   * @returns true if new image is significantly better
-   */
+  // ¿La imagen nueva es bastante mejor? (por defecto, 50% más píxeles)
   isSignificantImprovement(
     currentDimensions: ImageDimensions,
     newDimensions: ImageDimensions,
@@ -394,23 +337,16 @@ export class ImageDownloadService {
     const currentPixels = currentDimensions.width * currentDimensions.height;
     const newPixels = newDimensions.width * newDimensions.height;
 
-    // New image has 50% more pixels
     const improvement = (newPixels - currentPixels) / currentPixels;
     return improvement >= improvementThreshold;
   }
 
-  /**
-   * Validate if a buffer contains a valid image
-   * Checks magic bytes for common image formats
-   * @param buffer Buffer to validate
-   * @returns true if valid image
-   */
+  // Valida que el buffer sea una imagen por sus magic bytes
   private isValidImageBuffer(buffer: Buffer): boolean {
     if (!buffer || buffer.length < 4) {
       return false;
     }
 
-    // Check magic bytes for common image formats
     // JPEG: FF D8 FF
     if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
       return true;
@@ -442,11 +378,7 @@ export class ImageDownloadService {
     return false;
   }
 
-  /**
-   * Get image format from buffer
-   * @param buffer Image buffer
-   * @returns Format string (jpg, png, gif, webp) or null
-   */
+  // Formato de la imagen según sus magic bytes (jpg/png/gif/webp) o null
   getImageFormat(buffer: Buffer): string | null {
     if (!buffer || buffer.length < 4) {
       return null;
