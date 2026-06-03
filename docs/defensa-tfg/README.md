@@ -4,10 +4,11 @@ Carpeta con el material de apoyo para la exposición oral del proyecto.
 
 ## Contenido
 
-| Archivo                                          | Qué es                                                                 |
-| ------------------------------------------------ | ---------------------------------------------------------------------- |
-| [`documento-defensa.md`](./documento-defensa.md) | Guion técnico completo: arquitectura, decisiones, código comentado y **anexo de preguntas del tribunal con respuestas**. |
-| [`presentacion.html`](./presentacion.html)       | Presentación de diapositivas (reveal.js), lista para proyectar.        |
+| Archivo                                                  | Qué es                                                                 |
+| -------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [`documento-defensa.md`](./documento-defensa.md)         | Guion técnico completo: arquitectura, decisiones, código comentado y **anexo de preguntas del tribunal con respuestas**. |
+| [`explicaciones-tecnicas.md`](./explicaciones-tecnicas.md) | Explicaciones profundas estilo **"cómo lo conseguí"** con código real (shuffle, federación) + plantilla para explicar cualquier funcionalidad. |
+| [`presentacion.html`](./presentacion.html)               | Presentación de diapositivas (reveal.js), lista para proyectar.        |
 
 ## Cómo usar la presentación
 
