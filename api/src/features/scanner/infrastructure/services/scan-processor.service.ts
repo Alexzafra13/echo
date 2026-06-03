@@ -18,17 +18,14 @@ import { RedisService } from '@infrastructure/cache/redis.service';
 import { ScannerError } from '@shared/errors';
 import * as path from 'path';
 
-// Setting key for music library path
 const LIBRARY_PATH_KEY = 'library.music.path';
 
-/** Options for enqueueing a scan job */
 interface EnqueueScanOptions {
   path?: string;
   recursive?: boolean;
   pruneDeleted?: boolean;
 }
 
-/** Data passed to full scan job processor */
 interface ScanJobData {
   scanId: string;
   path: string;
@@ -36,22 +33,20 @@ interface ScanJobData {
   pruneDeleted: boolean;
 }
 
-/** Data passed to incremental scan job processor */
 interface IncrementalScanJobData {
   files: string[];
   source: string;
   timestamp: string;
 }
 
-/** Signal to control a running scan */
 type ScanSignal = 'pause' | 'cancel';
 
 @Injectable()
 export class ScanProcessorService implements OnModuleInit {
   private readonly QUEUE_NAME = 'library-scan';
-  /** Active scan control signals - checked each iteration of the file loop */
+  // Señal activa por scan; se consulta en cada vuelta del bucle de archivos
   private readonly scanSignals = new Map<string, ScanSignal>();
-  /** Resolve function to wake up a paused scan */
+  // Se resuelve para despertar un scan en pausa
   private readonly pauseResolvers = new Map<string, () => void>();
 
   constructor(
@@ -90,9 +85,6 @@ export class ScanProcessorService implements OnModuleInit {
     });
   }
 
-  /**
-   * Get music library path from settings
-   */
   private async getMusicLibraryPath(): Promise<string> {
     return this.settingsService.getString(
       LIBRARY_PATH_KEY,
@@ -100,9 +92,7 @@ export class ScanProcessorService implements OnModuleInit {
     );
   }
 
-  /**
-   * Pause a running scan. The file loop will stop at the next iteration.
-   */
+  // El bucle de archivos se detiene en la siguiente vuelta
   async pauseScan(scanId: string): Promise<boolean> {
     const scan = await this.scannerRepository.findById(scanId);
     if (!scan || scan.status !== 'running') return false;
@@ -112,16 +102,13 @@ export class ScanProcessorService implements OnModuleInit {
     return true;
   }
 
-  /**
-   * Cancel a running or paused scan.
-   */
   async cancelScan(scanId: string, reason?: string): Promise<boolean> {
     const scan = await this.scannerRepository.findById(scanId);
     if (!scan || (scan.status !== 'running' && scan.status !== 'paused')) return false;
 
     this.scanSignals.set(scanId, 'cancel');
 
-    // If paused, wake up the loop so it can exit
+    // Si está en pausa, despierta el bucle para que pueda salir
     const resolver = this.pauseResolvers.get(scanId);
     if (resolver) {
       resolver();
@@ -134,16 +121,12 @@ export class ScanProcessorService implements OnModuleInit {
     return true;
   }
 
-  /**
-   * Resume a paused scan.
-   */
   async resumeScan(scanId: string): Promise<boolean> {
     const scan = await this.scannerRepository.findById(scanId);
     if (!scan || scan.status !== 'paused') return false;
 
     this.scanSignals.delete(scanId);
 
-    // Wake up the paused loop
     const resolver = this.pauseResolvers.get(scanId);
     if (resolver) {
       resolver();
@@ -155,20 +138,17 @@ export class ScanProcessorService implements OnModuleInit {
     return true;
   }
 
-  /**
-   * Check signal and handle pause/cancel. Returns true if scan should stop.
-   */
+  // Atiende la pausa/cancelación. Devuelve true si el scan debe parar
   private async checkSignal(scanId: string, tracker: ScanProgressTracker): Promise<boolean> {
     const signal = this.scanSignals.get(scanId);
     if (!signal) return false;
 
     if (signal === 'cancel') {
       this.scanSignals.delete(scanId);
-      return true; // Caller will handle cancelled state
+      return true; // el llamador gestiona el estado cancelado
     }
 
     if (signal === 'pause') {
-      // Update DB status to paused
       await this.scannerRepository.update(scanId, { status: 'paused' });
       this.emitProgress(scanId, tracker, ScanStatus.PAUSED, 'Scan en pausa');
 
@@ -176,19 +156,18 @@ export class ScanProcessorService implements OnModuleInit {
         `Scan ${scanId} pausado en archivo ${tracker.filesScanned}/${tracker.totalFiles}`
       );
 
-      // Wait until resumed or cancelled
+      // Espera hasta que se reanude o se cancele
       await new Promise<void>((resolve) => {
         this.pauseResolvers.set(scanId, resolve);
       });
 
-      // After waking up, check if we were cancelled while paused
+      // Al despertar, comprueba si se canceló durante la pausa
       const newSignal = this.scanSignals.get(scanId);
       if (newSignal === 'cancel') {
         this.scanSignals.delete(scanId);
         return true;
       }
 
-      // Resumed
       this.emitProgress(scanId, tracker, ScanStatus.SCANNING, 'Scan reanudado');
       return false;
     }
@@ -196,9 +175,6 @@ export class ScanProcessorService implements OnModuleInit {
     return false;
   }
 
-  /**
-   * Queue a new scan job
-   */
   async enqueueScan(scanId: string, options?: EnqueueScanOptions): Promise<void> {
     // Lock distribuido para prevenir scans concurrentes (race condition safe)
     const lockKey = 'scan:lock';
@@ -234,9 +210,6 @@ export class ScanProcessorService implements OnModuleInit {
     }
   }
 
-  /**
-   * Process a full library scan
-   */
   private async processScanning(data: ScanJobData): Promise<void> {
     const { scanId, path: scanPath, recursive, pruneDeleted } = data;
     const startTime = Date.now();
@@ -251,10 +224,9 @@ export class ScanProcessorService implements OnModuleInit {
     });
 
     try {
-      // Update status to running
       await this.scannerRepository.update(scanId, { status: 'running' });
 
-      // Get last scan timestamp for incremental scanning
+      // Timestamp del último scan, para procesar solo lo modificado (modo incremental)
       const lastScanTime = await this.getLastScanTime();
       if (lastScanTime) {
         this.logger.info(
@@ -264,10 +236,8 @@ export class ScanProcessorService implements OnModuleInit {
         this.logger.info(`Scan completo: primera vez o sin scans previos`);
       }
 
-      // Emit: scan started
       this.emitProgress(scanId, tracker, ScanStatus.SCANNING, 'Buscando archivos...');
 
-      // Scan directory
       const files = await this.fileScanner.scanDirectory(scanPath, recursive);
       tracker.totalFiles = files.length;
       this.logger.info(`Encontrados ${files.length} archivos de música`);
@@ -279,14 +249,12 @@ export class ScanProcessorService implements OnModuleInit {
         `Encontrados ${files.length} archivos`
       );
 
-      // Process each file
       let tracksAdded = 0;
       let tracksUpdated = 0;
       let tracksDeleted = 0;
       let wasCancelled = false;
 
       for (const filePath of files) {
-        // Check for pause/cancel signals
         const shouldStop = await this.checkSignal(scanId, tracker);
         if (shouldStop) {
           wasCancelled = true;
@@ -304,7 +272,7 @@ export class ScanProcessorService implements OnModuleInit {
 
           tracker.filesScanned++;
 
-          // Emit progress every 10 files
+          // Progreso cada 10 archivos
           if (tracker.filesScanned % 10 === 0 || tracker.filesScanned === tracker.totalFiles) {
             this.emitProgress(
               scanId,
@@ -325,7 +293,6 @@ export class ScanProcessorService implements OnModuleInit {
         }
       }
 
-      // Handle cancellation
       if (wasCancelled) {
         await this.redis.releaseLock('scan:lock', scanId);
         await this.scannerRepository.update(scanId, {
@@ -351,7 +318,7 @@ export class ScanProcessorService implements OnModuleInit {
           message: 'Scan cancelado',
         });
 
-        // Clean up signals and caches
+        // Limpia señales y cachés
         this.scanSignals.delete(scanId);
         this.pauseResolvers.delete(scanId);
         this.trackProcessing.clearEntityCache();
@@ -373,7 +340,6 @@ export class ScanProcessorService implements OnModuleInit {
         return;
       }
 
-      // Prune deleted tracks
       if (pruneDeleted) {
         this.emitProgress(scanId, tracker, ScanStatus.SCANNING, 'Eliminando archivos borrados...');
         tracksDeleted = await this.libraryCleanup.pruneDeletedTracks(files);
@@ -381,10 +347,8 @@ export class ScanProcessorService implements OnModuleInit {
 
       this.logger.info(`Álbumes y artistas ya procesados durante el escaneo`);
 
-      // Scan for music videos
       await this.scanVideos(scanPath, recursive, tracker);
 
-      // Update scan as completed
       await this.scannerRepository.update(scanId, {
         status: 'completed',
         finishedAt: new Date(),
@@ -398,14 +362,11 @@ export class ScanProcessorService implements OnModuleInit {
 
       const duration = Date.now() - startTime;
 
-      // Clear in-memory entity cache
       this.trackProcessing.clearEntityCache();
 
-      // Invalidate cache
       await this.cachedAlbumRepository.invalidateListCaches();
       await this.cachedGenreRepository.invalidate();
 
-      // Post-scan tasks
       await this.postScanTasks.runAll();
 
       await this.logService.info(LogCategory.SCANNER, `Scan completado exitosamente: ${scanId}`, {
@@ -427,7 +388,6 @@ export class ScanProcessorService implements OnModuleInit {
         }),
       });
 
-      // Emit: completed (real-time WebSocket)
       this.scannerGateway.emitCompleted({
         scanId,
         totalFiles: tracker.totalFiles,
@@ -442,7 +402,7 @@ export class ScanProcessorService implements OnModuleInit {
         timestamp: new Date().toISOString(),
       });
 
-      // Persistent notification for all users
+      // Notificación persistente para todos los usuarios
       const summary = `${tracker.tracksCreated} tracks añadidos, ${tracker.albumsCreated} álbumes, ${tracker.artistsCreated} artistas${tracker.videosFound > 0 ? `, ${tracker.videosFound} videoclips` : ''}`;
       this.notificationsService
         .notifyAll(
@@ -497,16 +457,10 @@ export class ScanProcessorService implements OnModuleInit {
     }
   }
 
-  /**
-   * Get last completed scan timestamp
-   */
   private async getLastScanTime(): Promise<Date | null> {
     return this.scannerRepository.getLastCompletedScanTime();
   }
 
-  /**
-   * Emit scan progress via WebSocket
-   */
   private emitProgress(
     scanId: string,
     tracker: ScanProgressTracker,
@@ -531,9 +485,6 @@ export class ScanProcessorService implements OnModuleInit {
     });
   }
 
-  /**
-   * Process incremental scan from file watcher
-   */
   private async processIncrementalScan(data: IncrementalScanJobData): Promise<void> {
     const { files, source, timestamp } = data;
     const scanId = generateUuid();
@@ -595,17 +546,13 @@ export class ScanProcessorService implements OnModuleInit {
         }
       }
 
-      // Clear in-memory entity cache
       this.trackProcessing.clearEntityCache();
 
-      // Invalidate cache
       await this.cachedAlbumRepository.invalidateListCaches();
       await this.cachedGenreRepository.invalidate();
 
-      // Post-scan tasks
       await this.postScanTasks.runAll();
 
-      // Emit: completed
       this.scannerGateway.emitCompleted({
         scanId,
         totalFiles: tracker.totalFiles,
@@ -643,9 +590,7 @@ export class ScanProcessorService implements OnModuleInit {
     }
   }
 
-  /**
-   * Scan for music video files and match them to existing tracks
-   */
+  // Busca los videoclips y los asocia a tracks ya existentes
   private async scanVideos(
     scanPath: string,
     recursive: boolean,
@@ -654,7 +599,7 @@ export class ScanProcessorService implements OnModuleInit {
     try {
       const videoFiles = await this.fileScanner.scanDirectoryForVideos(scanPath, recursive);
 
-      // Process video files (add new, update existing without thumbnails)
+      // Añade los vídeos nuevos y actualiza los que no tienen miniatura
       if (videoFiles.length > 0) {
         this.logger.info(`Found ${videoFiles.length} video files, processing...`);
 
@@ -664,7 +609,7 @@ export class ScanProcessorService implements OnModuleInit {
         }
       }
 
-      // Mark missing video files (same pattern as audio track pruning)
+      // Marca como ausentes los vídeos que ya no están
       const videosMissing = await this.videoProcessing.pruneDeletedVideos();
       if (videosMissing > 0) {
         this.logger.info(`${videosMissing} video files marked as missing`);

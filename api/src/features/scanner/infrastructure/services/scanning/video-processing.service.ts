@@ -34,18 +34,18 @@ export class VideoProcessingService {
 
   async processVideoFile(filePath: string): Promise<'added' | 'updated' | 'skipped'> {
     try {
-      // Check if already indexed
+      // ¿Ya está indexado?
       const existing = await this.videoRepository.findByPath(filePath);
       if (existing) {
         let updated = false;
 
-        // Recover if was marked as missing
+        // Recupera el vídeo si estaba marcado como desaparecido
         if (existing.missingAt) {
           await this.videoRepository.update(existing.id, { missingAt: null });
           updated = true;
         }
 
-        // Re-attempt matching if not yet linked to a track
+        // Reintenta asociarlo a un track si aún no lo está
         if (!existing.trackId) {
           const metadata = await this.extractVideoMetadata(filePath);
           const match = await this.matchVideoToTrack(filePath, metadata.title, metadata.artist);
@@ -59,7 +59,7 @@ export class VideoProcessingService {
           }
         }
 
-        // Generate thumbnail if missing
+        // Genera la miniatura si falta
         if (!existing.thumbnailPath) {
           const thumbnailPath = await this.generateThumbnail(existing.id, filePath);
           if (thumbnailPath) {
@@ -71,11 +71,10 @@ export class VideoProcessingService {
         return updated ? 'updated' : 'skipped';
       }
 
-      // Extract metadata with ffprobe
       const metadata = await this.extractVideoMetadata(filePath);
       const suffix = path.extname(filePath).toLowerCase().replace('.', '');
 
-      // Try to match to an audio track
+      // Intenta asociarlo a un track de audio
       const match = await this.matchVideoToTrack(filePath, metadata.title, metadata.artist);
 
       const video = await this.videoRepository.create({
@@ -95,7 +94,7 @@ export class VideoProcessingService {
         missingAt: null,
       });
 
-      // Generate thumbnail from video frame
+      // Miniatura a partir de un fotograma
       const thumbnailPath = await this.generateThumbnail(video.id, filePath);
       if (thumbnailPath) {
         await this.videoRepository.update(video.id, { thumbnailPath });
@@ -168,11 +167,7 @@ export class VideoProcessingService {
     }
   }
 
-  /**
-   * Mark videos as missing if their files no longer exist on disk.
-   * Similar to LibraryCleanupService.pruneDeletedTracks() for audio tracks.
-   * Processes checks in batches for better performance on large libraries.
-   */
+  // Marca como desaparecidos los vídeos cuyo archivo ya no existe (en lotes)
   async pruneDeletedVideos(): Promise<number> {
     const allVideos = await this.videoRepository.getAllPaths();
     let marked = 0;
@@ -217,16 +212,16 @@ export class VideoProcessingService {
         ffmpeg,
         [
           '-ss',
-          '2', // Seek to 2 seconds
+          '2', // salta a los 2 s
           '-i',
           videoPath,
           '-frames:v',
-          '1', // Extract 1 frame
+          '1', // 1 fotograma
           '-q:v',
-          '5', // JPEG quality (2-31, lower = better)
+          '5', // calidad JPEG (2-31, menor = mejor)
           '-vf',
-          'scale=480:-2', // Scale to 480px wide, keep aspect ratio
-          '-y', // Overwrite
+          'scale=480:-2', // 480px de ancho, mantiene proporción
+          '-y', // sobrescribe
           outputPath,
         ],
         { timeout: 15000 }
@@ -248,13 +243,13 @@ export class VideoProcessingService {
     const parentDirectory = path.dirname(directory);
     const baseName = path.basename(videoPath, path.extname(videoPath));
 
-    // Strategy 1: Same directory, same base filename
+    // 1) Mismo directorio, mismo nombre base
     const filenameMatch = await this.videoRepository.findTrackByBaseName(directory, baseName);
     if (filenameMatch) {
       return { trackId: filenameMatch.id, method: 'filename' };
     }
 
-    // Strategy 2: Parent directory, same base filename (for videos/ subdirectory pattern)
+    // 2) Directorio padre, mismo nombre base (patrón carpeta videos/)
     if (parentDirectory !== directory) {
       const parentMatch = await this.videoRepository.findTrackByBaseName(parentDirectory, baseName);
       if (parentMatch) {
@@ -262,7 +257,7 @@ export class VideoProcessingService {
       }
     }
 
-    // Strategy 3: Extract track name from "Artist - Title" filename pattern
+    // 3) Nombre tipo "Artista - Título"
     const dashParts = baseName.split(' - ');
     if (dashParts.length >= 2) {
       const possibleTitle = dashParts.slice(1).join(' - ').trim();
@@ -278,7 +273,7 @@ export class VideoProcessingService {
       }
     }
 
-    // Strategy 4: Match by title + artist from video metadata tags
+    // 4) Por título + artista de los tags del vídeo
     if (videoTitle && videoArtist) {
       const metadataMatch = await this.videoRepository.findTrackByTitleArtist(
         videoTitle,

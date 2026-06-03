@@ -20,10 +20,7 @@ export interface AlbumResult {
   coverExtracted: boolean;
 }
 
-/**
- * Service for creating and finding artists and albums
- * Implements atomic find-or-create pattern with PID-based identification
- */
+// Busca o crea artistas y álbumes (find-or-create), identificándolos por PID
 @Injectable()
 export class EntityCreationService {
   // Cache in-memory para evitar queries repetidas durante el scan.
@@ -39,30 +36,23 @@ export class EntityCreationService {
     private readonly logger: PinoLogger
   ) {}
 
-  /**
-   * Limpia el cache in-memory. Llamar al finalizar un scan.
-   */
+  // Vacía la caché en memoria. Llamar al finalizar un scan.
   clearCache(): void {
     this.artistCache.clear();
     this.albumCache.clear();
   }
 
-  /**
-   * Find or create an artist atomically
-   *
-   * Uses normalized name (without accents) to prevent duplicates like
-   * "Dani Fernández" and "Dani Fernandez" being treated as different artists.
-   */
+  // Usa el nombre normalizado (sin acentos) para no tratar
+  // "Dani Fernández" y "Dani Fernandez" como artistas distintos
   async findOrCreateArtist(artistName: string, mbzArtistId?: string): Promise<ArtistResult> {
     const normalizedName = (artistName || 'Unknown Artist').trim();
     const orderName = normalizeForSorting(normalizedName);
 
-    // Check cache first (key = normalized name)
+    // Caché primero (clave = nombre normalizado)
     const cacheKey = orderName;
     const cached = this.artistCache.get(cacheKey);
     if (cached) return cached;
 
-    // Search by normalized name (without accents)
     const existingArtist = await this.drizzle.db
       .select({ id: artists.id, name: artists.name, mbzArtistId: artists.mbzArtistId })
       .from(artists)
@@ -70,7 +60,7 @@ export class EntityCreationService {
       .limit(1);
 
     if (existingArtist[0]) {
-      // Update MBID if provided and artist doesn't have one
+      // Completa el MBID si llega y el artista aún no lo tiene
       if (mbzArtistId && !existingArtist[0].mbzArtistId) {
         await this.drizzle.db
           .update(artists)
@@ -87,7 +77,6 @@ export class EntityCreationService {
       return result;
     }
 
-    // Create new artist
     const newArtist = await this.drizzle.db
       .insert(artists)
       .values({
@@ -106,13 +95,8 @@ export class EntityCreationService {
   }
 
   /**
-   * Find or create an album atomically
-   *
-   * Uses PID (Persistent ID) for stable identification:
-   * - MusicBrainz Album ID if available (most reliable)
-   * - Otherwise, hash of artistId + normalized name + year
-   *
-   * Falls back to orderAlbumName + artistId for legacy albums without PID.
+   * Identifica el álbum por un PID estable: el MBID si existe, o un hash de
+   * artistId + nombre + año. Para álbumes antiguos sin PID cae a nombre + artista.
    */
   async findOrCreateAlbum(
     albumName: string,
@@ -128,12 +112,10 @@ export class EntityCreationService {
     const normalizedName = (albumName || 'Unknown Album').trim();
     const orderName = normalizeForSorting(normalizedName);
 
-    // Generate PID for this album
     const pid = generateAlbumPid(metadata.mbzAlbumId, artistId, normalizedName, metadata.year);
 
-    // Check album cache (key = PID)
-    // Si el album está cacheado CON cover, devolver directo.
-    // Si no tiene cover, intentar extraerlo de este track antes de devolver.
+    // Si el álbum está cacheado con cover, se devuelve directo;
+    // si no tiene cover, se intenta extraer de este track antes de devolver.
     const cachedAlbum = this.albumCache.get(pid);
     if (cachedAlbum) {
       if (cachedAlbum.coverExtracted) return cachedAlbum;
@@ -151,7 +133,7 @@ export class EntityCreationService {
       return cachedAlbum;
     }
 
-    // Strategy 1: Search by PID (most reliable, handles metadata changes)
+    // 1) Por PID (lo más fiable, aguanta cambios de metadatos)
     let existingAlbum = await this.drizzle.db
       .select({
         id: albums.id,
@@ -166,7 +148,7 @@ export class EntityCreationService {
       .where(eq(albums.pid, pid))
       .limit(1);
 
-    // Strategy 2: Fallback to orderAlbumName + artistId (for legacy or different PID)
+    // 2) Fallback: por nombre + artista (álbumes antiguos o con otro PID)
     if (!existingAlbum[0]) {
       existingAlbum = await this.drizzle.db
         .select({
@@ -198,11 +180,11 @@ export class EntityCreationService {
           `coverArtPath: ${existingAlbum[0].coverArtPath === null ? 'NULL' : `"${existingAlbum[0].coverArtPath}"`}`
       );
 
-      // Update MBID and PID if provided and album doesn't have one
+      // Completa MBID y PID si llegan y el álbum no los tiene
       if (metadata.mbzAlbumId && !existingAlbum[0].mbzAlbumId) {
         updates.mbzAlbumId = metadata.mbzAlbumId;
         updates.mbzAlbumArtistId = metadata.mbzAlbumArtistId || null;
-        // Regenerate PID with MusicBrainz ID (more stable)
+        // Regenera el PID con el MBID (más estable)
         updates.pid = generateAlbumPid(
           metadata.mbzAlbumId,
           artistId,
@@ -214,12 +196,12 @@ export class EntityCreationService {
         );
       }
 
-      // Set PID for legacy albums that don't have one
+      // Pone PID a los álbumes antiguos que no tienen
       if (!existingAlbum[0].pid) {
         updates.pid = pid;
       }
 
-      // Extract cover if missing
+      // Extrae la portada si falta
       if (!existingAlbum[0].coverArtPath) {
         this.logger.debug(
           `Attempting to extract cover for existing album "${existingAlbum[0].name}" from: ${trackPath}`
@@ -245,7 +227,6 @@ export class EntityCreationService {
         }
       }
 
-      // Apply updates if any
       if (Object.keys(updates).length > 0) {
         updates.updatedAt = new Date();
         await this.drizzle.db.update(albums).set(updates).where(eq(albums.id, existingAlbum[0].id));
@@ -262,7 +243,6 @@ export class EntityCreationService {
       return result;
     }
 
-    // Create new album
     const albumId = generateUuid();
 
     const coverPath = await this.coverArtService.extractAndCacheCover(albumId, trackPath);

@@ -1,9 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsBoolean, IsString } from 'class-validator';
 
-/**
- * StartScanRequestDto - DTO para solicitud de inicio de escaneo
- */
 export class StartScanRequestDto {
   @ApiProperty({
     description: 'Ruta del directorio a escanear',
@@ -33,9 +30,6 @@ export class StartScanRequestDto {
   pruneDeleted?: boolean;
 }
 
-/**
- * StartScanResponseDto - DTO para respuesta de inicio de escaneo
- */
 export class StartScanResponseDto {
   @ApiProperty({ description: 'ID del escaneo' })
   id!: string;

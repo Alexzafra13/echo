@@ -7,10 +7,10 @@ import { FileScannerService } from '../file-scanner.service';
 import { SettingsService } from '@infrastructure/settings';
 
 /**
- * Purge mode for missing files:
- * - 'never': Only mark as missing, never delete (preserves ratings, playlists, etc.)
- * - 'always': Delete immediately when file disappears
- * - 'after_days:N': Delete after N days of being missing
+ * Política de purga de archivos desaparecidos:
+ * - 'never': solo los marca, nunca borra (conserva ratings, playlists, etc.)
+ * - 'always': borra en cuanto el archivo desaparece
+ * - 'after_days:N': borra tras N días desaparecido
  */
 export type PurgeMode = 'never' | 'always' | `after_days:${number}`;
 
@@ -26,11 +26,9 @@ export interface TrackMissingResult {
 }
 
 /**
- * Service for cleaning up orphaned library records
- * Supports "missing files" pattern like Navidrome:
- * - Mark files as missing instead of deleting immediately
- * - Preserve ratings, play counts, playlist references
- * - Configurable purge policy (never, always, after N days)
+ * Limpia registros huérfanos de la biblioteca con el patrón "archivos desaparecidos"
+ * (estilo Navidrome): marca en vez de borrar, conserva ratings/reproducciones/playlists
+ * y purga según la política configurada.
  */
 @Injectable()
 export class LibraryCleanupService {
@@ -42,20 +40,12 @@ export class LibraryCleanupService {
     private readonly logger: PinoLogger
   ) {}
 
-  /**
-   * Get the current purge mode from settings
-   */
   async getPurgeMode(): Promise<PurgeMode> {
     const mode = await this.settingsService.getString('library.purgeMissing', 'never');
     return mode as PurgeMode;
   }
 
-  /**
-   * Handle a missing file - either mark as missing or delete based on purge mode
-   *
-   * @param filePath - Path to the missing file
-   * @returns Information about what action was taken
-   */
+  // Marca el archivo como desaparecido o lo borra, según la política de purga
   async handleMissingFile(filePath: string): Promise<TrackMissingResult> {
     const result: TrackMissingResult = {
       trackMarkedMissing: false,
@@ -65,7 +55,6 @@ export class LibraryCleanupService {
     };
 
     try {
-      // Find the track by path
       const track = await this.drizzle.db
         .select({
           id: tracks.id,
@@ -82,7 +71,7 @@ export class LibraryCleanupService {
         return result;
       }
 
-      // Already marked as missing
+      // Ya estaba marcado como desaparecido
       if (track[0].missingAt) {
         this.logger.debug(`Track already marked as missing: ${filePath}`);
         return result;
@@ -95,11 +84,10 @@ export class LibraryCleanupService {
       const purgeMode = await this.getPurgeMode();
 
       if (purgeMode === 'always') {
-        // Delete immediately
         return this.deleteTrackById(track[0].id, track[0].albumId);
       }
 
-      // Mark as missing (for 'never' or 'after_days:N')
+      // Para 'never' o 'after_days:N': solo se marca
       await this.drizzle.db
         .update(tracks)
         .set({ missingAt: new Date(), updatedAt: new Date() })
@@ -115,9 +103,7 @@ export class LibraryCleanupService {
     }
   }
 
-  /**
-   * Mark a track as no longer missing (file reappeared)
-   */
+  // El archivo reapareció: deja de estar marcado como desaparecido
   async unmarkMissing(filePath: string): Promise<boolean> {
     try {
       const updated = await this.drizzle.db
@@ -186,9 +172,7 @@ export class LibraryCleanupService {
     }
   }
 
-  /**
-   * Delete a track by ID and cleanup orphans
-   */
+  // Borra el track y, si se quedan vacíos, también su álbum y su artista
   private async deleteTrackById(
     trackId: string,
     albumId: string | null
@@ -200,7 +184,7 @@ export class LibraryCleanupService {
       artistDeleted: false,
     };
 
-    // Get track info before deleting
+    // Guarda los datos del track antes de borrarlo
     const track = await this.drizzle.db
       .select({ title: tracks.title })
       .from(tracks)
@@ -211,12 +195,11 @@ export class LibraryCleanupService {
     result.trackTitle = track[0]?.title;
     result.albumId = albumId ?? undefined;
 
-    // Delete the track
     await this.drizzle.db.delete(tracks).where(eq(tracks.id, trackId));
     result.trackDeleted = true;
     this.logger.info(` Track eliminado: "${track[0]?.title}"`);
 
-    // Check if album is now orphaned
+    // ¿El álbum se ha quedado sin tracks?
     if (albumId) {
       const albumTracks = await this.drizzle.db
         .select({ id: tracks.id })
@@ -225,7 +208,6 @@ export class LibraryCleanupService {
         .limit(1);
 
       if (albumTracks.length === 0) {
-        // Get artist ID before deleting album
         const album = await this.drizzle.db
           .select({ artistId: albums.artistId })
           .from(albums)
@@ -234,12 +216,11 @@ export class LibraryCleanupService {
 
         result.artistId = album[0]?.artistId ?? undefined;
 
-        // Delete orphaned album
         await this.drizzle.db.delete(albums).where(eq(albums.id, albumId));
         result.albumDeleted = true;
         this.logger.info(` Álbum huérfano eliminado (ID: ${albumId})`);
 
-        // Check if artist is now orphaned
+        // ¿El artista se ha quedado sin álbumes?
         if (result.artistId) {
           const artistAlbums = await this.drizzle.db
             .select({ id: albums.id })
@@ -259,10 +240,7 @@ export class LibraryCleanupService {
     return result;
   }
 
-  /**
-   * Purge tracks that have been missing for longer than the configured period
-   * Called periodically or during full scan
-   */
+  // Borra los tracks que llevan desaparecidos más del periodo configurado
   async purgeOldMissingTracks(): Promise<number> {
     const purgeMode = await this.getPurgeMode();
 
@@ -271,11 +249,10 @@ export class LibraryCleanupService {
     }
 
     if (purgeMode === 'always') {
-      // All missing tracks should be deleted
       return this.deleteAllMissingTracks();
     }
 
-    // Parse 'after_days:N' format
+    // Formato 'after_days:N'
     const match = purgeMode.match(/^after_days:(\d+)$/);
     if (!match) {
       this.logger.warn(`Invalid purge mode: ${purgeMode}`);
@@ -286,7 +263,7 @@ export class LibraryCleanupService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    // Find tracks missing for longer than cutoff
+    // Tracks desaparecidos antes de la fecha de corte
     const oldMissingTracks = await this.drizzle.db
       .select({ id: tracks.id, albumId: tracks.albumId })
       .from(tracks)
@@ -309,9 +286,6 @@ export class LibraryCleanupService {
     return deletedCount;
   }
 
-  /**
-   * Delete all tracks marked as missing
-   */
   private async deleteAllMissingTracks(): Promise<number> {
     const missingTracks = await this.drizzle.db
       .select({ id: tracks.id })
@@ -335,9 +309,7 @@ export class LibraryCleanupService {
     return missingTracks.length;
   }
 
-  /**
-   * Get list of all missing tracks (for admin page)
-   */
+  // Lista de tracks desaparecidos (para el panel de admin)
   async getMissingTracks(): Promise<
     Array<{
       id: string;
@@ -362,9 +334,6 @@ export class LibraryCleanupService {
       .orderBy(tracks.missingAt);
   }
 
-  /**
-   * Get count of missing tracks
-   */
   async getMissingTracksCount(): Promise<number> {
     const result = await this.drizzle.db
       .select({ count: sql<number>`count(*)` })
@@ -373,12 +342,8 @@ export class LibraryCleanupService {
     return Number(result[0]?.count ?? 0);
   }
 
-  /**
-   * Delete a specific missing track by ID
-   * Used by admin panel to manually delete individual tracks
-   */
+  // Borrado manual de un desaparecido concreto desde el panel de admin
   async deleteMissingTrackById(trackId: string): Promise<TrackMissingResult> {
-    // Get track info
     const track = await this.drizzle.db
       .select({ id: tracks.id, albumId: tracks.albumId, missingAt: tracks.missingAt })
       .from(tracks)
@@ -395,7 +360,7 @@ export class LibraryCleanupService {
       };
     }
 
-    // Only allow deletion of tracks marked as missing
+    // Solo se pueden borrar tracks marcados como desaparecidos
     if (!track[0].missingAt) {
       this.logger.warn(`Track ${trackId} is not marked as missing, cannot delete`);
       return {
@@ -409,13 +374,7 @@ export class LibraryCleanupService {
     return this.deleteTrackById(track[0].id, track[0].albumId);
   }
 
-  /**
-   * Remove tracks from DB that no longer exist in the filesystem
-   * Also cleans up orphaned albums and artists
-   *
-   * @param existingFiles - List of files that currently exist
-   * @returns Number of tracks deleted
-   */
+  // Borra de la BD los tracks que ya no existen en disco y limpia álbumes/artistas huérfanos
   async pruneDeletedTracks(existingFiles: string[]): Promise<number> {
     try {
       const existingFilesSet = new Set(existingFiles);
@@ -472,9 +431,6 @@ export class LibraryCleanupService {
     }
   }
 
-  /**
-   * Delete albums that have no tracks
-   */
   private async deleteOrphanedAlbums(): Promise<number> {
     const orphanedAlbumsResult = await this.drizzle.db.execute(sql`
       SELECT id FROM albums a
@@ -498,9 +454,6 @@ export class LibraryCleanupService {
     return orphanedAlbums.length;
   }
 
-  /**
-   * Delete artists that have no albums
-   */
   private async deleteOrphanedArtists(): Promise<number> {
     const orphanedArtistsResult = await this.drizzle.db.execute(sql`
       SELECT id FROM artists ar

@@ -41,7 +41,7 @@ import {
 
 @WebSocketGateway({
   namespace: 'scanner',
-  // CORS is configured globally by WebSocketAdapter (see websocket.adapter.ts)
+  // El CORS lo configura globalmente WebSocketAdapter (ver websocket.adapter.ts)
   transports: ['websocket', 'polling'],
 })
 @UseGuards(WsJwtGuard)
@@ -58,13 +58,13 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
   @WebSocketServer()
   server!: Server;
-  // Caché de progreso para suscriptores tardíos (auto-evict after 1h for crashed scans)
+  // Caché de progreso para suscriptores tardíos (se purga tras 1h por si el scan murió)
   private scanProgress = new Map<string, ScanProgressDto>();
   private scanTimestamps = new Map<string, number>();
 
   afterInit(_server: Server) {
     this.logger.info('ScannerGateway initialized');
-    // Periodic cleanup of stale scan progress entries (crashed scans)
+    // Limpieza periódica de progresos obsoletos (scans que murieron)
     setInterval(
       () => {
         const oneHourAgo = Date.now() - 60 * 60 * 1000;

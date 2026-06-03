@@ -15,9 +15,7 @@ import { TrackGenreService } from './track-genre.service';
 
 export type ProcessFileResult = 'added' | 'updated' | 'skipped';
 
-/**
- * Tracker for scan progress statistics
- */
+// Lleva las estadísticas de progreso del escaneo
 export class ScanProgressTracker {
   filesScanned = 0;
   totalFiles = 0;
@@ -35,10 +33,7 @@ export class ScanProgressTracker {
   }
 }
 
-/**
- * Service for processing individual music files
- * Extracts metadata and creates/updates database records
- */
+// Procesa cada archivo: extrae metadatos y crea/actualiza los registros en BD
 @Injectable()
 export class TrackProcessingService {
   constructor(
@@ -55,26 +50,14 @@ export class TrackProcessingService {
     private readonly logger: PinoLogger
   ) {}
 
-  /**
-   * Clear in-memory entity caches. Call after a scan completes.
-   */
+  // Vacía las cachés en memoria; llamar al terminar un scan
   clearEntityCache(): void {
     this.entityCreation.clearCache();
   }
 
   /**
-   * Process a single music file atomically
-   *
-   * Following Navidrome's architecture:
-   * 1. Extract metadata from file
-   * 2. Find or create artist
-   * 3. Find or create album (linked to artist)
-   * 4. Create or update track (linked to album and artist)
-   *
-   * @param filePath - Path to the music file
-   * @param tracker - Optional progress tracker
-   * @param lastScanTime - Optional timestamp for incremental scanning
-   * @returns 'added', 'updated', or 'skipped'
+   * Procesa un archivo de música. Siguiendo el orden de Navidrome:
+   * busca o crea artista → álbum → track. Devuelve 'added' | 'updated' | 'skipped'.
    */
   async processFile(
     filePath: string,
@@ -82,7 +65,7 @@ export class TrackProcessingService {
     lastScanTime?: Date | null
   ): Promise<ProcessFileResult> {
     try {
-      // Check if file changed (incremental scan)
+      // Scan incremental: salta el archivo si no ha cambiado
       if (lastScanTime) {
         const shouldSkip = await this.shouldSkipFile(filePath, lastScanTime);
         if (shouldSkip) {
@@ -90,7 +73,6 @@ export class TrackProcessingService {
         }
       }
 
-      // Extract metadata
       const metadata = await this.metadataExtractor.extractMetadata(filePath);
       if (!metadata) {
         this.logger.warn(` No se pudieron extraer metadatos de ${filePath}`);
@@ -107,7 +89,6 @@ export class TrackProcessingService {
       const stats = await this.fileScanner.getFileStats(filePath);
       const size = stats ? stats.size : 0;
 
-      // Find or create artist
       const artistName = metadata.albumArtist || metadata.artist || 'Unknown Artist';
       const mbzArtistId = Array.isArray(metadata.musicBrainzArtistId)
         ? metadata.musicBrainzArtistId[0]
@@ -119,14 +100,13 @@ export class TrackProcessingService {
         tracker.artistsCreated++;
       }
 
-      // Auto-search MBID for new artists
+      // Artista nuevo sin MBID: búsqueda automática en segundo plano
       if (!mbzArtistId && artist.created) {
         this.mbidAutoSearchService.searchArtistMbid(artist.id, artistName, true).catch((error) => {
           this.logger.warn(`Auto-search MBID failed for artist "${artistName}": ${error.message}`);
         });
       }
 
-      // Find or create album
       const albumName = metadata.album || 'Unknown Album';
       const mbzAlbumId = metadata.musicBrainzAlbumId;
       const mbzAlbumArtistId = Array.isArray(metadata.musicBrainzAlbumArtistId)
@@ -150,7 +130,7 @@ export class TrackProcessingService {
         if (album.coverExtracted) tracker.coversExtracted++;
       }
 
-      // Auto-search MBID for new albums
+      // Álbum nuevo sin MBID: búsqueda automática en segundo plano
       if (!mbzAlbumId && album.created) {
         this.mbidAutoSearchService
           .searchAlbumMbid(album.id, albumName, artistName, true)
@@ -159,7 +139,6 @@ export class TrackProcessingService {
           });
       }
 
-      // Log warning for tracks without basic metadata
       if (!metadata.title && !metadata.artist && !metadata.album) {
         await this.logService.warning(
           LogCategory.SCANNER,
@@ -176,10 +155,8 @@ export class TrackProcessingService {
         );
       }
 
-      // Prepare track data
-      // Note: ReplayGain values from file tags are only used if present in metadata.
-      // If not present (undefined), we don't include them in trackData to avoid
-      // overwriting LUFS-analyzed values during re-scans.
+      // Los ReplayGain de los tags solo se usan si vienen en el archivo: si no,
+      // no se incluyen para no pisar los valores calculados por LUFS en re-escaneos.
       const hasEmbeddedReplayGain = metadata.rgTrackGain !== undefined;
 
       const trackData = {
@@ -208,26 +185,25 @@ export class TrackProcessingService {
               ? metadata.comment
               : null,
         lyrics: metadata.lyrics,
-        // Only include ReplayGain values if embedded in file tags.
-        // This prevents overwriting LUFS-analyzed values during re-scans.
+        // Solo si vienen embebidos en el archivo
         ...(hasEmbeddedReplayGain && {
           rgTrackGain: metadata.rgTrackGain,
           rgTrackPeak: metadata.rgTrackPeak ?? null,
           rgAlbumGain: metadata.rgAlbumGain ?? null,
           rgAlbumPeak: metadata.rgAlbumPeak ?? null,
-          // If file has embedded ReplayGain, mark as analyzed to skip LUFS analysis
+          // Con ReplayGain embebido se marca como analizado para saltar el LUFS
           lufsAnalyzedAt: new Date(),
         }),
         mbzTrackId: metadata.musicBrainzTrackId,
         mbzAlbumId: mbzAlbumId,
         mbzArtistId: mbzArtistId,
         mbzAlbumArtistId: mbzAlbumArtistId,
-        // DJ/Audio analysis from ID3 tags (TBPM, TKEY)
+        // Análisis DJ desde tags ID3 (TBPM, TKEY)
         bpm: metadata.bpm ?? null,
         initialKey: metadata.initialKey ?? null,
       };
 
-      // Check if track exists (need albumId to detect album changes)
+      // ¿El track ya existe? (el albumId sirve para detectar cambios de álbum)
       const existingTrackResult = await this.drizzle.db
         .select({ id: tracks.id, albumId: tracks.albumId })
         .from(tracks)
@@ -238,17 +214,15 @@ export class TrackProcessingService {
       let result: ProcessFileResult;
 
       if (existingTrack) {
-        // Track exists - check if album changed (metadata correction)
         const oldAlbumId = existingTrack.albumId;
         const albumChanged = oldAlbumId !== album.id;
 
-        // Update existing track
-        // Clear missingAt if file reappeared (was marked as missing before)
+        // Actualiza el track; limpia missingAt por si el archivo había desaparecido
         await this.drizzle.db
           .update(tracks)
           .set({
             ...trackData,
-            missingAt: null, // Clear missing status - file exists again
+            missingAt: null,
             updatedAt: new Date(),
           })
           .where(eq(tracks.id, existingTrack.id));
@@ -263,13 +237,12 @@ export class TrackProcessingService {
 
         result = 'updated';
       } else {
-        // Create new track
         const newTrackResult = await this.drizzle.db.insert(tracks).values(trackData).returning();
         const newTrack = newTrackResult[0];
 
         await this.trackGenres.saveTrackGenres(newTrack.id, metadata.genre);
 
-        // Auto-search MBID for new tracks
+        // Track nuevo sin MBID: búsqueda automática en segundo plano
         if (!metadata.musicBrainzTrackId) {
           this.mbidAutoSearchService
             .searchTrackMbid(
@@ -316,25 +289,22 @@ export class TrackProcessingService {
     }
   }
 
-  /**
-   * Check if file should be skipped (incremental scan)
-   */
+  // Decide si saltar el archivo en un scan incremental
   private async shouldSkipFile(filePath: string, lastScanTime: Date): Promise<boolean> {
     const stats = await this.fileScanner.getFileStats(filePath);
     if (!stats) return false;
 
     const fileMtime = stats.mtime;
 
-    // If file wasn't modified since last scan...
+    // Si no se modificó desde el último scan...
     if (fileMtime <= lastScanTime) {
-      // Check if track exists in DB
       const existingTrack = await this.drizzle.db
         .select({ id: tracks.id })
         .from(tracks)
         .where(eq(tracks.path, filePath))
         .limit(1);
 
-      // If exists and not changed, skip
+      // ...y ya existe en la BD, se salta
       if (existingTrack.length > 0) {
         return true;
       }

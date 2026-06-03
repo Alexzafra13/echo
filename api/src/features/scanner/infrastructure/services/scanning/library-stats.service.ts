@@ -3,18 +3,12 @@ import { eq, count, sum } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists, albums, tracks } from '@infrastructure/database/schema';
 
-/**
- * Service for updating library statistics
- * Calculates and updates album/artist counts, durations, and sizes
- */
+// Recalcula los contadores, duraciones y tamaños de álbumes y artistas
 @Injectable()
 export class LibraryStatsService {
   constructor(private readonly drizzle: DrizzleService) {}
 
-  /**
-   * Update album statistics (songCount, duration, size)
-   * based on its linked tracks
-   */
+  // Recuenta songCount, duración y tamaño del álbum a partir de sus tracks
   async updateAlbumStats(albumId: string): Promise<void> {
     const stats = await this.drizzle.db
       .select({
@@ -36,10 +30,7 @@ export class LibraryStatsService {
       .where(eq(albums.id, albumId));
   }
 
-  /**
-   * Update artist statistics (albumCount, songCount, size)
-   * based on its linked albums and tracks
-   */
+  // Recuenta albumCount, songCount y tamaño del artista a partir de sus álbumes y tracks
   async updateArtistStats(artistId: string): Promise<void> {
     const [albumCountResult, trackStats] = await Promise.all([
       this.drizzle.db
@@ -66,9 +57,6 @@ export class LibraryStatsService {
       .where(eq(artists.id, artistId));
   }
 
-  /**
-   * Update both album and artist stats
-   */
   async updateStats(albumId: string, artistId: string): Promise<void> {
     await Promise.all([
       this.updateAlbumStats(albumId),

@@ -1,8 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-/**
- * ScanStatusResponseDto - DTO para respuesta de estado de escaneo
- */
 export class ScanStatusResponseDto {
   @ApiProperty({ description: 'ID del escaneo' })
   id!: string;

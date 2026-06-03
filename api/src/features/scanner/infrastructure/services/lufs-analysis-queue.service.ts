@@ -259,18 +259,18 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
       this.processedInSession++;
 
-      // Update average processing time
+      // Media móvil del tiempo de proceso
       const processingTime = Date.now() - startTime;
       this.averageProcessingTime = Math.round(
         this.averageProcessingTime * 0.9 + processingTime * 0.1
       );
 
-      // Emit WebSocket progress every 10 tracks (or on first track)
+      // Progreso por WebSocket cada 10 tracks (y en el primero)
       if (this.processedInSession === 1 || this.processedInSession % 10 === 0) {
         this.emitProgress();
       }
 
-      // Log progress every 100 tracks
+      // Log de progreso cada 100 tracks
       if (this.processedInSession % 100 === 0) {
         const stats = await this.getQueueStats();
         this.logger.info(
@@ -278,11 +278,10 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         );
       }
 
-      // Check if queue is complete (guard contra múltiples workers finalizando a la vez)
+      // ¿Cola terminada? (guard contra varios workers finalizando a la vez)
       if (this.processedInSession >= this.totalToProcess && !this.isFinishing) {
         this.isFinishing = true;
-        // Before finishing, check if there are any new pending tracks
-        // (could have been added during processing)
+        // Antes de cerrar, mira si llegaron tracks nuevos durante el proceso
         const remainingPending = await this.drizzle.db
           .select({ count: sql<number>`count(*)::int` })
           .from(tracks)
@@ -291,12 +290,10 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         const remainingCount = remainingPending[0]?.count ?? 0;
 
         if (remainingCount > 0) {
-          // There are new tracks to process - continue the queue
           this.logger.info(
             `Found ${remainingCount} new tracks added during processing, continuing...`
           );
 
-          // Re-fetch and enqueue the new tracks
           const newPendingTracks = await this.drizzle.db
             .select({
               id: tracks.id,
@@ -313,7 +310,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
           return;
         }
 
-        // Queue is truly complete
+        // Ahora sí, cola terminada
         const duration = this.sessionStartedAt ? Date.now() - this.sessionStartedAt.getTime() : 0;
         this.logger.info(
           `LUFS track analysis completed! Processed ${this.processedInSession} tracks in ${formatDuration(duration)}`
@@ -355,13 +352,8 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     }
   }
 
-  /**
-   * Emit current progress via WebSocket
-   * Uses internal counters for real-time updates (faster than DB queries)
-   */
+  // Emite el progreso por WebSocket con contadores internos (más rápido que consultar la BD)
   private emitProgress(): void {
-    // Calculate pending based on internal counters
-    // This is more accurate for real-time updates since new tracks may be added dynamically
     const pendingTracks = Math.max(0, this.totalToProcess - this.processedInSession);
     const estimatedTimeRemaining =
       this.isRunning && pendingTracks > 0
@@ -377,13 +369,9 @@ export class LufsAnalysisQueueService implements OnModuleInit {
   }
 
   /**
-   * Calculate album gain/peak values based on all tracks in each album
-   *
-   * Album gain is the average of all track gains in the album (weighted by track count)
-   * Album peak is the maximum peak across all tracks in the album
-   *
-   * This ensures consistent loudness when playing an album in order,
-   * preserving the intended dynamic range between tracks.
+   * Calcula el gain/peak de cada álbum a partir de sus tracks (gain = media,
+   * peak = máximo). Mantiene un loudness coherente al reproducir el álbum entero,
+   * conservando la dinámica entre canciones.
    */
   private async calculateAlbumGains(): Promise<void> {
     this.logger.info('Calculating album gains...');

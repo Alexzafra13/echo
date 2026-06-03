@@ -1,8 +1,5 @@
 import { IsString, IsNumber, IsBoolean, IsOptional, IsEnum, Min, Max } from 'class-validator';
 
-/**
- * Estado del escaneo
- */
 export enum ScanStatus {
   PENDING = 'pending',
   SCANNING = 'scanning',
@@ -14,17 +11,11 @@ export enum ScanStatus {
   CANCELLED = 'cancelled',
 }
 
-/**
- * DTO para suscribirse a eventos de un scan
- */
 export class SubscribeScanDto {
   @IsString()
   scanId!: string;
 }
 
-/**
- * DTO para evento de progreso del scan
- */
 export class ScanProgressDto {
   @IsString()
   scanId!: string;
@@ -79,9 +70,6 @@ export class ScanProgressDto {
   message?: string;
 }
 
-/**
- * DTO para evento de error del scan
- */
 export class ScanErrorDto {
   @IsString()
   scanId!: string;
@@ -96,9 +84,6 @@ export class ScanErrorDto {
   timestamp!: string;
 }
 
-/**
- * DTO para evento de completado del scan
- */
 export class ScanCompletedDto {
   @IsString()
   scanId!: string;
@@ -145,17 +130,11 @@ export class ScanCompletedDto {
   timestamp!: string;
 }
 
-/**
- * DTO para pausar el scan
- */
 export class PauseScanDto {
   @IsString()
   scanId!: string;
 }
 
-/**
- * DTO para cancelar el scan
- */
 export class CancelScanDto {
   @IsString()
   scanId!: string;
@@ -165,17 +144,11 @@ export class CancelScanDto {
   reason?: string;
 }
 
-/**
- * DTO para resumir el scan
- */
 export class ResumeScanDto {
   @IsString()
   scanId!: string;
 }
 
-/**
- * DTO para evento de progreso del análisis LUFS
- */
 export class LufsProgressDto {
   @IsBoolean()
   isRunning!: boolean;
@@ -193,9 +166,6 @@ export class LufsProgressDto {
   estimatedTimeRemaining?: string | null;
 }
 
-/**
- * DTO para evento de progreso del análisis DJ (BPM, Key, Energy)
- */
 export class DjProgressDto {
   @IsBoolean()
   isRunning!: boolean;
@@ -213,9 +183,6 @@ export class DjProgressDto {
   estimatedTimeRemaining?: string | null;
 }
 
-/**
- * Tipo de cambio en la biblioteca
- */
 export enum LibraryChangeType {
   TRACK_MISSING = 'track_missing', // Archivo desaparecido (marcado)
   TRACK_RECOVERED = 'track_recovered', // Archivo recuperado
@@ -226,9 +193,6 @@ export enum LibraryChangeType {
   TRACK_UPDATED = 'track_updated',
 }
 
-/**
- * DTO para evento de cambio en la biblioteca (archivos añadidos/eliminados)
- */
 export class LibraryChangeDto {
   @IsEnum(LibraryChangeType)
   type!: LibraryChangeType;

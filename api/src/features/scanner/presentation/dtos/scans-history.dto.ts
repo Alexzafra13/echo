@@ -4,9 +4,6 @@ import { PaginationQueryDto } from '@shared/dtos/pagination-query.dto';
 // Reutilizar DTO compartido en vez de duplicar
 export { PaginationQueryDto as ScansHistoryQueryDto };
 
-/**
- * ScanHistoryItemDto - Item individual del historial
- */
 export class ScanHistoryItemDto {
   @ApiProperty({ description: 'ID del escaneo' })
   id!: string;
@@ -39,9 +36,6 @@ export class ScanHistoryItemDto {
   errorMessage?: string;
 }
 
-/**
- * ScansHistoryResponseDto - Respuesta con historial de escaneos
- */
 export class ScansHistoryResponseDto {
   @ApiProperty({ description: 'Lista de escaneos', type: [ScanHistoryItemDto] })
   scans!: ScanHistoryItemDto[];

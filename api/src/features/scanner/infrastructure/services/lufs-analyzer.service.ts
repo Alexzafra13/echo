@@ -6,32 +6,21 @@ import { getFfmpegPath } from '@features/dj/infrastructure/utils/ffmpeg.util';
 
 const execFileAsync = promisify(execFile);
 
-/**
- * Resultado del análisis de loudness
- */
 export interface LufsAnalysisResult {
   inputLufs: number; // Loudness integrado del archivo (LUFS)
   inputPeak: number; // True peak del archivo (dBTP)
   trackGain: number; // Ganancia necesaria para llegar al target (dB)
   trackPeak: number; // Peak normalizado (0-1)
-  outroStart?: number; // Seconds where outro/silence begins (for smart crossfade)
+  outroStart?: number; // Segundo donde empieza el outro/silencio (para crossfade)
 }
 
 /**
- * LufsAnalyzerService
- *
- * Analiza archivos de audio usando FFmpeg para obtener valores de loudness (LUFS)
- * cuando los archivos no tienen tags de ReplayGain embebidos.
- *
- * Usa el filtro loudnorm de FFmpeg para medir:
- * - Integrated loudness (LUFS)
- * - True peak (dBTP)
- *
- * Target: -16 LUFS (estilo Apple Music, más conservador)
+ * Mide el loudness (LUFS) de un archivo con el filtro loudnorm de FFmpeg,
+ * pensado para audio sin tags de ReplayGain. Target: -16 LUFS (estilo Apple Music).
  */
 @Injectable()
 export class LufsAnalyzerService {
-  // Target LUFS para normalización (Apple Music usa -16, Spotify usa -14)
+  // Apple Music usa -16, Spotify -14
   private readonly TARGET_LUFS = -16;
 
   constructor(
@@ -39,12 +28,7 @@ export class LufsAnalyzerService {
     private readonly logger: PinoLogger
   ) {}
 
-  /**
-   * Analiza un archivo de audio y devuelve los valores de loudness
-   * También detecta el inicio del outro/silencio para crossfade inteligente
-   * @param filePath Ruta al archivo de audio
-   * @returns Resultado del análisis o null si falla
-   */
+  // Devuelve loudness + inicio del outro (para crossfade). null si falla
   async analyzeFile(filePath: string): Promise<LufsAnalysisResult | null> {
     try {
       // Un solo proceso FFmpeg: ambos filtros (loudnorm + silencedetect) en un
@@ -59,11 +43,10 @@ export class LufsAnalyzerService {
         return null;
       }
 
-      // Calcular ganancia necesaria para llegar al target
+      // Ganancia necesaria para alcanzar el target
       const trackGain = this.TARGET_LUFS - lufsResult.inputLufs;
 
-      // Convertir true peak de dBTP a ratio (0-1)
-      // dBTP a linear: 10^(dBTP/20)
+      // True peak de dBTP a ratio lineal (0-1): 10^(dBTP/20)
       const trackPeak = Math.pow(10, lufsResult.inputPeak / 20);
 
       this.logger.debug(
@@ -82,7 +65,7 @@ export class LufsAnalyzerService {
         inputLufs: lufsResult.inputLufs,
         inputPeak: lufsResult.inputPeak,
         trackGain,
-        trackPeak, // No clamp: True Peak puede ser > 1.0 (> 0 dBTP) en audio con clipping
+        trackPeak, // Sin clamp: el True Peak puede ser > 1.0 (> 0 dBTP) en audio con clipping
         outroStart,
       };
     } catch (error) {
@@ -92,9 +75,8 @@ export class LufsAnalyzerService {
   }
 
   /**
-   * Análisis combinado: loudnorm + silencedetect en un solo proceso FFmpeg.
-   * Usa asplit para bifurcar el audio decodificado a ambos filtros,
-   * evitando leer el archivo dos veces.
+   * loudnorm + silencedetect en un solo proceso: asplit bifurca el audio decodificado
+   * a ambos filtros para no leer el archivo dos veces.
    */
   private async analyzeCombined(
     filePath: string
@@ -140,9 +122,7 @@ export class LufsAnalyzerService {
     }
   }
 
-  /**
-   * Parsea silence_start del output combinado para detectar el outro
-   */
+  // Saca silence_start del output combinado para detectar el outro
   private parseOutroFromCombinedOutput(stderr: string): number | undefined {
     const silenceMatches = stderr.matchAll(/silence_start:\s*([\d.]+)/g);
     const silenceStarts: number[] = [];
@@ -172,9 +152,7 @@ export class LufsAnalyzerService {
     return lastSilence;
   }
 
-  /**
-   * Fallback: analyze loudness only (sin silence detect)
-   */
+  // Fallback: solo loudness, sin detección de silencio
   private async analyzeLoudness(
     filePath: string
   ): Promise<{ inputLufs: number; inputPeak: number } | null> {
@@ -203,16 +181,11 @@ export class LufsAnalyzerService {
     }
   }
 
-  /**
-   * Detect where the outro/silence starts at the end of the track
-   * Uses FFmpeg silencedetect filter to find the last silence in the track
-   * Returns the timestamp in seconds where meaningful audio ends
-   */
+  // Detecta dónde empieza el outro/silencio final con el filtro silencedetect
   private async detectOutroStart(filePath: string): Promise<number | undefined> {
     try {
-      // Use silencedetect to find silence periods
-      // -60dB threshold: only actual silence/near-silence (not just quiet parts)
-      // d=1.0: minimum silence duration of 1 second (avoid brief pauses)
+      // Umbral -60dB: solo silencio real, no partes simplemente flojas.
+      // d=1.0: mínimo 1s de silencio, para ignorar pausas breves.
       const { stderr } = await execFileAsync(
         getFfmpegPath(),
         [
@@ -232,8 +205,7 @@ export class LufsAnalyzerService {
         }
       );
 
-      // Parse silence detection output
-      // Format: [silencedetect @ xxx] silence_start: 234.567
+      // Formato del output: "silence_start: 234.567"
       const silenceMatches = stderr.matchAll(/silence_start:\s*([\d.]+)/g);
       const silenceStarts: number[] = [];
 
@@ -242,11 +214,10 @@ export class LufsAnalyzerService {
       }
 
       if (silenceStarts.length === 0) {
-        // No silence detected - track plays to the very end
+        // Sin silencio: el track suena hasta el final
         return undefined;
       }
 
-      // Get track duration from FFmpeg output
       const durationMatch = stderr.match(/Duration:\s*(\d+):(\d+):(\d+)\.(\d+)/);
       if (!durationMatch) {
         return undefined;
@@ -258,20 +229,18 @@ export class LufsAnalyzerService {
       const centiseconds = parseInt(durationMatch[4], 10);
       const duration = hours * 3600 + minutes * 60 + seconds + centiseconds / 100;
 
-      // Find silence that's near the end of the track (within last 15 seconds)
-      // Only use silences that are very close to the end - this is the actual outro
+      // Solo silencios pegados al final (últimos 15s y pasado el 85% del track): ese es el outro
       const outroSilences = silenceStarts
-        .filter((s) => s > duration - 15 && s > duration * 0.85) // Last 15s AND after 85% of track
+        .filter((s) => s > duration - 15 && s > duration * 0.85)
         .sort((a, b) => a - b);
 
-      const lastSilence = outroSilences[0]; // Get the first (earliest) one near the end
+      const lastSilence = outroSilences[0]; // el más temprano cerca del final
 
       if (lastSilence === undefined) {
         return undefined;
       }
 
-      // Sanity check: outroStart should be at least 3 seconds before end
-      // and at least 60 seconds into the track (skip intros that might have silence)
+      // Descarta valores raros: al menos 3s antes del fin y pasado el primer minuto
       if (lastSilence < 60 || lastSilence > duration - 3) {
         return undefined;
       }
@@ -283,26 +252,15 @@ export class LufsAnalyzerService {
     }
   }
 
-  /**
-   * Parsea el output JSON de FFmpeg loudnorm
-   */
   private parseFFmpegOutput(output: string): { inputLufs: number; inputPeak: number } | null {
     try {
-      // El output de loudnorm está en formato JSON al final del stderr
-      // Aparece después de [Parsed_loudnorm...] con formato:
-      // {
-      //     "input_i" : "-5.02",
-      //     "input_tp" : "1.31",
-      //     ...
-      // }
-
-      // Buscar el bloque JSON que empieza con "input_i" (específico de loudnorm)
-      // Usamos regex no-greedy y anclamos al inicio del JSON de loudnorm
+      // loudnorm imprime un bloque JSON al final del stderr (input_i, input_tp, ...).
+      // Lo buscamos anclando al inicio del JSON propio de loudnorm.
       const jsonMatch = output.match(
         /\{\s*"input_i"\s*:\s*"[^"]+"\s*,[\s\S]*?"target_offset"\s*:\s*"[^"]+"\s*\}/
       );
       if (!jsonMatch) {
-        // Fallback: buscar cualquier JSON que contenga input_i cerca del final
+        // Fallback: cualquier JSON con input_i cerca del final
         const lines = output.split('\n');
         const lastLines = lines.slice(-20).join('\n');
         const fallbackMatch = lastLines.match(/\{[^{}]*"input_i"[^{}]*\}/);
@@ -320,8 +278,7 @@ export class LufsAnalyzerService {
 
       const data = JSON.parse(jsonMatch[0]);
 
-      // input_i = integrated loudness
-      // input_tp = true peak
+      // input_i = loudness integrado, input_tp = true peak
       const inputLufs = parseFloat(data.input_i);
       const inputPeak = parseFloat(data.input_tp);
 
@@ -335,9 +292,6 @@ export class LufsAnalyzerService {
     }
   }
 
-  /**
-   * Verifica si FFmpeg está disponible en el sistema
-   */
   async isFFmpegAvailable(): Promise<boolean> {
     try {
       await execFileAsync(getFfmpegPath(), ['-version']);

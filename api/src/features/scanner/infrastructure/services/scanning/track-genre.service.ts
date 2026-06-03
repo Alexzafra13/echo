@@ -4,10 +4,7 @@ import { eq } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { genres, trackGenres } from '@infrastructure/database/schema';
 
-/**
- * Service for managing track genres
- * Creates genre entries and associates them with tracks
- */
+// Crea los géneros y los asocia a los tracks
 @Injectable()
 export class TrackGenreService {
   constructor(
@@ -16,20 +13,14 @@ export class TrackGenreService {
     private readonly logger: PinoLogger,
   ) {}
 
-  /**
-   * Process and save genres from audio file tags
-   * Creates genre entries if they don't exist and associates them with the track
-   *
-   * @param trackId - Track ID to associate genres with
-   * @param genreTags - Array of genre names from audio metadata
-   */
+  // Guarda los géneros de los tags: crea los que falten y los asocia al track
   async saveTrackGenres(trackId: string, genreTags?: string[]): Promise<void> {
     if (!genreTags || genreTags.length === 0) {
       return;
     }
 
     try {
-      // Normalize genre names (trim, capitalize, remove duplicates)
+      // Normaliza nombres (trim, capitaliza, sin duplicados)
       const normalizedGenres = [...new Set(
         genreTags
           .map((g) => g.trim())
@@ -41,14 +32,14 @@ export class TrackGenreService {
         return;
       }
 
-      // Upsert genres (create if not exist)
+      // Crea los géneros que no existan
       const genreRecords = await Promise.all(
         normalizedGenres.map(async (genreName) => {
           return this.findOrCreateGenre(genreName);
         }),
       );
 
-      // Associate genres with track
+      // Asocia los géneros al track
       await Promise.all(
         genreRecords
           .filter((genre) => genre != null)
@@ -72,15 +63,11 @@ export class TrackGenreService {
       this.logger.debug(`Saved ${genreRecords.length} genres for track ${trackId}`);
     } catch (error) {
       this.logger.error(`Error saving track genres: ${(error as Error).message}`);
-      // Don't throw - genre saving shouldn't block track processing
+      // No relanza: guardar géneros no debe bloquear el procesado del track
     }
   }
 
-  /**
-   * Find or create a genre by name
-   */
   private async findOrCreateGenre(genreName: string): Promise<{ id: string; name: string }> {
-    // Try to find existing genre
     const existing = await this.drizzle.db
       .select({ id: genres.id, name: genres.name })
       .from(genres)
@@ -91,14 +78,13 @@ export class TrackGenreService {
       return existing[0];
     }
 
-    // Create new genre
     const newGenre = await this.drizzle.db
       .insert(genres)
       .values({ name: genreName })
       .onConflictDoNothing({ target: genres.name })
       .returning({ id: genres.id, name: genres.name });
 
-    // If insert was ignored due to conflict, fetch existing
+    // Si el insert se ignoró por conflicto, busca el existente
     if (!newGenre[0]) {
       const fetched = await this.drizzle.db
         .select({ id: genres.id, name: genres.name })

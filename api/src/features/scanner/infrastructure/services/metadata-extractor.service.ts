@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { parseFile, type IAudioMetadata } from 'music-metadata';
 
-/**
- * TrackMetadata - Metadatos extraídos de un archivo de música
- */
+// Metadatos extraídos de un archivo de música
 export interface TrackMetadata {
   // Información básica
   title?: string;
@@ -14,14 +12,14 @@ export interface TrackMetadata {
   year?: number;
   genre?: string[];
 
-  // Track info
+  // Pista
   trackNumber?: number;
   discNumber?: number;
   duration?: number; // en segundos
 
-  // DJ/Audio analysis (from ID3 tags)
-  bpm?: number; // TBPM tag - tempo in beats per minute
-  initialKey?: string; // TKEY tag - musical key (e.g., "Am", "C", "5A")
+  // Análisis DJ (tags ID3)
+  bpm?: number; // tag TBPM (tempo)
+  initialKey?: string; // tag TKEY (tonalidad, ej. "Am", "C", "5A")
 
   // Técnicos
   bitRate?: number;
@@ -84,12 +82,12 @@ export class MetadataExtractorService {
       year: common.year || undefined,
       genre: common.genre || undefined,
 
-      // Track info
+      // Pista
       trackNumber: common.track?.no || undefined,
       discNumber: common.disk?.no || 1,
       duration: format.duration ? Math.round(format.duration) : undefined,
 
-      // DJ/Audio analysis from ID3 tags (TBPM, TKEY)
+      // Análisis DJ (tags ID3: TBPM, TKEY)
       bpm: common.bpm ? Math.round(common.bpm) : undefined,
       initialKey: common.key || undefined,
 
@@ -116,7 +114,7 @@ export class MetadataExtractorService {
 
       // Otros
       comment: this.extractComment(common.comment),
-      // Extract text from lyrics object: music-metadata returns {language, descriptor, text}
+      // music-metadata devuelve la letra como {language, descriptor, text}
       lyrics:
         common.lyrics?.[0]?.text ||
         (typeof common.lyrics?.[0] === 'string' ? common.lyrics[0] : undefined),
@@ -125,10 +123,7 @@ export class MetadataExtractorService {
     };
   }
 
-  /**
-   * Extrae valores de ReplayGain de los metadatos
-   * music-metadata proporciona estos valores en common.replaygain
-   */
+  // music-metadata expone el ReplayGain en common.replaygain como IRatio (dB y ratio)
   private extractReplayGain(common: IAudioMetadata['common']): {
     trackGain?: number;
     trackPeak?: number;
@@ -136,18 +131,14 @@ export class MetadataExtractorService {
     albumPeak?: number;
   } {
     return {
-      // Track gain/peak - music-metadata exposes these as IRatio with dB and ratio
       trackGain: common.replaygain_track_gain?.dB ?? undefined,
       trackPeak: common.replaygain_track_peak?.ratio ?? undefined,
-      // Album gain/peak
       albumGain: common.replaygain_album_gain?.dB ?? undefined,
       albumPeak: common.replaygain_album_peak?.ratio ?? undefined,
     };
   }
 
-  /**
-   * Extrae ID de MusicBrainz de diferentes formatos
-   */
+  // Saca el ID de MusicBrainz contemplando varios formatos
   private extractMusicBrainzId(common: IAudioMetadata['common'], type: string): string | undefined {
     const key = `musicbrainz_${type}id` as keyof IAudioMetadata['common'];
     const value = common[key];
@@ -157,9 +148,7 @@ export class MetadataExtractorService {
     return undefined;
   }
 
-  /**
-   * Extrae comentario (puede venir en diferentes formatos)
-   */
+  // El comentario puede venir en varios formatos
   private extractComment(comment: IAudioMetadata['common']['comment']): string | undefined {
     if (!comment) return undefined;
 

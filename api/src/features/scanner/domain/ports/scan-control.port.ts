@@ -1,6 +1,6 @@
 /**
- * Interface for controlling a running scan (pause/cancel/resume).
- * Used to break the circular dependency between ScannerGateway and ScanProcessorService.
+ * Controla un scan en marcha (pausar/cancelar/reanudar). Rompe la dependencia
+ * circular entre ScannerGateway y ScanProcessorService.
  */
 export interface IScanControl {
   pauseScan(scanId: string): Promise<boolean>;

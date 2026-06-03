@@ -5,10 +5,7 @@ import { EnrichmentQueueService } from '@features/external-metadata/infrastructu
 import { LufsAnalysisQueueService } from './lufs-analysis-queue.service';
 import { DjAnalysisQueueService } from '@features/dj/infrastructure/services/dj-analysis-queue.service';
 
-/**
- * Orchestrates post-scan tasks: metadata enrichment, LUFS analysis, and DJ analysis.
- * Extracted from ScanProcessorService to reduce its dependency count.
- */
+// Orquesta las tareas posteriores al scan: enriquecimiento, LUFS y análisis DJ
 @Injectable()
 export class PostScanTasksService {
   constructor(
@@ -20,18 +17,12 @@ export class PostScanTasksService {
     private readonly logger: PinoLogger
   ) {}
 
-  /**
-   * Run all post-scan tasks: enrichment, LUFS, and DJ analysis.
-   */
   async runAll(): Promise<void> {
     await this.performAutoEnrichment();
     await this.startLufsAnalysis();
     await this.startDjAnalysis();
   }
 
-  /**
-   * Trigger auto-enrichment after scan
-   */
   async performAutoEnrichment(): Promise<void> {
     try {
       const autoEnrichEnabled = await this.settingsService.getBoolean(
@@ -59,9 +50,6 @@ export class PostScanTasksService {
     }
   }
 
-  /**
-   * Trigger LUFS analysis after scan
-   */
   async startLufsAnalysis(): Promise<void> {
     try {
       const lufsAnalysisEnabled = await this.settingsService.getBoolean(
@@ -89,9 +77,7 @@ export class PostScanTasksService {
     }
   }
 
-  /**
-   * Trigger DJ analysis (BPM, Key, Energy) after scan
-   */
+  // Análisis DJ: BPM, tonalidad y energía
   async startDjAnalysis(): Promise<void> {
     try {
       const djAnalysisEnabled = await this.settingsService.getBoolean(
