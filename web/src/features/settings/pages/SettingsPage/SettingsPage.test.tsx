@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import SettingsPage from './SettingsPage';
+import { usePlayerSettingsStore } from '@features/player/store/playerSettingsStore';
 
 // Mock dependencies
 vi.mock('@shared/components/layout/Header', () => ({
@@ -73,6 +74,7 @@ const mockPlaybackState = {
   setCrossfadeEnabled: vi.fn(),
   setCrossfadeDuration: vi.fn(),
   setCrossfadeSmartMode: vi.fn(),
+  setCrossfadeTempoMatch: vi.fn(),
   normalization: { enabled: true },
   setNormalizationEnabled: vi.fn(),
   volumeControlSupported: true,
@@ -331,6 +333,26 @@ describe('SettingsPage', () => {
       fireEvent.click(screen.getByLabelText('Fundido inteligente'));
 
       expect(mockPlaybackState.setCrossfadeSmartMode).toHaveBeenCalledWith(true);
+    });
+
+    it('should toggle tempo matching when crossfade is enabled', () => {
+      mockPlaybackState.crossfade.enabled = true;
+      render(<SettingsPage />);
+
+      fireEvent.click(screen.getByLabelText('Ajuste de tempo'));
+
+      expect(mockPlaybackState.setCrossfadeTempoMatch).toHaveBeenCalledWith(true);
+    });
+
+    it('should toggle DJ mix for shuffle', () => {
+      render(<SettingsPage />);
+
+      const toggle = screen.getByLabelText('Mezcla DJ al reproducir aleatorio') as HTMLInputElement;
+      expect(toggle.checked).toBe(true);
+      fireEvent.click(toggle);
+
+      expect(usePlayerSettingsStore.getState().djMode.enabled).toBe(false);
+      usePlayerSettingsStore.getState().setDjModeEnabled(true);
     });
 
     it('should toggle volume normalization', () => {

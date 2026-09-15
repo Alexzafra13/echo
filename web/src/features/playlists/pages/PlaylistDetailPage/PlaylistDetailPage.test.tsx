@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PlaylistDetailPage from './PlaylistDetailPage';
+import { playlistsService } from '../../services/playlists.service';
+import { usePlayerSettingsStore } from '@features/player/store/playerSettingsStore';
 
 // Mock state
 const mockState = {
@@ -321,6 +323,34 @@ describe('PlaylistDetailPage', () => {
         expect(mockSetShuffle).toHaveBeenCalledWith(true);
         expect(mockPlayQueue).toHaveBeenCalled();
       });
+      expect(playlistsService.getDjShuffledTracks).toHaveBeenCalledWith('playlist-123');
+    });
+
+    it('should shuffle on the client when DJ mix is off for this playlist', async () => {
+      usePlayerSettingsStore.getState().setPlaylistDjMode('playlist-123', false);
+      render(<PlaylistDetailPage />);
+
+      fireEvent.click(screen.getByRole('button', { name: /aleatorio/i }));
+
+      await waitFor(() => {
+        expect(mockSetShuffle).toHaveBeenCalledWith(true);
+        expect(mockPlayQueue).toHaveBeenCalled();
+      });
+      expect(playlistsService.getDjShuffledTracks).not.toHaveBeenCalled();
+      usePlayerSettingsStore.getState().setPlaylistDjMode('playlist-123', null);
+    });
+
+    it('should toggle DJ mix for this playlist with the chip', () => {
+      render(<PlaylistDetailPage />);
+
+      const chip = screen.getByRole('button', { name: /mezcla dj en esta lista/i });
+      expect(chip).toHaveAttribute('aria-pressed', 'true');
+      fireEvent.click(chip);
+
+      expect(usePlayerSettingsStore.getState().djMode.playlistOverrides['playlist-123']).toBe(
+        false
+      );
+      usePlayerSettingsStore.getState().setPlaylistDjMode('playlist-123', null);
     });
   });
 

@@ -54,6 +54,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const setCrossfadeEnabledStore = usePlayerSettingsStore((s) => s.setCrossfadeEnabled);
   const setCrossfadeDurationStore = usePlayerSettingsStore((s) => s.setCrossfadeDuration);
   const setCrossfadeSmartModeStore = usePlayerSettingsStore((s) => s.setCrossfadeSmartMode);
+  const setCrossfadeTempoMatchStore = usePlayerSettingsStore((s) => s.setCrossfadeTempoMatch);
   const setVolumeStore = usePlayerSettingsStore((s) => s.setVolume);
   const storedVolume = usePlayerSettingsStore((s) => s.volume);
   // Volumen guardado: solo cuenta el valor inicial, al crear los elementos de audio
@@ -80,18 +81,18 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const wantsToPlayRef = useRef(false);
   // Cuándo pausó el sistema por su cuenta (para no reanudar interrupciones viejas)
   const interruptedAtRef = useRef<number | null>(null);
-  // Pista actual accesible desde callbacks sin re-crearlos
-  const currentTrackRef = useRef<Track | null>(null);
   const preloadedNextRef = useRef<{
     trackId: string;
     nextIndex: number;
     track: Track;
   } | null>(null);
   const queueContextRef = useRef<PlayContext | undefined>(undefined);
+  // Pista actual accesible desde callbacks sin re-crearlos
+  const currentTrackRef = useRef<Track | null>(null);
 
   // Bundle refs into a single object for cleaner hook params.
   const sharedRefs: PlayerSharedRefs = useMemo(
-    () => ({ isTransitioningRef, preloadedNextRef, queueContextRef }),
+    () => ({ isTransitioningRef, preloadedNextRef, queueContextRef, currentTrackRef }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Objeto contenedor estable; los refs internos son mutables por diseño
     []
   );
@@ -505,6 +506,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     [setCrossfadeSmartModeStore]
   );
 
+  const setCrossfadeTempoMatch = useCallback(
+    (enabled: boolean) => setCrossfadeTempoMatchStore(enabled),
+    [setCrossfadeTempoMatchStore]
+  );
+
   const setNormalizationEnabled = useCallback(
     (enabled: boolean) => setNormalizationEnabledStore(enabled),
     [setNormalizationEnabledStore]
@@ -571,6 +577,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setCrossfadeEnabled,
       setCrossfadeDuration,
       setCrossfadeSmartMode,
+      setCrossfadeTempoMatch,
       setNormalizationEnabled,
     }),
     [
@@ -592,6 +599,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setCrossfadeEnabled,
       setCrossfadeDuration,
       setCrossfadeSmartMode,
+      setCrossfadeTempoMatch,
       setNormalizationEnabled,
     ]
   );

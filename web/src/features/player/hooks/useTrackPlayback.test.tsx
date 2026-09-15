@@ -82,6 +82,7 @@ function createMockParams(overrides: Partial<UseTrackPlaybackParams> = {}): UseT
     isTransitioningRef: { current: false },
     preloadedNextRef: { current: null },
     queueContextRef: { current: undefined },
+    currentTrackRef: { current: null },
     ...(overrides.sharedRefs ?? {}),
   };
 

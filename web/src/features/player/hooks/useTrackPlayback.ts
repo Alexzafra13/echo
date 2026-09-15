@@ -9,6 +9,7 @@ import { useStreamToken } from './useStreamToken';
 import { logger } from '@shared/utils/logger';
 import { playActiveWithRetry } from './playActiveWithRetry';
 import { getTrackGainMultiplier } from '../utils/replayGain';
+import { getTempoRatio } from '../utils/tempo';
 import type { AudioElements } from './useAudioElements';
 import type { CrossfadeLogic } from './useCrossfadeLogic';
 import type { PlayTracking } from './usePlayTracking';
@@ -42,7 +43,7 @@ export function useTrackPlayback({
   setCurrentTrack,
   sharedRefs,
 }: UseTrackPlaybackParams) {
-  const { isTransitioningRef, preloadedNextRef, queueContextRef } = sharedRefs;
+  const { isTransitioningRef, preloadedNextRef, queueContextRef, currentTrackRef } = sharedRefs;
   const { data: streamTokenData, ensureToken } = useStreamToken();
 
   /**
@@ -99,9 +100,14 @@ export function useTrackPlayback({
         logger.debug('[Player] Starting crossfade to:', track.title);
       }
 
+      // Tempo de la pista saliente antes de que currentTrack cambie
+      const tempoRatio = crossfadeSettings.tempoMatch
+        ? getTempoRatio(currentTrackRef.current, track)
+        : undefined;
+
       setCurrentTrack(track);
 
-      const crossfadeStarted = await crossfade.performCrossfade();
+      const crossfadeStarted = await crossfade.performCrossfade({ tempoRatio });
 
       if (!crossfadeStarted) {
         // Crossfade failed — fall back to normal playback
@@ -123,7 +129,15 @@ export function useTrackPlayback({
       playTracking.startPlaySession(track, queueContextRef.current);
     },
     // Refs are stable — only include callback/object deps
-    [audioElements, crossfade, normalizationEnabled, playTracking, setCurrentTrack, setIsPlaying]
+    [
+      audioElements,
+      crossfade,
+      crossfadeSettings.tempoMatch,
+      normalizationEnabled,
+      playTracking,
+      setCurrentTrack,
+      setIsPlaying,
+    ]
   );
 
   /**

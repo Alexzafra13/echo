@@ -529,6 +529,56 @@ describe('useCrossfadeLogic', () => {
     });
   });
 
+  describe('tempo match', () => {
+    it('should ramp the outgoing playbackRate towards the tempo ratio', async () => {
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: defaultSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+        })
+      );
+
+      await act(async () => {
+        await result.current.performCrossfade({ tempoRatio: 1.04 });
+      });
+
+      const outgoing = mockAudioElements.audioRefA.current!;
+      expect(outgoing.preservesPitch).toBe(false);
+
+      const advanceTime = (global as unknown as { advanceTime: (ms: number) => void }).advanceTime;
+      act(() => advanceTime(1000));
+      expect(outgoing.playbackRate).toBeCloseTo(1.02, 3);
+
+      act(() => advanceTime(1100));
+      // Fundido terminado: la pista saliente vuelve a velocidad normal
+      expect(outgoing.playbackRate).toBe(1);
+      expect(outgoing.preservesPitch).toBe(true);
+    });
+
+    it('should leave playbackRate alone without a tempo ratio', async () => {
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: defaultSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+        })
+      );
+
+      await act(async () => {
+        await result.current.performCrossfade();
+      });
+
+      const advanceTime = (global as unknown as { advanceTime: (ms: number) => void }).advanceTime;
+      act(() => advanceTime(1000));
+      expect(mockAudioElements.audioRefA.current!.playbackRate).toBe(1);
+    });
+  });
+
   describe('clearCrossfade', () => {
     it('should reset isCrossfading to false', () => {
       const { result } = renderHook(() =>

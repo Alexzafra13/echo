@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Shuffle, Calendar, TrendingUp, RefreshCw } from 'lucide-react';
 import { ActionCard } from '../ActionCard';
 import { useShufflePlay } from '@shared/hooks';
+import { DjModeChip } from '@shared/components/DjModeChip';
 import { useRandomAlbums } from '@features/explore/hooks';
 import { useAutoPlaylists, getArtistImageUrl } from '@features/home/hooks';
 import { getTopTracks } from '@shared/services/play-tracking.service';
@@ -17,7 +18,7 @@ export interface ActionCardsRowProps {
 export function ActionCardsRow({ className }: ActionCardsRowProps) {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
-  const { shufflePlay, isLoading: shuffleLoading } = useShufflePlay();
+  const { shufflePlay, isLoading: shuffleLoading, djMode, setDjMode } = useShufflePlay();
 
   const { data: randomAlbumsData } = useRandomAlbums(3);
   const { data: autoPlaylists } = useAutoPlaylists();
@@ -109,16 +110,19 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
 
   return (
     <div className={`${styles.actionCardsRow} ${className || ''}`}>
-      <ActionCard
-        icon={<Shuffle size={22} />}
-        loadingIcon={<RefreshCw size={22} className={styles.spinning} />}
-        title={t('home.shuffle')}
-        loadingTitle={t('common.loading')}
-        onClick={shufflePlay}
-        isLoading={shuffleLoading}
-        customGradient={['#1a1a2e', '#16213e']}
-        backgroundCoverUrl={shuffleCoverUrl}
-      />
+      <div className={styles.actionCardsRow__shuffle}>
+        <ActionCard
+          icon={<Shuffle size={22} />}
+          loadingIcon={<RefreshCw size={22} className={styles.spinning} />}
+          title={t('home.shuffle')}
+          loadingTitle={t('common.loading')}
+          onClick={shufflePlay}
+          isLoading={shuffleLoading}
+          customGradient={['#1a1a2e', '#16213e']}
+          backgroundCoverUrl={shuffleCoverUrl}
+        />
+        <DjModeChip active={djMode} onToggle={setDjMode} className={styles.actionCardsRow__dj} />
+      </div>
 
       <ActionCard
         icon={<Calendar size={22} />}

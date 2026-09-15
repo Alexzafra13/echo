@@ -95,6 +95,7 @@ vi.mock('../store', () => ({
       setCrossfadeEnabled: vi.fn(),
       setCrossfadeDuration: vi.fn(),
       setCrossfadeSmartMode: vi.fn(),
+      setCrossfadeTempoMatch: vi.fn(),
       setVolume: vi.fn(),
       setAutoplayEnabled: vi.fn(),
       setNormalizationEnabled: vi.fn(),

@@ -9,6 +9,21 @@
   max-width: 100%;
 }
 
+/* Tarjeta de shuffle con el chip DJ superpuesto */
+.actionCardsRow__shuffle {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.actionCardsRow__dj {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 2;
+}
+
 /* Spinning animation for loading states */
 .spinning {
   animation: spin 1s linear infinite;
