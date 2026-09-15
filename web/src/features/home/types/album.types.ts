@@ -49,9 +49,7 @@ export function isHeroAlbum(item: HeroItem): item is { type: 'album'; data: Albu
 /**
  * Type guard to check if HeroItem is a playlist
  */
-export function isHeroPlaylist(
-  item: HeroItem
-): item is {
+export function isHeroPlaylist(item: HeroItem): item is {
   type: 'playlist';
   data: import('@shared/services/recommendations.service').AutoPlaylist;
 } {
@@ -117,15 +115,4 @@ export interface AlbumsByArtistResponse {
  */
 export interface AlbumsRecentlyPlayedResponse {
   data: Album[];
-}
-
-/**
- * Response type for favorite albums
- * Standardized format: data + page/limit/hasMore
- */
-export interface AlbumsFavoritesResponse {
-  data: Album[];
-  page: number;
-  limit: number;
-  hasMore: boolean;
 }

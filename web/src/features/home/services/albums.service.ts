@@ -6,7 +6,6 @@ import type {
   AlbumsAlphabeticalResponse,
   AlbumsByArtistResponse,
   AlbumsRecentlyPlayedResponse,
-  AlbumsFavoritesResponse,
 } from '../types';
 
 /**
@@ -118,19 +117,6 @@ export const albumsService = {
   getRecentlyPlayed: async (limit?: number): Promise<AlbumsRecentlyPlayedResponse> => {
     const { data } = await apiClient.get<AlbumsRecentlyPlayedResponse>('/albums/recently-played', {
       params: limit ? { limit } : undefined,
-    });
-    return data;
-  },
-
-  /**
-   * Get favorite albums for the authenticated user
-   */
-  getFavorites: async (params?: {
-    page?: number;
-    limit?: number;
-  }): Promise<AlbumsFavoritesResponse> => {
-    const { data } = await apiClient.get<AlbumsFavoritesResponse>('/albums/favorites', {
-      params,
     });
     return data;
   },

@@ -35,14 +35,12 @@ import {
 import { GetAlbumsAlphabeticallyUseCase } from '../../domain/use-cases/get-albums-alphabetically/get-albums-alphabetically.use-case';
 import { GetAlbumsByArtistUseCase } from '../../domain/use-cases/get-albums-by-artist/get-albums-by-artist.use-case';
 import { GetRecentlyPlayedAlbumsUseCase } from '../../domain/use-cases/get-recently-played-albums/get-recently-played-albums.use-case';
-import { GetFavoriteAlbumsUseCase } from '../../domain/use-cases/get-favorite-albums/get-favorite-albums.use-case';
 import {
   AlbumResponseDto,
   GetAlbumsResponseDto,
   SearchAlbumsResponseDto,
   GetAlbumsPaginatedResponseDto,
   GetRecentlyPlayedAlbumsResponseDto,
-  GetFavoriteAlbumsResponseDto,
 } from '../dtos';
 import { AlbumsPaginationQueryDto, AlbumsLimitQueryDto } from '../dtos/albums-sort.query.dto';
 import { TrackResponseDto } from '@features/tracks/presentation/dtos';
@@ -73,7 +71,6 @@ export class AlbumsController {
     private readonly getAlbumsAlphabeticallyUseCase: GetAlbumsAlphabeticallyUseCase,
     private readonly getAlbumsByArtistUseCase: GetAlbumsByArtistUseCase,
     private readonly getRecentlyPlayedAlbumsUseCase: GetRecentlyPlayedAlbumsUseCase,
-    private readonly getFavoriteAlbumsUseCase: GetFavoriteAlbumsUseCase,
     private readonly videoEnrichment: VideoEnrichmentService
   ) {}
 
@@ -315,56 +312,6 @@ export class AlbumsController {
 
     return GetRecentlyPlayedAlbumsResponseDto.create({
       data: result.albums.map((album) => AlbumResponseDto.fromDomain(album)),
-    });
-  }
-
-  @Get('favorites')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({
-    summary: 'Obtener álbumes favoritos',
-    description:
-      'Retorna álbumes marcados como favoritos (like) por el usuario, ordenados por fecha de like',
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: 'Número de página (empieza en 1)',
-    example: 1,
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Álbumes por página (1-100)',
-    example: 20,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de álbumes favoritos obtenida exitosamente',
-    type: GetFavoriteAlbumsResponseDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'No autenticado o token inválido',
-  })
-  async getFavoriteAlbums(
-    @CurrentUser() user: JwtUser,
-    @Query() query: AlbumsPaginationQueryDto
-  ): Promise<GetFavoriteAlbumsResponseDto> {
-    const result = await this.getFavoriteAlbumsUseCase.execute({
-      userId: user.id,
-      page: query.page || 1,
-      limit: query.limit || 20,
-    });
-
-    return GetFavoriteAlbumsResponseDto.create({
-      data: result.albums.map((album) => AlbumResponseDto.fromDomain(album)),
-      page: result.page,
-      limit: result.limit,
-      hasMore: result.hasMore,
     });
   }
 

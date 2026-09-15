@@ -12,7 +12,6 @@ import { GetAlbumCoverUseCase } from '../../domain/use-cases/get-album-cover/get
 import { GetAlbumsAlphabeticallyUseCase } from '../../domain/use-cases/get-albums-alphabetically/get-albums-alphabetically.use-case';
 import { GetAlbumsByArtistUseCase } from '../../domain/use-cases/get-albums-by-artist/get-albums-by-artist.use-case';
 import { GetRecentlyPlayedAlbumsUseCase } from '../../domain/use-cases/get-recently-played-albums/get-recently-played-albums.use-case';
-import { GetFavoriteAlbumsUseCase } from '../../domain/use-cases/get-favorite-albums/get-favorite-albums.use-case';
 import { VideoEnrichmentService } from '@features/music-videos/infrastructure/services/video-enrichment.service';
 import { GetUserTopPlayedAlbumsUseCase } from '../../domain/use-cases/get-user-top-played-albums/get-user-top-played-albums.use-case';
 import { Album } from '../../domain/entities/album.entity';
@@ -34,7 +33,6 @@ describe('AlbumsController', () => {
   let getAlbumsAlphabeticallyUseCase: jest.Mocked<GetAlbumsAlphabeticallyUseCase>;
   let getAlbumsByArtistUseCase: jest.Mocked<GetAlbumsByArtistUseCase>;
   let getRecentlyPlayedAlbumsUseCase: jest.Mocked<GetRecentlyPlayedAlbumsUseCase>;
-  let getFavoriteAlbumsUseCase: jest.Mocked<GetFavoriteAlbumsUseCase>;
 
   const mockAlbum = Album.reconstruct({
     id: 'album-1',
@@ -95,7 +93,6 @@ describe('AlbumsController', () => {
         { provide: GetAlbumsAlphabeticallyUseCase, useValue: { execute: jest.fn() } },
         { provide: GetAlbumsByArtistUseCase, useValue: { execute: jest.fn() } },
         { provide: GetRecentlyPlayedAlbumsUseCase, useValue: { execute: jest.fn() } },
-        { provide: GetFavoriteAlbumsUseCase, useValue: { execute: jest.fn() } },
         { provide: GetUserTopPlayedAlbumsUseCase, useValue: { execute: jest.fn() } },
         { provide: getLoggerToken(AlbumsController.name), useValue: mockLogger },
         {
@@ -117,7 +114,6 @@ describe('AlbumsController', () => {
     getAlbumsAlphabeticallyUseCase = module.get(GetAlbumsAlphabeticallyUseCase);
     getAlbumsByArtistUseCase = module.get(GetAlbumsByArtistUseCase);
     getRecentlyPlayedAlbumsUseCase = module.get(GetRecentlyPlayedAlbumsUseCase);
-    getFavoriteAlbumsUseCase = module.get(GetFavoriteAlbumsUseCase);
   });
 
   describe('getAlbum', () => {
@@ -359,35 +355,6 @@ describe('AlbumsController', () => {
         limit: 20,
       });
       expect(result.data).toHaveLength(1);
-    });
-  });
-
-  describe('getFavoriteAlbums', () => {
-    it('debería retornar álbumes favoritos del usuario', async () => {
-      // Arrange
-      getFavoriteAlbumsUseCase.execute.mockResolvedValue({
-        albums: [mockAlbum],
-        page: 1,
-        limit: 20,
-        hasMore: false,
-      });
-
-      const mockUser = { id: 'user-1', username: 'test' };
-
-      // Act
-      const result = await controller.getFavoriteAlbums(mockUser as unknown as JwtUser, {
-        page: 1,
-        limit: 20,
-      });
-
-      // Assert
-      expect(getFavoriteAlbumsUseCase.execute).toHaveBeenCalledWith({
-        userId: 'user-1',
-        page: 1,
-        limit: 20,
-      });
-      expect(result.data).toHaveLength(1);
-      expect(result.hasMore).toBe(false);
     });
   });
 });

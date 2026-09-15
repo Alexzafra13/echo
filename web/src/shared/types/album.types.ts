@@ -30,7 +30,12 @@ export interface Album {
 /**
  * Album sort/filter options
  */
-export type AlbumSortOption = 'recent' | 'alphabetical' | 'artist' | 'recently-played' | 'top-played' | 'favorites';
+export type AlbumSortOption =
+  | 'recent'
+  | 'alphabetical'
+  | 'artist'
+  | 'recently-played'
+  | 'top-played';
 
 /**
  * Paginated response type for albums

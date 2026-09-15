@@ -131,7 +131,6 @@ export default function AlbumsPage() {
                   { value: 'artist', label: t('albums.sortArtist') },
                   { value: 'recently-played', label: t('albums.sortRecentlyPlayed') },
                   { value: 'top-played', label: t('albums.sortTopPlayed') },
-                  { value: 'favorites', label: t('albums.sortFavorites') },
                 ]}
                 className={styles.albumsPage__filterWrapper}
               />

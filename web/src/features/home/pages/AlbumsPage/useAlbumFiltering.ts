@@ -6,7 +6,6 @@ import {
   useAlbumsAlphabetically,
   useAlbumsByArtist,
   useAlbumsRecentlyPlayed,
-  useAlbumsFavorites,
   useAlbumSearch,
 } from '../../hooks/useAlbums';
 import { useGridDimensions } from '../../hooks/useGridDimensions';
@@ -55,7 +54,6 @@ export function useAlbumFiltering() {
   const byArtistQuery = useAlbumsByArtist({ page, limit: itemsPerPage });
   const recentlyPlayedQuery = useAlbumsRecentlyPlayed(itemsPerPage);
   const topPlayedQuery = useTopPlayedAlbums(itemsPerPage);
-  const favoritesQuery = useAlbumsFavorites({ page, limit: itemsPerPage });
 
   // Active query selector
   let activeQuery;
@@ -82,11 +80,6 @@ export function useAlbumFiltering() {
       activeQuery = topPlayedQuery;
       allAlbums = topPlayedQuery.data || [];
       totalPages = 1;
-      break;
-    case 'favorites':
-      activeQuery = favoritesQuery;
-      allAlbums = favoritesQuery.data?.data || [];
-      totalPages = favoritesQuery.data?.hasMore ? page + 1 : page;
       break;
     case 'recent':
     default:

@@ -114,11 +114,6 @@ vi.mock('../../hooks/useAlbums', () => ({
     isLoading: false,
     error: null,
   }),
-  useAlbumsFavorites: () => ({
-    data: { data: mockAlbums, hasMore: false },
-    isLoading: false,
-    error: null,
-  }),
   useAlbumSearch: () => ({
     data: null,
     isLoading: false,
@@ -260,7 +255,6 @@ describe('AlbumsPage', () => {
       expect(screen.getByText('Por artista (A-Z)')).toBeInTheDocument();
       expect(screen.getByText('Reproducidos recientemente')).toBeInTheDocument();
       expect(screen.getByText('Los más reproducidos')).toBeInTheDocument();
-      expect(screen.getByText('Mis favoritos')).toBeInTheDocument();
     });
 
     it('should change sort option when selected', () => {

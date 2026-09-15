@@ -43,7 +43,6 @@ describe('CachedAlbumRepository', () => {
       findAlphabetically: jest.fn(),
       findByArtistName: jest.fn(),
       findRecentlyPlayed: jest.fn(),
-      findFavorites: jest.fn(),
       count: jest.fn(),
       countByArtistId: jest.fn(),
       create: jest.fn(),

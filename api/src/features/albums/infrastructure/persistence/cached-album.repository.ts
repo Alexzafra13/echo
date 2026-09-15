@@ -119,10 +119,6 @@ export class CachedAlbumRepository
   }
 
   // Sin caché - específico por usuario
-  async findFavorites(userId: string, skip: number, take: number): Promise<Album[]> {
-    return this.baseRepository.findFavorites(userId, skip, take);
-  }
-
   override async create(album: Album): Promise<Album> {
     const created = await this.baseRepository.create(album);
     await this.invalidateListCaches();

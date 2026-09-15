@@ -9,7 +9,6 @@ export type {
   AlbumsAlphabeticalResponse,
   AlbumsByArtistResponse,
   AlbumsRecentlyPlayedResponse,
-  AlbumsFavoritesResponse,
 } from './album.types';
 
 export { isHeroAlbum, isHeroPlaylist, isHeroMusicVideo } from './album.types';
