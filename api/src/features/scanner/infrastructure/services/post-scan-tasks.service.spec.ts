@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getLoggerToken } from 'nestjs-pino';
 import { PostScanTasksService } from './post-scan-tasks.service';
-import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
+import { SettingsService } from '@infrastructure/settings';
 import { EnrichmentQueueService } from '@features/external-metadata/infrastructure/services/enrichment-queue.service';
 import { LufsAnalysisQueueService } from './lufs-analysis-queue.service';
 import { DjAnalysisQueueService } from '@features/dj/infrastructure/services/dj-analysis-queue.service';

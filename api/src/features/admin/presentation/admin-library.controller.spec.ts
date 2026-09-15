@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { getLoggerToken } from 'nestjs-pino';
 import { AdminLibraryController } from './admin-library.controller';
-import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
+import { SettingsService } from '@infrastructure/settings';
 import { FilesystemService } from '@infrastructure/filesystem/filesystem.service';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';

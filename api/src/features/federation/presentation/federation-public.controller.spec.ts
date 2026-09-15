@@ -4,7 +4,7 @@ import { FederationPublicController } from './federation-public.controller';
 import { FederationTokenService } from '../domain/services';
 import { IFederationLibraryRepository, FEDERATION_LIBRARY_REPOSITORY } from '../domain/ports';
 import { CoverArtService } from '@shared/services';
-import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
+import { SettingsService } from '@infrastructure/settings';
 import { FilesystemService } from '@infrastructure/filesystem/filesystem.service';
 import { getLoggerToken } from 'nestjs-pino';
 import { FederationAccessToken } from '../domain/types';

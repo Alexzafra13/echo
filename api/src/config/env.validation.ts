@@ -4,6 +4,7 @@
  * Validates required variables at startup without external dependencies.
  * Replaces Joi with a simple manual validator since we only check ~10 vars.
  */
+import { getVersion } from '@shared/utils/version.util';
 
 interface ValidationError {
   field: string;
@@ -81,9 +82,9 @@ export function validateEnvironment(config: Record<string, unknown>): Record<str
   return {
     ...config,
     NODE_ENV: config.NODE_ENV || 'development',
-    PORT: config.PORT ? Number(config.PORT) : 4567,
+    PORT: config.PORT ? Number(config.PORT) : 3000,
     REDIS_HOST: config.REDIS_HOST || 'localhost',
     REDIS_PORT: config.REDIS_PORT ? Number(config.REDIS_PORT) : 6379,
-    VERSION: config.VERSION || '1.0.2',
+    VERSION: config.VERSION || getVersion(),
   };
 }

@@ -1,3 +1,4 @@
+import { getVersion } from '@shared/utils/version.util';
 import { validateEnvironment } from './env.validation';
 
 describe('validateEnvironment', () => {
@@ -17,9 +18,9 @@ describe('validateEnvironment', () => {
     expect(result.NODE_ENV).toBe('development');
   });
 
-  it('should default PORT to 4567', () => {
+  it('should default PORT to 3000', () => {
     const result = validateEnvironment(validConfig);
-    expect(result.PORT).toBe(4567);
+    expect(result.PORT).toBe(3000);
   });
 
   it('should default REDIS_HOST to localhost', () => {
@@ -32,9 +33,9 @@ describe('validateEnvironment', () => {
     expect(result.REDIS_PORT).toBe(6379);
   });
 
-  it('should default VERSION to 1.0.0', () => {
+  it('should default VERSION to the package version', () => {
     const result = validateEnvironment(validConfig);
-    expect(result.VERSION).toBe('1.0.2');
+    expect(result.VERSION).toBe(getVersion());
   });
 
   it('should reject invalid NODE_ENV', () => {
