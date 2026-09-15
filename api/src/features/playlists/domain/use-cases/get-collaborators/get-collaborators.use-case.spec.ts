@@ -1,13 +1,8 @@
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { GetCollaboratorsUseCase } from './get-collaborators.use-case';
 import { Playlist } from '../../entities';
-import {
-  PlaylistCollaborator,
-  CollaboratorRole,
-  CollaboratorStatus,
-} from '../../entities/playlist-collaborator.entity';
 import { IPlaylistRepository } from '../../ports';
-import { ICollaboratorRepository } from '../../ports';
+import { ICollaboratorRepository, CollaboratorWithUser } from '../../ports';
 
 describe('GetCollaboratorsUseCase', () => {
   let useCase: GetCollaboratorsUseCase;
@@ -30,19 +25,20 @@ describe('GetCollaboratorsUseCase', () => {
     });
   };
 
-  const createMockCollaborator = (overrides = {}): PlaylistCollaborator => {
-    return PlaylistCollaborator.fromPrimitives({
-      id: 'collab-123',
-      playlistId: 'playlist-123',
-      userId: 'user-456',
-      role: 'viewer' as CollaboratorRole,
-      status: 'pending' as CollaboratorStatus,
-      invitedBy: 'owner-123',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...overrides,
-    });
-  };
+  const createMockCollaborator = (
+    overrides: Partial<CollaboratorWithUser> = {}
+  ): CollaboratorWithUser => ({
+    id: 'collab-123',
+    playlistId: 'playlist-123',
+    userId: 'user-456',
+    username: 'collaborator',
+    hasAvatar: false,
+    role: 'viewer',
+    status: 'pending',
+    invitedBy: 'owner-123',
+    createdAt: new Date(),
+    ...overrides,
+  });
 
   beforeEach(() => {
     playlistRepository = {

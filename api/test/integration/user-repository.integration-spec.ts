@@ -97,6 +97,8 @@ describe('UserRepository Integration', () => {
         passwordHash: '$2b$12$test_hash_for_integration',
         name: 'Integration Test',
         isAdmin: false,
+        isActive: true,
+        mustChangePassword: true,
       });
 
       const created = await repository.create(user);
@@ -124,6 +126,8 @@ describe('UserRepository Integration', () => {
         passwordHash: '$2b$12$admin_hash',
         name: 'Admin User',
         isAdmin: true,
+        isActive: true,
+        mustChangePassword: false,
       });
 
       const created = await repository.create(admin);
@@ -136,6 +140,9 @@ describe('UserRepository Integration', () => {
         username: 'duplicate_user',
         passwordHash: '$2b$12$hash1',
         name: 'First User',
+        isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
       });
       await repository.create(user1);
 
@@ -143,6 +150,9 @@ describe('UserRepository Integration', () => {
         username: 'duplicate_user',
         passwordHash: '$2b$12$hash2',
         name: 'Second User',
+        isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
       });
 
       await expect(repository.create(user2)).rejects.toThrow();
@@ -155,6 +165,9 @@ describe('UserRepository Integration', () => {
         username: 'findme',
         passwordHash: '$2b$12$hash',
         name: 'Find Me',
+        isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
       });
       await repository.create(user);
 
@@ -178,6 +191,9 @@ describe('UserRepository Integration', () => {
         username: 'findbyid',
         passwordHash: '$2b$12$hash',
         name: 'Find By ID',
+        isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
       });
       const created = await repository.create(user);
 
@@ -202,6 +218,9 @@ describe('UserRepository Integration', () => {
           username: `user_${i}`,
           passwordHash: '$2b$12$hash',
           name: `User ${i}`,
+          isAdmin: false,
+          isActive: true,
+          mustChangePassword: false,
         });
         await repository.create(user);
       }
@@ -220,6 +239,9 @@ describe('UserRepository Integration', () => {
         const user = User.create({
           username: `count_user_${i}`,
           passwordHash: '$2b$12$hash',
+          isAdmin: false,
+          isActive: true,
+          mustChangePassword: false,
         });
         await repository.create(user);
       }
@@ -243,6 +265,9 @@ describe('UserRepository Integration', () => {
         passwordHash: '$2b$12$hash',
         name: 'Original Name',
         theme: 'dark',
+        isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
       });
       const created = await repository.create(user);
 
@@ -262,6 +287,9 @@ describe('UserRepository Integration', () => {
       const user = User.create({
         username: 'password_update_test',
         passwordHash: '$2b$12$original_hash',
+        isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
       });
       const created = await repository.create(user);
 
@@ -282,6 +310,8 @@ describe('UserRepository Integration', () => {
         username: 'promote_test',
         passwordHash: '$2b$12$hash',
         isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
       });
       const created = await repository.create(user);
 
@@ -297,6 +327,9 @@ describe('UserRepository Integration', () => {
       const user = User.create({
         username: 'delete_test',
         passwordHash: '$2b$12$hash',
+        isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
       });
       const created = await repository.create(user);
 

@@ -28,6 +28,7 @@ const createMockSocialRepository = (): jest.Mocked<ISocialRepository> => ({
   getListeningFriends: jest.fn(),
   getAllListeningUsers: jest.fn(),
   getFriendsActivity: jest.fn(),
+  getUserDisplayName: jest.fn(),
   searchUsers: jest.fn(),
 });
 

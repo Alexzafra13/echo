@@ -8,7 +8,8 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { FastifyRequest } from 'fastify';
+
+type UploadRequest = Parameters<RadioFaviconsController['upload']>[1];
 
 describe('RadioFaviconsController', () => {
   let controller: RadioFaviconsController;
@@ -72,7 +73,7 @@ describe('RadioFaviconsController', () => {
             : null
         ),
         user: { id: 'admin-123' },
-      } as unknown as FastifyRequest & { file: () => Promise<unknown> } & { user: { id: string } };
+      } as unknown as UploadRequest;
     };
 
     it('debería subir un favicon correctamente', async () => {

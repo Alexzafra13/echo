@@ -12,7 +12,7 @@ import { RadioStation, RadioStationProps } from '../domain/entities/radio-statio
 import { SearchStationsDto } from './dto/search-stations.dto';
 import { SaveApiStationDto } from './dto/save-api-station.dto';
 import { CreateCustomStationDto } from './dto/create-custom-station.dto';
-import { RadioBrowserStation } from '../domain/ports/radio-browser-api.port';
+import { RadioBrowserStation, RadioCountry } from '../domain/ports/radio-browser-api.port';
 
 const createMockStation = (overrides: Partial<RadioStationProps> = {}) =>
   RadioStation.reconstruct({
@@ -185,9 +185,9 @@ describe('RadioController', () => {
 
   describe('getCountries', () => {
     it('should return available countries', async () => {
-      const mockCountries = [
-        { name: 'United States', stationcount: 5000 },
-      ] as unknown as RadioBrowserStation[];
+      const mockCountries: RadioCountry[] = [
+        { name: 'United States', iso_3166_1: 'US', stationcount: 5000 },
+      ];
       searchStationsUseCase.getCountries.mockResolvedValue(mockCountries);
 
       const result = await controller.getCountries();

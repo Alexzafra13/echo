@@ -35,7 +35,7 @@ describe('WebSocket E2E', () => {
     options: {
       method?: 'auth' | 'query' | 'header';
       namespace?: string;
-    } = {},
+    } = {}
   ): Socket => {
     const { method = 'auth', namespace = '/scanner' } = options;
 
@@ -93,11 +93,7 @@ describe('WebSocket E2E', () => {
   };
 
   // Helper para esperar un evento específico
-  const waitForEvent = <T>(
-    socket: Socket,
-    event: string,
-    timeout = 3000,
-  ): Promise<T> => {
+  const waitForEvent = <T>(socket: Socket, event: string, timeout = 3000): Promise<T> => {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         reject(new Error(`Timeout waiting for event: ${event}`));
@@ -299,18 +295,12 @@ describe('WebSocket E2E', () => {
 
         // Suscribirse a scan 1
         socket.emit('scanner:subscribe', { scanId: 'scan-1' });
-        const response1 = await waitForEvent<{ scanId: string }>(
-          socket,
-          'scanner:subscribed',
-        );
+        const response1 = await waitForEvent<{ scanId: string }>(socket, 'scanner:subscribed');
         expect(response1.scanId).toBe('scan-1');
 
         // Suscribirse a scan 2
         socket.emit('scanner:subscribe', { scanId: 'scan-2' });
-        const response2 = await waitForEvent<{ scanId: string }>(
-          socket,
-          'scanner:subscribed',
-        );
+        const response2 = await waitForEvent<{ scanId: string }>(socket, 'scanner:subscribed');
         expect(response2.scanId).toBe('scan-2');
       } finally {
         socket.disconnect();
@@ -326,11 +316,7 @@ describe('WebSocket E2E', () => {
       try {
         await waitForConnect(socket);
 
-        const errorPromise = waitForEvent<{ message: string }>(
-          socket,
-          'exception',
-          2000,
-        );
+        const errorPromise = waitForEvent<{ message: string }>(socket, 'exception', 2000);
 
         socket.emit('scanner:pause', { scanId: '00000000-0000-0000-0000-000000000123' });
 
@@ -348,11 +334,7 @@ describe('WebSocket E2E', () => {
       try {
         await waitForConnect(socket);
 
-        const errorPromise = waitForEvent<{ message: string }>(
-          socket,
-          'exception',
-          2000,
-        );
+        const errorPromise = waitForEvent<{ message: string }>(socket, 'exception', 2000);
 
         socket.emit('scanner:cancel', {
           scanId: '00000000-0000-0000-0000-000000000456',
@@ -373,11 +355,7 @@ describe('WebSocket E2E', () => {
       try {
         await waitForConnect(socket);
 
-        const errorPromise = waitForEvent<{ message: string }>(
-          socket,
-          'exception',
-          2000,
-        );
+        const errorPromise = waitForEvent<{ message: string }>(socket, 'exception', 2000);
 
         socket.emit('scanner:resume', { scanId: '00000000-0000-0000-0000-000000000789' });
 
@@ -396,11 +374,7 @@ describe('WebSocket E2E', () => {
         await waitForConnect(socket);
 
         // Esperar error o excepción
-        const errorPromise = waitForEvent<{ message: string }>(
-          socket,
-          'exception',
-          2000,
-        );
+        const errorPromise = waitForEvent<{ message: string }>(socket, 'exception', 2000);
 
         socket.emit('scanner:pause', { scanId: '00000000-0000-0000-0000-100000000123' });
 
@@ -418,11 +392,7 @@ describe('WebSocket E2E', () => {
       try {
         await waitForConnect(socket);
 
-        const errorPromise = waitForEvent<{ message: string }>(
-          socket,
-          'exception',
-          2000,
-        );
+        const errorPromise = waitForEvent<{ message: string }>(socket, 'exception', 2000);
 
         socket.emit('scanner:cancel', {
           scanId: '00000000-0000-0000-0000-100000000456',
@@ -443,11 +413,7 @@ describe('WebSocket E2E', () => {
       try {
         await waitForConnect(socket);
 
-        const errorPromise = waitForEvent<{ message: string }>(
-          socket,
-          'exception',
-          2000,
-        );
+        const errorPromise = waitForEvent<{ message: string }>(socket, 'exception', 2000);
 
         socket.emit('scanner:resume', { scanId: '00000000-0000-0000-0000-100000000789' });
 
@@ -497,10 +463,7 @@ describe('WebSocket E2E', () => {
 
       // Debería poder suscribirse de nuevo
       socket2.emit('scanner:subscribe', { scanId: 'reconnect-test' });
-      const response = await waitForEvent<{ scanId: string }>(
-        socket2,
-        'scanner:subscribed',
-      );
+      const response = await waitForEvent<{ scanId: string }>(socket2, 'scanner:subscribed');
       expect(response.scanId).toBe('reconnect-test');
 
       socket2.disconnect();
@@ -565,37 +528,40 @@ describe('WebSocket E2E', () => {
   });
 
   describe('Performance', () => {
-    // TODO: Race condition - all waitForEvent listeners receive the same event
-    // because events arrive faster than listeners are registered.
-    // To fix: Use a different approach like collecting all events in an array.
-    it.skip('debería manejar múltiples suscripciones rápidas', async () => {
+    it('debería manejar múltiples suscripciones rápidas', async () => {
       const { accessToken } = await createUserAndLogin(drizzle, app);
       const socket = createSocket(accessToken);
 
       try {
         await waitForConnect(socket);
 
-        const subscriptionPromises: Promise<{ scanId: string }>[] = [];
+        const total = 10;
+        const confirmations: { scanId: string }[] = [];
 
-        // Suscribirse rápidamente a 10 scans
-        for (let i = 0; i < 10; i++) {
-          const promise = waitForEvent<{ scanId: string }>(
-            socket,
-            'scanner:subscribed',
-            5000,
+        // Un único listener acumula todas las confirmaciones
+        const allConfirmed = new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(
+            () =>
+              reject(new Error(`Only ${confirmations.length}/${total} subscriptions confirmed`)),
+            5000
           );
+          socket.on('scanner:subscribed', (data: { scanId: string }) => {
+            confirmations.push(data);
+            if (confirmations.length === total) {
+              clearTimeout(timer);
+              resolve();
+            }
+          });
+        });
+
+        for (let i = 0; i < total; i++) {
           socket.emit('scanner:subscribe', { scanId: `rapid-scan-${i}` });
-          subscriptionPromises.push(promise);
         }
 
-        // Esperar todas las confirmaciones
-        const results = await Promise.all(subscriptionPromises);
-        expect(results.length).toBe(10);
+        await allConfirmed;
 
-        // Verificar que todos tienen scanId diferentes
-        const scanIds = results.map((r) => r.scanId);
-        const uniqueIds = new Set(scanIds);
-        expect(uniqueIds.size).toBe(10);
+        const uniqueIds = new Set(confirmations.map((c) => c.scanId));
+        expect(uniqueIds.size).toBe(total);
       } finally {
         socket.disconnect();
       }
@@ -608,8 +574,8 @@ describe('WebSocket E2E', () => {
           createUserAndLogin(drizzle, app, {
             username: `concurrent_user_${i}`,
             password: 'Test123!',
-          }),
-        ),
+          })
+        )
       );
 
       const sockets = users.map((u) => createSocket(u.accessToken));
@@ -676,10 +642,7 @@ describe('WebSocket E2E', () => {
 
       // Debería poder suscribirse al mismo scan
       socket2.emit('scanner:subscribe', { scanId: 'resubscribe-scan' });
-      const response = await waitForEvent<{ scanId: string }>(
-        socket2,
-        'scanner:subscribed',
-      );
+      const response = await waitForEvent<{ scanId: string }>(socket2, 'scanner:subscribed');
       expect(response.scanId).toBe('resubscribe-scan');
 
       socket2.disconnect();
@@ -705,18 +668,12 @@ describe('WebSocket E2E', () => {
 
         // User1 se suscribe a scan-A
         socket1.emit('scanner:subscribe', { scanId: 'isolated-scan-A' });
-        const response1 = await waitForEvent<{ scanId: string }>(
-          socket1,
-          'scanner:subscribed',
-        );
+        const response1 = await waitForEvent<{ scanId: string }>(socket1, 'scanner:subscribed');
         expect(response1.scanId).toBe('isolated-scan-A');
 
         // User2 se suscribe a scan-B
         socket2.emit('scanner:subscribe', { scanId: 'isolated-scan-B' });
-        const response2 = await waitForEvent<{ scanId: string }>(
-          socket2,
-          'scanner:subscribed',
-        );
+        const response2 = await waitForEvent<{ scanId: string }>(socket2, 'scanner:subscribed');
         expect(response2.scanId).toBe('isolated-scan-B');
 
         // Ambas suscripciones son independientes

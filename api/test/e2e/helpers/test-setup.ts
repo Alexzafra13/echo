@@ -1,11 +1,14 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ThrottlerGuard, ThrottlerStorage, ThrottlerStorageRecord } from '@nestjs/throttler';
+import { Reflector } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
 import { AppModule } from '../../../src/app.module';
 import { WebSocketAdapter } from '../../../src/infrastructure/websocket/websocket.adapter';
 import { RedisService } from '../../../src/infrastructure/cache/redis.service';
+import { BigIntSerializerInterceptor } from '../../../src/shared/interceptors/bigint-serializer.interceptor';
+import { MustChangePasswordInterceptor } from '../../../src/shared/interceptors/must-change-password.interceptor';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import * as schema from '../../../src/infrastructure/database/schema';
@@ -28,6 +31,8 @@ class NoOpThrottlerGuard extends ThrottlerGuard {
 /**
  * Mock ThrottlerStorage que nunca bloquea (para E2E tests)
  */
+type ThrottlerStorageRecord = Awaited<ReturnType<ThrottlerStorage['increment']>>;
+
 class NoOpThrottlerStorage implements ThrottlerStorage {
   async increment(): Promise<ThrottlerStorageRecord> {
     return { totalHits: 0, timeToExpire: 0, isBlocked: false, timeToBlockExpire: 0 };
@@ -53,16 +58,20 @@ export async function createTestApp(): Promise<{
     .useClass(NoOpThrottlerStorage)
     .compile();
 
-  const app = moduleFixture.createNestApplication<NestFastifyApplication>(
-    new FastifyAdapter(),
-  );
+  const app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
 
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-    }),
+    })
+  );
+
+  // Mismos interceptores globales que main.ts
+  app.useGlobalInterceptors(
+    new BigIntSerializerInterceptor(),
+    new MustChangePasswordInterceptor(app.get(Reflector))
   );
 
   app.setGlobalPrefix('api');
@@ -113,7 +122,7 @@ export async function createTestUser(
     isAdmin?: boolean;
     isActive?: boolean;
     mustChangePassword?: boolean;
-  },
+  }
 ): Promise<{ id: string; username: string }> {
   const passwordHash = await bcrypt.hash(data.password, 12);
 
@@ -145,7 +154,7 @@ export async function createTestUser(
 export async function loginUser(
   app: INestApplication,
   username: string,
-  password: string,
+  password: string
 ): Promise<{ accessToken: string; refreshToken: string }> {
   const response = await request(app.getHttpServer())
     .post('/api/auth/login')
@@ -164,7 +173,7 @@ export async function loginUser(
 export async function createAdminAndLogin(
   drizzle: DrizzleService,
   app: INestApplication,
-  options?: { username?: string; password?: string },
+  options?: { username?: string; password?: string }
 ): Promise<{
   user: { id: string; username: string };
   accessToken: string;
@@ -192,7 +201,7 @@ export async function createAdminAndLogin(
 export async function createUserAndLogin(
   drizzle: DrizzleService,
   app: INestApplication,
-  options?: { username?: string; password?: string; name?: string },
+  options?: { username?: string; password?: string; name?: string }
 ): Promise<{
   user: { id: string; username: string };
   accessToken: string;
@@ -317,7 +326,7 @@ export async function createTestArtist(
     biography?: string;
     albumCount?: number;
     songCount?: number;
-  },
+  }
 ): Promise<{ id: string; name: string }> {
   const [artist] = await drizzle.db
     .insert(schema.artists)
@@ -344,7 +353,7 @@ export async function createTestAlbum(
     year?: number;
     songCount?: number;
     duration?: number;
-  },
+  }
 ): Promise<{ id: string; name: string }> {
   const [album] = await drizzle.db
     .insert(schema.albums)
@@ -375,7 +384,7 @@ export async function createTestTrack(
     duration?: number;
     trackNumber?: number;
     discNumber?: number;
-  },
+  }
 ): Promise<{ id: string; title: string }> {
   const [track] = await drizzle.db
     .insert(schema.tracks)
@@ -397,10 +406,7 @@ export async function createTestTrack(
 /**
  * Obtiene un usuario por username
  */
-export async function getUserByUsername(
-  drizzle: DrizzleService,
-  username: string,
-) {
+export async function getUserByUsername(drizzle: DrizzleService, username: string) {
   const [user] = await drizzle.db
     .select()
     .from(schema.users)
@@ -413,10 +419,7 @@ export async function getUserByUsername(
 /**
  * Obtiene un usuario por ID
  */
-export async function getUserById(
-  drizzle: DrizzleService,
-  id: string,
-) {
+export async function getUserById(drizzle: DrizzleService, id: string) {
   const [user] = await drizzle.db
     .select()
     .from(schema.users)
@@ -436,7 +439,7 @@ export async function createTestPlaylist(
     ownerId: string;
     description?: string;
     isPublic?: boolean;
-  },
+  }
 ): Promise<{ id: string; name: string }> {
   const [playlist] = await drizzle.db
     .insert(schema.playlists)
@@ -462,7 +465,7 @@ export async function addTrackToPlaylist(
   drizzle: DrizzleService,
   playlistId: string,
   trackId: string,
-  trackOrder: number,
+  trackOrder: number
 ): Promise<void> {
   await drizzle.db.insert(schema.playlistTracks).values({
     playlistId,
