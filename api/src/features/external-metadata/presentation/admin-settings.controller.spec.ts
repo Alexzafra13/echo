@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { getLoggerToken } from 'nestjs-pino';
 import { AdminSettingsController } from './admin-settings.controller';
-import { SettingsService } from '../infrastructure/services/settings.service';
+import { SettingsService } from '@infrastructure/settings';
 import { EnrichmentQueueService } from '../infrastructure/services/enrichment-queue.service';
 import { FanartTvAgent } from '../infrastructure/agents/fanart-tv.agent';
 import { LastfmAgent } from '../infrastructure/agents/lastfm.agent';
@@ -21,6 +21,18 @@ const mockLogger = {
 describe('AdminSettingsController', () => {
   let controller: AdminSettingsController;
   let settingsService: jest.Mocked<SettingsService>;
+
+  const mockSecret = {
+    id: '9',
+    key: 'jwt_secret',
+    value: 'super-secret',
+    type: 'secret',
+    category: 'security',
+    description: 'Auto-generated',
+    isPublic: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
   const mockSetting = {
     id: '1',
@@ -112,6 +124,17 @@ describe('AdminSettingsController', () => {
       expect(settingsService.findAll).toHaveBeenCalledTimes(1);
     });
 
+    it('no debería incluir secretos del servidor', async () => {
+      // Arrange
+      settingsService.findAll.mockResolvedValue([mockSetting, mockSecret]);
+
+      // Act
+      const result = await controller.getAllSettings();
+
+      // Assert
+      expect(result).toEqual([mockSetting]);
+    });
+
     it('debería propagar errores del servicio', async () => {
       // Arrange
       settingsService.findAll.mockRejectedValue(new Error('Database error'));
@@ -182,6 +205,17 @@ describe('AdminSettingsController', () => {
       expect(result).toBeNull();
     });
 
+    it('debería retornar null si la clave es un secreto', async () => {
+      // Arrange
+      settingsService.findOne.mockResolvedValue(mockSecret);
+
+      // Act
+      const result = await controller.getSetting('jwt_secret');
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
     it('debería propagar errores del servicio', async () => {
       // Arrange
       settingsService.findOne.mockRejectedValue(new Error('Database error'));
@@ -192,6 +226,17 @@ describe('AdminSettingsController', () => {
   });
 
   describe('updateSetting', () => {
+    it('debería rechazar la modificación de secretos', async () => {
+      // Arrange
+      settingsService.findOne.mockResolvedValue(mockSecret);
+
+      // Act & Assert
+      await expect(controller.updateSetting('jwt_secret', { value: 'x' })).rejects.toThrow(
+        ForbiddenException
+      );
+      expect(settingsService.set).not.toHaveBeenCalled();
+    });
+
     it('debería actualizar una configuración existente', async () => {
       // Arrange
       const oldSetting = { ...mockSetting, value: 'old-value' };
@@ -322,6 +367,15 @@ describe('AdminSettingsController', () => {
   });
 
   describe('deleteSetting', () => {
+    it('debería rechazar el borrado de secretos', async () => {
+      // Arrange
+      settingsService.findOne.mockResolvedValue(mockSecret);
+
+      // Act & Assert
+      await expect(controller.deleteSetting('jwt_secret')).rejects.toThrow(ForbiddenException);
+      expect(settingsService.delete).not.toHaveBeenCalled();
+    });
+
     it('debería eliminar una configuración', async () => {
       // Arrange
       settingsService.findOne.mockResolvedValue(mockSetting);
