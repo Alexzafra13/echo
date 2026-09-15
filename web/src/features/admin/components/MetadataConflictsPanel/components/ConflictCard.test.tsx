@@ -46,9 +46,7 @@ vi.mock('./ImageWithFallback', () => ({
 }));
 
 vi.mock('./SourceBadge', () => ({
-  SourceBadge: ({ source }: { source: string }) => (
-    <span data-testid="source-badge">{source}</span>
-  ),
+  SourceBadge: ({ source }: { source: string }) => <span data-testid="source-badge">{source}</span>,
 }));
 
 // Mock UI components
@@ -351,10 +349,10 @@ describe('ConflictCard', () => {
       expect(screen.getByText('Cover Externa')).toBeInTheDocument();
     });
 
-    it('should translate cover to "Cover"', () => {
+    it('should translate cover to "Portada"', () => {
       render(<ConflictCard conflict={mockLowQualityConflict} />);
 
-      expect(screen.getByText('Cover')).toBeInTheDocument();
+      expect(screen.getByText('Portada')).toBeInTheDocument();
     });
 
     it('should translate biography to "Biografía"', () => {
@@ -589,7 +587,9 @@ describe('ConflictCard', () => {
       fireEvent.click(screen.getByText('Aplicar selección'));
 
       await waitFor(() => {
-        expect(screen.getByText('Error al aplicar sugerencia: Invalid suggestion')).toBeInTheDocument();
+        expect(
+          screen.getByText('Error al aplicar sugerencia: Invalid suggestion')
+        ).toBeInTheDocument();
       });
     });
 

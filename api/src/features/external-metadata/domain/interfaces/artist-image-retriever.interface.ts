@@ -12,8 +12,5 @@ export interface IArtistImageRetriever extends IAgent {
    * @param name Artist name (fallback for search)
    * @returns ArtistImages entity or null if not found
    */
-  getArtistImages(
-    mbid: string | null,
-    name: string
-  ): Promise<ArtistImages | null>;
+  getArtistImages(mbid: string | null, name: string): Promise<ArtistImages | null>;
 }

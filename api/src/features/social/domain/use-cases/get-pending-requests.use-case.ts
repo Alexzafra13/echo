@@ -6,7 +6,7 @@ import { Friend } from '../entities/friendship.entity';
 export class GetPendingRequestsUseCase {
   constructor(
     @Inject(SOCIAL_REPOSITORY)
-    private readonly socialRepository: ISocialRepository,
+    private readonly socialRepository: ISocialRepository
   ) {}
 
   async execute(userId: string): Promise<{ received: Friend[]; sent: Friend[]; count: number }> {

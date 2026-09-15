@@ -1,16 +1,12 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { eq, count as dbCount } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { users, settings } from '@infrastructure/database/schema';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import {
-  DirectoryBrowserService,
-  BrowseResult,
-  MusicLibraryDetectorService,
-} from './services';
+import { DirectoryBrowserService, BrowseResult, MusicLibraryDetectorService } from './services';
 import { SettingsService } from '@infrastructure/settings/settings.service';
 
 // Re-export types for backwards compatibility
@@ -73,7 +69,7 @@ export class SetupService {
     private readonly drizzle: DrizzleService,
     private readonly directoryBrowser: DirectoryBrowserService,
     private readonly libraryDetector: MusicLibraryDetectorService,
-    private readonly settingsService: SettingsService,
+    private readonly settingsService: SettingsService
   ) {
     this.setupFilePath = path.join(this.dataPath, 'setup.json');
   }
@@ -140,17 +136,14 @@ export class SetupService {
    * Create admin account (step 1 of wizard)
    */
   async createAdmin(username: string, password: string): Promise<void> {
-    const [state, existingAdmin] = await Promise.all([
-      this.getSetupState(),
-      this.hasAdminUser(),
-    ]);
+    const [state, existingAdmin] = await Promise.all([this.getSetupState(), this.hasAdminUser()]);
 
     // Block if admin already exists
     if (existingAdmin) {
       throw new BadRequestException(
         state.completed
           ? 'Setup already completed. Use admin panel to manage users.'
-          : 'Admin user already exists.',
+          : 'Admin user already exists.'
       );
     }
 
@@ -188,18 +181,13 @@ export class SetupService {
    * Configure music library path (step 2 of wizard)
    */
   async configureMusicLibrary(
-    libraryPath: string,
+    libraryPath: string
   ): Promise<{ valid: boolean; message: string; fileCount?: number }> {
-    const [state, hasAdmin] = await Promise.all([
-      this.getSetupState(),
-      this.hasAdminUser(),
-    ]);
+    const [state, hasAdmin] = await Promise.all([this.getSetupState(), this.hasAdminUser()]);
 
     // Only block if setup is truly complete
     if (state.completed && hasAdmin) {
-      throw new BadRequestException(
-        'Setup already completed. Use admin panel to change settings.',
-      );
+      throw new BadRequestException('Setup already completed. Use admin panel to change settings.');
     }
 
     // Validate using detector service
@@ -214,7 +202,7 @@ export class SetupService {
     await this.saveSetupState(state);
 
     this.logger.info(
-      `Music library configured: ${libraryPath} (${validation.fileCount} files found)`,
+      `Music library configured: ${libraryPath} (${validation.fileCount} files found)`
     );
 
     return validation;
@@ -235,10 +223,7 @@ export class SetupService {
    * Complete setup (step 3 of wizard)
    */
   async completeSetup(): Promise<{ success: boolean; message: string }> {
-    const [state, hasAdmin] = await Promise.all([
-      this.getSetupState(),
-      this.hasAdminUser(),
-    ]);
+    const [state, hasAdmin] = await Promise.all([this.getSetupState(), this.hasAdminUser()]);
 
     // If setup is truly complete, return success
     if (state.completed && hasAdmin) {
@@ -287,9 +272,11 @@ export class SetupService {
     return (await this.getAdminInfo())?.username ?? null;
   }
 
-  private async getAdminInfo(): Promise<
-    { id: string; username: string; hasAvatar: boolean } | null
-  > {
+  private async getAdminInfo(): Promise<{
+    id: string;
+    username: string;
+    hasAvatar: boolean;
+  } | null> {
     const result = await this.drizzle.db
       .select({
         id: users.id,
@@ -427,9 +414,7 @@ export class SetupService {
       // Storage settings
       {
         key: 'metadata.storage.path',
-        value: process.env.DATA_PATH
-          ? `${process.env.DATA_PATH}/metadata`
-          : '/app/data/metadata',
+        value: process.env.DATA_PATH ? `${process.env.DATA_PATH}/metadata` : '/app/data/metadata',
         category: 'metadata',
         type: 'string',
         description: 'Path for storing downloaded metadata (images, etc.)',

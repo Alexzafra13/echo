@@ -57,9 +57,7 @@ export function ApiKeysStep({
           brandColor="#D51007"
           brandColorRgb="213, 16, 7"
           helpUrl="https://www.last.fm/api/account/create"
-          placeholder={
-            formatHint(savedHints?.lastfm ?? null) ?? t('setup.apiKeyPlaceholder')
-          }
+          placeholder={formatHint(savedHints?.lastfm ?? null) ?? t('setup.apiKeyPlaceholder')}
           savedHint={savedHints?.lastfm ?? null}
           value={lastfm}
           onChange={(v) => onChange('lastfm', v)}
@@ -72,9 +70,7 @@ export function ApiKeysStep({
           brandColor="#1C94E0"
           brandColorRgb="28, 148, 224"
           helpUrl="https://fanart.tv/get-an-api-key"
-          placeholder={
-            formatHint(savedHints?.fanart ?? null) ?? t('setup.apiKeyPlaceholder')
-          }
+          placeholder={formatHint(savedHints?.fanart ?? null) ?? t('setup.apiKeyPlaceholder')}
           savedHint={savedHints?.fanart ?? null}
           value={fanart}
           onChange={(v) => onChange('fanart', v)}
@@ -86,12 +82,7 @@ export function ApiKeysStep({
       <p className={styles.providerHint}>{t('setup.apiKeysHint')}</p>
 
       <div className={styles.actions}>
-        <Button
-          onClick={onSkip}
-          variant="outline"
-          size="lg"
-          disabled={isSubmitting}
-        >
+        <Button onClick={onSkip} variant="outline" size="lg" disabled={isSubmitting}>
           {t('setup.skipButton')}
         </Button>
         <Button
@@ -154,12 +145,7 @@ function ProviderRow({
           <span className={styles.providerName}>{name}</span>
           <span className={styles.providerDescription}>{description}</span>
         </div>
-        <a
-          href={helpUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.providerHelp}
-        >
+        <a href={helpUrl} target="_blank" rel="noopener noreferrer" className={styles.providerHelp}>
           {t('setup.getKeyLink')}
         </a>
       </div>

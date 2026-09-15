@@ -19,11 +19,7 @@ export class PaginationMeta {
   @ApiProperty({ description: 'Hay página anterior', example: false })
   hasPrevious!: boolean;
 
-  static create(params: {
-    total: number;
-    page: number;
-    limit: number;
-  }): PaginationMeta {
+  static create(params: { total: number; page: number; limit: number }): PaginationMeta {
     const meta = new PaginationMeta();
     meta.total = params.total;
     meta.page = params.page;
@@ -45,7 +41,7 @@ export class PaginatedResponse<T> {
 
   static create<T>(
     data: T[],
-    pagination: { total: number; page: number; limit: number },
+    pagination: { total: number; page: number; limit: number }
   ): PaginatedResponse<T> {
     const response = new PaginatedResponse<T>();
     response.data = data;
@@ -73,7 +69,7 @@ export class SimplePaginatedResponse<T> {
 
   static create<T>(
     data: T[],
-    params: { total: number; skip?: number; take?: number },
+    params: { total: number; skip?: number; take?: number }
   ): SimplePaginatedResponse<T> {
     const response = new SimplePaginatedResponse<T>();
     response.data = data;

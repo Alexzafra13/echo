@@ -111,7 +111,7 @@ export default function AdminPage() {
 
   const tabs: Tab[] = [
     { id: 'dashboard', label: t('admin.tabs.dashboard'), icon: <LayoutDashboard size={20} /> },
-    { id: 'server', label: 'Server', icon: <Monitor size={20} /> },
+    { id: 'server', label: t('admin.tabs.server'), icon: <Monitor size={20} /> },
     { id: 'library', label: t('admin.tabs.library'), icon: <Library size={20} /> },
     { id: 'metadata', label: t('admin.tabs.metadata'), icon: <Music2 size={20} /> },
     { id: 'maintenance', label: t('admin.tabs.maintenance'), icon: <Wrench size={20} /> },

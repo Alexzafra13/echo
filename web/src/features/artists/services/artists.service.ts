@@ -47,9 +47,12 @@ export const artistsService = {
     const skip = params?.skip ?? 0;
     const take = params?.take ?? 50;
 
-    const response = await apiClient.get<PaginatedArtists>(`/artists/search/${encodeURIComponent(query)}`, {
-      params: { skip, take },
-    });
+    const response = await apiClient.get<PaginatedArtists>(
+      `/artists/search/${encodeURIComponent(query)}`,
+      {
+        params: { skip, take },
+      }
+    );
 
     return response.data;
   },
@@ -82,11 +85,14 @@ export const artistsService = {
   async getTopTracks(
     artistId: string,
     limit: number = 10,
-    days?: number,
+    days?: number
   ): Promise<ArtistTopTracksResponse> {
-    const response = await apiClient.get<ArtistTopTracksResponse>(`/artists/${artistId}/top-tracks`, {
-      params: { limit, days },
-    });
+    const response = await apiClient.get<ArtistTopTracksResponse>(
+      `/artists/${artistId}/top-tracks`,
+      {
+        params: { limit, days },
+      }
+    );
     return response.data;
   },
 

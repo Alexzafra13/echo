@@ -44,7 +44,8 @@
 }
 
 @keyframes equalizerPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scaleY(1);
   }
   50% {
@@ -53,15 +54,31 @@
 }
 
 /* Size variants - scale all bars proportionally */
-.equalizer--sm .equalizer__bar:nth-child(1) { height: 5px; }
-.equalizer--sm .equalizer__bar:nth-child(2) { height: 10px; }
-.equalizer--sm .equalizer__bar:nth-child(3) { height: 7px; }
-.equalizer--sm .equalizer__bar:nth-child(4) { height: 12px; }
+.equalizer--sm .equalizer__bar:nth-child(1) {
+  height: 5px;
+}
+.equalizer--sm .equalizer__bar:nth-child(2) {
+  height: 10px;
+}
+.equalizer--sm .equalizer__bar:nth-child(3) {
+  height: 7px;
+}
+.equalizer--sm .equalizer__bar:nth-child(4) {
+  height: 12px;
+}
 
 .equalizer--lg .equalizer__bar {
   width: 4px;
 }
-.equalizer--lg .equalizer__bar:nth-child(1) { height: 8px; }
-.equalizer--lg .equalizer__bar:nth-child(2) { height: 16px; }
-.equalizer--lg .equalizer__bar:nth-child(3) { height: 10px; }
-.equalizer--lg .equalizer__bar:nth-child(4) { height: 18px; }
+.equalizer--lg .equalizer__bar:nth-child(1) {
+  height: 8px;
+}
+.equalizer--lg .equalizer__bar:nth-child(2) {
+  height: 16px;
+}
+.equalizer--lg .equalizer__bar:nth-child(3) {
+  height: 10px;
+}
+.equalizer--lg .equalizer__bar:nth-child(4) {
+  height: 18px;
+}

@@ -136,6 +136,27 @@ describe('HttpExceptionFilter', () => {
       );
     });
 
+    it('should keep the mustChangePassword flag for the client', () => {
+      const error = new HttpException(
+        {
+          message: 'You must change your password before accessing the system',
+          error: 'MustChangePassword',
+          mustChangePassword: true,
+        },
+        HttpStatus.FORBIDDEN
+      );
+
+      filter.catch(error, mockHost);
+
+      expect(mockResponse.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: HttpStatus.FORBIDDEN,
+          error: 'MustChangePassword',
+          mustChangePassword: true,
+        })
+      );
+    });
+
     it('should handle HttpException with message array', () => {
       const error = new HttpException(
         { message: ['Field1 is required', 'Field2 is invalid'] },

@@ -61,9 +61,7 @@ export class Track {
    * Factory method para crear un nuevo Track
    * Genera automáticamente: id (UUID), createdAt, updatedAt
    */
-  static create(
-    props: Omit<TrackProps, 'id' | 'createdAt' | 'updatedAt'>,
-  ): Track {
+  static create(props: Omit<TrackProps, 'id' | 'createdAt' | 'updatedAt'>): Track {
     return new Track({
       ...props,
       id: generateUuid(),

@@ -27,7 +27,7 @@ export class CachedTrackRepository
     baseRepository: DrizzleTrackRepository,
     cache: RedisService,
     @InjectPinoLogger(CachedTrackRepository.name)
-    logger: PinoLogger,
+    logger: PinoLogger
   ) {
     super(
       baseRepository,
@@ -40,7 +40,7 @@ export class CachedTrackRepository
         entityTtl: cacheConfig.ttl.track,
         searchTtl: cacheConfig.ttl.search,
       },
-      Track.reconstruct,
+      Track.reconstruct
     );
   }
 
@@ -58,7 +58,12 @@ export class CachedTrackRepository
    * Find tracks by album ID with optional pagination.
    * Not cached - album track lists are typically small and change rarely.
    */
-  async findByAlbumId(albumId: string, includeMissing = true, skip?: number, take?: number): Promise<Track[]> {
+  async findByAlbumId(
+    albumId: string,
+    includeMissing = true,
+    skip?: number,
+    take?: number
+  ): Promise<Track[]> {
     return this.baseRepository.findByAlbumId(albumId, includeMissing, skip, take);
   }
 
@@ -74,11 +79,7 @@ export class CachedTrackRepository
    * Find tracks by artist ID with pagination.
    * Not cached - too many pagination combinations.
    */
-  async findByArtistId(
-    artistId: string,
-    skip: number,
-    take: number,
-  ): Promise<Track[]> {
+  async findByArtistId(artistId: string, skip: number, take: number): Promise<Track[]> {
     return this.baseRepository.findByArtistId(artistId, skip, take);
   }
 
@@ -86,11 +87,7 @@ export class CachedTrackRepository
    * Get tracks in deterministic random order with pagination.
    * Not cached - pagination combinations are too many.
    */
-  async findShuffledPaginated(
-    seed: number,
-    skip: number,
-    take: number,
-  ): Promise<Track[]> {
+  async findShuffledPaginated(seed: number, skip: number, take: number): Promise<Track[]> {
     return this.baseRepository.findShuffledPaginated(seed, skip, take);
   }
 }

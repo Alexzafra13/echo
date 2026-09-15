@@ -18,7 +18,7 @@ export function useQueueManager({
   onPlayTrack,
   onEndSession,
   repeatMode,
-  isShuffle
+  isShuffle,
 }: UseQueueManagerParams) {
   const [queue, setQueue] = useState<Track[]>([]);
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
@@ -29,7 +29,7 @@ export function useQueueManager({
   // Add tracks to queue
   const addToQueue = useCallback((track: Track | Track[]) => {
     const tracks = Array.isArray(track) ? track : [track];
-    setQueue(prev => [...prev, ...tracks]);
+    setQueue((prev) => [...prev, ...tracks]);
   }, []);
 
   // Clear queue
@@ -40,42 +40,48 @@ export function useQueueManager({
   }, []);
 
   // Remove track from queue
-  const removeFromQueue = useCallback((index: number, shouldPlayNext: (index: number) => void) => {
-    setQueue(prev => {
-      const newQueue = [...prev];
-      newQueue.splice(index, 1);
-      return newQueue;
-    });
+  const removeFromQueue = useCallback(
+    (index: number, shouldPlayNext: (index: number) => void) => {
+      setQueue((prev) => {
+        const newQueue = [...prev];
+        newQueue.splice(index, 1);
+        return newQueue;
+      });
 
-    // Update shuffle played indices - shift indices greater than removed index
-    const newPlayedIndices = new Set<number>();
-    shufflePlayedIndices.current.forEach(playedIndex => {
-      if (playedIndex < index) {
-        newPlayedIndices.add(playedIndex);
-      } else if (playedIndex > index) {
-        newPlayedIndices.add(playedIndex - 1);
+      // Update shuffle played indices - shift indices greater than removed index
+      const newPlayedIndices = new Set<number>();
+      shufflePlayedIndices.current.forEach((playedIndex) => {
+        if (playedIndex < index) {
+          newPlayedIndices.add(playedIndex);
+        } else if (playedIndex > index) {
+          newPlayedIndices.add(playedIndex - 1);
+        }
+        // If playedIndex === index, it's being removed, so don't add it
+      });
+      shufflePlayedIndices.current = newPlayedIndices;
+
+      if (index < currentQueueIndex) {
+        setCurrentQueueIndex(currentQueueIndex - 1);
+      } else if (index === currentQueueIndex) {
+        // If removed current track, play next
+        shouldPlayNext(index);
       }
-      // If playedIndex === index, it's being removed, so don't add it
-    });
-    shufflePlayedIndices.current = newPlayedIndices;
-
-    if (index < currentQueueIndex) {
-      setCurrentQueueIndex(currentQueueIndex - 1);
-    } else if (index === currentQueueIndex) {
-      // If removed current track, play next
-      shouldPlayNext(index);
-    }
-  }, [currentQueueIndex]);
+    },
+    [currentQueueIndex]
+  );
 
   // Play queue of tracks
-  const playQueue = useCallback((tracks: Track[], startIndex: number = 0) => {
-    setQueue(tracks);
-    setCurrentQueueIndex(startIndex);
-    // Reset shuffle tracking for new queue
-    shufflePlayedIndices.current.clear();
-    shufflePlayedIndices.current.add(startIndex);
-    onPlayTrack(tracks[startIndex], startIndex);
-  }, [onPlayTrack]);
+  const playQueue = useCallback(
+    (tracks: Track[], startIndex: number = 0) => {
+      setQueue(tracks);
+      setCurrentQueueIndex(startIndex);
+      // Reset shuffle tracking for new queue
+      shufflePlayedIndices.current.clear();
+      shufflePlayedIndices.current.add(startIndex);
+      onPlayTrack(tracks[startIndex], startIndex);
+    },
+    [onPlayTrack]
+  );
 
   // Play next track in queue
   const playNext = useCallback(() => {
@@ -127,30 +133,33 @@ export function useQueueManager({
   }, [queue, isShuffle, repeatMode, currentQueueIndex, onEndSession, onPlayTrack]);
 
   // Play previous track in queue
-  const playPrevious = useCallback((audioCurrentTime: number, shouldRestart: () => void) => {
-    if (queue.length === 0) return;
+  const playPrevious = useCallback(
+    (audioCurrentTime: number, shouldRestart: () => void) => {
+      if (queue.length === 0) return;
 
-    // If more than 3 seconds played, restart current track
-    if (audioCurrentTime > 3) {
-      shouldRestart();
-      return;
-    }
-
-    // End current session as skipped
-    onEndSession(true);
-
-    let prevIndex = currentQueueIndex - 1;
-    if (prevIndex < 0) {
-      if (repeatMode === 'all') {
-        prevIndex = queue.length - 1;
-      } else {
-        prevIndex = 0;
+      // If more than 3 seconds played, restart current track
+      if (audioCurrentTime > 3) {
+        shouldRestart();
+        return;
       }
-    }
 
-    setCurrentQueueIndex(prevIndex);
-    onPlayTrack(queue[prevIndex], prevIndex);
-  }, [queue, repeatMode, currentQueueIndex, onEndSession, onPlayTrack]);
+      // End current session as skipped
+      onEndSession(true);
+
+      let prevIndex = currentQueueIndex - 1;
+      if (prevIndex < 0) {
+        if (repeatMode === 'all') {
+          prevIndex = queue.length - 1;
+        } else {
+          prevIndex = 0;
+        }
+      }
+
+      setCurrentQueueIndex(prevIndex);
+      onPlayTrack(queue[prevIndex], prevIndex);
+    },
+    [queue, repeatMode, currentQueueIndex, onEndSession, onPlayTrack]
+  );
 
   return {
     queue,

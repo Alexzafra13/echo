@@ -20,7 +20,12 @@ vi.mock('@shared/components/layout/Header', () => ({
 }));
 
 vi.mock('@shared/components/ui', () => ({
-  Button: ({ children, onClick, disabled, className }: {
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    className,
+  }: {
     children: React.ReactNode;
     onClick?: () => void;
     disabled?: boolean;
@@ -41,9 +46,7 @@ vi.mock('@shared/components/ActionCard', () => ({
 }));
 
 vi.mock('../../components/PlaylistCover', () => ({
-  PlaylistCover: ({ name }: { name: string }) => (
-    <div data-testid="playlist-cover">{name}</div>
-  ),
+  PlaylistCover: ({ name }: { name: string }) => <div data-testid="playlist-cover">{name}</div>,
 }));
 
 // Mock auth store

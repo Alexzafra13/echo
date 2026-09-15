@@ -19,7 +19,9 @@ export const shares = pgTable(
   'shares',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     description: varchar('description', { length: 512 }),
     expiresAt: timestamp('expires_at'),
     lastVisitedAt: timestamp('last_visited_at'),
@@ -30,9 +32,7 @@ export const shares = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => [
-    index('idx_shares_user').on(table.userId),
-  ],
+  (table) => [index('idx_shares_user').on(table.userId)]
 );
 
 // ============================================
@@ -42,7 +42,9 @@ export const bookmarks = pgTable(
   'bookmarks',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     itemId: uuid('item_id').notNull(), // Polymorphic: can reference tracks, albums, etc.
     itemType: varchar('item_type', { length: 50 }).notNull(),
     position: bigint('position', { mode: 'number' }).notNull(),
@@ -50,9 +52,7 @@ export const bookmarks = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => [
-    unique('bookmarks_user_item_unique').on(table.userId, table.itemId, table.itemType),
-  ],
+  (table) => [unique('bookmarks_user_item_unique').on(table.userId, table.itemId, table.itemType)]
 );
 
 // Type exports

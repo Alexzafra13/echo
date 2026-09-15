@@ -34,7 +34,10 @@ export class GetRelatedArtistsResponseDto {
   @Expose()
   data!: RelatedArtistDto[];
 
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'ID del artista base' })
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'ID del artista base',
+  })
   @Expose()
   artistId!: string;
 
@@ -45,7 +48,7 @@ export class GetRelatedArtistsResponseDto {
   @ApiProperty({
     example: 'external',
     description: 'Fuente de los datos (external, genre, internal, none)',
-    enum: ['external', 'genre', 'internal', 'none']
+    enum: ['external', 'genre', 'internal', 'none'],
   })
   @Expose()
   source!: 'external' | 'genre' | 'internal' | 'none';

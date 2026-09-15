@@ -61,9 +61,7 @@ describe('BcryptAdapter', () => {
     it('should propagate bcrypt errors', async () => {
       (bcrypt.compare as jest.Mock).mockRejectedValue(new Error('Compare error'));
 
-      await expect(
-        adapter.compare('password', 'invalid_hash'),
-      ).rejects.toThrow('Compare error');
+      await expect(adapter.compare('password', 'invalid_hash')).rejects.toThrow('Compare error');
     });
   });
 });

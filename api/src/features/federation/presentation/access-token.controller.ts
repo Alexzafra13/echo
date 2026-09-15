@@ -29,12 +29,11 @@ import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { User } from '@infrastructure/database/schema';
 import { FederationTokenService } from '../domain/services';
 import { RemoteServerService } from '../infrastructure/services';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
 import {
-  UpdatePermissionsDto,
-  AccessTokenResponseDto,
-  ConnectedServerResponseDto,
-} from './dto';
+  IFederationRepository,
+  FEDERATION_REPOSITORY,
+} from '../domain/ports/federation.repository';
+import { UpdatePermissionsDto, AccessTokenResponseDto, ConnectedServerResponseDto } from './dto';
 
 @ApiTags('federation')
 @Controller('federation/access-tokens')
@@ -47,7 +46,7 @@ export class AccessTokenController {
     private readonly tokenService: FederationTokenService,
     private readonly remoteServerService: RemoteServerService,
     @Inject(FEDERATION_REPOSITORY)
-    private readonly repository: IFederationRepository,
+    private readonly repository: IFederationRepository
   ) {}
 
   @Get()
@@ -60,9 +59,7 @@ export class AccessTokenController {
     description: 'Lista de tokens de acceso',
     type: [AccessTokenResponseDto],
   })
-  async getAccessTokens(
-    @CurrentUser() user: User,
-  ): Promise<AccessTokenResponseDto[]> {
+  async getAccessTokens(@CurrentUser() user: User): Promise<AccessTokenResponseDto[]> {
     const tokens = await this.tokenService.getUserAccessTokens(user.id);
 
     return tokens.map((token) => ({
@@ -80,17 +77,22 @@ export class AccessTokenController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Revocar o eliminar acceso de servidor',
-    description: 'Revoca el acceso de un servidor a tu biblioteca. Con ?permanent=true elimina permanentemente.',
+    description:
+      'Revoca el acceso de un servidor a tu biblioteca. Con ?permanent=true elimina permanentemente.',
   })
   @ApiParam({ name: 'id', description: 'ID del token de acceso' })
-  @ApiQuery({ name: 'permanent', required: false, description: 'Si es true, elimina permanentemente el token' })
+  @ApiQuery({
+    name: 'permanent',
+    required: false,
+    description: 'Si es true, elimina permanentemente el token',
+  })
   @ApiResponse({ status: 204, description: 'Acceso revocado/eliminado' })
   @ApiResponse({ status: 404, description: 'Token no encontrado' })
   @ApiResponse({ status: 403, description: 'Sin acceso al token' })
   async revokeOrDeleteAccessToken(
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
-    @Query('permanent') permanent?: string,
+    @Query('permanent') permanent?: string
   ): Promise<void> {
     const accessToken = await this.repository.findFederationAccessTokenById(id);
     if (!accessToken) {
@@ -124,7 +126,7 @@ export class AccessTokenController {
   @ApiResponse({ status: 403, description: 'Sin acceso al token' })
   async reactivateAccessToken(
     @CurrentUser() user: User,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseUUIDPipe) id: string
   ): Promise<AccessTokenResponseDto> {
     const accessToken = await this.repository.findFederationAccessTokenById(id);
     if (!accessToken) {
@@ -155,7 +157,8 @@ export class AccessTokenController {
   @Patch(':id/permissions')
   @ApiOperation({
     summary: 'Actualizar permisos de un servidor',
-    description: 'Actualiza los permisos (browse, stream, download) de un servidor que tiene acceso a tu biblioteca',
+    description:
+      'Actualiza los permisos (browse, stream, download) de un servidor que tiene acceso a tu biblioteca',
   })
   @ApiParam({ name: 'id', description: 'ID del token de acceso' })
   @ApiResponse({
@@ -168,7 +171,7 @@ export class AccessTokenController {
   async updateAccessTokenPermissions(
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdatePermissionsDto,
+    @Body() dto: UpdatePermissionsDto
   ): Promise<AccessTokenResponseDto> {
     const accessToken = await this.repository.findFederationAccessTokenById(id);
     if (!accessToken) {
@@ -178,7 +181,11 @@ export class AccessTokenController {
       throw new ForbiddenException('No tienes acceso a este token');
     }
 
-    const permissionsToUpdate: Partial<{ canBrowse: boolean; canStream: boolean; canDownload: boolean }> = {};
+    const permissionsToUpdate: Partial<{
+      canBrowse: boolean;
+      canStream: boolean;
+      canDownload: boolean;
+    }> = {};
     if (dto.canBrowse !== undefined) permissionsToUpdate.canBrowse = dto.canBrowse;
     if (dto.canStream !== undefined) permissionsToUpdate.canStream = dto.canStream;
     if (dto.canDownload !== undefined) permissionsToUpdate.canDownload = dto.canDownload;
@@ -191,7 +198,7 @@ export class AccessTokenController {
 
     this.logger.info(
       { userId: user.id, tokenId: id, permissions: dto },
-      'Access token permissions updated',
+      'Access token permissions updated'
     );
 
     return {
@@ -215,9 +222,7 @@ export class AccessTokenController {
     description: 'Lista de servidores con solicitud mutua pendiente',
     type: [AccessTokenResponseDto],
   })
-  async getPendingMutualRequests(
-    @CurrentUser() user: User,
-  ): Promise<AccessTokenResponseDto[]> {
+  async getPendingMutualRequests(@CurrentUser() user: User): Promise<AccessTokenResponseDto[]> {
     const tokens = await this.tokenService.getPendingMutualRequests(user.id);
     return tokens.map((token) => ({
       id: token.id,
@@ -246,7 +251,7 @@ export class AccessTokenController {
   @ApiResponse({ status: 403, description: 'Sin acceso al access token' })
   async approveMutualRequest(
     @CurrentUser() user: User,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseUUIDPipe) id: string
   ): Promise<ConnectedServerResponseDto> {
     const accessToken = await this.tokenService.getAccessTokenById(id);
     if (!accessToken) {
@@ -255,7 +260,11 @@ export class AccessTokenController {
     if (accessToken.ownerId !== user.id) {
       throw new ForbiddenException('No tienes acceso a este token de acceso');
     }
-    if (accessToken.mutualStatus !== 'pending' || !accessToken.mutualInvitationToken || !accessToken.serverUrl) {
+    if (
+      accessToken.mutualStatus !== 'pending' ||
+      !accessToken.mutualInvitationToken ||
+      !accessToken.serverUrl
+    ) {
       throw new NotFoundException('No hay solicitud mutua pendiente');
     }
 
@@ -268,12 +277,12 @@ export class AccessTokenController {
       user.id,
       accessToken.serverUrl,
       accessToken.mutualInvitationToken,
-      accessToken.serverName,
+      accessToken.serverName
     );
 
     this.logger.info(
       { userId: user.id, accessTokenId: id, serverUrl: accessToken.serverUrl },
-      'Mutual federation request approved and connected',
+      'Mutual federation request approved and connected'
     );
 
     return {
@@ -298,7 +307,8 @@ export class AccessTokenController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Rechazar solicitud de federación mutua',
-    description: 'Rechaza la solicitud de federación mutua (el servidor sigue pudiendo acceder a tu biblioteca)',
+    description:
+      'Rechaza la solicitud de federación mutua (el servidor sigue pudiendo acceder a tu biblioteca)',
   })
   @ApiParam({ name: 'id', description: 'ID del access token' })
   @ApiResponse({ status: 204, description: 'Solicitud rechazada' })
@@ -306,7 +316,7 @@ export class AccessTokenController {
   @ApiResponse({ status: 403, description: 'Sin acceso al access token' })
   async rejectMutualRequest(
     @CurrentUser() user: User,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseUUIDPipe) id: string
   ): Promise<void> {
     const accessToken = await this.tokenService.getAccessTokenById(id);
     if (!accessToken) {

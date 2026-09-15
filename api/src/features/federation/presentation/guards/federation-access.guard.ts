@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { UnauthorizedError } from '@shared/errors';
 import { RequestWithFederationToken } from '@shared/types/request.types';

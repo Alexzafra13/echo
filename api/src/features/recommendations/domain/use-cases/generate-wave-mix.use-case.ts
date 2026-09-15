@@ -6,7 +6,7 @@ import { AutoPlaylist, WaveMixConfig } from '../entities/track-score.entity';
 export class GenerateWaveMixUseCase {
   constructor(
     @Inject(WAVE_MIX_GENERATOR)
-    private readonly waveMixService: IWaveMixGenerator,
+    private readonly waveMixService: IWaveMixGenerator
   ) {}
 
   async execute(userId: string, config?: Partial<WaveMixConfig>): Promise<AutoPlaylist> {

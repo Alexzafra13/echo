@@ -201,9 +201,7 @@ export async function getSmartPlaylistByGenre(
 /**
  * Calculate scores for specific tracks
  */
-export async function calculateTrackScores(
-  trackIds: string[]
-): Promise<ScoredTrack[]> {
+export async function calculateTrackScores(trackIds: string[]): Promise<ScoredTrack[]> {
   const response = await apiClient.post('/recommendations/calculate-score', {
     trackIds,
   });

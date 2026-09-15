@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LogCleanupService } from './log-cleanup.service';
 import { LogService, LogCategory } from './log.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
+import { SettingsService } from '@infrastructure/settings';
 
 describe('LogCleanupService', () => {
   let service: LogCleanupService;

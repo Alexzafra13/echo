@@ -6,7 +6,7 @@ import { ItemType } from '../entities/user-interaction.entity';
 export class RemoveRatingUseCase {
   constructor(
     @Inject(USER_INTERACTIONS_REPOSITORY)
-    private readonly repository: IUserInteractionsRepository,
+    private readonly repository: IUserInteractionsRepository
   ) {}
 
   async execute(userId: string, itemId: string, itemType: ItemType): Promise<void> {

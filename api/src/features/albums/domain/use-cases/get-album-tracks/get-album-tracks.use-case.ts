@@ -2,7 +2,10 @@ import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError } from '@shared/errors';
 import { validatePagination } from '@shared/utils';
 import { ALBUM_REPOSITORY, IAlbumRepository } from '../../ports';
-import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
+import {
+  TRACK_REPOSITORY,
+  ITrackRepository,
+} from '@features/tracks/domain/ports/track-repository.port';
 import { GetAlbumTracksInput, GetAlbumTracksOutput } from './get-album-tracks.dto';
 
 @Injectable()
@@ -11,7 +14,7 @@ export class GetAlbumTracksUseCase {
     @Inject(ALBUM_REPOSITORY)
     private readonly albumRepository: IAlbumRepository,
     @Inject(TRACK_REPOSITORY)
-    private readonly trackRepository: ITrackRepository,
+    private readonly trackRepository: ITrackRepository
   ) {}
 
   async execute(input: GetAlbumTracksInput): Promise<GetAlbumTracksOutput> {

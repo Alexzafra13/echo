@@ -58,7 +58,9 @@ export class ErrorBoundary extends Component<Props, State> {
           window.location.reload();
           return;
         }
-      } catch { /* sessionStorage no disponible (modo privado) */ }
+      } catch {
+        /* sessionStorage no disponible (modo privado) */
+      }
     }
 
     this.setState({

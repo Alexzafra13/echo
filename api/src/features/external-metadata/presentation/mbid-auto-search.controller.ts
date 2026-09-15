@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nes
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MbidAutoSearchService } from '../infrastructure/services/mbid-auto-search.service';
-import { SettingsService } from '../infrastructure/services/settings.service';
+import { SettingsService } from '@infrastructure/settings';
 
 // Configuración de búsqueda automática de MBIDs durante escaneo
 @ApiTags('Admin - MBID Auto-Search')

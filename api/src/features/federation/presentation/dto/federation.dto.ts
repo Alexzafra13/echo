@@ -80,7 +80,6 @@ export class ConnectToServerDto {
   @IsOptional()
   @IsBoolean()
   requestMutual?: boolean;
-
 }
 
 export class UpdateServerDto {

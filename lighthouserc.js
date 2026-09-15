@@ -22,10 +22,7 @@ module.exports = {
       settings: {
         preset: 'desktop',
         // Skip some audits that don't apply to dev
-        skipAudits: [
-          'uses-http2',
-          'uses-long-cache-ttl',
-        ],
+        skipAudits: ['uses-http2', 'uses-long-cache-ttl'],
       },
     },
     assert: {

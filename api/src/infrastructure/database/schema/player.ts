@@ -13,17 +13,14 @@ import { users } from './users';
 // ============================================
 // Transcoding
 // ============================================
-export const transcodings = pgTable(
-  'transcoding',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    name: varchar('name', { length: 255 }).notNull(),
-    targetFormat: varchar('target_format', { length: 10 }).notNull(),
-    defaultBitRate: integer('default_bit_rate'),
-    command: text('command').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-  },
-);
+export const transcodings = pgTable('transcoding', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }).notNull(),
+  targetFormat: varchar('target_format', { length: 10 }).notNull(),
+  defaultBitRate: integer('default_bit_rate'),
+  command: text('command').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
 // ============================================
 // Player
@@ -40,12 +37,12 @@ export const players = pgTable(
     ipAddress: varchar('ip_address', { length: 45 }),
     lastSeen: timestamp('last_seen'),
     maxBitRate: integer('max_bit_rate'),
-    transcodingId: uuid('transcoding_id').references(() => transcodings.id, { onDelete: 'set null' }),
+    transcodingId: uuid('transcoding_id').references(() => transcodings.id, {
+      onDelete: 'set null',
+    }),
     scrobbleEnabled: boolean('scrobble_enabled').default(true).notNull(),
   },
-  (table) => [
-    index('idx_players_user').on(table.userId),
-  ],
+  (table) => [index('idx_players_user').on(table.userId)]
 );
 
 // Type exports

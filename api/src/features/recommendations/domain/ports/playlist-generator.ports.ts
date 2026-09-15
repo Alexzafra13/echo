@@ -1,4 +1,9 @@
-import { AutoPlaylist, SmartPlaylistConfig, TrackScore, WaveMixConfig } from '../entities/track-score.entity';
+import {
+  AutoPlaylist,
+  SmartPlaylistConfig,
+  TrackScore,
+  WaveMixConfig,
+} from '../entities/track-score.entity';
 
 /** Metadata returned from smart playlist generation */
 export interface SmartPlaylistMetadata {

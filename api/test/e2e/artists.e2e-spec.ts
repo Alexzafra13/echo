@@ -102,9 +102,7 @@ describe('Artists E2E', () => {
     });
 
     it('debería permitir acceso sin autenticación (endpoint público)', () => {
-      return request(app.getHttpServer())
-        .get(`/api/artists/${artist1Id}`)
-        .expect(200);
+      return request(app.getHttpServer()).get(`/api/artists/${artist1Id}`).expect(200);
     });
   });
 
@@ -166,9 +164,7 @@ describe('Artists E2E', () => {
     });
 
     it('debería permitir acceso sin autenticación (endpoint público)', () => {
-      return request(app.getHttpServer())
-        .get('/api/artists')
-        .expect(200);
+      return request(app.getHttpServer()).get('/api/artists').expect(200);
     });
   });
 
@@ -238,9 +234,7 @@ describe('Artists E2E', () => {
     });
 
     it('debería permitir acceso sin autenticación (endpoint público)', () => {
-      return request(app.getHttpServer())
-        .get('/api/artists/search/Beatles')
-        .expect(200);
+      return request(app.getHttpServer()).get('/api/artists/search/Beatles').expect(200);
     });
   });
 

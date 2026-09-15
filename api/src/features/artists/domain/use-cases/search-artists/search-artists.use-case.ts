@@ -7,7 +7,7 @@ import { SearchArtistsInput, SearchArtistsOutput } from './search-artists.dto';
 export class SearchArtistsUseCase {
   constructor(
     @Inject(ARTIST_REPOSITORY)
-    private readonly artistRepository: IArtistRepository,
+    private readonly artistRepository: IArtistRepository
   ) {}
 
   async execute(input: SearchArtistsInput): Promise<SearchArtistsOutput> {

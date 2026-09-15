@@ -80,7 +80,7 @@ export const QueueList = memo(function QueueList({ onClose }: QueueListProps) {
             {t('player.queue')}
           </h3>
         </div>
-        <p className={styles.queueList__empty}>{t('playback.emptyQueue')}</p>
+        <p className={styles.queueList__empty}>{t('settings.playback.emptyQueue')}</p>
       </div>
     );
   }

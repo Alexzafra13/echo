@@ -43,7 +43,10 @@ export function useArtistSearch(query: string, params?: { skip?: number; take?: 
 /**
  * Hook to fetch albums by artist ID
  */
-export function useArtistAlbums(artistId: string | undefined, params?: { skip?: number; take?: number }) {
+export function useArtistAlbums(
+  artistId: string | undefined,
+  params?: { skip?: number; take?: number }
+) {
   return useQuery({
     queryKey: ['artists', artistId, 'albums', params],
     queryFn: () => artistsService.getAlbums(artistId!, params),
@@ -72,7 +75,7 @@ export function useArtistStats(artistId: string | undefined) {
 export function useArtistTopTracks(
   artistId: string | undefined,
   limit: number = 10,
-  days?: number,
+  days?: number
 ) {
   return useQuery({
     queryKey: ['artists', artistId, 'top-tracks', limit, days],

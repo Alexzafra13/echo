@@ -35,7 +35,7 @@ test.describe('Smoke Tests', () => {
 
   test('no hay errores críticos en la consola al cargar', async ({ page }) => {
     const errors: string[] = [];
-    page.on('console', msg => {
+    page.on('console', (msg) => {
       if (msg.type() === 'error') {
         errors.push(msg.text());
       }
@@ -46,7 +46,11 @@ test.describe('Smoke Tests', () => {
 
     // Filtrar errores aceptables (favicon, imágenes, 401 en carga inicial sin sesion)
     const criticalErrors = errors.filter(
-      e => !e.includes('favicon') && !e.includes('404') && !e.includes('backgrounds') && !e.includes('401')
+      (e) =>
+        !e.includes('favicon') &&
+        !e.includes('404') &&
+        !e.includes('backgrounds') &&
+        !e.includes('401')
     );
 
     expect(criticalErrors).toHaveLength(0);

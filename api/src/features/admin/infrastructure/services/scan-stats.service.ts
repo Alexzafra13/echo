@@ -9,16 +9,12 @@ import { ScannerGateway } from '@features/scanner/infrastructure/gateways/scanne
 export class ScanStatsService {
   constructor(
     private readonly drizzle: DrizzleService,
-    private readonly scannerGateway: ScannerGateway,
+    private readonly scannerGateway: ScannerGateway
   ) {}
 
   async get(): Promise<ScanStats> {
     const [latestScanResult, currentScanResult] = await Promise.all([
-      this.drizzle.db
-        .select()
-        .from(libraryScans)
-        .orderBy(desc(libraryScans.startedAt))
-        .limit(1),
+      this.drizzle.db.select().from(libraryScans).orderBy(desc(libraryScans.startedAt)).limit(1),
       this.drizzle.db
         .select()
         .from(libraryScans)

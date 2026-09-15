@@ -7,7 +7,7 @@ import { SkipTrackInput, SkipTrackOutput } from './skip-track.dto';
 export class SkipTrackUseCase {
   constructor(
     @Inject(LISTENING_SESSION_REPOSITORY)
-    private readonly sessionRepository: IListeningSessionRepository,
+    private readonly sessionRepository: IListeningSessionRepository
   ) {}
 
   async execute(input: SkipTrackInput): Promise<SkipTrackOutput> {
@@ -38,7 +38,7 @@ export class SkipTrackUseCase {
     if (session.currentTrackId) {
       // Find current position and mark as played
       const queue = await this.sessionRepository.getQueue(input.sessionId);
-      const currentItem = queue.find(q => q.trackId === session.currentTrackId && !q.played);
+      const currentItem = queue.find((q) => q.trackId === session.currentTrackId && !q.played);
       if (currentItem) {
         await this.sessionRepository.markPlayed(input.sessionId, currentItem.position);
       }

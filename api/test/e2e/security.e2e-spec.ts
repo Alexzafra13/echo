@@ -13,7 +13,7 @@ import {
   createTestTrack,
 } from './helpers/test-setup';
 import * as schema from '../../src/infrastructure/database/schema';
-import * as jwt from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
 
 /**
  * Security E2E Tests
@@ -76,11 +76,10 @@ describe('Security E2E', () => {
 
       it('debería rechazar token con firma inválida', async () => {
         // Crear un token con un secret diferente
-        const fakeToken = jwt.sign(
-          { sub: '00000000-0000-0000-0000-000000000000', username: 'fake' },
-          'wrong-secret-key-that-is-at-least-32-chars',
-          { expiresIn: '1h' }
-        );
+        const fakeToken = new JwtService({
+          secret: 'wrong-secret-key-that-is-at-least-32-chars',
+          signOptions: { expiresIn: '1h' },
+        }).sign({ sub: '00000000-0000-0000-0000-000000000000', username: 'fake' });
 
         return request(app.getHttpServer())
           .get('/api/auth/me')
@@ -451,12 +450,26 @@ describe('Security E2E', () => {
         .expect(204);
     });
 
-    // TODO: MustChangePasswordGuard requires architectural changes to work.
-    // The guard runs before JwtAuthGuard (which is per-controller), so request.user
-    // is undefined when it checks. Solutions:
-    // 1. Convert to interceptor (runs after guards)
-    // 2. Make JwtAuthGuard global with @Public() on all public endpoints
-    it.todo('usuario con mustChangePassword NO debería poder acceder a otros endpoints');
+    it('usuario con mustChangePassword NO debería poder acceder a otros endpoints', async () => {
+      await createTestUser(drizzle, {
+        username: 'must_change',
+        password: 'Temp123!',
+        mustChangePassword: true,
+      });
+
+      const loginRes = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ username: 'must_change', password: 'Temp123!' })
+        .expect(200);
+
+      const res = await request(app.getHttpServer())
+        .get('/api/playlists')
+        .set('Authorization', `Bearer ${loginRes.body.accessToken}`)
+        .expect(403);
+
+      expect(res.body.error).toBe('MustChangePassword');
+      expect(res.body.mustChangePassword).toBe(true);
+    });
   });
 
   describe('Input Validation Security', () => {
@@ -585,7 +598,10 @@ describe('Security E2E', () => {
 
       // Crear tracks
       const artist = await createTestArtist(drizzle, { name: 'Concurrent Artist' });
-      const album = await createTestAlbum(drizzle, { name: 'Concurrent Album', artistId: artist.id });
+      const album = await createTestAlbum(drizzle, {
+        name: 'Concurrent Album',
+        artistId: artist.id,
+      });
 
       const trackIds: string[] = [];
       for (let i = 0; i < 5; i++) {
@@ -598,8 +614,7 @@ describe('Security E2E', () => {
         trackIds.push(track.id);
       }
 
-      // Agregar tracks secuencialmente para evitar race conditions conocida
-      // TODO: Mejorar addTrackWithAutoOrder para manejar concurrencia con retry
+      // La inserción concurrente se cubre en test/integration/concurrency.integration-spec.ts
       for (const trackId of trackIds) {
         await request(app.getHttpServer())
           .post(`/api/playlists/${playlistId}/tracks`)

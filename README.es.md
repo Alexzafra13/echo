@@ -59,9 +59,9 @@ Echo está disponible en los siguientes idiomas:
 
 | Idioma   | Progreso                                                 | Claves      |
 | -------- | -------------------------------------------------------- | ----------- |
-| English  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1733 / 1733 |
-| Español  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1733 / 1733 |
-| Français | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1733 / 1733 |
+| English  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1761 / 1761 |
+| Español  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1761 / 1761 |
+| Français | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1761 / 1761 |
 
 ¿Quieres añadir un nuevo idioma? Copia `web/src/shared/i18n/locales/en.json`, tradúcelo y abre un Pull Request.
 
@@ -78,7 +78,7 @@ Edita `docker-compose.yml` y configura las rutas de tu música (busca `>>> YOUR 
 
 ```yaml
 volumes:
-  - ./data:/app/data
+  - echo_data:/app/data
   - /ruta/a/tu/musica:/music:ro
 ```
 
@@ -87,6 +87,14 @@ docker compose up -d
 ```
 
 Abre **http://localhost:4567** y crea tu cuenta de administrador.
+
+Como alternativa, el script de instalación descarga `docker-compose.yml` y arranca el servidor en un solo paso (añade después las rutas de tu música y vuelve a ejecutar `docker compose up -d`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Alexzafra13/echo/main/install.sh | sh
+```
+
+Usa `sh -s -- --secure` en lugar de `sh` para generar además un `.env` con contraseñas aleatorias para PostgreSQL y Redis.
 
 ### Linux (sin Docker)
 
@@ -104,6 +112,7 @@ Consulta la guía de [Instalación en Linux](docs/bare-metal.md) para más detal
 | [Configuración](docs/configuration.md)     | Variables de entorno, volúmenes y puertos                        |
 | [Proxy Inverso](docs/reverse-proxy.md)     | HTTPS con Caddy, Nginx, Traefik o Cloudflare Tunnel              |
 | [Copias de Seguridad](docs/backup.md)      | Backup, restauración y migración de servidor                     |
+| [Synology NAS](docs/synology.md)           | Resolución de problemas con Container Manager en DSM 7.2+        |
 | [Base de Datos](docs/database.md)          | Relaciones de entidades y esquema general                        |
 | [Arquitectura](docs/architecture.md)       | Diagramas del sistema, flujo de peticiones y estrategia de caché |
 | [Desarrollo](docs/development.md)          | Configuración local, comandos y testing                          |
@@ -131,7 +140,7 @@ docker compose pull && docker compose up -d  # Actualizar
 ```bash
 git clone https://github.com/Alexzafra13/echo.git
 cd echo
-pnpm quickstart    # instala dependencias, levanta BD, ejecuta migraciones
+pnpm quickstart    # instala dependencias, levanta BD, sincroniza el esquema
 pnpm dev:all       # frontend (5173) + backend (3000)
 ```
 
@@ -143,7 +152,7 @@ Documentación de la API disponible en **http://localhost:3000/api/docs** (Swagg
 echo/
 ├── api/            # Backend NestJS (Arquitectura Hexagonal)
 │   └── src/
-│       ├── features/         # Módulos de dominio (25 módulos)
+│       ├── features/         # Módulos de dominio (26 módulos)
 │       ├── infrastructure/   # BD, caché, colas, websocket
 │       └── shared/           # Guards, decoradores, utilidades
 ├── web/            # Frontend React
@@ -163,7 +172,8 @@ echo/
 3. Ejecuta `pnpm quickstart` para la configuración local
 4. Haz tus cambios
 5. Ejecuta los tests (`pnpm --filter echo-api test && pnpm --filter echo-web test`)
-6. Abre un Pull Request
+6. Documenta los cambios visibles para el usuario en [CHANGELOG.md](CHANGELOG.md), en la sección _Unreleased_
+7. Abre un Pull Request
 
 ## Licencia
 
@@ -177,4 +187,6 @@ echo/
   <a href="https://github.com/Alexzafra13/echo/issues">Solicitar una Funcionalidad</a>
   &middot;
   <a href="https://github.com/Alexzafra13/echo/releases">Releases</a>
+  &middot;
+  <a href="CHANGELOG.md">Changelog</a>
 </p>

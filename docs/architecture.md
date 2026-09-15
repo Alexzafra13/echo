@@ -182,7 +182,7 @@ graph TB
     end
 
     subgraph Vol["Volumes"]
-        Data["./data"]
+        Data["echo_data"]
         PGData["postgres_data"]
         Music["/music (read-only)"]
     end

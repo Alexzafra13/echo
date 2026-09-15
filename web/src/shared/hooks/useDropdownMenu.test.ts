@@ -267,7 +267,7 @@ describe('useDropdownMenu', () => {
 
       // Check that mousedown was not added (menu is closed)
       const mousedownCalls = addEventListenerSpy.mock.calls.filter(
-        call => call[0] === 'mousedown'
+        (call) => call[0] === 'mousedown'
       );
       expect(mousedownCalls.length).toBe(0);
       addEventListenerSpy.mockRestore();

@@ -6,7 +6,11 @@ export interface IMusicVideoRepository {
   findById(id: string): Promise<MusicVideoProps | null>;
   findByTrackId(trackId: string): Promise<MusicVideoProps | null>;
   findByPath(path: string): Promise<MusicVideoProps | null>;
-  findAll(filter?: 'matched' | 'unmatched', limit?: number, offset?: number): Promise<MusicVideoProps[]>;
+  findAll(
+    filter?: 'matched' | 'unmatched',
+    limit?: number,
+    offset?: number
+  ): Promise<MusicVideoProps[]>;
   findByArtistId(artistId: string): Promise<MusicVideoProps[]>;
 
   create(data: Omit<MusicVideoProps, 'id' | 'createdAt' | 'updatedAt'>): Promise<MusicVideoProps>;

@@ -21,14 +21,8 @@ export function ProgressBar({ currentTime, duration, onSeek }: ProgressBarProps)
     <div className={styles.progressContainer}>
       <span className={styles.timeLabel}>{formatDuration(currentTime)}</span>
       <div className={styles.progressBar} onClick={handleProgressClick}>
-        <div
-          className={styles.progressFill}
-          style={{ width: `${progressPercent}%` }}
-        />
-        <div
-          className={styles.progressHandle}
-          style={{ left: `${progressPercent}%` }}
-        />
+        <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
+        <div className={styles.progressHandle} style={{ left: `${progressPercent}%` }} />
       </div>
       <span className={styles.timeLabel}>{formatDuration(duration)}</span>
     </div>

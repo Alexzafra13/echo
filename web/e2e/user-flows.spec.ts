@@ -8,13 +8,17 @@ test.describe('Gestión de Usuarios', () => {
   test('modal de crear usuario se abre correctamente', async ({ page }) => {
     // 1. Ir al panel de usuarios
     await page.goto('/admin?tab=users');
-    await expect(page.getByText(/Gestión de Usuarios|User Management/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Gestión de Usuarios|User Management/i)).toBeVisible({
+      timeout: 15000,
+    });
 
     // 2. Abrir modal de crear usuario
     await page.getByRole('button', { name: /Crear Usuario|Create User/i }).click();
 
     // 3. Verificar que el modal se abrió
-    await expect(page.getByRole('dialog', { name: /Crear Usuario|Create User/i })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('dialog', { name: /Crear Usuario|Create User/i })).toBeVisible({
+      timeout: 5000,
+    });
   });
 });
 
@@ -31,10 +35,12 @@ test.describe('Búsqueda', () => {
 
     // No debe haber errores de servidor visibles
     const serverError = page.getByText(/500|Internal Server Error/i);
-    await expect(serverError).not.toBeVisible({ timeout: 3000 }).catch(() => {
-      // Si hay un error 500, el test debe fallar explícitamente
-      expect(serverError).not.toBeVisible();
-    });
+    await expect(serverError)
+      .not.toBeVisible({ timeout: 3000 })
+      .catch(() => {
+        // Si hay un error 500, el test debe fallar explícitamente
+        expect(serverError).not.toBeVisible();
+      });
   });
 });
 
@@ -66,9 +72,9 @@ test.describe('Navegación principal', () => {
     await expect(sidebar).toBeVisible({ timeout: 15000 });
 
     // Debe tener al menos un link a secciones principales
-    await expect(
-      sidebar.getByText(/Inicio|Home|Albums|Artists/i).first()
-    ).toBeVisible({ timeout: 5000 });
+    await expect(sidebar.getByText(/Inicio|Home|Albums|Artists/i).first()).toBeVisible({
+      timeout: 5000,
+    });
   });
 });
 
@@ -80,11 +86,13 @@ test.describe('Playlists', () => {
 
     // Debe mostrar título, botón crear, loading o estado vacío
     await expect(
-      page.getByRole('heading', { name: /Playlists/i }).or(
-        page.getByText(/Cargando playlists|Loading playlists|No tienes playlists|No playlists/i)
-      ).or(
-        page.getByRole('button', { name: /Nueva Playlist|New Playlist/i })
-      ).first()
+      page
+        .getByRole('heading', { name: /Playlists/i })
+        .or(
+          page.getByText(/Cargando playlists|Loading playlists|No tienes playlists|No playlists/i)
+        )
+        .or(page.getByRole('button', { name: /Nueva Playlist|New Playlist/i }))
+        .first()
     ).toBeVisible({ timeout: 15000 });
   });
 
@@ -95,9 +103,10 @@ test.describe('Playlists', () => {
 
     // Esperar a que la página cargue
     await expect(
-      page.getByRole('heading', { name: /Playlists/i }).or(
-        page.getByRole('button', { name: /Crear|Nueva|New|Create/i })
-      ).first()
+      page
+        .getByRole('heading', { name: /Playlists/i })
+        .or(page.getByRole('button', { name: /Crear|Nueva|New|Create/i }))
+        .first()
     ).toBeVisible({ timeout: 15000 });
 
     // Buscar botón de crear (usar first() porque puede haber uno en header y otro en empty state)
@@ -107,14 +116,18 @@ test.describe('Playlists', () => {
     await createButton.click();
 
     // Esperar modal o formulario - match both Spanish and English placeholders
-    const nameInput = page.locator('input[placeholder="Mi Playlist..."], input[placeholder="My Playlist..."]');
+    const nameInput = page.locator(
+      'input[placeholder="Mi Playlist..."], input[placeholder="My Playlist..."]'
+    );
     await expect(nameInput).toBeVisible({ timeout: 5000 });
 
     await nameInput.fill(playlistName);
 
     // Seleccionar al menos una canción (requerido para habilitar el botón)
     // Buscar una canción usando el buscador del modal (mínimo 2 caracteres)
-    const searchInput = page.locator('input[placeholder*="título o artista"], input[placeholder*="title or artist"]');
+    const searchInput = page.locator(
+      'input[placeholder*="título o artista"], input[placeholder*="title or artist"]'
+    );
     await expect(searchInput).toBeVisible({ timeout: 3000 });
 
     // Esperar a que la búsqueda retorne resultados del API
@@ -131,7 +144,9 @@ test.describe('Playlists', () => {
     await firstTrack.click();
 
     // Guardar - el botón del modal muestra "Crear Playlist (N)" o "Create Playlist (N)"
-    const submitButton = page.getByRole('button', { name: /Crear Playlist \(\d+\)|Create Playlist \(\d+\)/i });
+    const submitButton = page.getByRole('button', {
+      name: /Crear Playlist \(\d+\)|Create Playlist \(\d+\)/i,
+    });
     await expect(submitButton).toBeEnabled({ timeout: 5000 });
     await submitButton.click();
 
@@ -147,9 +162,7 @@ test.describe('Perfil de usuario', () => {
     expect(page.url()).toContain('/profile');
 
     // Debe mostrar información del usuario (nombre admin al menos)
-    await expect(
-      page.getByText(/admin/i).first()
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/admin/i).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('página de configuración carga correctamente', async ({ page }) => {
@@ -159,9 +172,12 @@ test.describe('Perfil de usuario', () => {
 
     // Debe mostrar el título "Configuración"/"Settings" o contenido de ajustes
     await expect(
-      page.getByRole('heading', { name: /Configuración|Settings/i }).or(
-        page.getByText(/Personaliza tu experiencia|Customize your experience|Cargando|Loading/i)
-      ).first()
+      page
+        .getByRole('heading', { name: /Configuración|Settings/i })
+        .or(
+          page.getByText(/Personaliza tu experiencia|Customize your experience|Cargando|Loading/i)
+        )
+        .first()
     ).toBeVisible({ timeout: 15000 });
   });
 });

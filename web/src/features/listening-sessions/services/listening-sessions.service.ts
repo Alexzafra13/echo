@@ -16,7 +16,9 @@ export const listeningSessionsService = {
     return data;
   },
 
-  createSession: async (dto: CreateSessionDto): Promise<{
+  createSession: async (
+    dto: CreateSessionDto
+  ): Promise<{
     id: string;
     hostId: string;
     name: string;
@@ -29,7 +31,9 @@ export const listeningSessionsService = {
     return data;
   },
 
-  joinSession: async (dto: JoinSessionDto): Promise<{
+  joinSession: async (
+    dto: JoinSessionDto
+  ): Promise<{
     sessionId: string;
     sessionName: string;
     hostId: string;
@@ -50,7 +54,10 @@ export const listeningSessionsService = {
     return data;
   },
 
-  addToQueue: async (sessionId: string, dto: AddToQueueDto): Promise<{
+  addToQueue: async (
+    sessionId: string,
+    dto: AddToQueueDto
+  ): Promise<{
     sessionId: string;
     trackId: string;
     position: number;
@@ -61,7 +68,9 @@ export const listeningSessionsService = {
     return data;
   },
 
-  skipTrack: async (sessionId: string): Promise<{
+  skipTrack: async (
+    sessionId: string
+  ): Promise<{
     sessionId: string;
     nextTrackId?: string;
     nextTrackTitle?: string;
@@ -75,7 +84,7 @@ export const listeningSessionsService = {
   updateParticipantRole: async (
     sessionId: string,
     userId: string,
-    dto: UpdateParticipantRoleDto,
+    dto: UpdateParticipantRoleDto
   ): Promise<void> => {
     await apiClient.patch(`/listening-sessions/${sessionId}/participants/${userId}/role`, dto);
   },
@@ -84,7 +93,10 @@ export const listeningSessionsService = {
     await apiClient.post(`/listening-sessions/${sessionId}/queue/${queueItemId}/remove`);
   },
 
-  updateSettings: async (sessionId: string, settings: { guestsCanControl?: boolean }): Promise<void> => {
+  updateSettings: async (
+    sessionId: string,
+    settings: { guestsCanControl?: boolean }
+  ): Promise<void> => {
     await apiClient.patch(`/listening-sessions/${sessionId}/settings`, settings);
   },
 
@@ -102,20 +114,32 @@ export const listeningSessionsService = {
   },
 
   // Obtener recomendaciones basadas en top tracks de los participantes
-  getSessionRecommendations: async (sessionId: string): Promise<{ id: string; title: string; artistName?: string; albumId?: string; duration?: number }[]> => {
+  getSessionRecommendations: async (
+    sessionId: string
+  ): Promise<
+    { id: string; title: string; artistName?: string; albumId?: string; duration?: number }[]
+  > => {
     // Obtener sesion con participantes
     const session = await apiClient.get<ListeningSession>(`/listening-sessions/${sessionId}`);
     const participantIds = session.data.participants?.map((p) => p.userId) ?? [];
 
     // Obtener top tracks de cada participante y mezclar
-    const allTracks: { id: string; title: string; artistName?: string; albumId?: string; duration?: number }[] = [];
+    const allTracks: {
+      id: string;
+      title: string;
+      artistName?: string;
+      albumId?: string;
+      duration?: number;
+    }[] = [];
     const seenIds = new Set<string>();
 
     // Obtener top tracks de cada participante (solo IDs)
     const trackIds: string[] = [];
     for (const uid of participantIds.slice(0, 5)) {
       try {
-        const { data } = await apiClient.get('/play-tracking/top-tracks', { params: { userId: uid, limit: 8, days: 30 } });
+        const { data } = await apiClient.get('/play-tracking/top-tracks', {
+          params: { userId: uid, limit: 8, days: 30 },
+        });
         const items = Array.isArray(data) ? data : [];
         for (const t of items as { trackId: string }[]) {
           if (t.trackId && !seenIds.has(t.trackId)) {
@@ -123,34 +147,68 @@ export const listeningSessionsService = {
             trackIds.push(t.trackId);
           }
         }
-      } catch { /* participante sin datos */ }
+      } catch {
+        /* participante sin datos */
+      }
     }
 
     // Obtener detalles de cada track
     for (const trackId of trackIds.slice(0, 15)) {
       try {
         const { data: trackData } = await apiClient.get(`/tracks/${trackId}`);
-        const t = trackData as { id: string; title: string; artistName?: string; albumId?: string; duration?: number };
-        allTracks.push({ id: t.id, title: t.title, artistName: t.artistName, albumId: t.albumId, duration: t.duration });
-      } catch { /* track no encontrado */ }
+        const t = trackData as {
+          id: string;
+          title: string;
+          artistName?: string;
+          albumId?: string;
+          duration?: number;
+        };
+        allTracks.push({
+          id: t.id,
+          title: t.title,
+          artistName: t.artistName,
+          albumId: t.albumId,
+          duration: t.duration,
+        });
+      } catch {
+        /* track no encontrado */
+      }
     }
 
     // Si no hay suficientes, completar con los mas escuchados de la plataforma
     if (allTracks.length < 5) {
       try {
-        const { data: topData } = await apiClient.get('/play-tracking/top-tracks', { params: { limit: 20, days: 30 } });
+        const { data: topData } = await apiClient.get('/play-tracking/top-tracks', {
+          params: { limit: 20, days: 30 },
+        });
         const topItems = Array.isArray(topData) ? topData : [];
         for (const t of topItems as { trackId: string }[]) {
           if (t.trackId && !seenIds.has(t.trackId) && allTracks.length < 15) {
             seenIds.add(t.trackId);
             try {
               const { data: trackData } = await apiClient.get(`/tracks/${t.trackId}`);
-              const track = trackData as { id: string; title: string; artistName?: string; albumId?: string; duration?: number };
-              allTracks.push({ id: track.id, title: track.title, artistName: track.artistName, albumId: track.albumId, duration: track.duration });
-            } catch { /* track no encontrado */ }
+              const track = trackData as {
+                id: string;
+                title: string;
+                artistName?: string;
+                albumId?: string;
+                duration?: number;
+              };
+              allTracks.push({
+                id: track.id,
+                title: track.title,
+                artistName: track.artistName,
+                albumId: track.albumId,
+                duration: track.duration,
+              });
+            } catch {
+              /* track no encontrado */
+            }
           }
         }
-      } catch { /* sin datos globales */ }
+      } catch {
+        /* sin datos globales */
+      }
     }
 
     // Mezclar aleatoriamente

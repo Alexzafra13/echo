@@ -4,7 +4,13 @@ import { ArtistAvatarSelectorModal } from './ArtistAvatarSelectorModal';
 
 // Mock UI components
 vi.mock('@shared/components/ui', () => ({
-  Button: ({ children, onClick, disabled, loading, variant }: {
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    loading,
+    variant,
+  }: {
     children: React.ReactNode;
     onClick?: () => void;
     disabled?: boolean;
@@ -42,10 +48,12 @@ const mockMutate = vi.fn();
 
 vi.mock('../../hooks/useArtistAvatars', () => ({
   useSearchArtistAvatars: () => ({
-    data: mockState.isLoading ? undefined : {
-      avatars: mockState.avatars,
-      artistInfo: { name: 'Test Artist' },
-    },
+    data: mockState.isLoading
+      ? undefined
+      : {
+          avatars: mockState.avatars,
+          artistInfo: { name: 'Test Artist' },
+        },
     isLoading: mockState.isLoading,
     error: mockState.error,
   }),
@@ -116,7 +124,7 @@ describe('ArtistAvatarSelectorModal', () => {
       render(<ArtistAvatarSelectorModal {...defaultProps} />);
       // Find close button by its position (first button with X icon)
       const buttons = screen.getAllByRole('button');
-      const closeButton = buttons.find(btn => btn.querySelector('svg.lucide-x'));
+      const closeButton = buttons.find((btn) => btn.querySelector('svg.lucide-x'));
       if (closeButton) {
         fireEvent.click(closeButton);
         expect(defaultProps.onClose).toHaveBeenCalled();
@@ -217,7 +225,13 @@ describe('ArtistAvatarSelectorModal', () => {
 
     it('should display resolution when available', () => {
       mockState.avatars = [
-        { url: 'https://example.com/1.jpg', provider: 'fanart', type: 'profile', width: 1000, height: 1000 },
+        {
+          url: 'https://example.com/1.jpg',
+          provider: 'fanart',
+          type: 'profile',
+          width: 1000,
+          height: 1000,
+        },
       ];
 
       render(<ArtistAvatarSelectorModal {...defaultProps} />);

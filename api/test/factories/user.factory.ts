@@ -93,10 +93,14 @@ export class UserFactory {
    */
   static createMany(count: number, overridesFn?: (index: number) => Partial<UserProps>): User[] {
     return Array.from({ length: count }, (_, i) =>
-      UserFactory.create(overridesFn ? overridesFn(i) : {
-        id: `user-${i}`,
-        username: `user${i}`,
-      })
+      UserFactory.create(
+        overridesFn
+          ? overridesFn(i)
+          : {
+              id: `user-${i}`,
+              username: `user${i}`,
+            }
+      )
     );
   }
 }

@@ -6,7 +6,7 @@ import { ISocialRepository, SOCIAL_REPOSITORY } from '../ports';
 export class RemoveFriendshipUseCase {
   constructor(
     @Inject(SOCIAL_REPOSITORY)
-    private readonly socialRepository: ISocialRepository,
+    private readonly socialRepository: ISocialRepository
   ) {}
 
   async execute(friendshipId: string, userId: string): Promise<void> {

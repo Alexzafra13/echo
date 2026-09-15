@@ -105,22 +105,22 @@ async function decodeAudio(filePath, ffmpegPath, ffprobePath, segmentLength) {
     // Short tracks (< SEGMENT_LENGTH): decode full track
 
     ffmpegArgs.push(
-      '-ac', '1',           // mono
-      '-ar', '44100',       // 44.1kHz
-      '-f', 'f32le',        // 32-bit float little-endian
-      '-acodec', 'pcm_f32le',
-      'pipe:1',
+      '-ac',
+      '1', // mono
+      '-ar',
+      '44100', // 44.1kHz
+      '-f',
+      'f32le', // 32-bit float little-endian
+      '-acodec',
+      'pcm_f32le',
+      'pipe:1'
     );
 
-    const { stdout } = await execFileAsync(
-      ffmpeg,
-      ffmpegArgs,
-      {
-        encoding: 'buffer',
-        maxBuffer: 20 * 1024 * 1024, // 20MB buffer (60s mono 44.1kHz = ~10.6MB)
-        timeout: 30000, // 30s — enough for a 60s segment decode
-      }
-    );
+    const { stdout } = await execFileAsync(ffmpeg, ffmpegArgs, {
+      encoding: 'buffer',
+      maxBuffer: 20 * 1024 * 1024, // 20MB buffer (60s mono 44.1kHz = ~10.6MB)
+      timeout: 30000, // 30s — enough for a 60s segment decode
+    });
 
     if (stdout.length % 4 !== 0) {
       throw new Error(`Invalid PCM buffer length: ${stdout.length} (not divisible by 4)`);
@@ -148,7 +148,14 @@ process.on('message', async (message) => {
       const hints = message.hints || {};
       const energyOnly = hints.bpm > 0 && hints.key && hints.key !== 'Unknown' && hints.key !== '';
       const segmentLength = energyOnly ? 30 : 60; // 30s is enough for energy-only analysis
-      process.send({ type: 'debug', step: 'start', filePath: message.filePath, requestId, energyOnly, segmentLength });
+      process.send({
+        type: 'debug',
+        step: 'start',
+        filePath: message.filePath,
+        requestId,
+        energyOnly,
+        segmentLength,
+      });
 
       // Step 1: Init Essentia
       process.send({ type: 'debug', step: 'init_essentia' });
@@ -157,7 +164,12 @@ process.on('message', async (message) => {
 
       // Step 2: Decode audio
       process.send({ type: 'debug', step: 'decode_audio' });
-      const audioData = await decodeAudio(message.filePath, message.ffmpegPath, message.ffprobePath, segmentLength);
+      const audioData = await decodeAudio(
+        message.filePath,
+        message.ffmpegPath,
+        message.ffprobePath,
+        segmentLength
+      );
       process.send({ type: 'debug', step: 'decoded', samples: audioData?.length || 0 });
 
       if (!audioData || audioData.length === 0) {
@@ -171,7 +183,11 @@ process.on('message', async (message) => {
       process.send({ type: 'debug', step: 'vector_ready' });
 
       // Step 4: Analyze
-      process.send({ type: 'debug', step: 'analyze', hasHints: { bpm: !!hints.bpm, key: !!hints.key } });
+      process.send({
+        type: 'debug',
+        step: 'analyze',
+        hasHints: { bpm: !!hints.bpm, key: !!hints.key },
+      });
 
       // BPM — skip RhythmExtractor2013 if ID3 tag provides BPM (saves ~40-60% of total time)
       let bpm = 0;
@@ -229,7 +245,9 @@ process.on('message', async (message) => {
         let spectrum = null;
         try {
           spectrum = essentia.Spectrum(audioVector).spectrum;
-        } catch (e) { /* spectrum unavailable, dependent features will use defaults */ }
+        } catch (e) {
+          /* spectrum unavailable, dependent features will use defaults */
+        }
 
         // 1. Spectral centroid (timbre) — high = bright/aggressive, low = dark/calm
         //    Log-frequency scale for perceptual accuracy
@@ -240,17 +258,24 @@ process.on('message', async (message) => {
             const centroidResult = essentia.Centroid(spectrum);
             const centroidHz = centroidResult.centroid * 22050;
             // Log2 scale: 500Hz→0, 1000Hz→0.33, 2000Hz→0.67, 4000Hz→1.0
-            spectralScore = Math.min(1, Math.max(0, (Math.log2(Math.max(centroidHz, 500)) - 9) / 3));
+            spectralScore = Math.min(
+              1,
+              Math.max(0, (Math.log2(Math.max(centroidHz, 500)) - 9) / 3)
+            );
           }
-        } catch (e) { /* use default */ }
+        } catch (e) {
+          /* use default */
+        }
 
         // 2. Dynamic complexity — inverted: compressed/loud = more energetic
         //    Typical music: 2-12 complexity range
         let dynamicScore = 0.5;
         try {
           const dynResult = essentia.DynamicComplexity(audioVector);
-          dynamicScore = Math.min(1, Math.max(0, 1 - (dynResult.dynamicComplexity / 12)));
-        } catch (e) { /* use default */ }
+          dynamicScore = Math.min(1, Math.max(0, 1 - dynResult.dynamicComplexity / 12));
+        } catch (e) {
+          /* use default */
+        }
 
         // 3. RMS (perceived loudness) — dB scale with music-calibrated range
         //    Typical music: -40dB (quiet acoustic) to -3dB (loud mastered)
@@ -264,7 +289,9 @@ process.on('message', async (message) => {
           } else {
             rmsScore = 0;
           }
-        } catch (e) { /* use default */ }
+        } catch (e) {
+          /* use default */
+        }
 
         // 4. Onset rate — log scale for perceptual accuracy
         //    Ballad ~1-3/s, Pop ~4-6/s, Metal/EDM ~8-15/s
@@ -273,8 +300,13 @@ process.on('message', async (message) => {
         try {
           const onsetResult = essentia.OnsetRate(audioVector);
           const onsetsPerSecond = onsetResult.onsetRate;
-          onsetScore = Math.min(1, Math.max(0, Math.log2(Math.max(onsetsPerSecond, 1)) / Math.log2(20)));
-        } catch (e) { /* use default */ }
+          onsetScore = Math.min(
+            1,
+            Math.max(0, Math.log2(Math.max(onsetsPerSecond, 1)) / Math.log2(20))
+          );
+        } catch (e) {
+          /* use default */
+        }
 
         // 5. Spectral entropy — general complexity/noise of the spectrum
         //    Tonal/simple music has low entropy, noisy/complex has high
@@ -285,12 +317,19 @@ process.on('message', async (message) => {
             const entropyResult = essentia.Entropy(spectrum);
             entropyScore = Math.min(1, Math.max(0, (entropyResult.entropy - 3) / 5));
           }
-        } catch (e) { /* use default */ }
+        } catch (e) {
+          /* use default */
+        }
 
         // Weighted combination (inspired by Spotify/EchoNest):
         // Loudness 30%, Onset rate 25%, Timbre 15%, Dynamics 15%, Entropy 15%
         // RMS and onset rate are the strongest perceptual energy correlates
-        const rawEnergy = rmsScore * 0.30 + onsetScore * 0.25 + spectralScore * 0.15 + dynamicScore * 0.15 + entropyScore * 0.15;
+        const rawEnergy =
+          rmsScore * 0.3 +
+          onsetScore * 0.25 +
+          spectralScore * 0.15 +
+          dynamicScore * 0.15 +
+          entropyScore * 0.15;
         rawEnergyValue = rawEnergy;
 
         // Apply sigmoid contrast enhancement to spread values across full 0-1 range
@@ -298,10 +337,20 @@ process.on('message', async (message) => {
         // Default center 0.50: neutral starting point — queue service will auto-calibrate
         // using the real median from the library after enough tracks are analyzed
         // Steepness 12: provides good contrast spread
-        energy = 1 / (1 + Math.exp(-12 * (rawEnergy - 0.50)));
+        energy = 1 / (1 + Math.exp(-12 * (rawEnergy - 0.5)));
         energy = Math.min(1, Math.max(0, energy));
 
-        process.send({ type: 'debug', step: 'energy_done', rmsScore, spectralScore, dynamicScore, onsetScore, entropyScore, rawEnergy, energy });
+        process.send({
+          type: 'debug',
+          step: 'energy_done',
+          rmsScore,
+          spectralScore,
+          dynamicScore,
+          onsetScore,
+          entropyScore,
+          rawEnergy,
+          energy,
+        });
       } catch (e) {
         process.send({ type: 'debug', step: 'energy_failed', error: e?.message || String(e) });
         energy = 0.5;
@@ -314,7 +363,11 @@ process.on('message', async (message) => {
         danceability = Math.min(1, Math.max(0, danceResult.danceability / 2.5));
         process.send({ type: 'debug', step: 'danceability_done', danceability });
       } catch (e) {
-        process.send({ type: 'debug', step: 'danceability_failed', error: e?.message || String(e) });
+        process.send({
+          type: 'debug',
+          step: 'danceability_failed',
+          error: e?.message || String(e),
+        });
         // Danceability is optional, leave as undefined
       }
 
@@ -324,16 +377,31 @@ process.on('message', async (message) => {
         audioVector = null;
       }
 
-      process.send({ type: 'result', requestId, success: true, data: { bpm, key, energy, rawEnergy: rawEnergyValue, danceability } });
+      process.send({
+        type: 'result',
+        requestId,
+        success: true,
+        data: { bpm, key, energy, rawEnergy: rawEnergyValue, danceability },
+      });
     } catch (error) {
       // Free WASM vector on error too
       if (audioVector && typeof audioVector.delete === 'function') {
-        try { audioVector.delete(); } catch { /* ignore */ }
+        try {
+          audioVector.delete();
+        } catch {
+          /* ignore */
+        }
       }
       // Serialize error properly
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
-      process.send({ type: 'result', requestId, success: false, error: errorMessage, stack: errorStack });
+      process.send({
+        type: 'result',
+        requestId,
+        success: false,
+        error: errorMessage,
+        stack: errorStack,
+      });
     }
   } else if (message.type === 'exit') {
     process.exit(0);

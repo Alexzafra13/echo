@@ -1,8 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import {
-  USER_REPOSITORY,
-  IUserRepository,
-} from '@features/auth/domain/ports';
+import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
 import { NotFoundError, ValidationError } from '@shared/errors';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { DeleteUserInput, DeleteUserOutput } from './delete-user.dto';
@@ -12,7 +9,7 @@ export class DeleteUserUseCase {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
-    private readonly logService: LogService,
+    private readonly logService: LogService
   ) {}
 
   async execute(input: DeleteUserInput): Promise<DeleteUserOutput> {
@@ -22,12 +19,13 @@ export class DeleteUserUseCase {
     }
 
     const allUsers = await this.userRepository.findAll(0, 1000);
-    const adminUsers = allUsers.filter(u => u.isAdmin);
-    const systemAdmin = adminUsers.length > 0
-      ? adminUsers.reduce((oldest, current) =>
-          current.createdAt < oldest.createdAt ? current : oldest
-        )
-      : null;
+    const adminUsers = allUsers.filter((u) => u.isAdmin);
+    const systemAdmin =
+      adminUsers.length > 0
+        ? adminUsers.reduce((oldest, current) =>
+            current.createdAt < oldest.createdAt ? current : oldest
+          )
+        : null;
 
     const isSystemAdmin = systemAdmin ? user.id === systemAdmin.id : false;
 
@@ -36,7 +34,7 @@ export class DeleteUserUseCase {
     }
 
     if (user.isAdmin) {
-      const adminCount = allUsers.filter(u => u.isAdmin && u.isActive).length;
+      const adminCount = allUsers.filter((u) => u.isAdmin && u.isActive).length;
 
       if (adminCount <= 1) {
         throw new ValidationError('Cannot delete the last admin user');
@@ -48,15 +46,11 @@ export class DeleteUserUseCase {
       isActive: false,
     });
 
-    await this.logService.info(
-      LogCategory.AUTH,
-      `User deactivated by admin: ${user.username}`,
-      {
-        userId: user.id,
-        username: user.username,
-        deletedBy: input.adminId,
-      },
-    );
+    await this.logService.info(LogCategory.AUTH, `User deactivated by admin: ${user.username}`, {
+      userId: user.id,
+      username: user.username,
+      deletedBy: input.adminId,
+    });
 
     return {
       success: true,

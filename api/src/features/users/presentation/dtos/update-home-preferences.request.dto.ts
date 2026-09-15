@@ -21,7 +21,7 @@ export class HomeSectionConfigDto {
     example: 'recent-albums',
   })
   @IsIn(VALID_SECTION_IDS)
-  id!: typeof VALID_SECTION_IDS[number];
+  id!: (typeof VALID_SECTION_IDS)[number];
 
   @ApiProperty({
     description: 'Si la sección está habilitada',

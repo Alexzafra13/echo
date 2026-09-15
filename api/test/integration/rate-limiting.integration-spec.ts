@@ -191,7 +191,9 @@ describe('Rate Limiting Integration', () => {
     const RATE_LIMIT = 5; // 5 requests per window
     const WINDOW_SECONDS = 60;
 
-    async function checkRateLimit(clientId: string): Promise<{ allowed: boolean; remaining: number }> {
+    async function checkRateLimit(
+      clientId: string
+    ): Promise<{ allowed: boolean; remaining: number }> {
       const key = `test:throttle:client:${clientId}`;
 
       const multi = redis.multi();
@@ -218,7 +220,7 @@ describe('Rate Limiting Integration', () => {
       }
 
       // Assert - All should be allowed
-      expect(results.every(r => r.allowed)).toBe(true);
+      expect(results.every((r) => r.allowed)).toBe(true);
       expect(results[0].remaining).toBe(4);
       expect(results[4].remaining).toBe(0);
 
@@ -238,8 +240,8 @@ describe('Rate Limiting Integration', () => {
       }
 
       // Assert - First 5 allowed, last 2 blocked
-      expect(results.slice(0, 5).every(r => r.allowed)).toBe(true);
-      expect(results.slice(5).every(r => !r.allowed)).toBe(true);
+      expect(results.slice(0, 5).every((r) => r.allowed)).toBe(true);
+      expect(results.slice(5).every((r) => !r.allowed)).toBe(true);
 
       // Cleanup
       await redis.del(`test:throttle:client:${clientId}`);

@@ -25,8 +25,9 @@ const migrationsFolder = path.join(__dirname, '..', 'drizzle');
  * Get list of migration files from disk
  */
 function getMigrationFiles() {
-  const files = fs.readdirSync(migrationsFolder)
-    .filter(f => f.endsWith('.sql'))
+  const files = fs
+    .readdirSync(migrationsFolder)
+    .filter((f) => f.endsWith('.sql'))
     .sort();
   return files;
 }
@@ -45,7 +46,7 @@ function getMigrationHash(filename) {
 async function getAppliedMigrations(pool) {
   try {
     const result = await pool.query('SELECT hash FROM "__drizzle_migrations" ORDER BY created_at');
-    return new Set(result.rows.map(r => r.hash));
+    return new Set(result.rows.map((r) => r.hash));
   } catch (e) {
     // Table doesn't exist yet - that's fine, no migrations applied
     return new Set();
@@ -60,9 +61,10 @@ async function applySingleMigration(pool, filename) {
   const hash = getMigrationHash(filename);
 
   // Split by statement breakpoint and execute each
-  const statements = sql.split('--> statement-breakpoint')
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
+  const statements = sql
+    .split('--> statement-breakpoint')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 
   for (const statement of statements) {
     try {

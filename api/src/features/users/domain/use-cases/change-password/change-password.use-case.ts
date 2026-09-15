@@ -5,11 +5,7 @@ import {
   PASSWORD_SERVICE,
   IPasswordService,
 } from '@features/auth/domain/ports';
-import {
-  NotFoundError,
-  UnauthorizedError,
-  ValidationError,
-} from '@shared/errors';
+import { NotFoundError, UnauthorizedError, ValidationError } from '@shared/errors';
 import { Password } from '@features/auth/domain/value-objects/password.vo';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { ChangePasswordInput } from './change-password.dto';
@@ -21,7 +17,7 @@ export class ChangePasswordUseCase {
     private readonly userRepository: IUserRepository,
     @Inject(PASSWORD_SERVICE)
     private readonly passwordService: IPasswordService,
-    private readonly logService: LogService,
+    private readonly logService: LogService
   ) {}
 
   async execute(input: ChangePasswordInput): Promise<void> {
@@ -39,7 +35,7 @@ export class ChangePasswordUseCase {
 
       const isValidCurrent = await this.passwordService.compare(
         input.currentPassword,
-        user.passwordHash,
+        user.passwordHash
       );
       if (!isValidCurrent) {
         throw new UnauthorizedError('Current password is incorrect');
@@ -47,7 +43,7 @@ export class ChangePasswordUseCase {
 
       const isSamePassword = await this.passwordService.compare(
         validatedPassword.getValue(),
-        user.passwordHash,
+        user.passwordHash
       );
       if (isSamePassword) {
         throw new ValidationError('New password must be different from current password');
@@ -63,14 +59,10 @@ export class ChangePasswordUseCase {
       });
     }
 
-    await this.logService.info(
-      LogCategory.AUTH,
-      `Password changed: ${user.username}`,
-      {
-        userId: user.id,
-        username: user.username,
-        wasFirstLogin: user.mustChangePassword,
-      },
-    );
+    await this.logService.info(LogCategory.AUTH, `Password changed: ${user.username}`, {
+      userId: user.id,
+      username: user.username,
+      wasFirstLogin: user.mustChangePassword,
+    });
   }
 }

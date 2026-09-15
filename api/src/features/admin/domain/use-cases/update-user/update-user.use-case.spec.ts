@@ -2,10 +2,7 @@ import { ConflictError, NotFoundError } from '@shared/errors';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { UserFactory } from 'test/factories';
 import { UpdateUserUseCase } from './update-user.use-case';
-import {
-  MockUserRepository,
-  createMockUserRepository,
-} from '@shared/testing/mock.types';
+import { MockUserRepository, createMockUserRepository } from '@shared/testing/mock.types';
 
 describe('UpdateUserUseCase', () => {
   let useCase: UpdateUserUseCase;

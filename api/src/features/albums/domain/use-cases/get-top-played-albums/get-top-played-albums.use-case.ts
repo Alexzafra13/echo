@@ -6,7 +6,7 @@ import { GetTopPlayedAlbumsInput, GetTopPlayedAlbumsOutput } from './get-top-pla
 export class GetTopPlayedAlbumsUseCase {
   constructor(
     @Inject(ALBUM_REPOSITORY)
-    private readonly albumRepository: IAlbumRepository,
+    private readonly albumRepository: IAlbumRepository
   ) {}
 
   async execute(input: GetTopPlayedAlbumsInput = {}): Promise<GetTopPlayedAlbumsOutput> {

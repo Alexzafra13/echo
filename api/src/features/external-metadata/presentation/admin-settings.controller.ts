@@ -10,6 +10,7 @@ import {
   HttpStatus,
   UseGuards,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
@@ -23,10 +24,14 @@ import {
 import { IsString, IsIn } from 'class-validator';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
-import { SettingsService } from '../infrastructure/services/settings.service';
+import { SettingsService, Setting } from '@infrastructure/settings';
 import { EnrichmentQueueService } from '../infrastructure/services/enrichment-queue.service';
 import { FanartTvAgent } from '../infrastructure/agents/fanart-tv.agent';
 import { LastfmAgent } from '../infrastructure/agents/lastfm.agent';
+
+// Los secretos generados por el servidor (JWT) nunca salen por la API
+const isSecret = (setting: Pick<Setting, 'type' | 'category'>): boolean =>
+  setting.type === 'secret' || setting.category === 'security';
 
 class UpdateSettingDto {
   @IsString()
@@ -91,7 +96,8 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getAllSettings() {
-    return this.settingsService.findAll();
+    const settings = await this.settingsService.findAll();
+    return settings.filter((setting) => !isSecret(setting));
   }
 
   @Get('category/:category')
@@ -110,7 +116,8 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getSettingsByCategory(@Param('category') category: string) {
-    return this.settingsService.findByCategory(category);
+    const settings = await this.settingsService.findByCategory(category);
+    return settings.filter((setting) => !isSecret(setting));
   }
 
   @Get(':key')
@@ -142,7 +149,11 @@ export class AdminSettingsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getSetting(@Param('key') key: string) {
-    return (await this.settingsService.findOne(key)) ?? null;
+    const setting = await this.settingsService.findOne(key);
+    if (!setting || isSecret(setting)) {
+      return null;
+    }
+    return setting;
   }
 
   @Put(':key')
@@ -183,6 +194,9 @@ export class AdminSettingsController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async updateSetting(@Param('key') key: string, @Body() dto: UpdateSettingDto) {
     const currentSetting = await this.settingsService.findOne(key);
+    if (currentSetting && isSecret(currentSetting)) {
+      throw new ForbiddenException(`Setting ${key} cannot be modified through the API`);
+    }
     const oldValue = currentSetting?.value ?? null;
     const isCreating = !currentSetting;
 
@@ -347,6 +361,9 @@ export class AdminSettingsController {
 
     if (!setting) {
       throw new BadRequestException(`Setting with key ${key} not found`);
+    }
+    if (isSecret(setting)) {
+      throw new ForbiddenException(`Setting ${key} cannot be deleted through the API`);
     }
 
     await this.settingsService.delete(key);

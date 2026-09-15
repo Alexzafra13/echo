@@ -7,7 +7,10 @@ import { IDjAnalysisRepository } from '../../domain/ports/dj-analysis.repository
 import { DjAnalysisMapper } from './dj-analysis.mapper';
 import { getCompatibleCamelotKeys } from '../../domain/utils/camelot.util';
 import { DJ_CONFIG } from '../../config/dj.config';
-import { calculateCompatibility, TrackDjData } from '../../domain/services/dj-compatibility.service';
+import {
+  calculateCompatibility,
+  TrackDjData,
+} from '../../domain/services/dj-compatibility.service';
 
 @Injectable()
 export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
@@ -94,7 +97,7 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
 
   async findCompatibleTracks(
     trackId: string,
-    options: { bpmTolerance?: number; limit?: number; minScore?: number } = {},
+    options: { bpmTolerance?: number; limit?: number; minScore?: number } = {}
   ): Promise<DjAnalysis[]> {
     const {
       bpmTolerance = DJ_CONFIG.compatibility.bpmTolerancePercent,
@@ -126,8 +129,8 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
           eq(djAnalysis.status, 'completed'),
           sql`${djAnalysis.trackId} != ${trackId}`,
           between(djAnalysis.bpm, bpmMin, bpmMax),
-          inArray(djAnalysis.camelotKey, compatibleKeys),
-        ),
+          inArray(djAnalysis.camelotKey, compatibleKeys)
+        )
       )
       .limit(fetchLimit);
 

@@ -1,9 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  GetPlaylistOutput,
-  GetPlaylistsOutput,
-  PlaylistListItem,
-} from '../../domain/use-cases';
+import { GetPlaylistOutput, GetPlaylistsOutput, PlaylistListItem } from '../../domain/use-cases';
 
 export class PlaylistResponseDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -39,7 +35,11 @@ export class PlaylistResponseDto {
   @ApiProperty({ example: 10 })
   songCount!: number;
 
-  @ApiPropertyOptional({ type: [String], example: ['album-id-1', 'album-id-2'], description: 'Unique album IDs in the playlist' })
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['album-id-1', 'album-id-2'],
+    description: 'Unique album IDs in the playlist',
+  })
   albumIds?: string[];
 
   @ApiPropertyOptional({ example: '/music/playlists/my-playlist' })

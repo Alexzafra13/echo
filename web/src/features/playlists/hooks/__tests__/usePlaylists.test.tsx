@@ -305,13 +305,21 @@ describe('usePlaylists hooks', () => {
 
       result.current.mutate({
         playlistId: 'playlist-1',
-        dto: { trackOrders: [{ trackId: 'track-1', order: 0 }, { trackId: 'track-2', order: 1 }] },
+        dto: {
+          trackOrders: [
+            { trackId: 'track-1', order: 0 },
+            { trackId: 'track-2', order: 1 },
+          ],
+        },
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       expect(playlistsService.reorderTracks).toHaveBeenCalledWith('playlist-1', {
-        trackOrders: [{ trackId: 'track-1', order: 0 }, { trackId: 'track-2', order: 1 }],
+        trackOrders: [
+          { trackId: 'track-1', order: 0 },
+          { trackId: 'track-2', order: 1 },
+        ],
       });
     });
   });

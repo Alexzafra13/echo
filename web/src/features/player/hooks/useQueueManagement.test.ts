@@ -111,7 +111,7 @@ describe('useQueueManagement', () => {
       });
 
       expect(result.current.queue).toHaveLength(4);
-      expect(result.current.queue.find(t => t.id === '3')).toBeUndefined();
+      expect(result.current.queue.find((t) => t.id === '3')).toBeUndefined();
     });
 
     it('should adjust currentIndex when removing track before it', () => {

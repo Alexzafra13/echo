@@ -15,11 +15,7 @@ export function useUnplayedAlbums(limit: number = 12, offset: number = 0) {
 /**
  * Hook to fetch forgotten albums
  */
-export function useForgottenAlbums(
-  limit: number = 12,
-  offset: number = 0,
-  monthsAgo: number = 3,
-) {
+export function useForgottenAlbums(limit: number = 12, offset: number = 0, monthsAgo: number = 3) {
   return useQuery({
     queryKey: ['explore', 'forgotten', limit, offset, monthsAgo],
     queryFn: () => exploreService.getForgottenAlbums(limit, offset, monthsAgo),

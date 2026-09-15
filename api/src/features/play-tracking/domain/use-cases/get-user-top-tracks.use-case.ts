@@ -11,7 +11,7 @@ export interface TopTrack {
 export class GetUserTopTracksUseCase {
   constructor(
     @Inject(PLAY_TRACKING_REPOSITORY)
-    private readonly repository: IPlayTrackingRepository,
+    private readonly repository: IPlayTrackingRepository
   ) {}
 
   async execute(userId: string, limit: number = 50, days?: number): Promise<TopTrack[]> {

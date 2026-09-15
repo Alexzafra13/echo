@@ -292,12 +292,6 @@ export class DrizzleAlbumRepository
     );
   }
 
-  // @deprecated - funcionalidad de favoritos eliminada
-
-  async findFavorites(_userId: string, _skip: number, _take: number): Promise<Album[]> {
-    return [];
-  }
-
   async count(): Promise<number> {
     const result = await this.drizzle.db.select({ count: count() }).from(albums);
 

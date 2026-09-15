@@ -317,9 +317,7 @@ export class LogService {
    * Delete ALL system logs
    */
   async deleteAllLogs(): Promise<number> {
-    const result = await this.drizzle.db
-      .delete(systemLogs)
-      .returning();
+    const result = await this.drizzle.db.delete(systemLogs).returning();
 
     this.logger.info({ count: result.length }, 'Deleted all system logs');
 

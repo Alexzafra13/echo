@@ -16,7 +16,6 @@ import {
 import { GetAlbumsAlphabeticallyUseCase } from './domain/use-cases/get-albums-alphabetically/get-albums-alphabetically.use-case';
 import { GetAlbumsByArtistUseCase } from './domain/use-cases/get-albums-by-artist/get-albums-by-artist.use-case';
 import { GetRecentlyPlayedAlbumsUseCase } from './domain/use-cases/get-recently-played-albums/get-recently-played-albums.use-case';
-import { GetFavoriteAlbumsUseCase } from './domain/use-cases/get-favorite-albums/get-favorite-albums.use-case';
 import { DrizzleAlbumRepository } from './infrastructure/persistence/album.repository';
 import { CachedAlbumRepository } from './infrastructure/persistence/cached-album.repository';
 import { ALBUM_REPOSITORY } from './domain/ports/album-repository.port';
@@ -39,7 +38,6 @@ import { MusicVideosModule } from '@features/music-videos/music-videos.module';
     GetAlbumsAlphabeticallyUseCase,
     GetAlbumsByArtistUseCase,
     GetRecentlyPlayedAlbumsUseCase,
-    GetFavoriteAlbumsUseCase,
     DrizzleAlbumRepository,
     CachedAlbumRepository,
     CoverArtService,

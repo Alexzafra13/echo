@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit} from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { CleanupService } from './cleanup.service';
@@ -22,7 +22,7 @@ export class MaintenanceSchedulerService implements OnModuleInit {
     private readonly logger: PinoLogger,
     private readonly bullmqService: BullmqService,
     private readonly cleanupService: CleanupService,
-    private readonly cacheService: MetadataCacheService,
+    private readonly cacheService: MetadataCacheService
   ) {}
 
   async onModuleInit() {
@@ -45,7 +45,10 @@ export class MaintenanceSchedulerService implements OnModuleInit {
             this.logger.warn(`Unknown job name: ${job.name}`);
         }
       } catch (error) {
-        this.logger.error(`Maintenance job failed: ${(error as Error).message}`, (error as Error).stack);
+        this.logger.error(
+          `Maintenance job failed: ${(error as Error).message}`,
+          (error as Error).stack
+        );
         throw error; // BullMQ will handle retry
       }
     });
@@ -150,7 +153,7 @@ export class MaintenanceSchedulerService implements OnModuleInit {
 
     this.logger.info(
       `Orphaned files cleanup completed: ${result.filesRemoved} files removed, ` +
-      `${(result.spaceFree / 1024 / 1024).toFixed(2)} MB freed`
+        `${(result.spaceFree / 1024 / 1024).toFixed(2)} MB freed`
     );
   }
 
@@ -164,8 +167,8 @@ export class MaintenanceSchedulerService implements OnModuleInit {
 
     this.logger.info(
       `Full cleanup completed: ${result.files.filesRemoved} files, ` +
-      `${result.cache.entriesRemoved} cache entries, ` +
-      `${(result.files.spaceFree / 1024 / 1024).toFixed(2)} MB freed`
+        `${result.cache.entriesRemoved} cache entries, ` +
+        `${(result.files.spaceFree / 1024 / 1024).toFixed(2)} MB freed`
     );
   }
 

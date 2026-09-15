@@ -14,10 +14,14 @@ export interface SearchUserResult {
 export class SearchUsersUseCase {
   constructor(
     @Inject(SOCIAL_REPOSITORY)
-    private readonly socialRepository: ISocialRepository,
+    private readonly socialRepository: ISocialRepository
   ) {}
 
-  async execute(query: string, currentUserId: string, limit: number = 10): Promise<SearchUserResult[]> {
+  async execute(
+    query: string,
+    currentUserId: string,
+    limit: number = 10
+  ): Promise<SearchUserResult[]> {
     if (!query || query.trim().length < 2) {
       return [];
     }

@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { sql, eq, and, desc, asc, inArray } from 'drizzle-orm';
+import { sql, eq, desc, asc, inArray } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import {
-  genres,
   trackGenres,
   albumGenres,
   artistGenres,
@@ -158,9 +157,7 @@ export class DrizzleGenreRepository implements IGenreRepository {
       ])
     );
 
-    const data = orderedIds
-      .map((id) => albumMap.get(id))
-      .filter((a): a is Album => a != null);
+    const data = orderedIds.map((id) => albumMap.get(id)).filter((a): a is Album => a != null);
 
     return { data, total };
   }
@@ -191,9 +188,7 @@ export class DrizzleGenreRepository implements IGenreRepository {
 
     const trackMap = new Map(trackRows.map((r) => [r.id, TrackMapper.toDomain(r)]));
 
-    const data = orderedIds
-      .map((id) => trackMap.get(id))
-      .filter((t): t is Track => t != null);
+    const data = orderedIds.map((id) => trackMap.get(id)).filter((t): t is Track => t != null);
 
     return { data, total };
   }
@@ -224,9 +219,7 @@ export class DrizzleGenreRepository implements IGenreRepository {
 
     const artistMap = new Map(artistRows.map((r) => [r.id, ArtistMapper.toDomain(r)]));
 
-    const data = orderedIds
-      .map((id) => artistMap.get(id))
-      .filter((a): a is Artist => a != null);
+    const data = orderedIds.map((id) => artistMap.get(id)).filter((a): a is Artist => a != null);
 
     return { data, total };
   }

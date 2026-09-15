@@ -21,9 +21,7 @@ export function ErrorFallback({ error, errorInfo, onReset }: ErrorFallbackProps)
 
         <h1 className="error-fallback__title">{t('errors.generic')}</h1>
 
-        <p className="error-fallback__message">
-          {t('errors.genericMessage')}
-        </p>
+        <p className="error-fallback__message">{t('errors.genericMessage')}</p>
 
         <div className="error-fallback__actions">
           <button

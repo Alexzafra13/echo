@@ -1,11 +1,4 @@
-import {
-  pgTable,
-  varchar,
-  boolean,
-  timestamp,
-  text,
-  index,
-} from 'drizzle-orm/pg-core';
+import { pgTable, varchar, boolean, timestamp, text, index } from 'drizzle-orm/pg-core';
 
 // ============================================
 // Setting
@@ -22,9 +15,7 @@ export const settings = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => [
-    index('settings_category_idx').on(table.category),
-  ],
+  (table) => [index('settings_category_idx').on(table.category)]
 );
 
 // Type exports

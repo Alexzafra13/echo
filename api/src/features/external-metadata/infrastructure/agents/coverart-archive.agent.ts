@@ -35,7 +35,7 @@ export class CoverArtArchiveAgent implements IAlbumCoverRetriever {
     private readonly rateLimiter: RateLimiterService,
     private readonly config: ConfigService
   ) {
-    this.enabled = this.config.get<boolean>('COVERART_ENABLED', true);
+    this.enabled = this.config.get<string>('COVERART_ENABLED', 'true') !== 'false';
   }
 
   isEnabled(): boolean {

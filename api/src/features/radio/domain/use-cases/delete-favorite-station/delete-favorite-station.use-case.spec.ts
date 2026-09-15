@@ -57,9 +57,9 @@ describe('DeleteFavoriteStationUseCase', () => {
     it('should throw NotFoundError when station does not exist', async () => {
       (repository.findById as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        useCase.execute({ stationId: 'nonexistent', userId: 'user-1' }),
-      ).rejects.toThrow(NotFoundError);
+      await expect(useCase.execute({ stationId: 'nonexistent', userId: 'user-1' })).rejects.toThrow(
+        NotFoundError
+      );
 
       expect(repository.delete).not.toHaveBeenCalled();
     });
@@ -68,7 +68,7 @@ describe('DeleteFavoriteStationUseCase', () => {
       (repository.findById as jest.Mock).mockResolvedValue(mockStation);
 
       await expect(
-        useCase.execute({ stationId: 'station-1', userId: 'other-user' }),
+        useCase.execute({ stationId: 'station-1', userId: 'other-user' })
       ).rejects.toThrow(ForbiddenError);
 
       expect(repository.delete).not.toHaveBeenCalled();
@@ -77,9 +77,9 @@ describe('DeleteFavoriteStationUseCase', () => {
     it('should propagate repository errors', async () => {
       (repository.findById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-      await expect(
-        useCase.execute({ stationId: 'station-1', userId: 'user-1' }),
-      ).rejects.toThrow('Database error');
+      await expect(useCase.execute({ stationId: 'station-1', userId: 'user-1' })).rejects.toThrow(
+        'Database error'
+      );
     });
   });
 });

@@ -25,12 +25,13 @@ export interface ItemInteractionSummary {
 export async function setRating(
   itemId: string,
   itemType: ItemType,
-  rating: number,
+  rating: number
 ): Promise<RatingResponse> {
-  const response = await apiClient.post<RatingResponse>(
-    '/interactions/rating',
-    { itemId, itemType, rating },
-  );
+  const response = await apiClient.post<RatingResponse>('/interactions/rating', {
+    itemId,
+    itemType,
+    rating,
+  });
   return response.data;
 }
 
@@ -46,10 +47,10 @@ export async function removeRating(itemId: string, itemType: ItemType): Promise<
  */
 export async function getItemInteractionSummary(
   itemId: string,
-  itemType: ItemType,
+  itemType: ItemType
 ): Promise<ItemInteractionSummary> {
   const response = await apiClient.get<ItemInteractionSummary>(
-    `/interactions/item/${itemType}/${itemId}`,
+    `/interactions/item/${itemType}/${itemId}`
   );
   return response.data;
 }

@@ -12,7 +12,7 @@ export class HealthController {
   @Get()
   @ApiOperation({
     summary: 'Health check',
-    description: 'Returns the health status of the application and its dependencies'
+    description: 'Returns the health status of the application and its dependencies',
   })
   @ApiResponse({
     status: 200,
@@ -26,7 +26,7 @@ export class HealthController {
         services: {
           database: 'ok',
           cache: 'ok',
-          storage: 'ok'
+          storage: 'ok',
         },
         system: {
           memory: { total: 16384, free: 8192, used: 8192, usagePercent: 50 },
@@ -37,11 +37,11 @@ export class HealthController {
             freeMB: 100000,
             usedMB: 400000,
             usagePercent: 80,
-            status: 'ok'
-          }
-        }
-      }
-    }
+            status: 'ok',
+          },
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 503,

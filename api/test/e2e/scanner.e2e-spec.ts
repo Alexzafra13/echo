@@ -154,9 +154,7 @@ describe('Scanner E2E', () => {
     });
 
     it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .get('/api/scanner')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/scanner').expect(401);
     });
 
     it('debería rechazar con usuario no-admin', () => {

@@ -1,8 +1,4 @@
-import {
-  SCORING_WEIGHTS,
-  FEEDBACK_SCORES,
-  RECENCY_DECAY,
-} from './track-score.entity';
+import { SCORING_WEIGHTS, FEEDBACK_SCORES, RECENCY_DECAY } from './track-score.entity';
 
 describe('TrackScore Entity', () => {
   describe('SCORING_WEIGHTS', () => {
@@ -31,8 +27,8 @@ describe('TrackScore Entity', () => {
     });
 
     it('should have expected specific weight values', () => {
-      expect(SCORING_WEIGHTS.explicitFeedback).toBe(0.30);
-      expect(SCORING_WEIGHTS.implicitBehavior).toBe(0.50);
+      expect(SCORING_WEIGHTS.explicitFeedback).toBe(0.3);
+      expect(SCORING_WEIGHTS.implicitBehavior).toBe(0.5);
       expect(SCORING_WEIGHTS.recency).toBe(0.18);
       expect(SCORING_WEIGHTS.diversity).toBe(0.02);
     });

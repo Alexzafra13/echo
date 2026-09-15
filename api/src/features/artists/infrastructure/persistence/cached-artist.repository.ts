@@ -23,10 +23,7 @@ export class CachedArtistRepository
   extends BaseCachedRepository<Artist, IArtistRepository>
   implements IArtistRepository
 {
-  constructor(
-    baseRepository: DrizzleArtistRepository,
-    cache: RedisService,
-  ) {
+  constructor(baseRepository: DrizzleArtistRepository, cache: RedisService) {
     super(
       baseRepository,
       cache,
@@ -38,7 +35,7 @@ export class CachedArtistRepository
         entityTtl: cacheConfig.ttl.artist,
         searchTtl: cacheConfig.ttl.search,
       },
-      Artist.reconstruct,
+      Artist.reconstruct
     );
   }
 
@@ -88,7 +85,7 @@ export class CachedArtistRepository
    */
   async findSimilarByGenreAndAudio(
     artistId: string,
-    limit: number,
+    limit: number
   ): Promise<{ artistId: string; score: number }[]> {
     return this.baseRepository.findSimilarByGenreAndAudio(artistId, limit);
   }

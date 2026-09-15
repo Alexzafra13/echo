@@ -33,10 +33,7 @@ export function FavoriteRadiosSection({
     <section className={styles.homeSection}>
       <div className={styles.homeSection__header}>
         <h2 className={styles.homeSection__title}>Radios Favoritas</h2>
-        <button
-          className={styles.homeSection__viewAll}
-          onClick={() => setLocation('/radio')}
-        >
+        <button className={styles.homeSection__viewAll} onClick={() => setLocation('/radio')}>
           Ver todo →
         </button>
       </div>

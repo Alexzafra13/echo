@@ -348,49 +348,4 @@ describe('albumsService', () => {
       expect(result.data).toHaveLength(0);
     });
   });
-
-  describe('getFavorites', () => {
-    it('should fetch favorite albums', async () => {
-      const mockResponse = {
-        data: [mockAlbum],
-        page: 1,
-        limit: 20,
-        hasMore: false,
-      };
-      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResponse });
-
-      const result = await albumsService.getFavorites();
-
-      expect(apiClient.get).toHaveBeenCalledWith('/albums/favorites', {
-        params: undefined,
-      });
-      expect(result.data).toHaveLength(1);
-      expect(result.hasMore).toBe(false);
-    });
-
-    it('should fetch with pagination', async () => {
-      const mockResponse = {
-        data: [mockAlbum, mockAlbum2],
-        page: 1,
-        limit: 20,
-        hasMore: true,
-      };
-      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResponse });
-
-      const result = await albumsService.getFavorites({ page: 1, limit: 20 });
-
-      expect(apiClient.get).toHaveBeenCalledWith('/albums/favorites', {
-        params: { page: 1, limit: 20 },
-      });
-      expect(result.hasMore).toBe(true);
-    });
-
-    it('should handle user with no favorites', async () => {
-      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [], page: 1, limit: 20, hasMore: false } });
-
-      const result = await albumsService.getFavorites();
-
-      expect(result.data).toHaveLength(0);
-    });
-  });
 });

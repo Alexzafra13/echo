@@ -6,7 +6,10 @@ import {
   ICollaboratorRepository,
   CollaboratorWithUser,
 } from '../../domain/ports/collaborator-repository.port';
-import { PlaylistCollaborator, CollaboratorRole } from '../../domain/entities/playlist-collaborator.entity';
+import {
+  PlaylistCollaborator,
+  CollaboratorRole,
+} from '../../domain/entities/playlist-collaborator.entity';
 
 @Injectable()
 export class DrizzleCollaboratorRepository implements ICollaboratorRepository {
@@ -43,7 +46,7 @@ export class DrizzleCollaboratorRepository implements ICollaboratorRepository {
 
   async findByPlaylistAndUser(
     playlistId: string,
-    userId: string,
+    userId: string
   ): Promise<PlaylistCollaborator | null> {
     const result = await this.drizzle.db
       .select()
@@ -51,8 +54,8 @@ export class DrizzleCollaboratorRepository implements ICollaboratorRepository {
       .where(
         and(
           eq(playlistCollaborators.playlistId, playlistId),
-          eq(playlistCollaborators.userId, userId),
-        ),
+          eq(playlistCollaborators.userId, userId)
+        )
       )
       .limit(1);
 
@@ -129,8 +132,8 @@ export class DrizzleCollaboratorRepository implements ICollaboratorRepository {
       .where(
         and(
           eq(playlistCollaborators.playlistId, playlistId),
-          eq(playlistCollaborators.userId, userId),
-        ),
+          eq(playlistCollaborators.userId, userId)
+        )
       )
       .returning();
 
@@ -145,8 +148,8 @@ export class DrizzleCollaboratorRepository implements ICollaboratorRepository {
         and(
           eq(playlistCollaborators.playlistId, playlistId),
           eq(playlistCollaborators.userId, userId),
-          eq(playlistCollaborators.status, 'accepted'),
-        ),
+          eq(playlistCollaborators.status, 'accepted')
+        )
       );
 
     return (result[0]?.count ?? 0) > 0;
@@ -161,8 +164,8 @@ export class DrizzleCollaboratorRepository implements ICollaboratorRepository {
           eq(playlistCollaborators.playlistId, playlistId),
           eq(playlistCollaborators.userId, userId),
           eq(playlistCollaborators.status, 'accepted'),
-          eq(playlistCollaborators.role, 'editor'),
-        ),
+          eq(playlistCollaborators.role, 'editor')
+        )
       );
 
     return (result[0]?.count ?? 0) > 0;

@@ -29,7 +29,7 @@ describe('DownloadController', () => {
       writableEnded: false,
       end: jest.fn(),
     };
-    return { raw } as unknown as FastifyReply;
+    return { raw } as unknown as FastifyReply & { raw: typeof raw };
   };
 
   beforeEach(async () => {

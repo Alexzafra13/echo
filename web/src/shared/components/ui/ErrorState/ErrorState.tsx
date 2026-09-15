@@ -9,11 +9,7 @@ export interface ErrorStateProps {
   className?: string;
 }
 
-export function ErrorState({
-  message,
-  onRetry,
-  className,
-}: ErrorStateProps) {
+export function ErrorState({ message, onRetry, className }: ErrorStateProps) {
   const { t } = useTranslation();
   return (
     <div className={`${styles.errorState} ${className || ''}`} role="alert">

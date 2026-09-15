@@ -255,9 +255,7 @@ describe('SetupWizard', () => {
       // Tras el refactor, la CompletedCard usa i18n "musicFilesFound" con el
       // count en vez de mostrar el validation.message crudo.
       await waitFor(() => {
-        expect(
-          screen.getByText(/1000\s+archivos de música detectados/i)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/1000\s+archivos de música detectados/i)).toBeInTheDocument();
       });
     });
 

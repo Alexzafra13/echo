@@ -140,14 +140,19 @@ describe('Redis Integration', () => {
 
       // Act
       await redisService.set(key, value);
-      const result = await redisService.get(key);
+      const result = await redisService.get<{
+        id: string;
+        name: string;
+        createdAt: string;
+        updatedAt: string;
+      }>(key);
 
       // Assert
-      expect(result.id).toBe(value.id);
-      expect(result.name).toBe(value.name);
+      expect(result?.id).toBe(value.id);
+      expect(result?.name).toBe(value.name);
       // Dates are serialized as ISO strings
-      expect(new Date(result.createdAt)).toEqual(value.createdAt);
-      expect(new Date(result.updatedAt)).toEqual(value.updatedAt);
+      expect(new Date(result!.createdAt)).toEqual(value.createdAt);
+      expect(new Date(result!.updatedAt)).toEqual(value.updatedAt);
     });
   });
 
@@ -279,11 +284,11 @@ describe('Redis Integration', () => {
 
       // Act
       await redisService.set(key, value);
-      const result = await redisService.get(key);
+      const result = await redisService.get<typeof value>(key);
 
       // Assert
       expect(result).toEqual(value);
-      expect(result.nullField).toBeNull();
+      expect(result?.nullField).toBeNull();
     });
   });
 });

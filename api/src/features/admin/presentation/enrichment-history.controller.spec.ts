@@ -4,7 +4,7 @@ import { ListEnrichmentLogsUseCase } from '../infrastructure/use-cases/list-enri
 import { GetEnrichmentStatsUseCase } from '../infrastructure/use-cases/get-enrichment-stats';
 import { BackfillEnrichmentLogsUseCase } from '../infrastructure/use-cases/backfill-enrichment-logs';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
+import { SettingsService } from '@infrastructure/settings';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 

@@ -15,7 +15,7 @@ export interface GetRecentlyPlayedAlbumsOutput {
 export class GetRecentlyPlayedAlbumsUseCase {
   constructor(
     @Inject(ALBUM_REPOSITORY)
-    private readonly albumRepository: IAlbumRepository,
+    private readonly albumRepository: IAlbumRepository
   ) {}
 
   async execute(input: GetRecentlyPlayedAlbumsInput): Promise<GetRecentlyPlayedAlbumsOutput> {

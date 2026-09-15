@@ -70,12 +70,8 @@ describe('PermanentlyDeleteUserUseCase', () => {
       mockUserRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(
-        useCase.execute({ userId: 'nonexistent' }),
-      ).rejects.toThrow(NotFoundError);
-      await expect(
-        useCase.execute({ userId: 'nonexistent' }),
-      ).rejects.toThrow('User not found');
+      await expect(useCase.execute({ userId: 'nonexistent' })).rejects.toThrow(NotFoundError);
+      await expect(useCase.execute({ userId: 'nonexistent' })).rejects.toThrow('User not found');
 
       expect(mockUserRepository.delete).not.toHaveBeenCalled();
     });
@@ -93,12 +89,10 @@ describe('PermanentlyDeleteUserUseCase', () => {
       mockUserRepository.findAll.mockResolvedValue([lastAdmin]);
 
       // Act & Assert
-      await expect(
-        useCase.execute({ userId: 'admin-1' }),
-      ).rejects.toThrow(ValidationError);
-      await expect(
-        useCase.execute({ userId: 'admin-1' }),
-      ).rejects.toThrow('Cannot permanently delete the last active admin user');
+      await expect(useCase.execute({ userId: 'admin-1' })).rejects.toThrow(ValidationError);
+      await expect(useCase.execute({ userId: 'admin-1' })).rejects.toThrow(
+        'Cannot permanently delete the last active admin user'
+      );
 
       expect(mockUserRepository.delete).not.toHaveBeenCalled();
     });
@@ -175,9 +169,7 @@ describe('PermanentlyDeleteUserUseCase', () => {
 
       // Act & Assert
       // Solo hay 1 admin activo, no debería permitir eliminarlo
-      await expect(
-        useCase.execute({ userId: 'admin-1' }),
-      ).rejects.toThrow(ValidationError);
+      await expect(useCase.execute({ userId: 'admin-1' })).rejects.toThrow(ValidationError);
 
       expect(mockUserRepository.delete).not.toHaveBeenCalled();
     });

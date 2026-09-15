@@ -15,9 +15,6 @@ musica/
 .env.*
 !.env*.example
 
-# Generated Prisma client (Prisma 7)
-server/src/generated/
-
 # Uploads & temp files
 uploads/
 *.log

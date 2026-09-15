@@ -7,7 +7,7 @@ import { GetSessionInput, GetSessionOutput } from './get-session.dto';
 export class GetSessionUseCase {
   constructor(
     @Inject(LISTENING_SESSION_REPOSITORY)
-    private readonly sessionRepository: IListeningSessionRepository,
+    private readonly sessionRepository: IListeningSessionRepository
   ) {}
 
   /**

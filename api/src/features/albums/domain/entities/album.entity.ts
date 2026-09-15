@@ -25,9 +25,7 @@ export class Album {
     this.props = props;
   }
 
-  static create(
-    props: Omit<AlbumProps, 'id' | 'createdAt' | 'updatedAt'>,
-  ): Album {
+  static create(props: Omit<AlbumProps, 'id' | 'createdAt' | 'updatedAt'>): Album {
     return new Album({
       ...props,
       id: generateUuid(),

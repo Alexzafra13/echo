@@ -7,7 +7,7 @@ import { GetFeaturedAlbumOutput } from './get-featured-album.dto';
 export class GetFeaturedAlbumUseCase {
   constructor(
     @Inject(ALBUM_REPOSITORY)
-    private readonly albumRepository: IAlbumRepository,
+    private readonly albumRepository: IAlbumRepository
   ) {}
 
   async execute(): Promise<GetFeaturedAlbumOutput> {

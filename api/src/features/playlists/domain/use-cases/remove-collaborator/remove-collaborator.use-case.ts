@@ -10,7 +10,7 @@ export class RemoveCollaboratorUseCase {
     @Inject(PLAYLIST_REPOSITORY)
     private readonly playlistRepository: IPlaylistRepository,
     @Inject(COLLABORATOR_REPOSITORY)
-    private readonly collaboratorRepository: ICollaboratorRepository,
+    private readonly collaboratorRepository: ICollaboratorRepository
   ) {}
 
   async execute(input: RemoveCollaboratorInput): Promise<RemoveCollaboratorOutput> {
@@ -31,12 +31,14 @@ export class RemoveCollaboratorUseCase {
     const isSelf = input.targetUserId === input.requesterId;
 
     if (!isOwner && !isSelf) {
-      throw new ForbiddenError('Only the owner or the collaborator themselves can remove collaboration');
+      throw new ForbiddenError(
+        'Only the owner or the collaborator themselves can remove collaboration'
+      );
     }
 
     const deleted = await this.collaboratorRepository.deleteByPlaylistAndUser(
       input.playlistId,
-      input.targetUserId,
+      input.targetUserId
     );
 
     if (!deleted) {

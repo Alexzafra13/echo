@@ -7,6 +7,7 @@ HTTPS configuration to expose Echo on the internet.
 ## Requirements
 
 Echo needs the reverse proxy to support:
+
 - **WebSocket** (for real-time sync)
 - **X-Forwarded-\* headers** (for HTTPS detection)
 
@@ -15,6 +16,7 @@ Echo needs the reverse proxy to support:
 Automatic SSL, minimal configuration.
 
 ### Install
+
 ```bash
 # Debian/Ubuntu
 sudo apt install caddy
@@ -24,6 +26,7 @@ docker run -d -p 80:80 -p 443:443 -v caddy_data:/data caddy
 ```
 
 ### Configure
+
 ```bash
 # /etc/caddy/Caddyfile
 music.yourdomain.com {
@@ -42,6 +45,7 @@ sudo systemctl reload caddy
 More control, manual SSL setup.
 
 ### Install
+
 ```bash
 sudo apt install nginx certbot python3-certbot-nginx
 ```
@@ -59,11 +63,13 @@ sudo nano /etc/nginx/sites-available/echo
 ```
 
 ### Get SSL certificate
+
 ```bash
 sudo certbot --nginx -d music.yourdomain.com
 ```
 
 ### Reload
+
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
 ```
@@ -163,11 +169,11 @@ services:
   echo:
     image: ghcr.io/alexzafra13/echo:latest
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.echo.rule=Host(`music.yourdomain.com`)"
-      - "traefik.http.routers.echo.tls=true"
-      - "traefik.http.routers.echo.tls.certresolver=letsencrypt"
-      - "traefik.http.services.echo.loadbalancer.server.port=4567"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.echo.rule=Host(`music.yourdomain.com`)'
+      - 'traefik.http.routers.echo.tls=true'
+      - 'traefik.http.routers.echo.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.echo.loadbalancer.server.port=4567'
     networks:
       - traefik
       - echo-network
@@ -230,9 +236,9 @@ curl -s -D - https://music.yourdomain.com -o /dev/null | grep -i strict
 
 ## Troubleshooting
 
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| WebSocket won't connect | Missing upgrade proxy | Add `Upgrade` and `Connection` headers |
-| Mixed Content (HTTP/HTTPS) | HTTP radio on HTTPS page | Echo handles this automatically with internal proxy |
-| 502 Bad Gateway | Echo is not running | `docker compose logs echo` |
-| Invalid certificate | Domain not pointing to server | Check DNS records |
+| Issue                      | Cause                         | Fix                                                 |
+| -------------------------- | ----------------------------- | --------------------------------------------------- |
+| WebSocket won't connect    | Missing upgrade proxy         | Add `Upgrade` and `Connection` headers              |
+| Mixed Content (HTTP/HTTPS) | HTTP radio on HTTPS page      | Echo handles this automatically with internal proxy |
+| 502 Bad Gateway            | Echo is not running           | `docker compose logs echo`                          |
+| Invalid certificate        | Domain not pointing to server | Check DNS records                                   |

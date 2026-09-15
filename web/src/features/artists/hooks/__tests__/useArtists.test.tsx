@@ -173,16 +173,18 @@ describe('useArtists hooks', () => {
   describe('useArtistAlbums', () => {
     it('should fetch albums by artist', async () => {
       const mockAlbumsResponse = {
-        data: [{
-          id: 'album-1',
-          title: 'Album 1',
-          artist: 'Test Artist',
-          artistId: 'artist-1',
-          coverImage: '/covers/album-1.jpg',
-          year: 2024,
-          totalTracks: 10,
-          addedAt: new Date('2024-01-01'),
-        }],
+        data: [
+          {
+            id: 'album-1',
+            title: 'Album 1',
+            artist: 'Test Artist',
+            artistId: 'artist-1',
+            coverImage: '/covers/album-1.jpg',
+            year: 2024,
+            totalTracks: 10,
+            addedAt: new Date('2024-01-01'),
+          },
+        ],
         total: 5,
         skip: 0,
         take: 100,
@@ -243,15 +245,17 @@ describe('useArtists hooks', () => {
   describe('useArtistTopTracks', () => {
     it('should fetch top tracks with default params', async () => {
       const mockResponse = {
-        data: [{
-          trackId: 'track-1',
-          title: 'Hit Song',
-          albumId: 'album-1',
-          albumName: 'Best Album',
-          duration: 240,
-          playCount: 5000,
-          uniqueListeners: 200,
-        }],
+        data: [
+          {
+            trackId: 'track-1',
+            title: 'Hit Song',
+            albumId: 'album-1',
+            albumName: 'Best Album',
+            duration: 240,
+            playCount: 5000,
+            uniqueListeners: 200,
+          },
+        ],
         artistId: 'artist-1',
         limit: 10,
       };
@@ -297,13 +301,15 @@ describe('useArtists hooks', () => {
   describe('useRelatedArtists', () => {
     it('should fetch related artists', async () => {
       const mockResponse = {
-        data: [{
-          id: 'artist-2',
-          name: 'Similar Artist',
-          albumCount: 3,
-          songCount: 30,
-          matchScore: 85,
-        }],
+        data: [
+          {
+            id: 'artist-2',
+            name: 'Similar Artist',
+            albumCount: 3,
+            songCount: 30,
+            matchScore: 85,
+          },
+        ],
         artistId: 'artist-1',
         limit: 10,
         source: 'external' as const,

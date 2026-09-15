@@ -118,9 +118,9 @@ describe('DeleteRadioFaviconUseCase', () => {
       };
       mockDrizzle.db.select.mockReturnValue(mockSelectResult);
 
-      await expect(
-        useCase.execute({ stationUuid: 'nonexistent-uuid' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute({ stationUuid: 'nonexistent-uuid' })).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 });

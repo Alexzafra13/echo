@@ -15,9 +15,5 @@ const SOURCE_LABELS: Record<string, string> = {
  * Source badge component - displays the metadata source
  */
 export function SourceBadge({ source }: SourceBadgeProps) {
-  return (
-    <span className={styles.sourceBadge}>
-      {SOURCE_LABELS[source] || source}
-    </span>
-  );
+  return <span className={styles.sourceBadge}>{SOURCE_LABELS[source] || source}</span>;
 }

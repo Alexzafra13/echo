@@ -19,7 +19,7 @@ export interface GetAlbumsByArtistOutput {
 export class GetAlbumsByArtistUseCase {
   constructor(
     @Inject(ALBUM_REPOSITORY)
-    private readonly albumRepository: IAlbumRepository,
+    private readonly albumRepository: IAlbumRepository
   ) {}
 
   async execute(input: GetAlbumsByArtistInput): Promise<GetAlbumsByArtistOutput> {

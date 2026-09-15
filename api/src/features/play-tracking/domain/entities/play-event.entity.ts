@@ -1,13 +1,13 @@
 export type PlayContext =
-  | 'direct'         // User searched and played directly
-  | 'album'          // Playing from album view
-  | 'playlist'       // Playing from playlist
-  | 'artist'         // Playing from artist view
-  | 'shuffle'        // Random/shuffle playback
-  | 'radio'          // Radio station
+  | 'direct' // User searched and played directly
+  | 'album' // Playing from album view
+  | 'playlist' // Playing from playlist
+  | 'artist' // Playing from artist view
+  | 'shuffle' // Random/shuffle playback
+  | 'radio' // Radio station
   | 'recommendation' // From recommendation system
-  | 'search'         // From search results
-  | 'queue';         // From play queue
+  | 'search' // From search results
+  | 'queue'; // From play queue
 
 export type SourceType = 'album' | 'playlist' | 'artist' | 'radio' | 'search' | 'recommendation';
 
@@ -56,13 +56,13 @@ export interface TrackPlaySummary {
 
 // Context weights for scoring algorithm
 export const CONTEXT_WEIGHTS: Record<PlayContext, number> = {
-  direct: 1.0,          // Highest weight - intentional play
-  search: 0.9,          // Very high - user searched for it
-  artist: 0.75,         // High - exploring artist
-  playlist: 0.8,        // High - curated listening
-  album: 0.6,           // Medium-high - album context
-  queue: 0.7,           // Medium-high - added to queue
-  recommendation: 0.7,  // Medium-high - from our recommendations
-  radio: 0.4,           // Medium - passive listening
-  shuffle: 0.2,         // Low - random playback
+  direct: 1.0, // Highest weight - intentional play
+  search: 0.9, // Very high - user searched for it
+  artist: 0.75, // High - exploring artist
+  playlist: 0.8, // High - curated listening
+  album: 0.6, // Medium-high - album context
+  queue: 0.7, // Medium-high - added to queue
+  recommendation: 0.7, // Medium-high - from our recommendations
+  radio: 0.4, // Medium - passive listening
+  shuffle: 0.2, // Low - random playback
 };

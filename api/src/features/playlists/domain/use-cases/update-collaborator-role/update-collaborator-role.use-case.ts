@@ -2,7 +2,10 @@ import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { ICollaboratorRepository, COLLABORATOR_REPOSITORY } from '../../ports';
-import { UpdateCollaboratorRoleInput, UpdateCollaboratorRoleOutput } from './update-collaborator-role.dto';
+import {
+  UpdateCollaboratorRoleInput,
+  UpdateCollaboratorRoleOutput,
+} from './update-collaborator-role.dto';
 
 @Injectable()
 export class UpdateCollaboratorRoleUseCase {
@@ -10,7 +13,7 @@ export class UpdateCollaboratorRoleUseCase {
     @Inject(PLAYLIST_REPOSITORY)
     private readonly playlistRepository: IPlaylistRepository,
     @Inject(COLLABORATOR_REPOSITORY)
-    private readonly collaboratorRepository: ICollaboratorRepository,
+    private readonly collaboratorRepository: ICollaboratorRepository
   ) {}
 
   async execute(input: UpdateCollaboratorRoleInput): Promise<UpdateCollaboratorRoleOutput> {
@@ -32,7 +35,7 @@ export class UpdateCollaboratorRoleUseCase {
 
     const collaborator = await this.collaboratorRepository.findByPlaylistAndUser(
       input.playlistId,
-      input.targetUserId,
+      input.targetUserId
     );
     if (!collaborator) {
       throw new NotFoundError('Collaborator', input.targetUserId);

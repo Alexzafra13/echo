@@ -29,16 +29,9 @@ export function ToggleSwitch({
     <div className={styles.toggleItem}>
       <div className={styles.toggleInfo}>
         <span className={styles.toggleLabel}>{label}</span>
-        {description && (
-          <p className={styles.toggleDescription}>{description}</p>
-        )}
+        {description && <p className={styles.toggleDescription}>{description}</p>}
       </div>
-      <Switch
-        checked={checked}
-        onChange={onChange}
-        disabled={disabled}
-        aria-label={label}
-      />
+      <Switch checked={checked} onChange={onChange} disabled={disabled} aria-label={label} />
     </div>
   );
 }

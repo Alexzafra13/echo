@@ -28,7 +28,10 @@ import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { User } from '@infrastructure/database/schema';
 import { ConnectedServer } from '../domain/types';
 import { RemoteServerService } from '../infrastructure/services';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
+import {
+  IFederationRepository,
+  FEDERATION_REPOSITORY,
+} from '../domain/ports/federation.repository';
 import { StreamTokenService } from '@features/streaming/infrastructure/services/stream-token.service';
 import {
   PaginationQueryDto,
@@ -50,12 +53,12 @@ export class RemoteLibraryController {
     private readonly remoteServerService: RemoteServerService,
     @Inject(FEDERATION_REPOSITORY)
     private readonly repository: IFederationRepository,
-    private readonly streamTokenService: StreamTokenService,
+    private readonly streamTokenService: StreamTokenService
   ) {}
 
   private async getServerWithOwnershipCheck(
     serverId: string,
-    userId: string,
+    userId: string
   ): Promise<ConnectedServer> {
     const server = await this.repository.findConnectedServerById(serverId);
     if (!server) {
@@ -70,7 +73,8 @@ export class RemoteLibraryController {
   @Get('shared-albums')
   @ApiOperation({
     summary: 'Ver álbums de todos los servidores conectados',
-    description: 'Obtiene álbums agregados de todos los servidores conectados (para la sección Bibliotecas Compartidas)',
+    description:
+      'Obtiene álbums agregados de todos los servidores conectados (para la sección Bibliotecas Compartidas)',
   })
   @ApiResponse({
     status: 200,
@@ -79,14 +83,14 @@ export class RemoteLibraryController {
   })
   async getSharedAlbums(
     @CurrentUser() user: User,
-    @Query() query: SharedLibrariesQueryDto,
+    @Query() query: SharedLibrariesQueryDto
   ): Promise<SharedAlbumsResponseDto> {
     const servers = await this.repository.findConnectedServersByUserId(user.id);
 
     // If specific server requested, filter to just that one
     const targetServers = query.serverId
-      ? servers.filter(s => s.id === query.serverId)
-      : servers.filter(s => s.isOnline !== false); // Only query online servers
+      ? servers.filter((s) => s.id === query.serverId)
+      : servers.filter((s) => s.isOnline !== false); // Only query online servers
 
     if (targetServers.length === 0) {
       return { albums: [], total: 0, serverCount: 0 };
@@ -104,9 +108,9 @@ export class RemoteLibraryController {
         try {
           const result = await this.remoteServerService.getRemoteAlbums(
             server,
-            searchTerm ? 1 : (query.page || 1), // Always fetch from page 1 when searching
+            searchTerm ? 1 : query.page || 1, // Always fetch from page 1 when searching
             fetchLimit,
-            query.search,
+            query.search
           );
           return {
             server,
@@ -116,11 +120,11 @@ export class RemoteLibraryController {
         } catch (error) {
           this.logger.warn(
             { serverId: server.id, error: error instanceof Error ? error.message : error },
-            'Failed to fetch albums from server',
+            'Failed to fetch albums from server'
           );
           return { server, albums: [], total: 0 };
         }
-      }),
+      })
     );
 
     // Aggregate results
@@ -144,9 +148,10 @@ export class RemoteLibraryController {
 
     // Apply local search filter as fallback (for servers that don't support search)
     if (searchTerm) {
-      allAlbums = allAlbums.filter(album =>
-        album.name.toLowerCase().includes(searchTerm) ||
-        album.artistName.toLowerCase().includes(searchTerm)
+      allAlbums = allAlbums.filter(
+        (album) =>
+          album.name.toLowerCase().includes(searchTerm) ||
+          album.artistName.toLowerCase().includes(searchTerm)
       );
     }
 
@@ -194,10 +199,14 @@ export class RemoteLibraryController {
   async getRemoteLibrary(
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
-    @Query() query: PaginationQueryDto,
+    @Query() query: PaginationQueryDto
   ): Promise<RemoteLibraryResponseDto> {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
-    const library = await this.remoteServerService.getRemoteLibrary(server, query.page, query.limit);
+    const library = await this.remoteServerService.getRemoteLibrary(
+      server,
+      query.page,
+      query.limit
+    );
     return {
       ...library,
       albums: this.transformAlbumsCoverUrls(library.albums, id),
@@ -218,14 +227,14 @@ export class RemoteLibraryController {
   async getRemoteAlbums(
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
-    @Query() query: PaginationQueryDto,
+    @Query() query: PaginationQueryDto
   ): Promise<{ albums: RemoteAlbumDto[]; total: number }> {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
     const result = await this.remoteServerService.getRemoteAlbums(
       server,
       query.page,
       query.limit,
-      query.search,
+      query.search
     );
     return {
       ...result,
@@ -244,7 +253,7 @@ export class RemoteLibraryController {
   async getRemoteAlbum(
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
-    @Param('albumId', ParseUUIDPipe) albumId: string,
+    @Param('albumId', ParseUUIDPipe) albumId: string
   ) {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
     const album = await this.remoteServerService.getRemoteAlbum(server, albumId);
@@ -255,7 +264,8 @@ export class RemoteLibraryController {
   @Public()
   @ApiOperation({
     summary: 'Obtener carátula de álbum remoto',
-    description: 'Proxy para obtener la carátula de un álbum de un servidor federado. ' +
+    description:
+      'Proxy para obtener la carátula de un álbum de un servidor federado. ' +
       'Este endpoint es público ya que las carátulas no son datos sensibles.',
   })
   @ApiParam({ name: 'id', description: 'ID del servidor' })
@@ -265,7 +275,7 @@ export class RemoteLibraryController {
   async getRemoteAlbumCover(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('albumId', ParseUUIDPipe) albumId: string,
-    @Res() res: FastifyReply,
+    @Res() res: FastifyReply
   ) {
     // Get server directly (endpoint is public, covers are not sensitive data)
     const server = await this.repository.findConnectedServerById(id);
@@ -290,7 +300,8 @@ export class RemoteLibraryController {
   @Public()
   @ApiOperation({
     summary: 'Stream de track desde servidor remoto',
-    description: 'Proxy para hacer streaming de un track desde un servidor federado. ' +
+    description:
+      'Proxy para hacer streaming de un track desde un servidor federado. ' +
       'Este endpoint acepta autenticación via stream token en query parameter (para HTML5 audio) ' +
       'o via JWT header.',
   })
@@ -306,7 +317,7 @@ export class RemoteLibraryController {
     @Param('trackId', ParseUUIDPipe) trackId: string,
     @Query('token') token: string | undefined,
     @Headers('range') range: string | undefined,
-    @Res() res: FastifyReply,
+    @Res() res: FastifyReply
   ) {
     // Validate stream token
     if (!token) {
@@ -332,11 +343,7 @@ export class RemoteLibraryController {
     }
 
     try {
-      const streamResult = await this.remoteServerService.streamRemoteTrack(
-        server,
-        trackId,
-        range,
-      );
+      const streamResult = await this.remoteServerService.streamRemoteTrack(server, trackId, range);
 
       if (!streamResult) {
         res.status(HttpStatus.NOT_FOUND).send({ error: 'Track no encontrado' });
@@ -351,7 +358,7 @@ export class RemoteLibraryController {
       streamResult.stream.on('error', (error) => {
         this.logger.error(
           { serverId: id, trackId, error: error instanceof Error ? error.message : error },
-          'Stream error from remote server',
+          'Stream error from remote server'
         );
         if (!res.raw.destroyed) {
           res.raw.destroy();
@@ -363,16 +370,18 @@ export class RemoteLibraryController {
     } catch (error) {
       this.logger.error(
         { serverId: id, trackId, error: error instanceof Error ? error.message : error },
-        'Failed to stream remote track',
+        'Failed to stream remote track'
       );
-      res.status(HttpStatus.BAD_GATEWAY).send({ error: 'Error al hacer streaming desde servidor remoto' });
+      res
+        .status(HttpStatus.BAD_GATEWAY)
+        .send({ error: 'Error al hacer streaming desde servidor remoto' });
     }
   }
 
   // Transforma coverUrl remota a proxy local
   private transformAlbumCoverUrl<T extends { id: string; coverUrl?: string }>(
     album: T,
-    serverId: string,
+    serverId: string
   ): T & { coverUrl?: string } {
     return {
       ...album,
@@ -384,7 +393,7 @@ export class RemoteLibraryController {
 
   private transformAlbumsCoverUrls<T extends { id: string; coverUrl?: string }>(
     albums: T[],
-    serverId: string,
+    serverId: string
   ): (T & { coverUrl?: string })[] {
     return albums.map((album) => this.transformAlbumCoverUrl(album, serverId));
   }

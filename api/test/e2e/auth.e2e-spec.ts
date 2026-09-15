@@ -173,10 +173,7 @@ describe('Auth E2E', () => {
     });
 
     it('debería rechazar si faltan campos', () => {
-      return request(app.getHttpServer())
-        .post('/api/auth/login')
-        .send({})
-        .expect(400);
+      return request(app.getHttpServer()).post('/api/auth/login').send({}).expect(400);
     });
   });
 
@@ -282,10 +279,7 @@ describe('Auth E2E', () => {
       await drizzle.db
         .update(authSchema.users)
         .set({ avatarPath: '/avatars/testuser.jpg' })
-        .where(eq(
-          authSchema.users.id,
-          user.id,
-        ));
+        .where(eq(authSchema.users.id, user.id));
 
       return request(app.getHttpServer())
         .get('/api/auth/me')
@@ -297,9 +291,7 @@ describe('Auth E2E', () => {
     });
 
     it('debería rechazar sin token', () => {
-      return request(app.getHttpServer())
-        .get('/api/auth/me')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/auth/me').expect(401);
     });
 
     it('debería rechazar con token inválido', () => {
@@ -310,9 +302,7 @@ describe('Auth E2E', () => {
     });
 
     it('debería rechazar sin header Authorization', () => {
-      return request(app.getHttpServer())
-        .get('/api/auth/me')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/auth/me').expect(401);
     });
   });
 

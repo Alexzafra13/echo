@@ -13,48 +13,71 @@ export interface CamelotParsed {
 // Tonalidad → notación Camelot, con enarmónicos (G#m y Abm → 1A)
 const KEY_TO_CAMELOT: Record<string, CamelotParsed> = {
   // Menores (columna A)
-  'Abm': { number: 1, letter: 'A' }, 'G#m': { number: 1, letter: 'A' },
-  'Ebm': { number: 2, letter: 'A' }, 'D#m': { number: 2, letter: 'A' },
-  'Bbm': { number: 3, letter: 'A' }, 'A#m': { number: 3, letter: 'A' },
-  'Fm': { number: 4, letter: 'A' },
-  'Cm': { number: 5, letter: 'A' },
-  'Gm': { number: 6, letter: 'A' },
-  'Dm': { number: 7, letter: 'A' },
-  'Am': { number: 8, letter: 'A' },
-  'Em': { number: 9, letter: 'A' },
-  'Bm': { number: 10, letter: 'A' },
-  'F#m': { number: 11, letter: 'A' }, 'Gbm': { number: 11, letter: 'A' },
-  'C#m': { number: 12, letter: 'A' }, 'Dbm': { number: 12, letter: 'A' },
+  Abm: { number: 1, letter: 'A' },
+  'G#m': { number: 1, letter: 'A' },
+  Ebm: { number: 2, letter: 'A' },
+  'D#m': { number: 2, letter: 'A' },
+  Bbm: { number: 3, letter: 'A' },
+  'A#m': { number: 3, letter: 'A' },
+  Fm: { number: 4, letter: 'A' },
+  Cm: { number: 5, letter: 'A' },
+  Gm: { number: 6, letter: 'A' },
+  Dm: { number: 7, letter: 'A' },
+  Am: { number: 8, letter: 'A' },
+  Em: { number: 9, letter: 'A' },
+  Bm: { number: 10, letter: 'A' },
+  'F#m': { number: 11, letter: 'A' },
+  Gbm: { number: 11, letter: 'A' },
+  'C#m': { number: 12, letter: 'A' },
+  Dbm: { number: 12, letter: 'A' },
 
   // Mayores (columna B)
-  'B': { number: 1, letter: 'B' }, 'Cb': { number: 1, letter: 'B' },
-  'F#': { number: 2, letter: 'B' }, 'Gb': { number: 2, letter: 'B' },
-  'C#': { number: 3, letter: 'B' }, 'Db': { number: 3, letter: 'B' },
-  'Ab': { number: 4, letter: 'B' }, 'G#': { number: 4, letter: 'B' },
-  'Eb': { number: 5, letter: 'B' }, 'D#': { number: 5, letter: 'B' },
-  'Bb': { number: 6, letter: 'B' }, 'A#': { number: 6, letter: 'B' },
-  'F': { number: 7, letter: 'B' },
-  'C': { number: 8, letter: 'B' },
-  'G': { number: 9, letter: 'B' },
-  'D': { number: 10, letter: 'B' },
-  'A': { number: 11, letter: 'B' },
-  'E': { number: 12, letter: 'B' },
+  B: { number: 1, letter: 'B' },
+  Cb: { number: 1, letter: 'B' },
+  'F#': { number: 2, letter: 'B' },
+  Gb: { number: 2, letter: 'B' },
+  'C#': { number: 3, letter: 'B' },
+  Db: { number: 3, letter: 'B' },
+  Ab: { number: 4, letter: 'B' },
+  'G#': { number: 4, letter: 'B' },
+  Eb: { number: 5, letter: 'B' },
+  'D#': { number: 5, letter: 'B' },
+  Bb: { number: 6, letter: 'B' },
+  'A#': { number: 6, letter: 'B' },
+  F: { number: 7, letter: 'B' },
+  C: { number: 8, letter: 'B' },
+  G: { number: 9, letter: 'B' },
+  D: { number: 10, letter: 'B' },
+  A: { number: 11, letter: 'B' },
+  E: { number: 12, letter: 'B' },
 };
 
 // Camelot → tonalidad canónica
 const CAMELOT_TO_KEY: Record<string, string> = {
-  '1A': 'Abm', '1B': 'B',
-  '2A': 'Ebm', '2B': 'Gb',
-  '3A': 'Bbm', '3B': 'Db',
-  '4A': 'Fm', '4B': 'Ab',
-  '5A': 'Cm', '5B': 'Eb',
-  '6A': 'Gm', '6B': 'Bb',
-  '7A': 'Dm', '7B': 'F',
-  '8A': 'Am', '8B': 'C',
-  '9A': 'Em', '9B': 'G',
-  '10A': 'Bm', '10B': 'D',
-  '11A': 'F#m', '11B': 'A',
-  '12A': 'C#m', '12B': 'E',
+  '1A': 'Abm',
+  '1B': 'B',
+  '2A': 'Ebm',
+  '2B': 'Gb',
+  '3A': 'Bbm',
+  '3B': 'Db',
+  '4A': 'Fm',
+  '4B': 'Ab',
+  '5A': 'Cm',
+  '5B': 'Eb',
+  '6A': 'Gm',
+  '6B': 'Bb',
+  '7A': 'Dm',
+  '7B': 'F',
+  '8A': 'Am',
+  '8B': 'C',
+  '9A': 'Em',
+  '9B': 'G',
+  '10A': 'Bm',
+  '10B': 'D',
+  '11A': 'F#m',
+  '11B': 'A',
+  '12A': 'C#m',
+  '12B': 'E',
 };
 
 // Tonalidad → "8A" (null si no es válida)
@@ -118,7 +141,10 @@ export function getCompatibleCamelotKeys(camelotKey: string): string[] {
 }
 
 // ¿Dos tonalidades Camelot son compatibles para mezcla armónica?
-export function areKeysCompatible(key1: string | null | undefined, key2: string | null | undefined): boolean {
+export function areKeysCompatible(
+  key1: string | null | undefined,
+  key2: string | null | undefined
+): boolean {
   if (!key1 || !key2) return false;
 
   const parsed1 = parseCamelot(key1);

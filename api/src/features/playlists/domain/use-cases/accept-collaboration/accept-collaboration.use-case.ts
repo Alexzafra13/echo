@@ -7,7 +7,7 @@ import { AcceptCollaborationInput, AcceptCollaborationOutput } from './accept-co
 export class AcceptCollaborationUseCase {
   constructor(
     @Inject(COLLABORATOR_REPOSITORY)
-    private readonly collaboratorRepository: ICollaboratorRepository,
+    private readonly collaboratorRepository: ICollaboratorRepository
   ) {}
 
   async execute(input: AcceptCollaborationInput): Promise<AcceptCollaborationOutput> {
@@ -29,7 +29,10 @@ export class AcceptCollaborationUseCase {
       throw new ValidationError('Collaboration is already accepted');
     }
 
-    const updated = await this.collaboratorRepository.updateStatus(input.collaborationId, 'accepted');
+    const updated = await this.collaboratorRepository.updateStatus(
+      input.collaborationId,
+      'accepted'
+    );
     if (!updated) {
       throw new NotFoundError('Collaboration', input.collaborationId);
     }

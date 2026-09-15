@@ -30,7 +30,7 @@ export class DirectoryBrowserService {
 
   constructor(
     @InjectPinoLogger(DirectoryBrowserService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   /**
@@ -169,7 +169,7 @@ export class DirectoryBrowserService {
   private validatePathSecurity(normalizedPath: string): void {
     const allowedRoots = ['/', '/mnt', '/media', '/home', '/music', '/data'];
     const isAllowed = allowedRoots.some(
-      (root) => normalizedPath === root || normalizedPath.startsWith(root + '/'),
+      (root) => normalizedPath === root || normalizedPath.startsWith(root + '/')
     );
 
     if (!isAllowed && normalizedPath !== '/') {
@@ -182,7 +182,7 @@ export class DirectoryBrowserService {
    */
   private async processDirectoryEntries(
     entries: import('fs').Dirent[],
-    basePath: string,
+    basePath: string
   ): Promise<DirectoryInfo[]> {
     const directories: DirectoryInfo[] = [];
 
@@ -201,7 +201,7 @@ export class DirectoryBrowserService {
         // Quick check for music files
         const files = await fs.readdir(dirPath);
         hasMusic = files.some((f) =>
-          this.musicExtensions.some((ext) => f.toLowerCase().endsWith(ext)),
+          this.musicExtensions.some((ext) => f.toLowerCase().endsWith(ext))
         );
       } catch {
         readable = false;
@@ -234,7 +234,7 @@ export class DirectoryBrowserService {
    */
   private calculateParentPath(
     normalizedPath: string,
-    isWindows: boolean,
+    isWindows: boolean
   ): { parentPath: string | null; canGoUp: boolean } {
     if (normalizedPath === '/') {
       return { parentPath: null, canGoUp: false };

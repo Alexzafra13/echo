@@ -9,7 +9,7 @@ const logger = new Logger('FileSystemUtil');
  */
 export async function safeDeleteFile(
   filePath: string | null | undefined,
-  context?: string,
+  context?: string
 ): Promise<boolean> {
   if (!filePath) {
     return false;
@@ -21,7 +21,7 @@ export async function safeDeleteFile(
     return true;
   } catch (error) {
     logger.warn(
-      `Failed to delete file: ${filePath}${context ? ` (${context})` : ''} - ${(error as Error).message}`,
+      `Failed to delete file: ${filePath}${context ? ` (${context})` : ''} - ${(error as Error).message}`
     );
     return false;
   }
@@ -53,7 +53,7 @@ export async function fileExists(filePath: string): Promise<boolean> {
 export async function writeFileSafe(
   filePath: string,
   content: Buffer | string,
-  errorMessage = 'Failed to write file',
+  errorMessage = 'Failed to write file'
 ): Promise<void> {
   try {
     await fs.writeFile(filePath, content);

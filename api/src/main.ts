@@ -133,7 +133,7 @@ async function bootstrap() {
         'API REST para servidor de música con streaming, gestión de álbumes, artistas y playlists. ' +
           'Construido con arquitectura hexagonal y NestJS.'
       )
-      .setVersion('1.0.0')
+      .setVersion(getVersion())
       .addBearerAuth(
         {
           type: 'http',
@@ -168,6 +168,7 @@ async function bootstrap() {
       .addTag('federation', 'Server federation management')
       .addTag('federation-import', 'Federation library import')
       .addTag('federation-public', 'Public federation endpoints (WebFinger, ActivityPub)')
+      .addTag('genres', 'Genre browsing')
       .addTag('health', 'Server health check')
       .addTag('images', 'Image serving and management')
       .addTag('interactions', 'User ratings and interactions')

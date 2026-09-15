@@ -18,10 +18,7 @@ export interface FetchOptions extends RequestInit {
  * @returns Response
  * @throws TimeoutError if timeout is reached
  */
-export async function fetchWithTimeout(
-  url: string,
-  options: FetchOptions = {}
-): Promise<Response> {
+export async function fetchWithTimeout(url: string, options: FetchOptions = {}): Promise<Response> {
   const { timeout = 10000, ...fetchOptions } = options;
 
   const controller = new AbortController();

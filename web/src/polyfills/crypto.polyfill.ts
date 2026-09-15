@@ -23,7 +23,7 @@ if (typeof window !== 'undefined' && window.crypto && !window.crypto.randomUUID)
 
       // Convert to hex string with dashes
       const hex = Array.from(buffer)
-        .map(b => b.toString(16).padStart(2, '0'))
+        .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
 
       return [
@@ -31,7 +31,7 @@ if (typeof window !== 'undefined' && window.crypto && !window.crypto.randomUUID)
         hex.slice(8, 12),
         hex.slice(12, 16),
         hex.slice(16, 20),
-        hex.slice(20, 32)
+        hex.slice(20, 32),
       ].join('-') as `${string}-${string}-${string}-${string}-${string}`;
     }
 

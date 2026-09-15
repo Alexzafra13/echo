@@ -9,13 +9,13 @@ export class ChangeLanguageUseCase {
 
   constructor(
     @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
+    private readonly userRepository: IUserRepository
   ) {}
 
   async execute(input: ChangeLanguageInput): Promise<void> {
     if (!this.VALID_LANGUAGES.includes(input.language)) {
       throw new ValidationError(
-        `Invalid language. Must be one of: ${this.VALID_LANGUAGES.join(', ')}`,
+        `Invalid language. Must be one of: ${this.VALID_LANGUAGES.join(', ')}`
       );
     }
 

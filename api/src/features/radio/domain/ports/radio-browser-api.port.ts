@@ -34,9 +34,25 @@ export interface SearchStationsParams {
   codec?: string;
   bitrateMin?: number;
   bitrateMax?: number;
-  order?: 'name' | 'url' | 'homepage' | 'favicon' | 'tags' | 'country' | 'state' |
-         'language' | 'votes' | 'codec' | 'bitrate' | 'lastcheckok' | 'lastchecktime' |
-         'clicktimestamp' | 'clickcount' | 'clicktrend' | 'changetimestamp' | 'random';
+  order?:
+    | 'name'
+    | 'url'
+    | 'homepage'
+    | 'favicon'
+    | 'tags'
+    | 'country'
+    | 'state'
+    | 'language'
+    | 'votes'
+    | 'codec'
+    | 'bitrate'
+    | 'lastcheckok'
+    | 'lastchecktime'
+    | 'clicktimestamp'
+    | 'clickcount'
+    | 'clicktrend'
+    | 'changetimestamp'
+    | 'random';
   reverse?: boolean;
   offset?: number;
   limit?: number;

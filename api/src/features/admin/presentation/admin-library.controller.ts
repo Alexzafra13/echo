@@ -143,7 +143,7 @@ export class AdminLibraryController {
     this.logger.info(`Music library path updated to: ${normalizedPath}`);
 
     // Count music files
-    const fileCount = await this.countMusicFiles(normalizedPath);
+    const { audioCount: fileCount } = await this.countMediaFiles(normalizedPath);
 
     return {
       success: true,
@@ -346,12 +346,6 @@ export class AdminLibraryController {
     }
 
     return { audioCount, videoCount };
-  }
-
-  /** @deprecated Use countMediaFiles instead */
-  private async countMusicFiles(dirPath: string, depth = 0): Promise<number> {
-    const { audioCount } = await this.countMediaFiles(dirPath, depth);
-    return audioCount;
   }
 
   private async getAvailableMountPoints(): Promise<string[]> {

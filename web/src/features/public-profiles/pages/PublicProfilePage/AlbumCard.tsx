@@ -27,9 +27,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
       {album.artistName && (
         <p className={styles.publicProfilePage__albumArtist}>{album.artistName}</p>
       )}
-      <p className={styles.publicProfilePage__albumMeta}>
-        {album.playCount} reproducciones
-      </p>
+      <p className={styles.publicProfilePage__albumMeta}>{album.playCount} reproducciones</p>
     </Link>
   );
 }

@@ -97,9 +97,7 @@ describe('useWebSocketConnection', () => {
       );
 
       // Simulate connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'connect'
-      )?.[1];
+      const connectHandler = mockSocket.on.mock.calls.find((call) => call[0] === 'connect')?.[1];
 
       act(() => {
         connectHandler?.();
@@ -142,9 +140,7 @@ describe('useWebSocketConnection', () => {
       expect(result.current.isConnected).toBe(false);
 
       // Simulate connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call) => call[0] === 'connect'
-      )?.[1];
+      const connectHandler = mockSocket.on.mock.calls.find((call) => call[0] === 'connect')?.[1];
 
       act(() => {
         connectHandler?.();

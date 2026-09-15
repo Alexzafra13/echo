@@ -22,24 +22,38 @@ const AlbumPage = lazy(() => import('@features/home/pages/AlbumPage'));
 const AlbumsPage = lazy(() => import('@features/home/pages/AlbumsPage'));
 const SearchResultsPage = lazy(() => import('@features/home/pages/SearchResultsPage'));
 const ArtistsPage = lazy(() => import('@features/artists/pages/ArtistsPage/ArtistsPage'));
-const ArtistDetailPage = lazy(() => import('@features/artists/pages/ArtistDetailPage/ArtistDetailPage'));
+const ArtistDetailPage = lazy(
+  () => import('@features/artists/pages/ArtistDetailPage/ArtistDetailPage')
+);
 const ProfilePage = lazy(() => import('@features/profile/pages/ProfilePage'));
 const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage/SettingsPage'));
-const PublicProfilePage = lazy(() => import('@features/public-profiles/pages/PublicProfilePage/PublicProfilePage'));
+const PublicProfilePage = lazy(
+  () => import('@features/public-profiles/pages/PublicProfilePage/PublicProfilePage')
+);
 const AdminPage = lazy(() => import('@features/admin/pages/AdminPage/AdminPage'));
 const PlaylistsPage = lazy(() => import('@features/playlists/pages/PlaylistsPage'));
 const PlaylistDetailPage = lazy(() => import('@features/playlists/pages/PlaylistDetailPage'));
 const RadioPage = lazy(() => import('@features/radio/pages/RadioPage'));
 const WaveMixPage = lazy(() => import('@features/recommendations/pages/WaveMixPage'));
-const WavePlaylistDetailPage = lazy(() => import('@features/recommendations/pages/PlaylistDetailPage'));
+const WavePlaylistDetailPage = lazy(
+  () => import('@features/recommendations/pages/PlaylistDetailPage')
+);
 const DailyRedirect = lazy(() => import('@features/recommendations/pages/DailyRedirect'));
-const ArtistPlaylistsPage = lazy(() => import('@features/recommendations/pages/ArtistPlaylistsPage'));
+const ArtistPlaylistsPage = lazy(
+  () => import('@features/recommendations/pages/ArtistPlaylistsPage')
+);
 const GenrePlaylistsPage = lazy(() => import('@features/recommendations/pages/GenrePlaylistsPage'));
 const SocialPage = lazy(() => import('@features/social/pages/SocialPage/SocialPage'));
-const JoinSessionRedirect = lazy(() => import('@features/listening-sessions/components/JoinSessionRedirect/JoinSessionRedirect'));
-const SessionPage = lazy(() => import('@features/listening-sessions/pages/SessionPage/SessionPage'));
+const JoinSessionRedirect = lazy(
+  () => import('@features/listening-sessions/components/JoinSessionRedirect/JoinSessionRedirect')
+);
+const SessionPage = lazy(
+  () => import('@features/listening-sessions/pages/SessionPage/SessionPage')
+);
 const TrendingPage = lazy(() => import('@features/social/pages/TrendingPage/TrendingPage'));
-const SharedAlbumPage = lazy(() => import('@features/federation/pages/SharedAlbumPage/SharedAlbumPage'));
+const SharedAlbumPage = lazy(
+  () => import('@features/federation/pages/SharedAlbumPage/SharedAlbumPage')
+);
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -297,9 +311,7 @@ function App() {
           </Route>
 
           {/* 404 - Redirect to home or login */}
-          <Route>
-            {isAuthenticated ? <Redirect to="/home" /> : <Redirect to="/login" />}
-          </Route>
+          <Route>{isAuthenticated ? <Redirect to="/home" /> : <Redirect to="/login" />}</Route>
         </Switch>
       </Suspense>
 

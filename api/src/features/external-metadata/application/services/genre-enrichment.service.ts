@@ -2,7 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq, sql } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { genres, artistGenres, albumGenres, trackGenres, tracks } from '@infrastructure/database/schema';
+import {
+  genres,
+  artistGenres,
+  albumGenres,
+  trackGenres,
+  tracks,
+} from '@infrastructure/database/schema';
 import { AgentRegistryService } from '../../infrastructure/services/agent-registry.service';
 import { LastfmAgent } from '../../infrastructure/agents/lastfm.agent';
 import { MbidSearchService } from './mbid-search.service';

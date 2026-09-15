@@ -21,7 +21,7 @@ export class CreateUserUseCase {
     private readonly passwordService: IPasswordService,
     @Inject(SOCIAL_REPOSITORY)
     private readonly socialRepository: ISocialRepository,
-    private readonly logService: LogService,
+    private readonly logService: LogService
   ) {}
 
   async execute(input: CreateUserInput): Promise<CreateUserOutput> {
@@ -29,9 +29,7 @@ export class CreateUserUseCase {
       throw new ValidationError('Username must be at least 3 characters');
     }
 
-    const existingUserByUsername = await this.userRepository.findByUsername(
-      input.username,
-    );
+    const existingUserByUsername = await this.userRepository.findByUsername(input.username);
     if (existingUserByUsername) {
       throw new ConflictError('Username already exists');
     }
@@ -57,21 +55,17 @@ export class CreateUserUseCase {
         await this.logService.warning(
           LogCategory.AUTH,
           `Failed to create automatic friendship for new user: ${savedUser.username}`,
-          { userId: savedUser.id, adminId: input.adminId, error: String(error) },
+          { userId: savedUser.id, adminId: input.adminId, error: String(error) }
         );
       }
     }
 
-    await this.logService.info(
-      LogCategory.AUTH,
-      `User created by admin: ${savedUser.username}`,
-      {
-        userId: savedUser.id,
-        username: savedUser.username,
-        isAdmin: savedUser.isAdmin,
-        createdBy: input.adminId,
-      },
-    );
+    await this.logService.info(LogCategory.AUTH, `User created by admin: ${savedUser.username}`, {
+      userId: savedUser.id,
+      username: savedUser.username,
+      isAdmin: savedUser.isAdmin,
+      createdBy: input.adminId,
+    });
 
     return {
       user: {

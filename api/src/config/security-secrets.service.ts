@@ -15,7 +15,7 @@ export class SecuritySecretsService implements OnModuleInit {
   constructor(
     private readonly drizzle: DrizzleService,
     @InjectPinoLogger(SecuritySecretsService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {
     // Inicialización síncrona para que JwtStrategy acceda en su constructor
     if (process.env.JWT_SECRET && process.env.JWT_REFRESH_SECRET) {
@@ -49,7 +49,10 @@ export class SecuritySecretsService implements OnModuleInit {
     if (this.initialized) return;
 
     this._jwtSecret = await this.getOrCreateSecret('jwt_secret', process.env.JWT_SECRET);
-    this._jwtRefreshSecret = await this.getOrCreateSecret('jwt_refresh_secret', process.env.JWT_REFRESH_SECRET);
+    this._jwtRefreshSecret = await this.getOrCreateSecret(
+      'jwt_refresh_secret',
+      process.env.JWT_REFRESH_SECRET
+    );
 
     this.initialized = true;
     this.logger.info('Security secrets initialized');

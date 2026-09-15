@@ -1,11 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
-import {
-  createTestApp,
-  createUserAndLogin,
-  cleanUserTables,
-} from './helpers/test-setup';
+import { createTestApp, createUserAndLogin, cleanUserTables } from './helpers/test-setup';
 import * as schema from '../../src/infrastructure/database/schema';
 
 /**
@@ -80,9 +76,7 @@ describe('Radio E2E', () => {
       });
 
       it('debería rechazar sin autenticación', () => {
-        return request(app.getHttpServer())
-          .get('/api/radio/favorites')
-          .expect(401);
+        return request(app.getHttpServer()).get('/api/radio/favorites').expect(401);
       });
     });
 
@@ -234,9 +228,7 @@ describe('Radio E2E', () => {
       });
 
       it('debería rechazar sin autenticación', () => {
-        return request(app.getHttpServer())
-          .delete(`/api/radio/favorites/${stationId}`)
-          .expect(401);
+        return request(app.getHttpServer()).delete(`/api/radio/favorites/${stationId}`).expect(401);
       });
 
       it('no debería permitir eliminar favoritos de otros usuarios', async () => {
@@ -322,9 +314,7 @@ describe('Radio E2E', () => {
       });
 
       it('debería rechazar sin autenticación', () => {
-        return request(app.getHttpServer())
-          .get('/api/radio/search?name=rock')
-          .expect(401);
+        return request(app.getHttpServer()).get('/api/radio/search?name=rock').expect(401);
       });
     });
 
@@ -409,9 +399,7 @@ describe('Radio E2E', () => {
   describe('Radio Stream Proxy', () => {
     describe('GET /api/radio/stream/proxy', () => {
       it('debería rechazar sin URL', () => {
-        return request(app.getHttpServer())
-          .get('/api/radio/stream/proxy')
-          .expect(400);
+        return request(app.getHttpServer()).get('/api/radio/stream/proxy').expect(400);
       });
 
       it('debería rechazar URL inválida', () => {

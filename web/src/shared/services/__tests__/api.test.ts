@@ -195,10 +195,9 @@ describe('API Client', () => {
         // Expected to fail in unit test context
       }
 
-      expect(axios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/auth/refresh'),
-        { refreshToken: 'test-refresh-token' }
-      );
+      expect(axios.post).toHaveBeenCalledWith(expect.stringContaining('/auth/refresh'), {
+        refreshToken: 'test-refresh-token',
+      });
     });
 
     it('should clear auth and redirect to login when refresh fails', async () => {

@@ -28,7 +28,7 @@ export class PlayStatsCalculatorService {
     totalPlays: number,
     avgCompletionRate: number,
     skipRate: number,
-    uniqueListeners: number,
+    uniqueListeners: number
   ): number {
     if (uniqueListeners === 0) return 0;
 
@@ -68,10 +68,13 @@ export class PlayStatsCalculatorService {
   getMostCommonContext(contexts: PlayContext[]): PlayContext | null {
     if (contexts.length === 0) return null;
 
-    const contextCounts = contexts.reduce((acc, context) => {
-      acc[context] = (acc[context] || 0) + 1;
-      return acc;
-    }, {} as Record<PlayContext, number>);
+    const contextCounts = contexts.reduce(
+      (acc, context) => {
+        acc[context] = (acc[context] || 0) + 1;
+        return acc;
+      },
+      {} as Record<PlayContext, number>
+    );
 
     let maxCount = 0;
     let topContext: PlayContext | null = null;

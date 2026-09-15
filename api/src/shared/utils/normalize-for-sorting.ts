@@ -9,19 +9,21 @@
  * Example: "blink‐182" (Unicode hyphen) -> "blink-182" (ASCII hyphen)
  */
 export function normalizeUnicodePunctuation(str: string): string {
-  return str
-    // Normalize different types of hyphens/dashes to ASCII hyphen
-    .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-')
-    // Normalize different types of spaces to regular space
-    .replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
-    // Normalize different types of single quotes/apostrophes
-    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
-    // Normalize different types of double quotes
-    .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
-    // Normalize ellipsis
-    .replace(/\u2026/g, '...')
-    // Remove zero-width characters that can cause invisible differences
-    .replace(/[\u200B-\u200D\uFEFF]/g, '');
+  return (
+    str
+      // Normalize different types of hyphens/dashes to ASCII hyphen
+      .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-')
+      // Normalize different types of spaces to regular space
+      .replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
+      // Normalize different types of single quotes/apostrophes
+      .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
+      // Normalize different types of double quotes
+      .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
+      // Normalize ellipsis
+      .replace(/\u2026/g, '...')
+      // Remove zero-width characters that can cause invisible differences
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+  );
 }
 
 /**
@@ -39,15 +41,15 @@ export function removeAccents(str: string): string {
  */
 export function removeLeadingArticles(str: string): string {
   const articles = [
-    /^the\s+/i,  // English: The
-    /^a\s+/i,    // English: A
-    /^an\s+/i,   // English: An
-    /^el\s+/i,   // Spanish: El
-    /^la\s+/i,   // Spanish: La
-    /^los\s+/i,  // Spanish: Los
-    /^las\s+/i,  // Spanish: Las
-    /^un\s+/i,   // Spanish: Un
-    /^una\s+/i,  // Spanish: Una
+    /^the\s+/i, // English: The
+    /^a\s+/i, // English: A
+    /^an\s+/i, // English: An
+    /^el\s+/i, // Spanish: El
+    /^la\s+/i, // Spanish: La
+    /^los\s+/i, // Spanish: Los
+    /^las\s+/i, // Spanish: Las
+    /^un\s+/i, // Spanish: Un
+    /^una\s+/i, // Spanish: Una
   ];
 
   let result = str.trim();

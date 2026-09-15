@@ -155,13 +155,7 @@ describe('Card', () => {
   describe('combinations', () => {
     it('should handle multiple props together', () => {
       const { container } = render(
-        <Card
-          variant="elevated"
-          padding="lg"
-          interactive
-          bordered
-          className="custom"
-        >
+        <Card variant="elevated" padding="lg" interactive bordered className="custom">
           Content
         </Card>
       );

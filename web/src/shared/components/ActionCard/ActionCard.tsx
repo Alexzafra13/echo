@@ -41,7 +41,7 @@ export function ActionCard({
   }, [useGradient, customGradient]);
 
   const displayIcon = isLoading
-    ? (loadingIcon || <RefreshCw size={24} className={styles.actionCard__spinning} />)
+    ? loadingIcon || <RefreshCw size={24} className={styles.actionCard__spinning} />
     : icon;
 
   return (
@@ -59,13 +59,9 @@ export function ActionCard({
         />
       )}
       <div className={styles.actionCard__content}>
-        <div className={styles.actionCard__icon}>
-          {displayIcon}
-        </div>
+        <div className={styles.actionCard__icon}>{displayIcon}</div>
         <div className={styles.actionCard__text}>
-          <h3 className={styles.actionCard__title}>
-            {isLoading ? loadingTitle : title}
-          </h3>
+          <h3 className={styles.actionCard__title}>{isLoading ? loadingTitle : title}</h3>
         </div>
       </div>
     </button>

@@ -14,7 +14,7 @@ cd echo
 pnpm quickstart
 ```
 
-`quickstart` verifies prerequisites, installs dependencies, starts PostgreSQL + Redis via Docker, generates `api/.env` with JWT secrets, and runs database migrations.
+`quickstart` verifies prerequisites, installs dependencies, starts PostgreSQL + Redis via Docker, generates `api/.env` with JWT secrets, and syncs the database schema (`pnpm db:push`).
 
 ## Running
 
@@ -99,6 +99,6 @@ pnpm docker:down    # Stop
 1. Create a feature branch
 2. Run `pnpm dev:all`
 3. Backend changes hot-reload automatically; frontend uses Vite HMR
-4. Run tests before committing: `cd api && pnpm test && cd ../web && pnpm test`
+4. Run lint and tests before committing: `cd api && pnpm lint && pnpm test && cd ../web && pnpm lint && pnpm test` (CI does not lint)
 5. Migrations: modify schema → `pnpm db:generate` → `pnpm db:migrate`
-6. Open a Pull Request — CI runs lint, tests, and Docker build
+6. Open a Pull Request — CI runs the tests, both builds, and the Docker build

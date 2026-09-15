@@ -1,3 +1,1 @@
-export {
-  useRandomAlbums,
-} from './useExplore';
+export { useRandomAlbums } from './useExplore';

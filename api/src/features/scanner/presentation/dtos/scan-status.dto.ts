@@ -4,7 +4,10 @@ export class ScanStatusResponseDto {
   @ApiProperty({ description: 'ID del escaneo' })
   id!: string;
 
-  @ApiProperty({ description: 'Estado del escaneo', enum: ['pending', 'running', 'completed', 'failed'] })
+  @ApiProperty({
+    description: 'Estado del escaneo',
+    enum: ['pending', 'running', 'completed', 'failed'],
+  })
   status!: string;
 
   @ApiProperty({ description: 'Fecha de inicio' })

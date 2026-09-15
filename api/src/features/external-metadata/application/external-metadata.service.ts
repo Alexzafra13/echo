@@ -1,6 +1,9 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { ArtistEnrichmentService, ArtistEnrichmentResult } from './services/artist-enrichment.service';
+import {
+  ArtistEnrichmentService,
+  ArtistEnrichmentResult,
+} from './services/artist-enrichment.service';
 import { AlbumEnrichmentService, AlbumEnrichmentResult } from './services/album-enrichment.service';
 
 /**
@@ -20,7 +23,7 @@ export class ExternalMetadataService {
     @InjectPinoLogger(ExternalMetadataService.name)
     private readonly logger: PinoLogger,
     private readonly artistEnrichment: ArtistEnrichmentService,
-    private readonly albumEnrichment: AlbumEnrichmentService,
+    private readonly albumEnrichment: AlbumEnrichmentService
   ) {}
 
   /**
@@ -31,10 +34,7 @@ export class ExternalMetadataService {
    * @param forceRefresh Skip cache and force fresh API calls
    * @returns Object with enrichment results
    */
-  async enrichArtist(
-    artistId: string,
-    forceRefresh = false
-  ): Promise<ArtistEnrichmentResult> {
+  async enrichArtist(artistId: string, forceRefresh = false): Promise<ArtistEnrichmentResult> {
     return this.artistEnrichment.enrich(artistId, forceRefresh);
   }
 
@@ -46,10 +46,7 @@ export class ExternalMetadataService {
    * @param forceRefresh Skip cache and force fresh API calls
    * @returns Object with enrichment results
    */
-  async enrichAlbum(
-    albumId: string,
-    forceRefresh = false
-  ): Promise<AlbumEnrichmentResult> {
+  async enrichAlbum(albumId: string, forceRefresh = false): Promise<AlbumEnrichmentResult> {
     return this.albumEnrichment.enrich(albumId, forceRefresh);
   }
 }

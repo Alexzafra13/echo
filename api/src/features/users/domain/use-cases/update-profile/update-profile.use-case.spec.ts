@@ -1,9 +1,6 @@
 import { NotFoundError } from '@shared/errors';
 import { UpdateProfileUseCase } from './update-profile.use-case';
-import {
-  MockUserRepository,
-  createMockUserRepository,
-} from '@shared/testing/mock.types';
+import { MockUserRepository, createMockUserRepository } from '@shared/testing/mock.types';
 import { UserFactory } from '@shared/testing/factories/user.factory';
 
 describe('UpdateProfileUseCase', () => {

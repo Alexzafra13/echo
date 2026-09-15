@@ -70,10 +70,7 @@ export interface IMusicBrainzSearch extends IAgent {
    * @param limit Maximum number of results (default: 5)
    * @returns Array of artist matches sorted by score
    */
-  searchArtist(
-    artistName: string,
-    limit?: number
-  ): Promise<MusicBrainzArtistMatch[]>;
+  searchArtist(artistName: string, limit?: number): Promise<MusicBrainzArtistMatch[]>;
 
   /**
    * Search for albums (release-groups) by title and artist

@@ -11,10 +11,13 @@ export const AlbumCard = React.memo(function AlbumCard({
   onClick,
   onPlayClick,
 }: AlbumCardProps) {
-  const handlePlayClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onPlayClick?.();
-  }, [onPlayClick]);
+  const handlePlayClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onPlayClick?.();
+    },
+    [onPlayClick]
+  );
 
   return (
     <article className={styles.albumCard} onClick={onClick}>

@@ -3,7 +3,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { HealthCheckService } from './health-check.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
-import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
+import { SettingsService } from '@infrastructure/settings';
 
 // Mock os module
 jest.mock('os', () => ({

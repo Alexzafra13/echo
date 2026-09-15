@@ -1,5 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { PLAY_TRACKING_REPOSITORY, IPlayTrackingRepository } from '@features/play-tracking/domain/ports';
+import {
+  PLAY_TRACKING_REPOSITORY,
+  IPlayTrackingRepository,
+} from '@features/play-tracking/domain/ports';
 import { GetArtistStatsInput, GetArtistStatsOutput } from './get-artist-stats.dto';
 
 /**
@@ -9,7 +12,7 @@ import { GetArtistStatsInput, GetArtistStatsOutput } from './get-artist-stats.dt
 export class GetArtistStatsUseCase {
   constructor(
     @Inject(PLAY_TRACKING_REPOSITORY)
-    private readonly playTrackingRepository: IPlayTrackingRepository,
+    private readonly playTrackingRepository: IPlayTrackingRepository
   ) {}
 
   async execute(input: GetArtistStatsInput): Promise<GetArtistStatsOutput> {

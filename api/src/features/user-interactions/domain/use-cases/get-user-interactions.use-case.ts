@@ -6,7 +6,7 @@ import { ItemType, UserInteraction } from '../entities/user-interaction.entity';
 export class GetUserInteractionsUseCase {
   constructor(
     @Inject(USER_INTERACTIONS_REPOSITORY)
-    private readonly repository: IUserInteractionsRepository,
+    private readonly repository: IUserInteractionsRepository
   ) {}
 
   async execute(userId: string, itemType?: ItemType): Promise<UserInteraction[]> {

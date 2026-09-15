@@ -29,7 +29,7 @@ export class PlaylistCoverService {
   constructor(
     private readonly drizzle: DrizzleService,
     @InjectPinoLogger(PlaylistCoverService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   /**
@@ -67,9 +67,15 @@ export class PlaylistCoverService {
 
     // If artist has either external or local profile image, use it
     if (artistWithImages?.externalProfilePath || artistWithImages?.profileImagePath) {
-      this.logger.debug({ artistId: artist.id, artistName: artist.name }, 'Reusing existing artist profile image');
+      this.logger.debug(
+        { artistId: artist.id, artistName: artist.name },
+        'Reusing existing artist profile image'
+      );
     } else {
-      this.logger.debug({ artistId: artist.id, artistName: artist.name }, 'No artist image found, using profile endpoint');
+      this.logger.debug(
+        { artistId: artist.id, artistName: artist.name },
+        'No artist image found, using profile endpoint'
+      );
     }
 
     // Always return the profile URL - the ImageService handles priority

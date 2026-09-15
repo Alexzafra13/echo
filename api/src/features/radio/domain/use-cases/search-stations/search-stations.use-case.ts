@@ -15,7 +15,7 @@ import {
 export class SearchStationsUseCase {
   constructor(
     @Inject(RADIO_BROWSER_API_CLIENT)
-    private readonly radioBrowserApi: IRadioBrowserApiClient,
+    private readonly radioBrowserApi: IRadioBrowserApiClient
   ) {}
 
   async execute(params: SearchStationsParams): Promise<RadioBrowserStation[]> {

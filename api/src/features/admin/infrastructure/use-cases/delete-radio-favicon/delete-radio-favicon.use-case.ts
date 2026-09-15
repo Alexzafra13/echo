@@ -5,10 +5,7 @@ import { eq } from 'drizzle-orm';
 import { radioStationImages } from '@infrastructure/database/schema';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
-import {
-  DeleteRadioFaviconInput,
-  DeleteRadioFaviconOutput,
-} from './delete-radio-favicon.dto';
+import { DeleteRadioFaviconInput, DeleteRadioFaviconOutput } from './delete-radio-favicon.dto';
 
 @Injectable()
 export class DeleteRadioFaviconUseCase {
@@ -17,7 +14,7 @@ export class DeleteRadioFaviconUseCase {
     private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
-    private readonly imageService: ImageService,
+    private readonly imageService: ImageService
   ) {}
 
   async execute(input: DeleteRadioFaviconInput): Promise<DeleteRadioFaviconOutput> {
@@ -44,9 +41,7 @@ export class DeleteRadioFaviconUseCase {
     }
 
     // Delete the database record
-    await this.drizzle.db
-      .delete(radioStationImages)
-      .where(eq(radioStationImages.id, image.id));
+    await this.drizzle.db.delete(radioStationImages).where(eq(radioStationImages.id, image.id));
 
     this.imageService.invalidateRadioFaviconCache(input.stationUuid);
 

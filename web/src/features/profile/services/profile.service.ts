@@ -33,7 +33,9 @@ export const profileService = {
   /**
    * Subir avatar del usuario
    */
-  uploadAvatar: async (file: File): Promise<{ avatarPath: string; avatarSize: number; avatarMimeType: string }> => {
+  uploadAvatar: async (
+    file: File
+  ): Promise<{ avatarPath: string; avatarSize: number; avatarMimeType: string }> => {
     const formData = new FormData();
     formData.append('file', file);
 

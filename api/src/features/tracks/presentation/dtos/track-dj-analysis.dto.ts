@@ -35,18 +35,22 @@ export class TrackDjAnalysisDto {
   @ApiPropertyOptional({ example: 0.62, description: 'Danceability (0-1)' })
   danceability?: number;
 
-  @ApiPropertyOptional({ example: 'FFmpeg decode failed', description: 'Error message if analysis failed' })
+  @ApiPropertyOptional({
+    example: 'FFmpeg decode failed',
+    description: 'Error message if analysis failed',
+  })
   analysisError?: string;
 
-  @ApiPropertyOptional({ example: '2024-01-15T10:30:00Z', description: 'When analysis was completed' })
+  @ApiPropertyOptional({
+    example: '2024-01-15T10:30:00Z',
+    description: 'When analysis was completed',
+  })
   analyzedAt?: string;
 
   static fromDomain(analysis: DjAnalysis | null): TrackDjAnalysisDto | null {
     if (!analysis) return null;
 
-    const camelotColor = analysis.camelotKey
-      ? CAMELOT_COLORS[analysis.camelotKey] || null
-      : null;
+    const camelotColor = analysis.camelotKey ? CAMELOT_COLORS[analysis.camelotKey] || null : null;
 
     const dto = new TrackDjAnalysisDto();
     dto.status = analysis.status;

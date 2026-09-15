@@ -94,7 +94,7 @@ export const federationService = {
    */
   async getRemoteAlbum(serverId: string, albumId: string): Promise<RemoteAlbumWithTracks> {
     const response = await apiClient.get<RemoteAlbumWithTracks>(
-      `/federation/servers/${serverId}/albums/${albumId}`,
+      `/federation/servers/${serverId}/albums/${albumId}`
     );
     return response.data;
   },

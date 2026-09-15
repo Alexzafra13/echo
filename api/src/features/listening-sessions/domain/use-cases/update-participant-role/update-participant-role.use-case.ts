@@ -1,13 +1,16 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { IListeningSessionRepository, LISTENING_SESSION_REPOSITORY } from '../../ports';
-import { UpdateParticipantRoleInput, UpdateParticipantRoleOutput } from './update-participant-role.dto';
+import {
+  UpdateParticipantRoleInput,
+  UpdateParticipantRoleOutput,
+} from './update-participant-role.dto';
 
 @Injectable()
 export class UpdateParticipantRoleUseCase {
   constructor(
     @Inject(LISTENING_SESSION_REPOSITORY)
-    private readonly sessionRepository: IListeningSessionRepository,
+    private readonly sessionRepository: IListeningSessionRepository
   ) {}
 
   async execute(input: UpdateParticipantRoleInput): Promise<UpdateParticipantRoleOutput> {
@@ -37,12 +40,19 @@ export class UpdateParticipantRoleUseCase {
       throw new ValidationError('Cannot change the host role');
     }
 
-    const participant = await this.sessionRepository.getParticipant(input.sessionId, input.targetUserId);
+    const participant = await this.sessionRepository.getParticipant(
+      input.sessionId,
+      input.targetUserId
+    );
     if (!participant) {
       throw new NotFoundError('Participant', input.targetUserId);
     }
 
-    await this.sessionRepository.updateParticipantRole(input.sessionId, input.targetUserId, input.role);
+    await this.sessionRepository.updateParticipantRole(
+      input.sessionId,
+      input.targetUserId,
+      input.role
+    );
 
     return {
       userId: input.targetUserId,

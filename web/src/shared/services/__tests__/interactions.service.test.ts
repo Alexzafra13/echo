@@ -48,7 +48,14 @@ describe('interactions.service', () => {
 
     it.each([1, 2, 3, 4, 5])('should accept rating %i', async (rating) => {
       vi.mocked(apiClient.post).mockResolvedValueOnce({
-        data: { userId: 'user-1', itemId: 'track-1', itemType: 'track', rating, createdAt: new Date(), updatedAt: new Date() },
+        data: {
+          userId: 'user-1',
+          itemId: 'track-1',
+          itemType: 'track',
+          rating,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
       });
 
       const result = await setRating('track-1', 'track', rating);
@@ -58,7 +65,14 @@ describe('interactions.service', () => {
 
     it.each(itemTypes)('should work for %s type', async (itemType) => {
       vi.mocked(apiClient.post).mockResolvedValueOnce({
-        data: { userId: 'user-1', itemId: `${itemType}-1`, itemType, rating: 4, createdAt: new Date(), updatedAt: new Date() },
+        data: {
+          userId: 'user-1',
+          itemId: `${itemType}-1`,
+          itemType,
+          rating: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
       });
 
       await setRating(`${itemType}-1`, itemType, 4);
@@ -91,7 +105,9 @@ describe('interactions.service', () => {
 
       await removeRating(`${itemType}-1`, itemType);
 
-      expect(apiClient.delete).toHaveBeenCalledWith(`/interactions/rating/${itemType}/${itemType}-1`);
+      expect(apiClient.delete).toHaveBeenCalledWith(
+        `/interactions/rating/${itemType}/${itemType}-1`
+      );
     });
 
     it('should handle not found gracefully', async () => {

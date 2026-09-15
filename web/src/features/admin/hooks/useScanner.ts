@@ -111,7 +111,7 @@ export function useLufsStatus(enabled: boolean = true) {
     refetchInterval: (query) => {
       // Si está running o hay pendientes, refrescar cada 5 segundos
       const data = query.state.data;
-      return (data?.isRunning || (data?.pendingTracks ?? 0) > 0) ? 5000 : 30000;
+      return data?.isRunning || (data?.pendingTracks ?? 0) > 0 ? 5000 : 30000;
     },
     staleTime: 5000,
   });

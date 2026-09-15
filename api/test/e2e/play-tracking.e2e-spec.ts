@@ -292,9 +292,7 @@ describe('Play Tracking E2E', () => {
     });
 
     it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .get('/api/play-tracking/history')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/play-tracking/history').expect(401);
     });
   });
 
@@ -348,9 +346,7 @@ describe('Play Tracking E2E', () => {
     });
 
     it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .get('/api/play-tracking/top-tracks')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/play-tracking/top-tracks').expect(401);
     });
   });
 
@@ -398,9 +394,7 @@ describe('Play Tracking E2E', () => {
     });
 
     it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .get('/api/play-tracking/recently-played')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/play-tracking/recently-played').expect(401);
     });
   });
 
@@ -451,9 +445,7 @@ describe('Play Tracking E2E', () => {
     });
 
     it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .get('/api/play-tracking/summary')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/play-tracking/summary').expect(401);
     });
   });
 

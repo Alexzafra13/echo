@@ -68,9 +68,7 @@ describe('GenreSelectModal', () => {
     });
 
     it('should render genre without icon', () => {
-      const genresWithoutIcon: Genre[] = [
-        { id: 'noicon', label: 'No Icon Genre' },
-      ];
+      const genresWithoutIcon: Genre[] = [{ id: 'noicon', label: 'No Icon Genre' }];
       render(<GenreSelectModal {...defaultProps} genres={genresWithoutIcon} />);
 
       expect(screen.getByText('No Icon Genre')).toBeInTheDocument();
@@ -246,9 +244,7 @@ describe('GenreSelectModal', () => {
     });
 
     it('should handle genre with special characters in label', () => {
-      const specialGenres: Genre[] = [
-        { id: 'rnb', label: 'R&B / Soul', icon: '🎤' },
-      ];
+      const specialGenres: Genre[] = [{ id: 'rnb', label: 'R&B / Soul', icon: '🎤' }];
       render(<GenreSelectModal {...defaultProps} genres={specialGenres} />);
 
       expect(screen.getByText('R&B / Soul')).toBeInTheDocument();

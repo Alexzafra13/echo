@@ -1,9 +1,6 @@
 import { NotFoundError, ValidationError } from '@shared/errors';
 import { ChangeThemeUseCase } from './change-theme.use-case';
-import {
-  MockUserRepository,
-  createMockUserRepository,
-} from '@shared/testing/mock.types';
+import { MockUserRepository, createMockUserRepository } from '@shared/testing/mock.types';
 import { UserFactory } from '@shared/testing/factories/user.factory';
 
 describe('ChangeThemeUseCase', () => {

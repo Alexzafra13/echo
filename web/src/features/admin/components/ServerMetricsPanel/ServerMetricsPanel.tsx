@@ -9,6 +9,7 @@ import {
   Server,
   Layers,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useServerMetrics, type ServerMetrics } from '../../hooks/useServerMetrics';
 import styles from './ServerMetricsPanel.module.css';
 
@@ -91,36 +92,39 @@ function MetricCard({
 }
 
 function SystemInfoSection({ metrics }: { metrics: ServerMetrics }) {
+  const { t } = useTranslation();
   const { system, process: proc } = metrics;
   return (
     <div className={styles.section}>
-      <h3 className={styles.sectionTitle}>Echo Server</h3>
+      <h3 className={styles.sectionTitle}>{t('admin.server.systemTitle')}</h3>
       <div className={styles.systemInfoCard}>
         <div className={styles.systemInfoGrid}>
           <div className={styles.systemInfoItem}>
-            <span className={styles.systemInfoItemLabel}>Hostname</span>
+            <span className={styles.systemInfoItemLabel}>{t('admin.server.hostname')}</span>
             <span className={styles.systemInfoItemValue}>{system.hostname}</span>
           </div>
           <div className={styles.systemInfoItem}>
-            <span className={styles.systemInfoItemLabel}>Plataforma</span>
+            <span className={styles.systemInfoItemLabel}>{t('admin.server.platform')}</span>
             <span className={styles.systemInfoItemValue}>
               {system.platform} / {system.arch}
             </span>
           </div>
           <div className={styles.systemInfoItem}>
-            <span className={styles.systemInfoItemLabel}>CPU</span>
-            <span className={styles.systemInfoItemValue}>{system.cpuCores} cores</span>
+            <span className={styles.systemInfoItemLabel}>{t('admin.server.cpu')}</span>
+            <span className={styles.systemInfoItemValue}>
+              {t('admin.server.cpuCores', { count: system.cpuCores })}
+            </span>
           </div>
           <div className={styles.systemInfoItem}>
-            <span className={styles.systemInfoItemLabel}>Node.js</span>
+            <span className={styles.systemInfoItemLabel}>{t('admin.server.node')}</span>
             <span className={styles.systemInfoItemValue}>{proc.nodeVersion}</span>
           </div>
           <div className={styles.systemInfoItem}>
-            <span className={styles.systemInfoItemLabel}>PID</span>
+            <span className={styles.systemInfoItemLabel}>{t('admin.server.pid')}</span>
             <span className={styles.systemInfoItemValue}>{proc.pid}</span>
           </div>
           <div className={styles.systemInfoItem}>
-            <span className={styles.systemInfoItemLabel}>Uptime Echo</span>
+            <span className={styles.systemInfoItemLabel}>{t('admin.server.uptime')}</span>
             <span className={styles.systemInfoItemValue}>{formatUptime(proc.uptimeSeconds)}</span>
           </div>
         </div>
@@ -130,6 +134,7 @@ function SystemInfoSection({ metrics }: { metrics: ServerMetrics }) {
 }
 
 function MemorySection({ metrics }: { metrics: ServerMetrics }) {
+  const { t } = useTranslation();
   const { system, process: proc } = metrics;
   const appTotalMB = proc.memoryUsage.rssMB;
   const appPercent =
@@ -140,34 +145,40 @@ function MemorySection({ metrics }: { metrics: ServerMetrics }) {
 
   return (
     <div className={styles.section}>
-      <h3 className={styles.sectionTitle}>Memoria de Echo</h3>
+      <h3 className={styles.sectionTitle}>{t('admin.server.memoryTitle')}</h3>
       <div className={styles.gridThree}>
         <MetricCard
-          label="Uso Total (RSS)"
+          label={t('admin.server.rssUsage')}
           value={appTotalMB}
-          unit="MB"
+          unit={t('admin.server.mb')}
           icon={<MemoryStick size={14} />}
-          subtext={`${appPercent}% de ${system.totalMemoryMB} MB del servidor`}
+          subtext={t('admin.server.rssSubtext', {
+            percent: appPercent,
+            total: system.totalMemoryMB,
+          })}
         >
           <ProgressBar percent={appPercent} />
         </MetricCard>
 
         <MetricCard
-          label="Heap V8"
+          label={t('admin.server.heap')}
           value={proc.memoryUsage.heapUsedMB}
-          unit="MB"
+          unit={t('admin.server.mb')}
           icon={<Cpu size={14} />}
-          subtext={`${proc.memoryUsage.heapUsagePercent}% del heap (${proc.memoryUsage.heapTotalMB} MB)`}
+          subtext={t('admin.server.heapSubtext', {
+            percent: proc.memoryUsage.heapUsagePercent,
+            total: proc.memoryUsage.heapTotalMB,
+          })}
         >
           <ProgressBar percent={proc.memoryUsage.heapUsagePercent} status={heapStatus} />
         </MetricCard>
 
         <MetricCard
-          label="Memoria Externa"
+          label={t('admin.server.externalMemory')}
           value={proc.memoryUsage.externalMB}
-          unit="MB"
+          unit={t('admin.server.mb')}
           icon={<Layers size={14} />}
-          subtext="Buffers C++ (ffmpeg, crypto)"
+          subtext={t('admin.server.externalSubtext')}
         />
       </div>
     </div>
@@ -175,6 +186,7 @@ function MemorySection({ metrics }: { metrics: ServerMetrics }) {
 }
 
 function CpuLoadSection({ metrics }: { metrics: ServerMetrics }) {
+  const { t } = useTranslation();
   const { system } = metrics;
   const load1m = system.loadAverage[0] ?? 0;
   const load5m = system.loadAverage[1] ?? 0;
@@ -189,26 +201,35 @@ function CpuLoadSection({ metrics }: { metrics: ServerMetrics }) {
 
   return (
     <div className={styles.section}>
-      <h3 className={styles.sectionTitle}>CPU</h3>
+      <h3 className={styles.sectionTitle}>{t('admin.server.cpuTitle')}</h3>
       <div className={styles.gridThree}>
         <MetricCard
-          label="Load 1 min"
+          label={t('admin.server.load1m')}
           value={load1m.toFixed(2)}
           icon={<Activity size={14} />}
-          subtext={`${loadPercent}% de ${system.cpuCores} cores`}
+          subtext={t('admin.server.loadSubtext', { percent: loadPercent, count: system.cpuCores })}
         >
           <ProgressBar percent={loadPercent} />
         </MetricCard>
 
-        <MetricCard label="Load 5 min" value={load5m.toFixed(2)} icon={<Activity size={14} />} />
+        <MetricCard
+          label={t('admin.server.load5m')}
+          value={load5m.toFixed(2)}
+          icon={<Activity size={14} />}
+        />
 
-        <MetricCard label="Load 15 min" value={load15m.toFixed(2)} icon={<Activity size={14} />} />
+        <MetricCard
+          label={t('admin.server.load15m')}
+          value={load15m.toFixed(2)}
+          icon={<Activity size={14} />}
+        />
       </div>
     </div>
   );
 }
 
 function StorageSection({ metrics }: { metrics: ServerMetrics }) {
+  const { t } = useTranslation();
   const { system } = metrics;
   if (!system.storage) return null;
 
@@ -216,9 +237,9 @@ function StorageSection({ metrics }: { metrics: ServerMetrics }) {
 
   return (
     <div className={styles.section}>
-      <h3 className={styles.sectionTitle}>Almacenamiento</h3>
+      <h3 className={styles.sectionTitle}>{t('admin.server.storageTitle')}</h3>
       <MetricCard
-        label="Disco de la Biblioteca"
+        label={t('admin.server.libraryDisk')}
         value={storage.usagePercent}
         unit="%"
         icon={<HardDrive size={14} />}
@@ -227,8 +248,8 @@ function StorageSection({ metrics }: { metrics: ServerMetrics }) {
         <ProgressBar
           percent={storage.usagePercent}
           status={storage.status}
-          leftLabel={`${storage.freeGB} GB libre`}
-          rightLabel={`${storage.totalGB} GB total`}
+          leftLabel={t('admin.server.freeSpace', { value: storage.freeGB })}
+          rightLabel={t('admin.server.totalSpace', { value: storage.totalGB })}
         />
       </MetricCard>
     </div>
@@ -236,6 +257,7 @@ function StorageSection({ metrics }: { metrics: ServerMetrics }) {
 }
 
 function StreamingSection({ metrics }: { metrics: ServerMetrics }) {
+  const { t } = useTranslation();
   const { pool } = metrics.database;
   const activeConnections = pool.totalConnections - pool.idleConnections;
 
@@ -250,33 +272,36 @@ function StreamingSection({ metrics }: { metrics: ServerMetrics }) {
 
   return (
     <div className={styles.section}>
-      <h3 className={styles.sectionTitle}>Streaming & Conexiones</h3>
+      <h3 className={styles.sectionTitle}>{t('admin.server.streamingTitle')}</h3>
       <div className={styles.gridFour}>
         <MetricCard
-          label="Streams Activos"
+          label={t('admin.server.activeStreams')}
           value={metrics.streaming.activeStreams}
           icon={<Radio size={14} />}
           className={styles.cardStreaming}
         />
 
         <MetricCard
-          label="Total Servidos"
+          label={t('admin.server.totalServed')}
           value={metrics.streaming.totalStreamsServed.toLocaleString()}
           icon={<Activity size={14} />}
-          subtext="Desde inicio del proceso"
+          subtext={t('admin.server.sinceProcessStart')}
         />
 
         <MetricCard
-          label="Tokens de Stream"
+          label={t('admin.server.streamTokens')}
           value={metrics.streaming.activeStreamTokens}
           icon={<Layers size={14} />}
         />
 
         <MetricCard
-          label="Pool de DB"
+          label={t('admin.server.dbPool')}
           value={`${activeConnections} / ${pool.maxConnections}`}
           icon={<Database size={14} />}
-          subtext={`${pool.idleConnections} idle, ${pool.waitingRequests} en espera`}
+          subtext={t('admin.server.poolSubtext', {
+            idle: pool.idleConnections,
+            waiting: pool.waitingRequests,
+          })}
         >
           <ProgressBar percent={poolPercent} status={poolStatus} />
         </MetricCard>
@@ -286,21 +311,22 @@ function StreamingSection({ metrics }: { metrics: ServerMetrics }) {
 }
 
 function QueuesSection({ metrics }: { metrics: ServerMetrics }) {
+  const { t } = useTranslation();
   if (metrics.queues.length === 0) return null;
 
   return (
     <div className={styles.section}>
-      <h3 className={styles.sectionTitle}>Colas de trabajo</h3>
+      <h3 className={styles.sectionTitle}>{t('admin.server.queuesTitle')}</h3>
       <div className={styles.queueCard}>
         <table className={styles.queueTable}>
           <thead>
             <tr>
-              <th>Cola</th>
-              <th>En espera</th>
-              <th>Activos</th>
-              <th>Completados</th>
-              <th>Fallidos</th>
-              <th>Retrasados</th>
+              <th>{t('admin.server.queue')}</th>
+              <th>{t('admin.server.waiting')}</th>
+              <th>{t('admin.server.active')}</th>
+              <th>{t('admin.server.completed')}</th>
+              <th>{t('admin.server.failed')}</th>
+              <th>{t('admin.server.delayed')}</th>
             </tr>
           </thead>
           <tbody>
@@ -342,6 +368,7 @@ function QueuesSection({ metrics }: { metrics: ServerMetrics }) {
 }
 
 export function ServerMetricsPanel() {
+  const { t } = useTranslation();
   const { metrics, isConnected } = useServerMetrics();
 
   if (!metrics) {
@@ -351,14 +378,14 @@ export function ServerMetricsPanel() {
           <div className={styles.headerLeft}>
             <Monitor size={24} />
             <div>
-              <h2 className={styles.title}>Server Metrics</h2>
-              <p className={styles.subtitle}>Monitoreo en tiempo real del servidor</p>
+              <h2 className={styles.title}>{t('admin.server.title')}</h2>
+              <p className={styles.subtitle}>{t('admin.server.subtitle')}</p>
             </div>
           </div>
         </div>
         <div className={styles.waiting}>
           <Server size={40} className={styles.waitingIcon} />
-          <p>Conectando con el servidor...</p>
+          <p>{t('admin.server.connecting')}</p>
         </div>
       </div>
     );
@@ -370,8 +397,8 @@ export function ServerMetricsPanel() {
         <div className={styles.headerLeft}>
           <Monitor size={24} />
           <div>
-            <h2 className={styles.title}>Server Metrics</h2>
-            <p className={styles.subtitle}>Monitoreo en tiempo real del servidor</p>
+            <h2 className={styles.title}>{t('admin.server.title')}</h2>
+            <p className={styles.subtitle}>{t('admin.server.subtitle')}</p>
           </div>
         </div>
         <div
@@ -380,7 +407,7 @@ export function ServerMetricsPanel() {
           }`}
         >
           <span className={styles.dot} />
-          {isConnected ? 'En vivo' : 'Desconectado'}
+          {isConnected ? t('admin.server.live') : t('admin.server.disconnected')}
         </div>
       </div>
 

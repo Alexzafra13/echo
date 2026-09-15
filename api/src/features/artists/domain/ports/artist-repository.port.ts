@@ -64,7 +64,7 @@ export interface IArtistRepository {
    */
   findSimilarByGenreAndAudio(
     artistId: string,
-    limit: number,
+    limit: number
   ): Promise<{ artistId: string; score: number }[]>;
 }
 

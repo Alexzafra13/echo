@@ -3,7 +3,6 @@ import { ISocialRepository } from '../ports';
 import { NotFoundError, ForbiddenError } from '@shared/errors';
 import { Friendship } from '../entities/friendship.entity';
 import { NotificationsService } from '@features/notifications/application/notifications.service';
-import { DrizzleService } from '@infrastructure/database/drizzle.service';
 
 import { PinoLogger } from 'nestjs-pino';
 
@@ -22,7 +21,6 @@ describe('AcceptFriendRequestUseCase', () => {
   let useCase: AcceptFriendRequestUseCase;
   let mockSocialRepo: jest.Mocked<ISocialRepository>;
   let mockNotificationsService: jest.Mocked<NotificationsService>;
-  let mockDrizzleService: jest.Mocked<DrizzleService>;
 
   const now = new Date();
 
@@ -45,26 +43,7 @@ describe('AcceptFriendRequestUseCase', () => {
       notify: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<NotificationsService>;
 
-    mockDrizzleService = {
-      db: {
-        select: jest.fn().mockReturnValue({
-          from: jest.fn().mockReturnValue({
-            where: jest.fn().mockReturnValue({
-              then: jest
-                .fn()
-                .mockImplementation((cb) => cb([{ name: 'Test User', username: 'testuser' }])),
-            }),
-          }),
-        }),
-      },
-    } as unknown as jest.Mocked<DrizzleService>;
-
-    useCase = new AcceptFriendRequestUseCase(
-      mockLogger,
-      mockSocialRepo,
-      mockNotificationsService,
-      mockDrizzleService
-    );
+    useCase = new AcceptFriendRequestUseCase(mockLogger, mockSocialRepo, mockNotificationsService);
   });
 
   describe('execute', () => {

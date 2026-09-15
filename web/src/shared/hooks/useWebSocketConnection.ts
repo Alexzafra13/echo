@@ -31,14 +31,7 @@ export interface UseWebSocketConnectionReturn {
 export function useWebSocketConnection(
   options: UseWebSocketConnectionOptions
 ): UseWebSocketConnectionReturn {
-  const {
-    namespace,
-    token,
-    enabled = true,
-    events = [],
-    onConnect,
-    onDisconnect,
-  } = options;
+  const { namespace, token, enabled = true, events = [], onConnect, onDisconnect } = options;
 
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);

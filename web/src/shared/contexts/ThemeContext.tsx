@@ -160,9 +160,5 @@ export function ThemeProvider({ children, defaultTheme = 'auto' }: ThemeProvider
     [theme, themePreference, toggleTheme, setThemePreference]
   );
 
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

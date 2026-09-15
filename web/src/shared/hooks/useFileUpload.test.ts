@@ -32,11 +32,7 @@ class MockFileReader {
 vi.stubGlobal('FileReader', MockFileReader);
 
 // Helper to create mock file
-function createMockFile(
-  name: string,
-  size: number,
-  type: string
-): File {
+function createMockFile(name: string, size: number, type: string): File {
   const content = new Array(size).fill('a').join('');
   return new File([content], name, { type });
 }
@@ -214,8 +210,8 @@ describe('useFileUpload', () => {
     });
 
     it('should respect custom max size', () => {
-      const { result } = renderHook(() =>
-        useFileUpload({ maxSize: 5 * 1024 * 1024 }) // 5MB
+      const { result } = renderHook(
+        () => useFileUpload({ maxSize: 5 * 1024 * 1024 }) // 5MB
       );
       const file = createMockFile('medium.jpg', 6 * 1024 * 1024, 'image/jpeg');
       const event = createMockChangeEvent(file);

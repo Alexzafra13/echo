@@ -13,9 +13,5 @@ export interface IAlbumCoverRetriever extends IAgent {
    * @param album Album name (fallback for search)
    * @returns AlbumCover entity or null if not found
    */
-  getAlbumCover(
-    mbid: string | null,
-    artist: string,
-    album: string
-  ): Promise<AlbumCover | null>;
+  getAlbumCover(mbid: string | null, artist: string, album: string): Promise<AlbumCover | null>;
 }

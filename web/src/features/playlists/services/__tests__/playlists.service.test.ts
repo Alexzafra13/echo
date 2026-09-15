@@ -153,7 +153,9 @@ describe('playlistsService', () => {
 
     it('should create playlist with minimal data', async () => {
       const createDto = { name: 'Minimal Playlist' };
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { ...mockPlaylist, name: 'Minimal Playlist' } });
+      vi.mocked(apiClient.post).mockResolvedValueOnce({
+        data: { ...mockPlaylist, name: 'Minimal Playlist' },
+      });
 
       const result = await playlistsService.createPlaylist(createDto);
 

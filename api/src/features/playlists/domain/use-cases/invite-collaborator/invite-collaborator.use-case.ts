@@ -14,7 +14,7 @@ export class InviteCollaboratorUseCase {
     @Inject(COLLABORATOR_REPOSITORY)
     private readonly collaboratorRepository: ICollaboratorRepository,
     @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
+    private readonly userRepository: IUserRepository
   ) {}
 
   async execute(input: InviteCollaboratorInput): Promise<InviteCollaboratorOutput> {
@@ -53,7 +53,7 @@ export class InviteCollaboratorUseCase {
     // Check if already a collaborator
     const existing = await this.collaboratorRepository.findByPlaylistAndUser(
       input.playlistId,
-      input.targetUserId,
+      input.targetUserId
     );
     if (existing) {
       throw new ConflictError('User is already a collaborator on this playlist');

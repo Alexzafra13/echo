@@ -183,7 +183,10 @@ export function useCrossfadeLogic({
         !isNaN(activeDur) && activeDur > activeTime
           ? (activeDur - activeTime) * 1000
           : configuredFadeDuration;
-      const fadeDuration = Math.max(CROSSFADE_MIN_MS, Math.min(configuredFadeDuration, trackRemainingMs));
+      const fadeDuration = Math.max(
+        CROSSFADE_MIN_MS,
+        Math.min(configuredFadeDuration, trackRemainingMs)
+      );
 
       if (fadeDuration < configuredFadeDuration) {
         logger.debug('[Crossfade] Fade duration capped to remaining track time', {

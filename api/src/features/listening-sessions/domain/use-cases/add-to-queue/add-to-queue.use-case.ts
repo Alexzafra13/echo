@@ -11,7 +11,7 @@ export class AddToQueueUseCase {
     @Inject(LISTENING_SESSION_REPOSITORY)
     private readonly sessionRepository: IListeningSessionRepository,
     @Inject(TRACK_REPOSITORY)
-    private readonly trackRepository: ITrackRepository,
+    private readonly trackRepository: ITrackRepository
   ) {}
 
   async execute(input: AddToQueueInput): Promise<AddToQueueOutput> {
@@ -39,7 +39,9 @@ export class AddToQueueUseCase {
 
     // Only host and dj can add to queue
     if (participant.role === 'listener') {
-      throw new ForbiddenError('Listeners cannot add tracks to the queue. Ask the host to promote you to DJ.');
+      throw new ForbiddenError(
+        'Listeners cannot add tracks to the queue. Ask the host to promote you to DJ.'
+      );
     }
 
     // Verify track exists
@@ -51,7 +53,7 @@ export class AddToQueueUseCase {
     const queueItem = await this.sessionRepository.addToQueue(
       input.sessionId,
       input.trackId,
-      input.userId,
+      input.userId
     );
 
     return {

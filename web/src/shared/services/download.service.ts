@@ -35,7 +35,7 @@ export async function downloadTrack(trackId: string, fileName?: string): Promise
 export async function downloadAlbum(
   albumId: string,
   albumName: string,
-  artistName: string,
+  artistName: string
 ): Promise<void> {
   const token = await getStreamToken();
   const url = `/api/albums/${albumId}/download?token=${token}`;

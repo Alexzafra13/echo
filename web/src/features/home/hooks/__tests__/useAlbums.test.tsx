@@ -13,7 +13,6 @@ import {
   useAlbumsAlphabetically,
   useAlbumsByArtist,
   useAlbumsRecentlyPlayed,
-  useAlbumsFavorites,
 } from '../useAlbums';
 import { albumsService } from '../../services';
 import type { Album } from '../../types';
@@ -31,7 +30,6 @@ vi.mock('../../services', () => ({
     getAlphabetically: vi.fn(),
     getByArtist: vi.fn(),
     getRecentlyPlayed: vi.fn(),
-    getFavorites: vi.fn(),
   },
 }));
 
@@ -371,46 +369,6 @@ describe('useAlbums hooks', () => {
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       expect(albumsService.getRecentlyPlayed).toHaveBeenCalledWith(10);
-    });
-  });
-
-  describe('useAlbumsFavorites', () => {
-    it('should fetch favorite albums', async () => {
-      const mockResponse = {
-        data: [mockAlbum],
-        page: 1,
-        limit: 20,
-        hasMore: false,
-      };
-      vi.mocked(albumsService.getFavorites).mockResolvedValueOnce(mockResponse);
-
-      const { result } = renderHook(() => useAlbumsFavorites(), {
-        wrapper: createWrapper(),
-      });
-
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-      expect(result.current.data?.data).toHaveLength(1);
-      expect(result.current.data?.hasMore).toBe(false);
-    });
-
-    it('should fetch with pagination', async () => {
-      const mockResponse = {
-        data: [mockAlbum, mockAlbum2],
-        page: 2,
-        limit: 10,
-        hasMore: true,
-      };
-      vi.mocked(albumsService.getFavorites).mockResolvedValueOnce(mockResponse);
-
-      const { result } = renderHook(() => useAlbumsFavorites({ page: 2, limit: 10 }), {
-        wrapper: createWrapper(),
-      });
-
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-      expect(albumsService.getFavorites).toHaveBeenCalledWith({ page: 2, limit: 10 });
-      expect(result.current.data?.hasMore).toBe(true);
     });
   });
 });

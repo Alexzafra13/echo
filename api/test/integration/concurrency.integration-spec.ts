@@ -46,9 +46,7 @@ describe('Concurrency Integration', () => {
       .useClass(NoOpThrottlerStorage)
       .compile();
 
-    app = moduleRef.createNestApplication<NestFastifyApplication>(
-      new FastifyAdapter()
-    );
+    app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
 
     app.useGlobalPipes(
       new ValidationPipe({
@@ -107,7 +105,9 @@ describe('Concurrency Integration', () => {
   /**
    * Helper to login and get tokens
    */
-  async function loginUser(username: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async function loginUser(
+    username: string
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const response = await request(app.getHttpServer())
       .post('/api/auth/login')
       .send({ username, password: 'Test123!' })
@@ -315,11 +315,12 @@ describe('Concurrency Integration', () => {
       // Use allSettled to handle potential connection resets gracefully
       const queryPromises = Array(10)
         .fill(null)
-        .map(() =>
-          request(app.getHttpServer())
-            .get('/api/auth/me')
-            .set('Authorization', `Bearer ${accessToken}`)
-            .catch((err) => ({ status: 0, error: err.message })) // Handle connection errors
+        .map(
+          () =>
+            request(app.getHttpServer())
+              .get('/api/auth/me')
+              .set('Authorization', `Bearer ${accessToken}`)
+              .catch((err) => ({ status: 0, error: err.message })) // Handle connection errors
         );
 
       const results = await Promise.all(queryPromises);
@@ -432,12 +433,8 @@ describe('Concurrency Integration', () => {
       expect(user2Count).toBe(3);
 
       // Verify no cross-contamination
-      const user1HasUser2 = user1Items.some((p: { name: string }) =>
-        p.name.startsWith('User2')
-      );
-      const user2HasUser1 = user2Items.some((p: { name: string }) =>
-        p.name.startsWith('User1')
-      );
+      const user1HasUser2 = user1Items.some((p: { name: string }) => p.name.startsWith('User2'));
+      const user2HasUser1 = user2Items.some((p: { name: string }) => p.name.startsWith('User1'));
 
       expect(user1HasUser2).toBe(false);
       expect(user2HasUser1).toBe(false);

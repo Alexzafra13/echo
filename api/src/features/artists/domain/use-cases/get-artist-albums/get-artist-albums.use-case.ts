@@ -1,6 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { validatePagination } from '@shared/utils';
-import { ALBUM_REPOSITORY, IAlbumRepository } from '@features/albums/domain/ports/album-repository.port';
+import {
+  ALBUM_REPOSITORY,
+  IAlbumRepository,
+} from '@features/albums/domain/ports/album-repository.port';
 import { GetArtistAlbumsInput, GetArtistAlbumsOutput } from './get-artist-albums.dto';
 
 /**
@@ -12,7 +15,7 @@ import { GetArtistAlbumsInput, GetArtistAlbumsOutput } from './get-artist-albums
 export class GetArtistAlbumsUseCase {
   constructor(
     @Inject(ALBUM_REPOSITORY)
-    private readonly albumRepository: IAlbumRepository,
+    private readonly albumRepository: IAlbumRepository
   ) {}
 
   async execute(input: GetArtistAlbumsInput): Promise<GetArtistAlbumsOutput> {

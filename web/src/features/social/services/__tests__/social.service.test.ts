@@ -11,7 +11,15 @@ import {
   getFriendsActivity,
   searchUsers,
 } from '../social.service';
-import type { SocialOverview, Friend, Friendship, PendingRequests, ListeningUser, ActivityItem, SearchUserResult } from '../social.service';
+import type {
+  SocialOverview,
+  Friend,
+  Friendship,
+  PendingRequests,
+  ListeningUser,
+  ActivityItem,
+  SearchUserResult,
+} from '../social.service';
 
 vi.mock('@shared/services/api', () => ({
   apiClient: {
@@ -198,9 +206,7 @@ describe('social.service', () => {
 
   describe('searchUsers', () => {
     it('should search users', async () => {
-      const mockResults: SearchUserResult[] = [
-        { ...mockFriend, friendshipStatus: null },
-      ];
+      const mockResults: SearchUserResult[] = [{ ...mockFriend, friendshipStatus: null }];
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResults });
 
       const result = await searchUsers('test');

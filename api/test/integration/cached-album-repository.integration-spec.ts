@@ -94,7 +94,7 @@ describe('CachedAlbumRepository Integration', () => {
     cachedRepository = new CachedAlbumRepository(
       baseRepository as unknown as DrizzleAlbumRepository,
       redisService,
-      mockLogger as unknown as PinoLogger,
+      mockLogger as unknown as PinoLogger
     );
   });
 
@@ -126,10 +126,10 @@ describe('CachedAlbumRepository Integration', () => {
       expect(result?.id).toBe('album-test-1');
 
       // Verificar que se guardó en Redis
-      const cached = await redisService.get('album:album-test-1');
+      const cached = await redisService.get<{ id: string; name: string }>('album:album-test-1');
       expect(cached).toBeDefined();
-      expect(cached.id).toBe('album-test-1');
-      expect(cached.name).toBe('Integration Test Album');
+      expect(cached?.id).toBe('album-test-1');
+      expect(cached?.name).toBe('Integration Test Album');
     });
 
     it('should return from Redis cache on second call (cache hit)', async () => {
@@ -296,9 +296,9 @@ describe('CachedAlbumRepository Integration', () => {
       await cachedRepository.findById('album-3');
 
       // Assert - Todos deberían estar en cache
-      const cached1 = await redisService.get('album:album-1');
-      const cached2 = await redisService.get('album:album-2');
-      const cached3 = await redisService.get('album:album-3');
+      const cached1 = await redisService.get<{ name: string }>('album:album-1');
+      const cached2 = await redisService.get<{ name: string }>('album:album-2');
+      const cached3 = await redisService.get<{ name: string }>('album:album-3');
 
       expect(cached1?.name).toBe('Album 1');
       expect(cached2?.name).toBe('Album 2');
@@ -326,9 +326,7 @@ describe('CachedAlbumRepository Integration', () => {
         name: 'Album 2',
       });
 
-      baseRepository.findById
-        .mockResolvedValueOnce(album1)
-        .mockResolvedValueOnce(album2);
+      baseRepository.findById.mockResolvedValueOnce(album1).mockResolvedValueOnce(album2);
 
       await cachedRepository.findById('album-1');
       await cachedRepository.findById('album-2');
@@ -348,8 +346,8 @@ describe('CachedAlbumRepository Integration', () => {
 
       // Assert - CachedAlbumRepository.invalidateListCaches() invalida TODOS los albums
       // Esto es por diseño para garantizar consistencia de datos
-      const cached1 = await redisService.get('album:album-1');
-      const cached2 = await redisService.get('album:album-2');
+      const cached1 = await redisService.get<{ name: string }>('album:album-1');
+      const cached2 = await redisService.get<{ name: string }>('album:album-2');
 
       expect(cached1).toBeNull(); // Invalidado
       expect(cached2).toBeNull(); // También invalidado (by design)
@@ -365,9 +363,9 @@ describe('CachedAlbumRepository Integration', () => {
       await cachedRepository.findById('album-test-1');
 
       // Assert - Verificar formato de clave
-      const cached = await redisService.get('album:album-test-1');
+      const cached = await redisService.get<{ id: string; name: string }>('album:album-test-1');
       expect(cached).toBeDefined();
-      expect(cached.id).toBe('album-test-1');
+      expect(cached?.id).toBe('album-test-1');
     });
   });
 
@@ -392,8 +390,8 @@ describe('CachedAlbumRepository Integration', () => {
       expect(result?.compilation).toBe(true);
       expect(result?.artistName).toBe('Various Artists');
 
-      const cached = await redisService.get('album:compilation-1');
-      expect(cached.compilation).toBe(true);
+      const cached = await redisService.get<{ compilation: boolean }>('album:compilation-1');
+      expect(cached?.compilation).toBe(true);
     });
   });
 });

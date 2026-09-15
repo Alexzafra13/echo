@@ -107,11 +107,7 @@ export function Select({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={`${styles.select} ${className}`}
-      onKeyDown={handleKeyDown}
-    >
+    <div ref={containerRef} className={`${styles.select} ${className}`} onKeyDown={handleKeyDown}>
       {label && <span className={styles.select__label}>{label}</span>}
       <button
         type="button"
@@ -120,9 +116,7 @@ export function Select({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <span className={styles.select__value}>
-          {selectedOption?.label || placeholder}
-        </span>
+        <span className={styles.select__value}>{selectedOption?.label || placeholder}</span>
         <ChevronDown
           size={16}
           className={`${styles.select__icon} ${isOpen ? styles['select__icon--open'] : ''}`}

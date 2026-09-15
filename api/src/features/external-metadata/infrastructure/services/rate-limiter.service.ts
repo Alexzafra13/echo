@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 /**
@@ -12,7 +12,7 @@ import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 export class RateLimiterService {
   constructor(
     @InjectPinoLogger(RateLimiterService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   // Map of service name to last request timestamp
@@ -38,9 +38,7 @@ export class RateLimiterService {
 
     if (timeSinceLastRequest < minDelay) {
       const waitTime = minDelay - timeSinceLastRequest;
-      this.logger.debug(
-        `Rate limiting ${serviceName}: waiting ${waitTime}ms before next request`
-      );
+      this.logger.debug(`Rate limiting ${serviceName}: waiting ${waitTime}ms before next request`);
       await this.sleep(waitTime);
     }
 

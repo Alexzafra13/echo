@@ -59,10 +59,14 @@ export class AlbumFactory {
    */
   static createMany(count: number, overridesFn?: (index: number) => Partial<AlbumProps>): Album[] {
     return Array.from({ length: count }, (_, i) =>
-      AlbumFactory.create(overridesFn ? overridesFn(i) : {
-        id: `album-${i}`,
-        name: `Album ${i}`,
-      })
+      AlbumFactory.create(
+        overridesFn
+          ? overridesFn(i)
+          : {
+              id: `album-${i}`,
+              name: `Album ${i}`,
+            }
+      )
     );
   }
 }

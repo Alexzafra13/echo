@@ -1,6 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError, ForbiddenError } from '@shared/errors';
-import { IRadioStationRepository, RADIO_STATION_REPOSITORY } from '../../ports/radio-station-repository.port';
+import {
+  IRadioStationRepository,
+  RADIO_STATION_REPOSITORY,
+} from '../../ports/radio-station-repository.port';
 
 interface DeleteFavoriteStationInput {
   stationId: string;
@@ -14,7 +17,7 @@ interface DeleteFavoriteStationInput {
 export class DeleteFavoriteStationUseCase {
   constructor(
     @Inject(RADIO_STATION_REPOSITORY)
-    private readonly repository: IRadioStationRepository,
+    private readonly repository: IRadioStationRepository
   ) {}
 
   async execute(input: DeleteFavoriteStationInput): Promise<void> {

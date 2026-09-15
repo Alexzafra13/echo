@@ -15,7 +15,7 @@ export interface IDjAnalysisRepository {
       bpmTolerance?: number;
       limit?: number;
       minScore?: number;
-    },
+    }
   ): Promise<DjAnalysis[]>;
   countPending(): Promise<number>;
   findTracksWithoutAnalysis(limit?: number): Promise<string[]>;

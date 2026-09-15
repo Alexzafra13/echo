@@ -13,7 +13,6 @@ export interface IAlbumRepository {
   // Ordena por nombre de artista, luego por nombre de álbum
   findByArtistName(skip: number, take: number): Promise<Album[]>;
   findRecentlyPlayed(userId: string, take: number): Promise<Album[]>;
-  findFavorites(userId: string, skip: number, take: number): Promise<Album[]>;
   count(): Promise<number>;
   countByArtistId(artistId: string): Promise<number>;
   create(album: Album): Promise<Album>;

@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GetArtistAlbumsUseCase } from './get-artist-albums.use-case';
-import { ALBUM_REPOSITORY, IAlbumRepository } from '@features/albums/domain/ports/album-repository.port';
+import {
+  ALBUM_REPOSITORY,
+  IAlbumRepository,
+} from '@features/albums/domain/ports/album-repository.port';
 import { Album } from '@features/albums/domain/entities/album.entity';
 
 describe('GetArtistAlbumsUseCase', () => {

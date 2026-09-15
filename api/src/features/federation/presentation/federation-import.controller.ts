@@ -36,7 +36,10 @@ import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { User } from '@infrastructure/database/schema';
 import { AlbumImportQueue } from '../domain/types';
 import { AlbumImportService, ImportProgressService } from '../infrastructure/services';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
+import {
+  IFederationRepository,
+  FEDERATION_REPOSITORY,
+} from '../domain/ports/federation.repository';
 
 class StartImportDto {
   @ApiProperty({ description: 'ID of the connected server' })
@@ -63,13 +66,14 @@ export class FederationImportController {
     private readonly importProgressService: ImportProgressService,
     @Inject(FEDERATION_REPOSITORY)
     private readonly repository: IFederationRepository,
-    private readonly jwtService: JwtService,
+    private readonly jwtService: JwtService
   ) {}
 
   @Post()
   @ApiOperation({
     summary: 'Iniciar importación de álbum',
-    description: 'Inicia la importación de un álbum desde un servidor federado conectado. ' +
+    description:
+      'Inicia la importación de un álbum desde un servidor federado conectado. ' +
       'El progreso se puede seguir via WebSocket conectando a /federation y escuchando eventos import:progress',
   })
   @ApiBody({ type: StartImportDto })
@@ -82,7 +86,7 @@ export class FederationImportController {
   @ApiResponse({ status: 502, description: 'Error al conectar con el servidor remoto' })
   async startImport(
     @CurrentUser() user: User,
-    @Body() dto: StartImportDto,
+    @Body() dto: StartImportDto
   ): Promise<AlbumImportQueue> {
     // Get connected server
     const server = await this.repository.findConnectedServerById(dto.serverId);
@@ -98,7 +102,7 @@ export class FederationImportController {
 
     this.logger.info(
       { userId: user.id, serverId: dto.serverId, albumId: dto.remoteAlbumId },
-      'Starting album import',
+      'Starting album import'
     );
 
     try {
@@ -108,7 +112,7 @@ export class FederationImportController {
       if (error instanceof Error && error.message.includes('Cannot connect to remote server')) {
         this.logger.error(
           { userId: user.id, serverId: dto.serverId, error: error.message },
-          'Failed to connect to remote server for import',
+          'Failed to connect to remote server for import'
         );
         throw new BadGatewayException(error.message);
       }
@@ -116,7 +120,7 @@ export class FederationImportController {
       if (error instanceof Error && error.message.includes('Failed to fetch album metadata')) {
         this.logger.error(
           { userId: user.id, serverId: dto.serverId, error: error.message },
-          'Failed to fetch album metadata from remote server',
+          'Failed to fetch album metadata from remote server'
         );
         throw new BadGatewayException(error.message);
       }
@@ -148,7 +152,7 @@ export class FederationImportController {
   @ApiResponse({ status: 404, description: 'Importación no encontrada' })
   async getImportStatus(
     @CurrentUser() user: User,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseUUIDPipe) id: string
   ): Promise<AlbumImportQueue> {
     const importEntry = await this.importService.getImportStatus(id);
 
@@ -174,7 +178,7 @@ export class FederationImportController {
   @ApiResponse({ status: 404, description: 'Importación no encontrada' })
   async cancelImport(
     @CurrentUser() user: User,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseUUIDPipe) id: string
   ): Promise<{ success: boolean }> {
     const importEntry = await this.importService.getImportStatus(id);
 
@@ -196,14 +200,15 @@ export class FederationImportController {
   @Public()
   @ApiOperation({
     summary: 'Stream de progreso de importación (SSE)',
-    description: 'Server-Sent Events para recibir actualizaciones de progreso de importación en tiempo real. ' +
+    description:
+      'Server-Sent Events para recibir actualizaciones de progreso de importación en tiempo real. ' +
       'Pasa token JWT como query param ya que EventSource no soporta headers.',
   })
   @ApiResponse({ status: 200, description: 'Stream de eventos de progreso' })
   @ApiResponse({ status: 403, description: 'Token inválido o expirado' })
   streamImportProgress(
     @Query('token') token: string,
-    @Req() request: FastifyRequest,
+    @Req() request: FastifyRequest
   ): Observable<MessageEvent> {
     // Validate JWT token from query param (EventSource can't send headers)
     let userId: string;
@@ -234,10 +239,13 @@ export class FederationImportController {
       const subscription = this.importProgressService
         .subscribeForUser(userId)
         .pipe(
-          map((event) => ({
-            type: 'import:progress',
-            data: event,
-          } as MessageEvent)),
+          map(
+            (event) =>
+              ({
+                type: 'import:progress',
+                data: event,
+              }) as MessageEvent
+          )
         )
         .subscribe((event) => subscriber.next(event));
 

@@ -9,7 +9,7 @@ export class ExternalApiError extends BaseError {
     public readonly provider: string,
     public readonly httpStatus: number,
     public readonly httpStatusText: string,
-    public readonly url?: string,
+    public readonly url?: string
   ) {
     const message = `${provider} API error: HTTP ${httpStatus} ${httpStatusText}`;
     super('EXTERNAL_API_ERROR', message);

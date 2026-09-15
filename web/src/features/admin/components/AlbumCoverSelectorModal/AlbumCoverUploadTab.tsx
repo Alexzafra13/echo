@@ -166,7 +166,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
       )}
 
       <div className={styles.gallerySection}>
-        <h3 className={styles.galleryTitle}>Portadas subidas</h3>
+        <h3 className={styles.galleryTitle}>{t('albums.uploadedCovers')}</h3>
 
         {isLoadingCovers ? (
           <div className={styles.loading}>
@@ -174,8 +174,8 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
           </div>
         ) : customCovers.length === 0 ? (
           <div className={styles.emptyGallery}>
-            <p>No hay portadas personalizadas</p>
-            <span>Sube una portada desde tu PC para empezar</span>
+            <p>{t('albums.noCustomCovers')}</p>
+            <span>{t('albums.uploadCoverHint')}</span>
           </div>
         ) : (
           <div className={styles.gallery}>

@@ -63,10 +63,7 @@ describe('PublicProfilesController', () => {
 
       mockGetPublicProfileUseCase.execute.mockResolvedValue(mockResult);
 
-      const result = await controller.getPublicProfile(
-        userId,
-        mockUser as JwtUser,
-      );
+      const result = await controller.getPublicProfile(userId, mockUser as JwtUser);
 
       expect(mockGetPublicProfileUseCase.execute).toHaveBeenCalledWith({
         userId,
@@ -78,13 +75,11 @@ describe('PublicProfilesController', () => {
 
     it('should propagate errors from the use case', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000';
-      mockGetPublicProfileUseCase.execute.mockRejectedValue(
-        new Error('User not found'),
-      );
+      mockGetPublicProfileUseCase.execute.mockRejectedValue(new Error('User not found'));
 
-      await expect(
-        controller.getPublicProfile(userId, mockUser as JwtUser),
-      ).rejects.toThrow('User not found');
+      await expect(controller.getPublicProfile(userId, mockUser as JwtUser)).rejects.toThrow(
+        'User not found'
+      );
     });
   });
 });

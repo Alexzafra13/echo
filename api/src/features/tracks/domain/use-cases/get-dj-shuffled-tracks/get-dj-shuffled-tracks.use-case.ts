@@ -9,7 +9,11 @@ import {
   calculateCompatibility,
   TrackDjData,
 } from '@features/dj/domain/services/dj-compatibility.service';
-import { GetDjShuffledTracksInput, GetDjShuffledTracksOutput, DjShuffledTrack } from './get-dj-shuffled-tracks.dto';
+import {
+  GetDjShuffledTracksInput,
+  GetDjShuffledTracksOutput,
+  DjShuffledTrack,
+} from './get-dj-shuffled-tracks.dto';
 
 const DEFAULT_TAKE = 50;
 const MAX_TAKE = 100;
@@ -21,7 +25,7 @@ export class GetDjShuffledTracksUseCase {
     @Inject(TRACK_REPOSITORY)
     private readonly trackRepository: ITrackRepository,
     @Inject(DJ_ANALYSIS_REPOSITORY)
-    private readonly djAnalysisRepo: IDjAnalysisRepository,
+    private readonly djAnalysisRepo: IDjAnalysisRepository
   ) {}
 
   async execute(input: GetDjShuffledTracksInput = {}): Promise<GetDjShuffledTracksOutput> {
@@ -50,7 +54,7 @@ export class GetDjShuffledTracksUseCase {
   private async tryDjShuffle(
     seed: number,
     take: number,
-    total: number,
+    total: number
   ): Promise<GetDjShuffledTracksOutput | null> {
     // Get a larger pool of tracks to work with
     const poolSize = Math.min(total, take * 3);
@@ -113,7 +117,7 @@ export class GetDjShuffledTracksUseCase {
   private orderByCompatibility(
     tracks: Track[],
     djDataMap: Map<string, TrackDjData>,
-    seed: number,
+    seed: number
   ): Track[] {
     if (tracks.length <= 1) return tracks;
 
@@ -164,11 +168,7 @@ export class GetDjShuffledTracksUseCase {
   /**
    * Interleave tracks without DJ analysis into the ordered list
    */
-  private interleave(
-    orderedTracks: Track[],
-    extraTracks: Track[],
-    seed: number,
-  ): Track[] {
+  private interleave(orderedTracks: Track[], extraTracks: Track[], seed: number): Track[] {
     if (extraTracks.length === 0) return orderedTracks;
 
     const result = [...orderedTracks];
@@ -187,7 +187,7 @@ export class GetDjShuffledTracksUseCase {
     seed: number,
     skip: number,
     take: number,
-    total: number,
+    total: number
   ): Promise<GetDjShuffledTracksOutput> {
     const tracks = await this.trackRepository.findShuffledPaginated(seed, skip, take);
 

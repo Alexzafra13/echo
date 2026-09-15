@@ -31,7 +31,7 @@ export class ExternalMetadataController {
     private readonly logger: PinoLogger,
     private readonly metadataService: ExternalMetadataService,
     private readonly gateway: MetadataEventsService,
-    private readonly jwtService: JwtService,
+    private readonly jwtService: JwtService
   ) {}
 
   // SSE endpoint - EventSource doesn't support headers, so auth via JWT in query param
@@ -44,7 +44,7 @@ export class ExternalMetadataController {
   @ApiResponse({ status: 200, description: 'Stream de eventos de metadata' })
   streamMetadataEvents(
     @Query('token') token: string,
-    @Req() request: FastifyRequest,
+    @Req() request: FastifyRequest
   ): Observable<MessageEvent> {
     let userId: string;
     try {
@@ -74,10 +74,13 @@ export class ExternalMetadataController {
       const subscription = this.gateway
         .getEventsStream()
         .pipe(
-          map((evt) => ({
-            type: evt.event,
-            data: evt.data,
-          } as MessageEvent)),
+          map(
+            (evt) =>
+              ({
+                type: evt.event,
+                data: evt.data,
+              }) as MessageEvent
+          )
         )
         .subscribe((event) => subscriber.next(event));
 
@@ -160,7 +163,10 @@ export class ExternalMetadataController {
         duration,
       };
     } catch (error) {
-      this.logger.error(`Error enriching artist ${artistId}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error enriching artist ${artistId}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
 
       // Emit error event
       this.gateway.emitEnrichmentError({
@@ -239,7 +245,10 @@ export class ExternalMetadataController {
         duration,
       };
     } catch (error) {
-      this.logger.error(`Error enriching album ${albumId}: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Error enriching album ${albumId}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
 
       // Emit error event
       this.gateway.emitEnrichmentError({

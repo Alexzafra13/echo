@@ -88,7 +88,7 @@ describe('GetAutoPlaylistsUseCase', () => {
 
       const result = await useCase.execute('user-123');
 
-      const types = result.map(p => p.type);
+      const types = result.map((p) => p.type);
       expect(types).toContain('wave-mix');
       expect(types).toContain('artist');
     });

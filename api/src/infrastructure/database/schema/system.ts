@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  integer,
-  timestamp,
-  text,
-  index,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, integer, timestamp, text, index } from 'drizzle-orm/pg-core';
 
 // ============================================
 // LibraryScan
@@ -26,7 +18,7 @@ export const libraryScans = pgTable(
   (table) => [
     index('idx_library_scans_status').on(table.status), // For finding active/pending scans
     index('idx_library_scans_started').on(table.startedAt), // For sorting by date
-  ],
+  ]
 );
 
 // ============================================
@@ -55,7 +47,7 @@ export const systemLogs = pgTable(
     index('system_logs_user_idx').on(table.userId),
     index('system_logs_request_idx').on(table.requestId),
     index('system_logs_created_idx').on(table.createdAt),
-  ],
+  ]
 );
 
 // Type exports

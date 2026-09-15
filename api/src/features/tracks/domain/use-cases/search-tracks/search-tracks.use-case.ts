@@ -16,7 +16,7 @@ import { SearchTracksInput, SearchTracksOutput } from './search-tracks.dto';
 export class SearchTracksUseCase {
   constructor(
     @Inject(TRACK_REPOSITORY)
-    private readonly trackRepository: ITrackRepository,
+    private readonly trackRepository: ITrackRepository
   ) {}
 
   async execute(input: SearchTracksInput): Promise<SearchTracksOutput> {

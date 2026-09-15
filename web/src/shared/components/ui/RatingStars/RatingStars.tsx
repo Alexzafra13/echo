@@ -94,11 +94,11 @@ export function RatingStars({
   };
 
   const ratingLabels = [
-    t('common.ratingBad', 'Malo'),
-    t('common.ratingFair', 'Regular'),
-    t('common.ratingGood', 'Bueno'),
-    t('common.ratingVeryGood', 'Muy bueno'),
-    t('common.ratingExcellent', 'Excelente'),
+    t('common.ratingBad'),
+    t('common.ratingFair'),
+    t('common.ratingGood'),
+    t('common.ratingVeryGood'),
+    t('common.ratingExcellent'),
   ];
 
   return (

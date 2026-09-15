@@ -29,9 +29,9 @@ export class AlbumMapper {
   static toPersistence(album: Album) {
     const primitives = album.toPrimitives();
     const releaseDate = primitives.releaseDate
-      ? (primitives.releaseDate instanceof Date
-          ? primitives.releaseDate.toISOString().split('T')[0]
-          : primitives.releaseDate)
+      ? primitives.releaseDate instanceof Date
+        ? primitives.releaseDate.toISOString().split('T')[0]
+        : primitives.releaseDate
       : null;
     return {
       id: primitives.id,

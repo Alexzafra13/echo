@@ -87,38 +87,34 @@ describe('CreatePlaylistModal', () => {
 
   describe('rendering', () => {
     it('should render modal with title', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       expect(screen.getByText('Nueva Playlist')).toBeInTheDocument();
     });
 
     it('should render playlist name input', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       expect(screen.getByPlaceholderText('Mi Playlist...')).toBeInTheDocument();
       expect(screen.getByText('Nombre de la playlist')).toBeInTheDocument();
     });
 
     it('should render search input', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       expect(screen.getByPlaceholderText('Buscar por título o artista...')).toBeInTheDocument();
     });
 
     it('should render recently played suggestions', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Recent Song 1')).toBeInTheDocument();
@@ -131,19 +127,17 @@ describe('CreatePlaylistModal', () => {
         () => new Promise(() => {}) // Never resolves
       );
 
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       expect(screen.getByText('Cargando sugerencias...')).toBeInTheDocument();
     });
 
     it('should render action buttons', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       expect(screen.getByText('Cancelar')).toBeInTheDocument();
       expect(screen.getByText('Crear Playlist')).toBeInTheDocument();
@@ -157,10 +151,9 @@ describe('CreatePlaylistModal', () => {
         isLoading: false,
       } as unknown as ReturnType<typeof useTrackSearch>);
 
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       const searchInput = screen.getByPlaceholderText('Buscar por título o artista...');
       fireEvent.change(searchInput, { target: { value: 'test' } });
@@ -178,10 +171,9 @@ describe('CreatePlaylistModal', () => {
         isLoading: true,
       } as unknown as ReturnType<typeof useTrackSearch>);
 
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       const searchInput = screen.getByPlaceholderText('Buscar por título o artista...');
       fireEvent.change(searchInput, { target: { value: 'test' } });
@@ -197,10 +189,9 @@ describe('CreatePlaylistModal', () => {
         isLoading: false,
       } as unknown as ReturnType<typeof useTrackSearch>);
 
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       const searchInput = screen.getByPlaceholderText('Buscar por título o artista...');
       fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
@@ -216,10 +207,9 @@ describe('CreatePlaylistModal', () => {
         isLoading: false,
       } as unknown as ReturnType<typeof useTrackSearch>);
 
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       const searchInput = screen.getByPlaceholderText('Buscar por título o artista...');
       fireEvent.change(searchInput, { target: { value: 'test' } });
@@ -239,10 +229,9 @@ describe('CreatePlaylistModal', () => {
 
   describe('track selection', () => {
     it('should add track to selection when clicked', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Recent Song 1')).toBeInTheDocument();
@@ -256,10 +245,9 @@ describe('CreatePlaylistModal', () => {
     });
 
     it('should remove track from selection when clicked again', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Recent Song 1')).toBeInTheDocument();
@@ -284,10 +272,9 @@ describe('CreatePlaylistModal', () => {
     });
 
     it('should update button text with track count', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Recent Song 1')).toBeInTheDocument();
@@ -303,10 +290,9 @@ describe('CreatePlaylistModal', () => {
 
   describe('form validation', () => {
     it('should disable submit when name is empty but tracks selected', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       // Select a track first
       await waitFor(() => {
@@ -322,10 +308,9 @@ describe('CreatePlaylistModal', () => {
     });
 
     it('should disable submit when no tracks selected', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       // Enter name but don't select tracks
       const nameInput = screen.getByPlaceholderText('Mi Playlist...');
@@ -337,10 +322,9 @@ describe('CreatePlaylistModal', () => {
     });
 
     it('should disable submit button when form is invalid', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       // Neither name nor tracks selected
       const submitButton = screen.getByText('Crear Playlist');
@@ -348,10 +332,9 @@ describe('CreatePlaylistModal', () => {
     });
 
     it('should enable submit button when name and tracks are provided', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       // Enter name
       const nameInput = screen.getByPlaceholderText('Mi Playlist...');
@@ -375,10 +358,9 @@ describe('CreatePlaylistModal', () => {
     it('should call onSubmit with name and track ids', async () => {
       mockOnSubmit.mockResolvedValueOnce(undefined);
 
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       // Enter name
       const nameInput = screen.getByPlaceholderText('Mi Playlist...');
@@ -405,11 +387,7 @@ describe('CreatePlaylistModal', () => {
 
     it('should show loading state when submitting', async () => {
       render(
-        <CreatePlaylistModal
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-          isLoading={true}
-        />,
+        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} isLoading={true} />,
         { wrapper: createWrapper() }
       );
 
@@ -418,11 +396,7 @@ describe('CreatePlaylistModal', () => {
 
     it('should disable inputs when loading', async () => {
       render(
-        <CreatePlaylistModal
-          onClose={mockOnClose}
-          onSubmit={mockOnSubmit}
-          isLoading={true}
-        />,
+        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} isLoading={true} />,
         { wrapper: createWrapper() }
       );
 
@@ -433,10 +407,9 @@ describe('CreatePlaylistModal', () => {
 
   describe('modal interactions', () => {
     it('should call onClose when cancel button is clicked', async () => {
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       fireEvent.click(screen.getByText('Cancelar'));
 
@@ -448,10 +421,9 @@ describe('CreatePlaylistModal', () => {
     it('should show empty state when no recently played', async () => {
       vi.mocked(getRecentlyPlayed).mockResolvedValue([]);
 
-      render(
-        <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
-        { wrapper: createWrapper() }
-      );
+      render(<CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />, {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(screen.getByText('No hay canciones recientes')).toBeInTheDocument();

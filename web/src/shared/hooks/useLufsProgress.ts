@@ -17,14 +17,15 @@ export function useLufsProgress(token: string | null) {
   const lufsProgress = useLufsProgressStore((state) => state.lufsProgress);
   const setLufsProgress = useLufsProgressStore((state) => state.setLufsProgress);
 
-  const handleLufsProgress = useCallback((data: LufsProgress) => {
-    setLufsProgress(data);
-  }, [setLufsProgress]);
+  const handleLufsProgress = useCallback(
+    (data: LufsProgress) => {
+      setLufsProgress(data);
+    },
+    [setLufsProgress]
+  );
 
   const events = useMemo(
-    () => [
-      { event: 'lufs:progress', handler: handleLufsProgress },
-    ],
+    () => [{ event: 'lufs:progress', handler: handleLufsProgress }],
     [handleLufsProgress]
   );
 

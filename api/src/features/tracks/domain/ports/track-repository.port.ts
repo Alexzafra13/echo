@@ -49,7 +49,12 @@ export interface ITrackRepository {
    * @param take - Cuántos registros traer (opcional, sin paginación si no se pasa)
    * @returns Array de tracks del álbum ordenados por discNumber y trackNumber
    */
-  findByAlbumId(albumId: string, includeMissing?: boolean, skip?: number, take?: number): Promise<Track[]>;
+  findByAlbumId(
+    albumId: string,
+    includeMissing?: boolean,
+    skip?: number,
+    take?: number
+  ): Promise<Track[]>;
 
   /**
    * Cuenta los tracks de un álbum específico
@@ -66,11 +71,7 @@ export interface ITrackRepository {
    * @param take - Cuántos registros traer
    * @returns Array de tracks del artista
    */
-  findByArtistId(
-    artistId: string,
-    skip: number,
-    take: number,
-  ): Promise<Track[]>;
+  findByArtistId(artistId: string, skip: number, take: number): Promise<Track[]>;
 
   /**
    * Obtiene el total de tracks
@@ -87,11 +88,7 @@ export interface ITrackRepository {
    * @param take - Cuántos registros traer
    * @returns Array de tracks en orden aleatorio reproducible
    */
-  findShuffledPaginated(
-    seed: number,
-    skip: number,
-    take: number,
-  ): Promise<Track[]>;
+  findShuffledPaginated(seed: number, skip: number, take: number): Promise<Track[]>;
 
   /**
    * Crea un nuevo track en la BD

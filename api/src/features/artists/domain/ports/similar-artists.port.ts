@@ -17,7 +17,7 @@ export interface ISimilarArtistsProvider {
   getSimilarArtists(
     mbzArtistId: string | null,
     artistName: string,
-    limit?: number,
+    limit?: number
   ): Promise<{ name: string; mbid?: string; match: number }[] | null>;
 }
 

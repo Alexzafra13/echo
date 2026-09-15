@@ -19,7 +19,7 @@ export interface GetAlbumsAlphabeticallyOutput {
 export class GetAlbumsAlphabeticallyUseCase {
   constructor(
     @Inject(ALBUM_REPOSITORY)
-    private readonly albumRepository: IAlbumRepository,
+    private readonly albumRepository: IAlbumRepository
   ) {}
 
   async execute(input: GetAlbumsAlphabeticallyInput): Promise<GetAlbumsAlphabeticallyOutput> {

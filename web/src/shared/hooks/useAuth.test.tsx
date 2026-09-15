@@ -28,9 +28,7 @@ describe('useAuth', () => {
 
   const createWrapper = () => {
     const Wrapper = ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
     return Wrapper;
   };
@@ -238,9 +236,7 @@ describe('useAuth', () => {
         'refresh-token'
       );
 
-      vi.mocked(authService.authService.logout).mockRejectedValue(
-        new Error('Network error')
-      );
+      vi.mocked(authService.authService.logout).mockRejectedValue(new Error('Network error'));
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -304,11 +300,7 @@ describe('useAuth', () => {
         isAdmin: true,
       };
 
-      useAuthStore.getState().setAuth(
-        mockUser,
-        'access-token',
-        'refresh-token'
-      );
+      useAuthStore.getState().setAuth(mockUser, 'access-token', 'refresh-token');
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),

@@ -12,7 +12,12 @@ interface EditPlaylistModalProps {
   isLoading?: boolean;
 }
 
-export function EditPlaylistModal({ playlist, onClose, onSubmit, isLoading = false }: EditPlaylistModalProps) {
+export function EditPlaylistModal({
+  playlist,
+  onClose,
+  onSubmit,
+  isLoading = false,
+}: EditPlaylistModalProps) {
   const { t } = useTranslation();
   const [name, setName] = useState(playlist.name);
   const [description, setDescription] = useState(playlist.description || '');
@@ -74,16 +79,11 @@ export function EditPlaylistModal({ playlist, onClose, onSubmit, isLoading = fal
           />
         </div>
 
-        <div
-          className={styles.toggleField}
-          onClick={() => !isLoading && setIsPublic(!isPublic)}
-        >
+        <div className={styles.toggleField} onClick={() => !isLoading && setIsPublic(!isPublic)}>
           <div className={styles.toggleContent}>
             <span className={styles.toggleTitle}>{t('playlists.publicPlaylist')}</span>
             <span className={styles.toggleHint}>
-              {isPublic
-                ? t('playlists.visiblePublic')
-                : t('playlists.visiblePrivate')}
+              {isPublic ? t('playlists.visiblePublic') : t('playlists.visiblePrivate')}
             </span>
           </div>
           <label className={styles.toggleSwitch} onClick={(e) => e.stopPropagation()}>
@@ -98,19 +98,10 @@ export function EditPlaylistModal({ playlist, onClose, onSubmit, isLoading = fal
         </div>
 
         <div className={styles.actions}>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
             {t('common.cancel')}
           </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={isLoading || !name.trim()}
-          >
+          <Button type="submit" variant="primary" disabled={isLoading || !name.trim()}>
             {isLoading ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </div>

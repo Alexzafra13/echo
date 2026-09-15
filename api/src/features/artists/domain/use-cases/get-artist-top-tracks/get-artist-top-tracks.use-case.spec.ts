@@ -145,9 +145,7 @@ describe('GetArtistTopTracksUseCase', () => {
     });
 
     it('should propagate repository errors', async () => {
-      (repository.getArtistTopTracks as jest.Mock).mockRejectedValue(
-        new Error('Database error'),
-      );
+      (repository.getArtistTopTracks as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(useCase.execute({ artistId: 'artist-1' })).rejects.toThrow('Database error');
     });

@@ -78,9 +78,7 @@ export class LufsAnalyzerService {
    * loudnorm + silencedetect en un solo proceso: asplit bifurca el audio decodificado
    * a ambos filtros para no leer el archivo dos veces.
    */
-  private async analyzeCombined(
-    filePath: string
-  ): Promise<{
+  private async analyzeCombined(filePath: string): Promise<{
     lufs: { inputLufs: number; inputPeak: number } | null;
     outroStart?: number;
   } | null> {

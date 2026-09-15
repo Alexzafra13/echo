@@ -20,7 +20,12 @@ export class ExploreQueryDto {
 }
 
 export class ForgottenAlbumsQueryDto extends ExploreQueryDto {
-  @ApiPropertyOptional({ default: 3, minimum: 1, maximum: 12, description: 'Months since last play' })
+  @ApiPropertyOptional({
+    default: 3,
+    minimum: 1,
+    maximum: 12,
+    description: 'Months since last play',
+  })
   @IsOptional()
   @IsInt()
   @Min(1)

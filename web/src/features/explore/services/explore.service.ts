@@ -41,7 +41,7 @@ export const exploreService = {
    */
   getUnplayedAlbums: async (
     limit: number = 20,
-    offset: number = 0,
+    offset: number = 0
   ): Promise<ExploreAlbumsResponse> => {
     const { data } = await apiClient.get<ExploreAlbumsResponse>('/explore/unplayed', {
       params: { limit, offset },
@@ -55,7 +55,7 @@ export const exploreService = {
   getForgottenAlbums: async (
     limit: number = 20,
     offset: number = 0,
-    monthsAgo: number = 3,
+    monthsAgo: number = 3
   ): Promise<ExploreAlbumsResponse> => {
     const { data } = await apiClient.get<ExploreAlbumsResponse>('/explore/forgotten', {
       params: { limit, offset, monthsAgo },

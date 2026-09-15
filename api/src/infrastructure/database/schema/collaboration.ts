@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  timestamp,
-  index,
-  unique,
-  check,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, index, unique, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 import { playlists } from './playlists';
@@ -42,7 +34,7 @@ export const playlistCollaborators = pgTable(
     unique('unique_playlist_collaborator').on(table.playlistId, table.userId),
     check('valid_collaborator_role', sql`${table.role} IN ('editor', 'viewer')`),
     check('valid_collaborator_status', sql`${table.status} IN ('pending', 'accepted')`),
-  ],
+  ]
 );
 
 // Type exports

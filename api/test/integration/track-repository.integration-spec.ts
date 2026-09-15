@@ -85,16 +85,18 @@ describe('TrackRepository Integration', () => {
   const createMissingTrack = async (
     title: string,
     path: string,
-    options?: { albumId?: string; artistId?: string },
+    options?: { albumId?: string; artistId?: string }
   ) => {
-    const track = await repository.create(Track.create({
-      title,
-      path,
-      discNumber: 1,
-      compilation: false,
-      albumId: options?.albumId,
-      artistId: options?.artistId,
-    }));
+    const track = await repository.create(
+      Track.create({
+        title,
+        path,
+        discNumber: 1,
+        compilation: false,
+        albumId: options?.albumId,
+        artistId: options?.artistId,
+      })
+    );
     await markTrackAsMissing(track.id);
     return track;
   };
@@ -262,31 +264,37 @@ describe('TrackRepository Integration', () => {
   describe('findByIds', () => {
     it('debería encontrar múltiples tracks por IDs', async () => {
       const tracks = await Promise.all([
-        repository.create(Track.create({
-          title: 'Track 1',
-          path: '/music/1.mp3',
-          discNumber: 1,
-          compilation: false,
-        })),
-        repository.create(Track.create({
-          title: 'Track 2',
-          path: '/music/2.mp3',
-          discNumber: 1,
-          compilation: false,
-        })),
-        repository.create(Track.create({
-          title: 'Track 3',
-          path: '/music/3.mp3',
-          discNumber: 1,
-          compilation: false,
-        })),
+        repository.create(
+          Track.create({
+            title: 'Track 1',
+            path: '/music/1.mp3',
+            discNumber: 1,
+            compilation: false,
+          })
+        ),
+        repository.create(
+          Track.create({
+            title: 'Track 2',
+            path: '/music/2.mp3',
+            discNumber: 1,
+            compilation: false,
+          })
+        ),
+        repository.create(
+          Track.create({
+            title: 'Track 3',
+            path: '/music/3.mp3',
+            discNumber: 1,
+            compilation: false,
+          })
+        ),
       ]);
 
-      const ids = tracks.map(t => t.id);
+      const ids = tracks.map((t) => t.id);
       const found = await repository.findByIds(ids);
 
       expect(found).toHaveLength(3);
-      expect(found.map(t => t.title).sort()).toEqual(['Track 1', 'Track 2', 'Track 3']);
+      expect(found.map((t) => t.title).sort()).toEqual(['Track 1', 'Track 2', 'Track 3']);
     });
 
     it('debería retornar array vacío para IDs vacíos', async () => {
@@ -300,12 +308,14 @@ describe('TrackRepository Integration', () => {
     it('debería retornar lista paginada de tracks', async () => {
       // Crear 5 tracks
       for (let i = 0; i < 5; i++) {
-        await repository.create(Track.create({
-          title: `Track ${i}`,
-          path: `/music/track_${i}.mp3`,
-          discNumber: 1,
-          compilation: false,
-        }));
+        await repository.create(
+          Track.create({
+            title: `Track ${i}`,
+            path: `/music/track_${i}.mp3`,
+            discNumber: 1,
+            compilation: false,
+          })
+        );
       }
 
       const page1 = await repository.findAll(0, 3);
@@ -317,12 +327,14 @@ describe('TrackRepository Integration', () => {
 
     it('debería excluir tracks marcados como missing', async () => {
       // Crear track normal
-      await repository.create(Track.create({
-        title: 'Normal Track',
-        path: '/music/normal.mp3',
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Normal Track',
+          path: '/music/normal.mp3',
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       // Crear track missing
       await createMissingTrack('Missing Track', '/music/missing.mp3');
@@ -336,32 +348,38 @@ describe('TrackRepository Integration', () => {
 
   describe('search', () => {
     beforeEach(async () => {
-      await repository.create(Track.create({
-        title: 'Rock Anthem',
-        path: '/music/rock.mp3',
-        discNumber: 1,
-        compilation: false,
-      }));
-      await repository.create(Track.create({
-        title: 'Pop Song',
-        path: '/music/pop.mp3',
-        discNumber: 1,
-        compilation: false,
-      }));
-      await repository.create(Track.create({
-        title: 'Rock Ballad',
-        path: '/music/ballad.mp3',
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Rock Anthem',
+          path: '/music/rock.mp3',
+          discNumber: 1,
+          compilation: false,
+        })
+      );
+      await repository.create(
+        Track.create({
+          title: 'Pop Song',
+          path: '/music/pop.mp3',
+          discNumber: 1,
+          compilation: false,
+        })
+      );
+      await repository.create(
+        Track.create({
+          title: 'Rock Ballad',
+          path: '/music/ballad.mp3',
+          discNumber: 1,
+          compilation: false,
+        })
+      );
     });
 
     it('debería buscar tracks por título (case insensitive)', async () => {
       const results = await repository.search('rock', 0, 10);
 
       expect(results).toHaveLength(2);
-      expect(results.map(t => t.title)).toContain('Rock Anthem');
-      expect(results.map(t => t.title)).toContain('Rock Ballad');
+      expect(results.map((t) => t.title)).toContain('Rock Anthem');
+      expect(results.map((t) => t.title)).toContain('Rock Ballad');
     });
 
     it('debería buscar con mayúsculas/minúsculas mixtas', async () => {
@@ -371,12 +389,14 @@ describe('TrackRepository Integration', () => {
     });
 
     it('debería manejar caracteres especiales en búsqueda', async () => {
-      await repository.create(Track.create({
-        title: 'Test % Percent',
-        path: '/music/percent.mp3',
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Test % Percent',
+          path: '/music/percent.mp3',
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       const results = await repository.search('%', 0, 10);
 
@@ -385,12 +405,14 @@ describe('TrackRepository Integration', () => {
     });
 
     it('debería manejar underscore en búsqueda', async () => {
-      await repository.create(Track.create({
-        title: 'Track_With_Underscores',
-        path: '/music/underscore.mp3',
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Track_With_Underscores',
+          path: '/music/underscore.mp3',
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       const results = await repository.search('_With_', 0, 10);
 
@@ -409,30 +431,36 @@ describe('TrackRepository Integration', () => {
 
   describe('findByAlbumId', () => {
     it('debería encontrar tracks de un album ordenados por disc/track', async () => {
-      await repository.create(Track.create({
-        title: 'Track 3',
-        path: '/music/t3.mp3',
-        albumId: testAlbumId,
-        trackNumber: 3,
-        discNumber: 1,
-        compilation: false,
-      }));
-      await repository.create(Track.create({
-        title: 'Track 1',
-        path: '/music/t1.mp3',
-        albumId: testAlbumId,
-        trackNumber: 1,
-        discNumber: 1,
-        compilation: false,
-      }));
-      await repository.create(Track.create({
-        title: 'Track 2',
-        path: '/music/t2.mp3',
-        albumId: testAlbumId,
-        trackNumber: 2,
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Track 3',
+          path: '/music/t3.mp3',
+          albumId: testAlbumId,
+          trackNumber: 3,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
+      await repository.create(
+        Track.create({
+          title: 'Track 1',
+          path: '/music/t1.mp3',
+          albumId: testAlbumId,
+          trackNumber: 1,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
+      await repository.create(
+        Track.create({
+          title: 'Track 2',
+          path: '/music/t2.mp3',
+          albumId: testAlbumId,
+          trackNumber: 2,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       const tracks = await repository.findByAlbumId(testAlbumId);
 
@@ -443,30 +471,36 @@ describe('TrackRepository Integration', () => {
     });
 
     it('debería ordenar por disco y luego por track', async () => {
-      await repository.create(Track.create({
-        title: 'Disc 2 Track 1',
-        path: '/music/d2t1.mp3',
-        albumId: testAlbumId,
-        trackNumber: 1,
-        discNumber: 2,
-        compilation: false,
-      }));
-      await repository.create(Track.create({
-        title: 'Disc 1 Track 2',
-        path: '/music/d1t2.mp3',
-        albumId: testAlbumId,
-        trackNumber: 2,
-        discNumber: 1,
-        compilation: false,
-      }));
-      await repository.create(Track.create({
-        title: 'Disc 1 Track 1',
-        path: '/music/d1t1.mp3',
-        albumId: testAlbumId,
-        trackNumber: 1,
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Disc 2 Track 1',
+          path: '/music/d2t1.mp3',
+          albumId: testAlbumId,
+          trackNumber: 1,
+          discNumber: 2,
+          compilation: false,
+        })
+      );
+      await repository.create(
+        Track.create({
+          title: 'Disc 1 Track 2',
+          path: '/music/d1t2.mp3',
+          albumId: testAlbumId,
+          trackNumber: 2,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
+      await repository.create(
+        Track.create({
+          title: 'Disc 1 Track 1',
+          path: '/music/d1t1.mp3',
+          albumId: testAlbumId,
+          trackNumber: 1,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       const tracks = await repository.findByAlbumId(testAlbumId);
 
@@ -476,13 +510,15 @@ describe('TrackRepository Integration', () => {
     });
 
     it('debería incluir tracks missing por defecto', async () => {
-      await repository.create(Track.create({
-        title: 'Present Track',
-        path: '/music/present.mp3',
-        albumId: testAlbumId,
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Present Track',
+          path: '/music/present.mp3',
+          albumId: testAlbumId,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       // Track missing
       await createMissingTrack('Missing Track', '/music/missing.mp3', { albumId: testAlbumId });
@@ -492,13 +528,15 @@ describe('TrackRepository Integration', () => {
     });
 
     it('debería excluir tracks missing si se indica', async () => {
-      await repository.create(Track.create({
-        title: 'Present Track',
-        path: '/music/present.mp3',
-        albumId: testAlbumId,
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Present Track',
+          path: '/music/present.mp3',
+          albumId: testAlbumId,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       await createMissingTrack('Missing Track', '/music/missing.mp3', { albumId: testAlbumId });
 
@@ -510,20 +548,24 @@ describe('TrackRepository Integration', () => {
 
   describe('findByArtistId', () => {
     it('debería encontrar tracks por artistId', async () => {
-      await repository.create(Track.create({
-        title: 'Artist Track 1',
-        path: '/music/at1.mp3',
-        artistId: testArtistId,
-        discNumber: 1,
-        compilation: false,
-      }));
-      await repository.create(Track.create({
-        title: 'Artist Track 2',
-        path: '/music/at2.mp3',
-        artistId: testArtistId,
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Artist Track 1',
+          path: '/music/at1.mp3',
+          artistId: testArtistId,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
+      await repository.create(
+        Track.create({
+          title: 'Artist Track 2',
+          path: '/music/at2.mp3',
+          artistId: testArtistId,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       const tracks = await repository.findByArtistId(testArtistId, 0, 10);
 
@@ -531,13 +573,15 @@ describe('TrackRepository Integration', () => {
     });
 
     it('debería encontrar tracks por albumArtistId', async () => {
-      await repository.create(Track.create({
-        title: 'Album Artist Track',
-        path: '/music/aat.mp3',
-        albumArtistId: testArtistId,
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Album Artist Track',
+          path: '/music/aat.mp3',
+          albumArtistId: testArtistId,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       const tracks = await repository.findByArtistId(testArtistId, 0, 10);
 
@@ -546,13 +590,15 @@ describe('TrackRepository Integration', () => {
     });
 
     it('debería excluir tracks missing', async () => {
-      await repository.create(Track.create({
-        title: 'Present',
-        path: '/music/present.mp3',
-        artistId: testArtistId,
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Present',
+          path: '/music/present.mp3',
+          artistId: testArtistId,
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       await createMissingTrack('Missing', '/music/missing.mp3', { artistId: testArtistId });
 
@@ -565,12 +611,14 @@ describe('TrackRepository Integration', () => {
   describe('count', () => {
     it('debería retornar conteo correcto de tracks', async () => {
       for (let i = 0; i < 5; i++) {
-        await repository.create(Track.create({
-          title: `Count Track ${i}`,
-          path: `/music/count_${i}.mp3`,
-          discNumber: 1,
-          compilation: false,
-        }));
+        await repository.create(
+          Track.create({
+            title: `Count Track ${i}`,
+            path: `/music/count_${i}.mp3`,
+            discNumber: 1,
+            compilation: false,
+          })
+        );
       }
 
       const count = await repository.count();
@@ -579,12 +627,14 @@ describe('TrackRepository Integration', () => {
     });
 
     it('debería excluir tracks missing del conteo', async () => {
-      await repository.create(Track.create({
-        title: 'Present',
-        path: '/music/present.mp3',
-        discNumber: 1,
-        compilation: false,
-      }));
+      await repository.create(
+        Track.create({
+          title: 'Present',
+          path: '/music/present.mp3',
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       await createMissingTrack('Missing', '/music/missing.mp3');
 
@@ -603,12 +653,14 @@ describe('TrackRepository Integration', () => {
   describe('findShuffledPaginated', () => {
     beforeEach(async () => {
       for (let i = 0; i < 10; i++) {
-        await repository.create(Track.create({
-          title: `Shuffle Track ${i}`,
-          path: `/music/shuffle_${i}.mp3`,
-          discNumber: 1,
-          compilation: false,
-        }));
+        await repository.create(
+          Track.create({
+            title: `Shuffle Track ${i}`,
+            path: `/music/shuffle_${i}.mp3`,
+            discNumber: 1,
+            compilation: false,
+          })
+        );
       }
     });
 
@@ -618,7 +670,7 @@ describe('TrackRepository Integration', () => {
       const result1 = await repository.findShuffledPaginated(seed, 0, 5);
       const result2 = await repository.findShuffledPaginated(seed, 0, 5);
 
-      expect(result1.map(t => t.id)).toEqual(result2.map(t => t.id));
+      expect(result1.map((t) => t.id)).toEqual(result2.map((t) => t.id));
     });
 
     it('debería retornar orden diferente con diferente seed', async () => {
@@ -626,8 +678,8 @@ describe('TrackRepository Integration', () => {
       const result2 = await repository.findShuffledPaginated(222, 0, 5);
 
       // Muy improbable que sean iguales con seeds diferentes
-      const ids1 = result1.map(t => t.id).join(',');
-      const ids2 = result2.map(t => t.id).join(',');
+      const ids1 = result1.map((t) => t.id).join(',');
+      const ids2 = result2.map((t) => t.id).join(',');
       expect(ids1).not.toBe(ids2);
     });
 
@@ -639,7 +691,7 @@ describe('TrackRepository Integration', () => {
       const page3 = await repository.findShuffledPaginated(seed, 6, 3);
 
       // Verificar que no hay duplicados entre páginas
-      const allIds = [...page1, ...page2, ...page3].map(t => t.id);
+      const allIds = [...page1, ...page2, ...page3].map((t) => t.id);
       const uniqueIds = new Set(allIds);
       expect(uniqueIds.size).toBe(9);
     });
@@ -647,12 +699,14 @@ describe('TrackRepository Integration', () => {
 
   describe('update', () => {
     it('debería actualizar campos del track', async () => {
-      const track = await repository.create(Track.create({
-        title: 'Original Title',
-        path: '/music/original.mp3',
-        discNumber: 1,
-        compilation: false,
-      }));
+      const track = await repository.create(
+        Track.create({
+          title: 'Original Title',
+          path: '/music/original.mp3',
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       const updated = await repository.update(track.id, {
         title: 'Updated Title',
@@ -672,17 +726,19 @@ describe('TrackRepository Integration', () => {
     });
 
     it('debería actualizar updatedAt automáticamente', async () => {
-      const track = await repository.create(Track.create({
-        title: 'Test',
-        path: '/music/test.mp3',
-        discNumber: 1,
-        compilation: false,
-      }));
+      const track = await repository.create(
+        Track.create({
+          title: 'Test',
+          path: '/music/test.mp3',
+          discNumber: 1,
+          compilation: false,
+        })
+      );
 
       const originalUpdatedAt = track.updatedAt;
 
       // Esperar un poco para que updatedAt sea diferente
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       await repository.update(track.id, { title: 'Modified' } as Partial<Track>);
 
@@ -695,10 +751,9 @@ describe('TrackRepository Integration', () => {
     });
 
     it('debería retornar null si track no existe', async () => {
-      const result = await repository.update(
-        '00000000-0000-0000-0000-000000000000',
-        { title: 'No Existe' } as Partial<Track>,
-      );
+      const result = await repository.update('00000000-0000-0000-0000-000000000000', {
+        title: 'No Existe',
+      } as Partial<Track>);
 
       expect(result).toBeNull();
     });

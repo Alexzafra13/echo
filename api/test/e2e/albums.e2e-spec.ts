@@ -117,9 +117,7 @@ describe('Albums E2E', () => {
     });
 
     it('debería permitir acceso sin autenticación (endpoint público)', () => {
-      return request(app.getHttpServer())
-        .get(`/api/albums/${album1Id}`)
-        .expect(200);
+      return request(app.getHttpServer()).get(`/api/albums/${album1Id}`).expect(200);
     });
   });
 
@@ -185,9 +183,7 @@ describe('Albums E2E', () => {
     });
 
     it('debería permitir acceso sin autenticación (endpoint público)', () => {
-      return request(app.getHttpServer())
-        .get('/api/albums')
-        .expect(200);
+      return request(app.getHttpServer()).get('/api/albums').expect(200);
     });
   });
 
@@ -255,9 +251,7 @@ describe('Albums E2E', () => {
     });
 
     it('debería permitir acceso sin autenticación (endpoint público)', () => {
-      return request(app.getHttpServer())
-        .get('/api/albums/search/Abbey')
-        .expect(200);
+      return request(app.getHttpServer()).get('/api/albums/search/Abbey').expect(200);
     });
   });
 

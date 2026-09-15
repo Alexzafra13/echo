@@ -55,8 +55,8 @@ If Echo can't write to mounted music folders, set `PUID` and `PGID` in the compo
 
 ```yaml
 environment:
-  PUID: 1026  # id -u on the NAS for your user
-  PGID: 100   # id -g on the NAS for your user
+  PUID: 1026 # id -u on the NAS for your user
+  PGID: 100 # id -g on the NAS for your user
 ```
 
 Find the IDs by SSH-ing into the NAS and running `id $(whoami)`.

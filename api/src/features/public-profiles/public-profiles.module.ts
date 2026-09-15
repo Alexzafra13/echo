@@ -6,9 +6,7 @@ import { GetPublicProfileUseCase } from './domain/use-cases/get-public-profile';
 @Module({
   imports: [AuthModule],
   controllers: [PublicProfilesController],
-  providers: [
-    GetPublicProfileUseCase,
-  ],
+  providers: [GetPublicProfileUseCase],
   exports: [GetPublicProfileUseCase],
 })
 export class PublicProfilesModule {}

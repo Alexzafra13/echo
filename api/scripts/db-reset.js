@@ -48,7 +48,7 @@ async function main() {
         cwd: path.resolve(__dirname, '..'),
         stdio: 'inherit',
         shell: true,
-        env: { ...process.env }
+        env: { ...process.env },
       });
 
       drizzle.on('close', (code) => {
@@ -70,7 +70,6 @@ async function main() {
     console.log('Next: Start the server and complete the setup wizard');
     console.log('      to create your admin account.');
     console.log('');
-
   } catch (error) {
     console.error('Error:', error.message);
     process.exit(1);

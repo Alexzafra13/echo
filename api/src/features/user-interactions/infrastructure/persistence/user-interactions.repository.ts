@@ -17,7 +17,12 @@ export class DrizzleUserInteractionsRepository implements IUserInteractionsRepos
   constructor(private readonly drizzle: DrizzleService) {}
 
   // Rating operations - Using upsert to avoid race conditions
-  async setRating(userId: string, itemId: string, itemType: ItemType, rating: number): Promise<UserRating> {
+  async setRating(
+    userId: string,
+    itemId: string,
+    itemType: ItemType,
+    rating: number
+  ): Promise<UserRating> {
     const result = await this.drizzle.db
       .insert(userRatings)
       .values({
@@ -45,8 +50,8 @@ export class DrizzleUserInteractionsRepository implements IUserInteractionsRepos
         and(
           eq(userRatings.userId, userId),
           eq(userRatings.itemId, itemId),
-          eq(userRatings.itemType, itemType),
-        ),
+          eq(userRatings.itemType, itemType)
+        )
       );
   }
 
@@ -58,8 +63,8 @@ export class DrizzleUserInteractionsRepository implements IUserInteractionsRepos
         and(
           eq(userRatings.userId, userId),
           eq(userRatings.itemId, itemId),
-          eq(userRatings.itemType, itemType),
-        ),
+          eq(userRatings.itemType, itemType)
+        )
       )
       .limit(1);
 
@@ -102,7 +107,11 @@ export class DrizzleUserInteractionsRepository implements IUserInteractionsRepos
   }
 
   // Item statistics
-  async getItemInteractionSummary(itemId: string, itemType: ItemType, userId?: string): Promise<ItemInteractionSummary> {
+  async getItemInteractionSummary(
+    itemId: string,
+    itemType: ItemType,
+    userId?: string
+  ): Promise<ItemInteractionSummary> {
     const [ratingsData, userRatingResult] = await Promise.all([
       this.drizzle.db
         .select({
@@ -119,8 +128,8 @@ export class DrizzleUserInteractionsRepository implements IUserInteractionsRepos
               and(
                 eq(userRatings.userId, userId),
                 eq(userRatings.itemId, itemId),
-                eq(userRatings.itemType, itemType),
-              ),
+                eq(userRatings.itemType, itemType)
+              )
             )
             .limit(1)
         : Promise.resolve([]),
