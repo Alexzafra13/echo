@@ -59,9 +59,9 @@ Echo is available in the following languages:
 
 | Language | Progress                                                 | Keys        |
 | -------- | -------------------------------------------------------- | ----------- |
-| English  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1733 / 1733 |
-| Español  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1733 / 1733 |
-| Français | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1733 / 1733 |
+| English  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1761 / 1761 |
+| Español  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1761 / 1761 |
+| Français | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1761 / 1761 |
 
 Want to add a new language? Copy `web/src/shared/i18n/locales/en.json`, translate it, and open a Pull Request.
 
@@ -78,7 +78,7 @@ Edit `docker-compose.yml` and set your music paths (look for `>>> YOUR MUSIC`):
 
 ```yaml
 volumes:
-  - ./data:/app/data
+  - echo_data:/app/data
   - /path/to/your/music:/music:ro
 ```
 
@@ -87,6 +87,14 @@ docker compose up -d
 ```
 
 Open **http://localhost:4567** and create your admin account.
+
+Alternatively, the install script downloads `docker-compose.yml` and starts the server in one step (add your music paths afterwards and run `docker compose up -d` again):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Alexzafra13/echo/main/install.sh | sh
+```
+
+Use `sh -s -- --secure` instead of `sh` to also generate a `.env` with random PostgreSQL and Redis passwords.
 
 ### Linux (without Docker)
 
@@ -104,6 +112,7 @@ See the [Linux Install](docs/bare-metal.md) guide for details.
 | [Configuration](docs/configuration.md) | Environment variables, volumes, and ports                    |
 | [Reverse Proxy](docs/reverse-proxy.md) | HTTPS setup with Caddy, Nginx, Traefik, or Cloudflare Tunnel |
 | [Backups](docs/backup.md)              | Backup, restore, and server migration                        |
+| [Synology NAS](docs/synology.md)       | Troubleshooting Container Manager on DSM 7.2+                |
 | [Database](docs/database.md)           | Entity relationships and schema overview                     |
 | [Architecture](docs/architecture.md)   | System diagrams, request flow, and caching strategy          |
 | [Development](docs/development.md)     | Local setup, commands, and testing                           |
@@ -131,7 +140,7 @@ docker compose pull && docker compose up -d  # Update
 ```bash
 git clone https://github.com/Alexzafra13/echo.git
 cd echo
-pnpm quickstart    # installs deps, starts DB, runs migrations
+pnpm quickstart    # installs deps, starts DB, syncs the database schema
 pnpm dev:all       # frontend (5173) + backend (3000)
 ```
 
@@ -143,7 +152,7 @@ API docs available at **http://localhost:3000/api/docs** (Swagger).
 echo/
 ├── api/            # NestJS backend (Hexagonal Architecture)
 │   └── src/
-│       ├── features/         # Domain modules (25 modules)
+│       ├── features/         # Domain modules (26 modules)
 │       ├── infrastructure/   # DB, cache, queue, websocket
 │       └── shared/           # Guards, decorators, utils
 ├── web/            # React frontend
@@ -163,7 +172,8 @@ echo/
 3. Run `pnpm quickstart` for local setup
 4. Make your changes
 5. Run tests (`pnpm --filter echo-api test && pnpm --filter echo-web test`)
-6. Open a Pull Request
+6. Document user-facing changes in [CHANGELOG.md](CHANGELOG.md) under _Unreleased_
+7. Open a Pull Request
 
 ## License
 
@@ -177,4 +187,6 @@ echo/
   <a href="https://github.com/Alexzafra13/echo/issues">Request a Feature</a>
   &middot;
   <a href="https://github.com/Alexzafra13/echo/releases">Releases</a>
+  &middot;
+  <a href="CHANGELOG.md">Changelog</a>
 </p>

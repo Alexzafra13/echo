@@ -34,10 +34,7 @@ RUN --mount=type=cache,id=pnpm-${TARGETARCH},target=/root/.local/share/pnpm/stor
 # Build Frontend
 WORKDIR /build/web
 COPY web/ ./
-# Verify proxy code exists before building (checks utils and player directories)
-RUN grep -rq "getProxiedStreamUrl" src/features/player/ && echo "✓ Proxy code found in source" || (echo "✗ Proxy code NOT found!" && exit 1)
-RUN pnpm build && \
-    grep -q "radio/stream/proxy" dist/assets/*.js && echo "✓ Proxy code found in build" || echo "⚠ Proxy code not in build (might be minified differently)"
+RUN pnpm build
 
 # Build Backend
 WORKDIR /build/api

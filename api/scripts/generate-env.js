@@ -43,8 +43,6 @@ const envContent = `# ============================================
 # ============================================
 NODE_ENV=development
 PORT=3000
-HOST=localhost
-API_PREFIX=api
 
 # ============================================
 # DATABASE (PostgreSQL)
@@ -68,13 +66,6 @@ REDIS_PASSWORD=dev_redis_password
 # Auto-generated secure secrets (do not share!)
 JWT_SECRET=${jwtSecret}
 JWT_REFRESH_SECRET=${jwtRefreshSecret}
-JWT_EXPIRATION=7d
-JWT_REFRESH_EXPIRATION=30d
-
-# ============================================
-# PASSWORD HASHING
-# ============================================
-BCRYPT_ROUNDS=10
 
 # ============================================
 # CORS
@@ -87,15 +78,6 @@ CORS_ORIGINS=http://localhost:5173,http://localhost:3000
 # ============================================
 UPLOAD_PATH=./uploads
 COVERS_PATH=./uploads/covers
-METADATA_PATH=./uploads/metadata
-
-# ============================================
-# CACHE CONFIGURATION
-# ============================================
-ENABLE_CACHE=true
-CACHE_ALBUM_TTL=3600
-CACHE_TRACK_TTL=3600
-CACHE_ARTIST_TTL=7200
 `;
 
 try {
