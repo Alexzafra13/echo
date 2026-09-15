@@ -774,7 +774,7 @@
       "crossfadeDurationDescription": "How long both songs overlap while one fades into the other",
       "crossfadeDurationValue": "{{seconds}} s",
       "smartCrossfadeLabel": "Smart crossfade",
-      "smartCrossfadeDescription": "Starts the crossfade where the analysis detects the song actually ends (silence or fade-out) instead of a fixed number of seconds before the end. Requires the DJ analysis.",
+      "smartCrossfadeDescription": "Starts the crossfade where the analysis detects the song actually ends (silence or fade-out) instead of a fixed number of seconds before the end. Requires the loudness (LUFS) analysis.",
       "unavailable": "Not available on this device. iOS does not allow volume control from the web, which prevents crossfading and volume normalization. Gapless transition is used automatically.",
       "normalizationLabel": "Volume normalization",
       "normalizationDescription": "Evens out loudness between songs using the library LUFS analysis. Louder songs are turned down; nothing is amplified. Requires the loudness analysis in Library Analysis, which is off by default; songs not yet analysed play unchanged.",

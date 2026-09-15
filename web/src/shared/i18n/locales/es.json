@@ -774,7 +774,7 @@
       "crossfadeDurationDescription": "Tiempo durante el que se solapan las dos canciones mientras una se funde en la otra",
       "crossfadeDurationValue": "{{seconds}} s",
       "smartCrossfadeLabel": "Fundido inteligente",
-      "smartCrossfadeDescription": "Empieza el fundido donde el análisis detecta que la canción termina de verdad (silencio o fade final), en vez de a un número fijo de segundos del final. Requiere el análisis DJ.",
+      "smartCrossfadeDescription": "Empieza el fundido donde el análisis detecta que la canción termina de verdad (silencio o fade final), en vez de a un número fijo de segundos del final. Requiere el análisis de sonoridad (LUFS).",
       "unavailable": "No disponible en este dispositivo. iOS no permite controlar el volumen desde la web, lo que impide el fundido y la normalización de volumen. Se utiliza transición sin cortes (gapless) automáticamente.",
       "normalizationLabel": "Normalización de volumen",
       "normalizationDescription": "Iguala la sonoridad entre canciones usando el análisis LUFS de la biblioteca. Las canciones más altas se atenúan; nada se amplifica. Requiere el análisis de sonoridad en Análisis de Librería, desactivado por defecto; las canciones sin analizar suenan tal cual.",
