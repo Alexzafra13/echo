@@ -9,6 +9,7 @@ describe('playerSettingsStore', () => {
     store.setCrossfadeDuration(2);
     store.setCrossfadeSmartMode(false);
     store.setAutoplayEnabled(true);
+    store.setNormalizationEnabled(true);
   });
 
   describe('initial state', () => {
@@ -32,6 +33,20 @@ describe('playerSettingsStore', () => {
       expect(state.autoplay).toEqual({
         enabled: true,
       });
+    });
+
+    it('should enable volume normalization by default', () => {
+      const state = usePlayerSettingsStore.getState();
+      expect(state.normalization).toEqual({ enabled: true });
+    });
+  });
+
+  describe('normalization actions', () => {
+    it('should disable and re-enable normalization', () => {
+      usePlayerSettingsStore.getState().setNormalizationEnabled(false);
+      expect(usePlayerSettingsStore.getState().normalization.enabled).toBe(false);
+      usePlayerSettingsStore.getState().setNormalizationEnabled(true);
+      expect(usePlayerSettingsStore.getState().normalization.enabled).toBe(true);
     });
   });
 

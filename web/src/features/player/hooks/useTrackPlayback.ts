@@ -8,6 +8,7 @@ import { Track } from '../types';
 import { useStreamToken } from './useStreamToken';
 import { logger } from '@shared/utils/logger';
 import { playActiveWithRetry } from './playActiveWithRetry';
+import { getTrackGainMultiplier } from '../utils/replayGain';
 import type { AudioElements } from './useAudioElements';
 import type { CrossfadeLogic } from './useCrossfadeLogic';
 import type { PlayTracking } from './usePlayTracking';
@@ -19,6 +20,8 @@ export interface UseTrackPlaybackParams {
   audioElements: AudioElements;
   crossfade: CrossfadeLogic;
   crossfadeSettings: CrossfadeSettings;
+  /** Normalización de sonoridad (ganancia LUFS de la pista) */
+  normalizationEnabled: boolean;
   playTracking: PlayTracking;
   radio: RadioPlayback;
   isPlaying: boolean;
@@ -31,6 +34,7 @@ export function useTrackPlayback({
   audioElements,
   crossfade,
   crossfadeSettings,
+  normalizationEnabled,
   playTracking,
   radio,
   isPlaying,
@@ -81,12 +85,13 @@ export function useTrackPlayback({
       isTransitioningRef.current = false;
 
       // Reuse preloaded audio if available, otherwise load now
+      const gain = getTrackGainMultiplier(track, normalizationEnabled);
       const preloaded = preloadedNextRef.current;
       if (preloaded && preloaded.trackId === track.id) {
         preloadedNextRef.current = null;
         logger.debug('[Player] Crossfade using preloaded audio:', track.title);
       } else {
-        crossfade.prepareCrossfade(streamUrl);
+        crossfade.prepareCrossfade(streamUrl, gain);
         logger.debug('[Player] Starting crossfade to:', track.title);
       }
 
@@ -99,7 +104,7 @@ export function useTrackPlayback({
         logger.warn('[Player] Crossfade failed on mobile, falling back to normal playback');
         isTransitioningRef.current = true;
         audioElements.stopInactive();
-        audioElements.loadOnActive(streamUrl);
+        audioElements.loadOnActive(streamUrl, gain);
 
         try {
           await playActiveWithRetry(audioElements, true);
@@ -114,7 +119,7 @@ export function useTrackPlayback({
       playTracking.startPlaySession(track, queueContextRef.current);
     },
     // Refs are stable — only include callback/object deps
-    [audioElements, crossfade, playTracking, setCurrentTrack, setIsPlaying]
+    [audioElements, crossfade, normalizationEnabled, playTracking, setCurrentTrack, setIsPlaying]
   );
 
   /**
@@ -126,7 +131,7 @@ export function useTrackPlayback({
       // isTransitioningRef is already true from playTrack
       crossfade.clearCrossfade();
       audioElements.stopInactive();
-      audioElements.loadOnActive(streamUrl);
+      audioElements.loadOnActive(streamUrl, getTrackGainMultiplier(track, normalizationEnabled));
 
       setCurrentTrack(track);
       playTracking.startPlaySession(track, queueContextRef.current);
@@ -140,7 +145,7 @@ export function useTrackPlayback({
         }
       }
     },
-    [audioElements, crossfade, playTracking, setCurrentTrack, setIsPlaying]
+    [audioElements, crossfade, normalizationEnabled, playTracking, setCurrentTrack, setIsPlaying]
   );
 
   /**

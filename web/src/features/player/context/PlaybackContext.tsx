@@ -6,7 +6,7 @@
  */
 
 import { createContext, useContext } from 'react';
-import type { Track, CrossfadeSettings } from '../types';
+import type { Track, CrossfadeSettings, NormalizationSettings } from '../types';
 
 export interface PlaybackContextValue {
   currentTrack: Track | null;
@@ -18,6 +18,7 @@ export interface PlaybackContextValue {
   crossfade: CrossfadeSettings;
   isCrossfading: boolean;
   volumeControlSupported: boolean;
+  normalization: NormalizationSettings;
 
   play: (track?: Track) => void;
   pause: () => void;
@@ -28,6 +29,8 @@ export interface PlaybackContextValue {
   playNext: () => void;
   playPrevious: () => void;
   setCrossfadeEnabled: (enabled: boolean) => void;
+  setCrossfadeDuration: (duration: number) => void;
+  setNormalizationEnabled: (enabled: boolean) => void;
 }
 
 export const PlaybackContext = createContext<PlaybackContextValue | undefined>(undefined);

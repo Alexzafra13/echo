@@ -221,6 +221,28 @@
   cursor: not-allowed;
 }
 
+/* Range (duración del fundido) */
+.settingsPage__range {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.settingsPage__rangeInput {
+  width: 140px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.settingsPage__rangeValue {
+  min-width: 3ch;
+  text-align: right;
+  font-size: var(--text-13);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Bio Textarea */
 .settingsPage__textarea {
   width: 100%;

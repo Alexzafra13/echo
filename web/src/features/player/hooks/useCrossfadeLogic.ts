@@ -9,11 +9,16 @@ import { logger } from '@shared/utils/logger';
 import type { AudioElements } from './useAudioElements';
 import type { CrossfadeSettings } from '../types';
 
-// Duración del crossfade en segundos (y milisegundos)
-const CROSSFADE_DURATION_S = 2;
-const CROSSFADE_DURATION_MS = CROSSFADE_DURATION_S * 1000;
+// Límites de la duración configurable del crossfade (segundos)
+const CROSSFADE_MIN_S = 1;
+const CROSSFADE_MAX_S = 12;
 // Mínimo para evitar cortes bruscos
-const CROSSFADE_MIN_MS = 1000;
+const CROSSFADE_MIN_MS = CROSSFADE_MIN_S * 1000;
+
+function getCrossfadeDurationS(settings: CrossfadeSettings): number {
+  const duration = Number.isFinite(settings.duration) ? settings.duration : CROSSFADE_MIN_S;
+  return Math.max(CROSSFADE_MIN_S, Math.min(CROSSFADE_MAX_S, duration));
+}
 
 interface UseCrossfadeLogicParams {
   audioElements: AudioElements;
@@ -119,8 +124,8 @@ export function useCrossfadeLogic({
 
   /**
    * Perform crossfade transition using requestAnimationFrame
-   * Uses equal-power curve for smooth audio transitions without crackling
-   * Fixed 2-second duration for reliable web playback.
+   * Uses equal-power curve for smooth audio transitions without crackling.
+   * La duración sale de los ajustes del usuario (1-12 s).
    */
   const performCrossfade = useCallback(async () => {
     // If a crossfade animation is already running, cancel it first to prevent
@@ -170,7 +175,7 @@ export function useCrossfadeLogic({
         await audioElements.playInactive(false);
       }
 
-      const configuredFadeDuration = CROSSFADE_DURATION_MS;
+      const configuredFadeDuration = getCrossfadeDurationS(settingsRef.current) * 1000;
 
       // Cap fade duration to the actual time remaining in the outgoing track.
       // Critical for smart crossfade: when outroStart is close to track end
@@ -196,8 +201,6 @@ export function useCrossfadeLogic({
         });
       }
 
-      // Use requestAnimationFrame for smoother volume transitions
-      // This avoids the timing issues of setInterval that cause crackling
       crossfadeStartTimeRef.current = performance.now();
 
       // Extracted completion logic — called by both rAF animation and backup timeout.
@@ -251,6 +254,16 @@ export function useCrossfadeLogic({
         callbacksRef.current.onCrossfadeComplete?.();
       };
 
+      // En segundo plano no hay requestAnimationFrame y los timers van
+      // estrangulados: la pista nueva sonaría a volumen 0 hasta que el
+      // timeout de respaldo cerrase el fundido. Mejor un cambio directo.
+      if (document.hidden) {
+        finishCrossfade('hidden');
+        return true;
+      }
+
+      // Use requestAnimationFrame for smoother volume transitions
+      // This avoids the timing issues of setInterval that cause crackling
       const animateFade = (currentTime: number) => {
         const startTime = crossfadeStartTimeRef.current;
         if (startTime === null) return;
@@ -296,11 +309,12 @@ export function useCrossfadeLogic({
   }, [audioElements, clearCrossfade]);
 
   /**
-   * Prepare inactive audio for crossfade
+   * Prepare inactive audio for crossfade.
+   * gain: multiplicador de normalización de la pista entrante.
    */
   const prepareCrossfade = useCallback(
-    (streamUrl: string) => {
-      audioElements.loadOnInactive(streamUrl);
+    (streamUrl: string, gain: number = 1) => {
+      audioElements.loadOnInactive(streamUrl, gain);
       logger.debug('[Crossfade] Prepared next track for crossfade');
     },
     [audioElements]
@@ -319,11 +333,13 @@ export function useCrossfadeLogic({
     const currentSettings = settingsRef.current;
 
     // Skip if crossfade is disabled, already crossfading, in radio mode, or repeat one.
-    // On iOS, volume is hardware-only so crossfade is overlap-only (acceptable).
+    // Sin control de volumen (iOS) no hay fundido posible: las dos pistas sonarían
+    // a la vez a todo volumen, así que se deja la transición gapless.
     // Use isCrossfadingRef (synchronous) instead of isCrossfading (React state) to prevent
     // race conditions where timeupdate fires before React re-renders with the new state.
     if (
       !currentSettings.enabled ||
+      !audioElements.volumeControlSupported ||
       isCrossfadingRef.current ||
       isRadioMode ||
       repeatMode === 'one'
@@ -338,9 +354,8 @@ export function useCrossfadeLogic({
 
     const duration = audioElements.getDuration();
     const currentTime = audioElements.getCurrentTime();
-    const crossfadeDuration = CROSSFADE_DURATION_S;
+    const crossfadeDuration = getCrossfadeDurationS(currentSettings);
 
-    // Fixed 2-second crossfade before track end
     const timeRemaining = duration - currentTime;
 
     if (

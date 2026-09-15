@@ -18,6 +18,10 @@ export interface AutoplaySettings {
   enabled: boolean;
 }
 
+export interface NormalizationSettings {
+  enabled: boolean; // Iguala la sonoridad con la ganancia LUFS de cada pista
+}
+
 export interface PlayerState {
   currentTrack: Track | null;
   queue: Track[];
@@ -32,6 +36,7 @@ export interface PlayerState {
   crossfade: CrossfadeSettings;
   isCrossfading: boolean;
   volumeControlSupported: boolean;
+  normalization: NormalizationSettings;
 
   currentRadioStation: RadioStation | null;
   isRadioMode: boolean;
@@ -78,6 +83,8 @@ export interface PlayerContextValue extends PlayerState {
   toggleRepeat: () => void;
 
   setCrossfadeEnabled: (enabled: boolean) => void;
+  setCrossfadeDuration: (duration: number) => void;
+  setNormalizationEnabled: (enabled: boolean) => void;
 
   setAutoplayEnabled: (enabled: boolean) => void;
 }

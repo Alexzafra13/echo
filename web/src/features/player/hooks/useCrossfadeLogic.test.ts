@@ -43,6 +43,7 @@ function createMockAudioElements(): AudioElements {
     audioRefB: { current: mockAudioB },
     activeAudioRef: { current: 'A' as const },
     volume: 0.7,
+    volumeControlSupported: true,
     getActiveAudio: vi.fn().mockReturnValue(mockAudioA),
     getInactiveAudio: vi.fn().mockReturnValue(mockAudioB),
     getActiveAudioId: vi.fn().mockReturnValue('A' as const),
@@ -260,6 +261,43 @@ describe('useCrossfadeLogic', () => {
       expect(result.current.checkCrossfadeTiming()).toBe(false);
     });
 
+    it('should return false when volume control is not supported (iOS)', () => {
+      mockAudioElements = createMockAudioElements();
+      (mockAudioElements as { volumeControlSupported: boolean }).volumeControlSupported = false;
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(178.5);
+      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
+
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: defaultSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+        })
+      );
+
+      expect(result.current.checkCrossfadeTiming()).toBe(false);
+    });
+
+    it('should use the configured duration', () => {
+      // 4.5s remaining: within a 5s crossfade, outside a 2s one
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(175.5);
+      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
+
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: { ...defaultSettings, duration: 5 },
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+        })
+      );
+
+      expect(result.current.checkCrossfadeTiming()).toBe(true);
+    });
+
     it('should return false if track is too short for crossfade', () => {
       // Track duration 1 second, hardcoded 2 second crossfade
       vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(0.5);
@@ -296,7 +334,29 @@ describe('useCrossfadeLogic', () => {
       });
 
       expect(mockAudioElements.loadOnInactive).toHaveBeenCalledWith(
-        'http://example.com/next-track.mp3'
+        'http://example.com/next-track.mp3',
+        1
+      );
+    });
+
+    it('should pass the normalization gain to the inactive audio', () => {
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: defaultSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+        })
+      );
+
+      act(() => {
+        result.current.prepareCrossfade('http://example.com/next-track.mp3', 0.5);
+      });
+
+      expect(mockAudioElements.loadOnInactive).toHaveBeenCalledWith(
+        'http://example.com/next-track.mp3',
+        0.5
       );
     });
   });

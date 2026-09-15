@@ -23,14 +23,16 @@ interface UseMediaSessionProps {
   seek: (time: number) => void;
 }
 
-const SKIP_TIME = 10; // seconds for seekbackward/seekforward
-
 /**
  * Hook to integrate with the Media Session API for system-level media controls.
  * Enables lock screen controls on mobile devices and media key support on desktop.
  *
  * Includes position state updates so the OS can properly maintain audio focus
  * during background playback in PWA mode.
+ *
+ * No se registran seekbackward/seekforward a propósito: cuando existen, iOS y
+ * Android muestran los botones de ±15 s en la notificación en lugar de
+ * anterior/siguiente pista. El seekto sigue disponible para la barra de progreso.
  */
 export function useMediaSession({
   currentTrack,
@@ -119,25 +121,6 @@ export function useMediaSession({
             seek(details.seekTime);
             syncPositionState(details.seekTime);
           }
-        },
-      ],
-      [
-        'seekbackward',
-        (details) => {
-          const skipTime = details.seekOffset || SKIP_TIME;
-          const newTime = Math.max(0, timeStoreGetCurrentTime() - skipTime);
-          seek(newTime);
-          syncPositionState(newTime);
-        },
-      ],
-      [
-        'seekforward',
-        (details) => {
-          const skipTime = details.seekOffset || SKIP_TIME;
-          const dur = timeStoreGetDuration();
-          const newTime = Math.min(dur || Infinity, timeStoreGetCurrentTime() + skipTime);
-          seek(newTime);
-          syncPositionState(newTime);
         },
       ],
     ];

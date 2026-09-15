@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CrossfadeSettings, AutoplaySettings } from '../types';
+import type { CrossfadeSettings, AutoplaySettings, NormalizationSettings } from '../types';
 
 // Incrementar al cambiar la estructura del estado persistido
 const STORE_VERSION = 1;
@@ -11,6 +11,7 @@ interface PlayerSettingsState {
   playerPreference: PlayerPreference;
   crossfade: CrossfadeSettings;
   autoplay: AutoplaySettings;
+  normalization: NormalizationSettings;
 
   setPlayerPreference: (preference: PlayerPreference) => void;
   setCrossfadeEnabled: (enabled: boolean) => void;
@@ -18,6 +19,7 @@ interface PlayerSettingsState {
   setCrossfadeSmartMode: (enabled: boolean) => void;
   setCrossfadeTempoMatch: (tempoMatch: boolean) => void;
   setAutoplayEnabled: (enabled: boolean) => void;
+  setNormalizationEnabled: (enabled: boolean) => void;
 }
 
 const DEFAULT_CROSSFADE: CrossfadeSettings = {
@@ -31,10 +33,15 @@ const DEFAULT_AUTOPLAY: AutoplaySettings = {
   enabled: true,
 };
 
+const DEFAULT_NORMALIZATION: NormalizationSettings = {
+  enabled: true,
+};
+
 const initialState = {
   playerPreference: 'dynamic' as PlayerPreference,
   crossfade: DEFAULT_CROSSFADE,
   autoplay: DEFAULT_AUTOPLAY,
+  normalization: DEFAULT_NORMALIZATION,
 };
 
 export const usePlayerSettingsStore = create<PlayerSettingsState>()(
@@ -70,6 +77,11 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
       setAutoplayEnabled: (enabled) =>
         set((state) => ({
           autoplay: { ...state.autoplay, enabled },
+        })),
+
+      setNormalizationEnabled: (enabled) =>
+        set((state) => ({
+          normalization: { ...state.normalization, enabled },
         })),
     }),
     {

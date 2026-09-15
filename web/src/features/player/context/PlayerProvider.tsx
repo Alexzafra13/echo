@@ -50,8 +50,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== SETTINGS ==========
   const crossfadeSettings = usePlayerSettingsStore((s) => s.crossfade);
   const autoplaySettings = usePlayerSettingsStore((s) => s.autoplay);
+  const normalizationSettings = usePlayerSettingsStore((s) => s.normalization);
   const setCrossfadeEnabledStore = usePlayerSettingsStore((s) => s.setCrossfadeEnabled);
+  const setCrossfadeDurationStore = usePlayerSettingsStore((s) => s.setCrossfadeDuration);
   const setAutoplayEnabledStore = usePlayerSettingsStore((s) => s.setAutoplayEnabled);
+  const setNormalizationEnabledStore = usePlayerSettingsStore((s) => s.setNormalizationEnabled);
 
   const autoplay = useAutoplay();
 
@@ -68,6 +71,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const playNextRef = useRef<(useCrossfade: boolean) => void>(() => {});
   const transitionsRef = useRef<() => void>(() => {});
   const isTransitioningRef = useRef(false);
+  // Intención del usuario (play/pause), independiente de que el sistema pause el audio
+  const wantsToPlayRef = useRef(false);
   const preloadedNextRef = useRef<{
     trackId: string;
     nextIndex: number;
@@ -86,7 +91,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const audioElements = useAudioElements({
     initialVolume: DEFAULT_VOLUME,
     callbacks: {
-      onPlay: () => setIsPlaying(true),
+      onPlay: () => {
+        wantsToPlayRef.current = true;
+        setIsPlaying(true);
+      },
       onPause: () => {
         if (!isTransitioningRef.current) {
           setIsPlaying(false);
@@ -151,6 +159,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     audioElements,
     crossfade,
     crossfadeSettings,
+    normalizationEnabled: normalizationSettings.enabled,
     playTracking,
     radio,
     isPlaying,
@@ -255,6 +264,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setCurrentTrack,
     currentTrack,
     autoplaySettings,
+    normalizationEnabled: normalizationSettings.enabled,
     sharedRefs,
     radio: { isRadioMode: radio.isRadioMode },
     handlePlayNext,
@@ -281,10 +291,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   );
 
   const pause = useCallback(() => {
+    wantsToPlayRef.current = false;
     audioElements.pauseActive();
   }, [audioElements]);
 
   const stop = useCallback(async () => {
+    wantsToPlayRef.current = false;
     await audioElements.stopBoth();
     setCurrentTrack(null);
     setIsPlaying(false);
@@ -417,6 +429,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== PWA VISIBILITY SYNC ==========
   useVisibilitySync({
     isPlaying,
+    wantsToPlayRef,
     getActiveAudio: audioElements.getActiveAudio,
     setIsPlaying,
   });
@@ -446,6 +459,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   );
 
   const stopRadio = useCallback(async () => {
+    wantsToPlayRef.current = false;
     try {
       await radio.stopRadio();
     } catch (error) {
@@ -460,6 +474,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const setCrossfadeEnabled = useCallback(
     (enabled: boolean) => setCrossfadeEnabledStore(enabled),
     [setCrossfadeEnabledStore]
+  );
+
+  const setCrossfadeDuration = useCallback(
+    (duration: number) => setCrossfadeDurationStore(duration),
+    [setCrossfadeDurationStore]
+  );
+
+  const setNormalizationEnabled = useCallback(
+    (enabled: boolean) => setNormalizationEnabledStore(enabled),
+    [setNormalizationEnabledStore]
   );
 
   const setAutoplayEnabled = useCallback(
@@ -511,6 +535,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       crossfade: crossfadeSettings,
       isCrossfading: crossfade.isCrossfading,
       volumeControlSupported: audioElements.volumeControlSupported,
+      normalization: normalizationSettings,
       play,
       pause,
       togglePlayPause,
@@ -520,6 +545,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playNext,
       playPrevious,
       setCrossfadeEnabled,
+      setCrossfadeDuration,
+      setNormalizationEnabled,
     }),
     [
       currentTrack,
@@ -528,6 +555,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       crossfadeSettings,
       crossfade.isCrossfading,
       audioElements.volumeControlSupported,
+      normalizationSettings,
       play,
       pause,
       togglePlayPause,
@@ -537,6 +565,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playNext,
       playPrevious,
       setCrossfadeEnabled,
+      setCrossfadeDuration,
+      setNormalizationEnabled,
     ]
   );
 

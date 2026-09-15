@@ -4,9 +4,19 @@ import { Switch } from '@shared/components/ui';
 import { usePlayback, useAutoplayContext } from '@features/player';
 import styles from './SettingsPage.module.css';
 
+const CROSSFADE_MIN_S = 1;
+const CROSSFADE_MAX_S = 12;
+
 export function PlaybackCard() {
   const { t } = useTranslation();
-  const { crossfade, setCrossfadeEnabled, volumeControlSupported } = usePlayback();
+  const {
+    crossfade,
+    setCrossfadeEnabled,
+    setCrossfadeDuration,
+    normalization,
+    setNormalizationEnabled,
+    volumeControlSupported,
+  } = usePlayback();
   const { autoplay, setAutoplayEnabled } = useAutoplayContext();
 
   return (
@@ -37,12 +47,47 @@ export function PlaybackCard() {
             {crossfade.enabled && (
               <div className={styles.settingsPage__toggleItem}>
                 <div className={styles.settingsPage__toggleInfo}>
+                  <label className={styles.settingsPage__toggleLabel} htmlFor="crossfade-duration">
+                    {t('settings.playback.crossfadeDuration')}
+                  </label>
                   <p className={styles.settingsPage__toggleDescription}>
-                    {t('settings.playback.crossfadeAuto')}
+                    {t('settings.playback.crossfadeDurationDescription')}
                   </p>
+                </div>
+                <div className={styles.settingsPage__range}>
+                  <input
+                    id="crossfade-duration"
+                    type="range"
+                    min={CROSSFADE_MIN_S}
+                    max={CROSSFADE_MAX_S}
+                    step={1}
+                    value={crossfade.duration}
+                    onChange={(e) => setCrossfadeDuration(Number(e.target.value))}
+                    className={styles.settingsPage__rangeInput}
+                  />
+                  <span className={styles.settingsPage__rangeValue}>
+                    {t('settings.playback.crossfadeDurationValue', {
+                      seconds: crossfade.duration,
+                    })}
+                  </span>
                 </div>
               </div>
             )}
+            <div className={styles.settingsPage__toggleItem}>
+              <div className={styles.settingsPage__toggleInfo}>
+                <span className={styles.settingsPage__toggleLabel}>
+                  {t('settings.playback.normalizationLabel')}
+                </span>
+                <p className={styles.settingsPage__toggleDescription}>
+                  {t('settings.playback.normalizationDescription')}
+                </p>
+              </div>
+              <Switch
+                checked={normalization.enabled}
+                onChange={setNormalizationEnabled}
+                aria-label={t('settings.playback.normalizationLabel')}
+              />
+            </div>
           </>
         ) : (
           <div className={styles.settingsPage__toggleItem}>
