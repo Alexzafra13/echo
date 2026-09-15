@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CrossfadeSettings, AutoplaySettings, NormalizationSettings } from '../types';
+import { DEFAULT_VOLUME } from '../types';
+import type {
+  CrossfadeSettings,
+  AutoplaySettings,
+  NormalizationSettings,
+  DjModeSettings,
+} from '../types';
 
 // Incrementar al cambiar la estructura del estado persistido
 const STORE_VERSION = 1;
@@ -12,6 +18,9 @@ interface PlayerSettingsState {
   crossfade: CrossfadeSettings;
   autoplay: AutoplaySettings;
   normalization: NormalizationSettings;
+  djMode: DjModeSettings;
+  /** Volumen del usuario (0-1), se conserva entre sesiones */
+  volume: number;
 
   setPlayerPreference: (preference: PlayerPreference) => void;
   setCrossfadeEnabled: (enabled: boolean) => void;
@@ -20,6 +29,18 @@ interface PlayerSettingsState {
   setCrossfadeTempoMatch: (tempoMatch: boolean) => void;
   setAutoplayEnabled: (enabled: boolean) => void;
   setNormalizationEnabled: (enabled: boolean) => void;
+  setVolume: (volume: number) => void;
+  setDjModeEnabled: (enabled: boolean) => void;
+  /** null borra la excepción y la playlist vuelve al valor global */
+  setPlaylistDjMode: (playlistId: string, enabled: boolean | null) => void;
+}
+
+/** Modo DJ efectivo para una playlist: su excepción si existe, si no el global */
+export function resolveDjMode(djMode: DjModeSettings, playlistId?: string): boolean {
+  if (playlistId && playlistId in djMode.playlistOverrides) {
+    return djMode.playlistOverrides[playlistId];
+  }
+  return djMode.enabled;
 }
 
 const DEFAULT_CROSSFADE: CrossfadeSettings = {
@@ -37,11 +58,18 @@ const DEFAULT_NORMALIZATION: NormalizationSettings = {
   enabled: true,
 };
 
+const DEFAULT_DJ_MODE: DjModeSettings = {
+  enabled: true,
+  playlistOverrides: {},
+};
+
 const initialState = {
   playerPreference: 'dynamic' as PlayerPreference,
   crossfade: DEFAULT_CROSSFADE,
   autoplay: DEFAULT_AUTOPLAY,
   normalization: DEFAULT_NORMALIZATION,
+  djMode: DEFAULT_DJ_MODE,
+  volume: DEFAULT_VOLUME,
 };
 
 export const usePlayerSettingsStore = create<PlayerSettingsState>()(
@@ -83,6 +111,27 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
         set((state) => ({
           normalization: { ...state.normalization, enabled },
         })),
+
+      setVolume: (volume) =>
+        set({
+          volume: Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : DEFAULT_VOLUME,
+        }),
+
+      setDjModeEnabled: (enabled) =>
+        set((state) => ({
+          djMode: { ...state.djMode, enabled },
+        })),
+
+      setPlaylistDjMode: (playlistId, enabled) =>
+        set((state) => {
+          const playlistOverrides = { ...state.djMode.playlistOverrides };
+          if (enabled === null) {
+            delete playlistOverrides[playlistId];
+          } else {
+            playlistOverrides[playlistId] = enabled;
+          }
+          return { djMode: { ...state.djMode, playlistOverrides } };
+        }),
     }),
     {
       name: 'echo-player-settings',

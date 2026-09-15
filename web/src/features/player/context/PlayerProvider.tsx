@@ -11,7 +11,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef, ReactNode } from 'react';
-import { Track, RadioStation, PlayContext, DEFAULT_VOLUME } from '../types';
+import { Track, RadioStation, PlayContext } from '../types';
 import { usePlayerSettingsStore } from '../store';
 import {
   setCurrentTime as timeStoreSetCurrentTime,
@@ -53,6 +53,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const normalizationSettings = usePlayerSettingsStore((s) => s.normalization);
   const setCrossfadeEnabledStore = usePlayerSettingsStore((s) => s.setCrossfadeEnabled);
   const setCrossfadeDurationStore = usePlayerSettingsStore((s) => s.setCrossfadeDuration);
+  const setCrossfadeSmartModeStore = usePlayerSettingsStore((s) => s.setCrossfadeSmartMode);
+  const setCrossfadeTempoMatchStore = usePlayerSettingsStore((s) => s.setCrossfadeTempoMatch);
+  const setVolumeStore = usePlayerSettingsStore((s) => s.setVolume);
+  const storedVolume = usePlayerSettingsStore((s) => s.volume);
+  // Volumen guardado: solo cuenta el valor inicial, al crear los elementos de audio
+  const initialVolumeRef = useRef(storedVolume);
   const setAutoplayEnabledStore = usePlayerSettingsStore((s) => s.setAutoplayEnabled);
   const setNormalizationEnabledStore = usePlayerSettingsStore((s) => s.setNormalizationEnabled);
 
@@ -73,30 +79,39 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const isTransitioningRef = useRef(false);
   // Intención del usuario (play/pause), independiente de que el sistema pause el audio
   const wantsToPlayRef = useRef(false);
+  // Cuándo pausó el sistema por su cuenta (para no reanudar interrupciones viejas)
+  const interruptedAtRef = useRef<number | null>(null);
   const preloadedNextRef = useRef<{
     trackId: string;
     nextIndex: number;
     track: Track;
   } | null>(null);
   const queueContextRef = useRef<PlayContext | undefined>(undefined);
+  // Pista actual accesible desde callbacks sin re-crearlos
+  const currentTrackRef = useRef<Track | null>(null);
 
   // Bundle refs into a single object for cleaner hook params.
   const sharedRefs: PlayerSharedRefs = useMemo(
-    () => ({ isTransitioningRef, preloadedNextRef, queueContextRef }),
+    () => ({ isTransitioningRef, preloadedNextRef, queueContextRef, currentTrackRef }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Objeto contenedor estable; los refs internos son mutables por diseño
     []
   );
 
   // ========== AUDIO ELEMENTS ==========
   const audioElements = useAudioElements({
-    initialVolume: DEFAULT_VOLUME,
+    initialVolume: initialVolumeRef.current,
     callbacks: {
       onPlay: () => {
         wantsToPlayRef.current = true;
+        interruptedAtRef.current = null;
         setIsPlaying(true);
       },
       onPause: () => {
         if (!isTransitioningRef.current) {
+          // Si el usuario no ha pausado, lo ha hecho el sistema (llamada, otra app)
+          if (wantsToPlayRef.current) {
+            interruptedAtRef.current = Date.now();
+          }
           setIsPlaying(false);
         }
       },
@@ -107,6 +122,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       },
     },
   });
+
+  currentTrackRef.current = currentTrack;
 
   // ========== QUEUE MANAGEMENT ==========
   const queue = useQueueManagement();
@@ -128,6 +145,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     isRadioMode: radio.isRadioMode,
     repeatMode: queue.repeatMode,
     hasNextTrack: queue.repeatMode === 'all' || queue.currentIndex < queue.queue.length - 1,
+    currentTrackRef,
     onCrossfadeTrigger: () => {
       playTracking.endPlaySession(false);
       crossfade.isCrossfadingRef.current = true;
@@ -315,8 +333,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const setVolume = useCallback(
     (volume: number) => {
       audioElements.setVolume(volume);
+      setVolumeStore(volume);
     },
-    [audioElements]
+    [audioElements, setVolumeStore]
   );
 
   const togglePlayPause = useCallback(() => {
@@ -430,6 +449,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   useVisibilitySync({
     isPlaying,
     wantsToPlayRef,
+    interruptedAtRef,
     getActiveAudio: audioElements.getActiveAudio,
     setIsPlaying,
   });
@@ -479,6 +499,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const setCrossfadeDuration = useCallback(
     (duration: number) => setCrossfadeDurationStore(duration),
     [setCrossfadeDurationStore]
+  );
+
+  const setCrossfadeSmartMode = useCallback(
+    (enabled: boolean) => setCrossfadeSmartModeStore(enabled),
+    [setCrossfadeSmartModeStore]
+  );
+
+  const setCrossfadeTempoMatch = useCallback(
+    (enabled: boolean) => setCrossfadeTempoMatchStore(enabled),
+    [setCrossfadeTempoMatchStore]
   );
 
   const setNormalizationEnabled = useCallback(
@@ -546,6 +576,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playPrevious,
       setCrossfadeEnabled,
       setCrossfadeDuration,
+      setCrossfadeSmartMode,
+      setCrossfadeTempoMatch,
       setNormalizationEnabled,
     }),
     [
@@ -566,6 +598,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playPrevious,
       setCrossfadeEnabled,
       setCrossfadeDuration,
+      setCrossfadeSmartMode,
+      setCrossfadeTempoMatch,
       setNormalizationEnabled,
     ]
   );

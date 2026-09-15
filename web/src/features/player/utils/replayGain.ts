@@ -11,11 +11,20 @@ type GainSource = Pick<Track, 'rgTrackGain' | 'rgAlbumGain'> | null | undefined;
  *
  * Sin Web Audio API solo se puede atenuar: las pistas que necesitarían
  * amplificación se quedan en 1.0.
+ *
+ * preferAlbumGain: al escuchar un álbum entero se usa la ganancia del álbum,
+ * que conserva las diferencias de volumen entre sus pistas.
  */
-export function getTrackGainMultiplier(track: GainSource, enabled: boolean): number {
+export function getTrackGainMultiplier(
+  track: GainSource,
+  enabled: boolean,
+  preferAlbumGain: boolean = false
+): number {
   if (!enabled || !track) return 1;
 
-  const gainDb = track.rgTrackGain ?? track.rgAlbumGain;
+  const gainDb = preferAlbumGain
+    ? (track.rgAlbumGain ?? track.rgTrackGain)
+    : (track.rgTrackGain ?? track.rgAlbumGain);
   if (gainDb === undefined || gainDb === null || !Number.isFinite(gainDb)) return 1;
 
   const multiplier = Math.pow(10, gainDb / 20);

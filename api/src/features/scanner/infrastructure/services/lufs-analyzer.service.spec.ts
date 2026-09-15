@@ -2,8 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LufsAnalyzerService, LufsAnalysisResult } from './lufs-analyzer.service';
 import { getLoggerToken } from 'nestjs-pino';
 
-// Type for the private method we want to test
+// Types for the private methods we want to test
 type ParseFFmpegOutput = (output: string) => { inputLufs: number; inputPeak: number } | null;
+type ParseOutro = (stderr: string) => number | undefined;
 
 describe('LufsAnalyzerService', () => {
   let service: LufsAnalyzerService;
@@ -167,6 +168,66 @@ Some info after
       expect(result).not.toBeNull();
       expect(result!.inputLufs).toBe(-30.0);
       expect(result!.inputPeak).toBe(-20.0);
+    });
+  });
+
+  describe('parseOutroFromCombinedOutput', () => {
+    const getOutroParser = (): ParseOutro =>
+      (service as unknown as Record<string, ParseOutro>).parseOutroFromCombinedOutput.bind(service);
+
+    // Output de silencedetect con la cabecera de duración que imprime FFmpeg
+    const buildOutput = (duration: string, silenceStarts: number[]): string => {
+      const lines = silenceStarts.map((s) => `[silencedetect @ 0x55d1] silence_start: ${s}`);
+      return `
+Input #0, mp3, from '/music/song.mp3':
+  Duration: ${duration}, start: 0.000000, bitrate: 320 kb/s
+${lines.join('\n')}
+`;
+    };
+
+    it('should pick the earliest fade-out start inside the outro window', () => {
+      const parse = getOutroParser();
+      // 3:20 = 200s: ventana = últimos 15s (>185) y último 15% (>170)
+      const result = parse(buildOutput('00:03:20.00', [190.5, 195.2]));
+
+      expect(result).toBe(190.5);
+    });
+
+    it('should ignore quiet passages earlier in the track', () => {
+      const parse = getOutroParser();
+      // 120.0 está fuera de los últimos 15s; 192.0 no
+      const result = parse(buildOutput('00:03:20.00', [120.0, 192.0]));
+
+      expect(result).toBe(192.0);
+    });
+
+    it('should return undefined when the only silence is before the outro window', () => {
+      const parse = getOutroParser();
+      const result = parse(buildOutput('00:03:20.00', [90.0, 150.0]));
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined when the fade starts within the last 3 seconds', () => {
+      const parse = getOutroParser();
+      const result = parse(buildOutput('00:03:20.00', [198.0]));
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined for tracks shorter than a minute', () => {
+      const parse = getOutroParser();
+      // 50s: 45.0 entra en la ventana pero no pasa el mínimo de 60s
+      const result = parse(buildOutput('00:00:50.00', [45.0]));
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined when there is no silence or no duration', () => {
+      const parse = getOutroParser();
+
+      expect(parse(buildOutput('00:03:20.00', []))).toBeUndefined();
+      expect(parse('[silencedetect @ 0x55d1] silence_start: 190.5')).toBeUndefined();
     });
   });
 

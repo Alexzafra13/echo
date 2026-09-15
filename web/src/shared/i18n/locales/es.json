@@ -56,6 +56,14 @@
     "ratingVeryGood": "Muy bueno",
     "ratingExcellent": "Excelente"
   },
+  "djMode": {
+    "badge": "DJ",
+    "tooltipOn": "Mezcla DJ activada: las canciones se ordenan por tonalidad, BPM y energía. Pulsa para desactivarla.",
+    "tooltipOff": "Mezcla DJ desactivada: orden aleatorio normal. Pulsa para activarla.",
+    "playlistToggle": "Mezcla DJ en esta lista: {{state}}. Pulsa para cambiarlo.",
+    "stateOn": "activada",
+    "stateOff": "desactivada"
+  },
   "nav": {
     "home": "Inicio",
     "albums": "Álbumes",
@@ -746,9 +754,9 @@
     },
     "libraryAnalysis": {
       "title": "Análisis de Librería",
-      "description": "Estos análisis se ejecutan automáticamente después de cada escaneo de librería. Desactívalos si prefieres ahorrar tiempo de procesamiento.",
+      "description": "Estos análisis se ejecutan automáticamente después de cada escaneo de librería. El análisis de sonoridad viene desactivado; actívalo aquí para empezar a analizar tu biblioteca.",
       "lufs": "Análisis LUFS",
-      "lufsDescription": "Calcula los niveles de volumen (ReplayGain) para normalización de audio",
+      "lufsDescription": "Mide la sonoridad (ReplayGain) para que el reproductor iguale el volumen entre canciones",
       "dj": "Análisis DJ",
       "djDescription": "Detecta BPM, tonalidad (Key) y energía para sugerencias de mezcla armónica"
     },
@@ -773,9 +781,15 @@
       "crossfadeDuration": "Duración del fundido",
       "crossfadeDurationDescription": "Tiempo durante el que se solapan las dos canciones mientras una se funde en la otra",
       "crossfadeDurationValue": "{{seconds}} s",
+      "smartCrossfadeLabel": "Fundido inteligente",
+      "smartCrossfadeDescription": "Empieza el fundido donde el análisis detecta que la canción termina de verdad (silencio o fade final), en vez de a un número fijo de segundos del final. Requiere el análisis de sonoridad (LUFS).",
+      "tempoMatchLabel": "Ajuste de tempo",
+      "tempoMatchDescription": "Durante el fundido, la canción saliente se acelera o frena (hasta un 6 %) para igualar el BPM de la siguiente. Requiere el análisis DJ.",
       "unavailable": "No disponible en este dispositivo. iOS no permite controlar el volumen desde la web, lo que impide el fundido y la normalización de volumen. Se utiliza transición sin cortes (gapless) automáticamente.",
       "normalizationLabel": "Normalización de volumen",
-      "normalizationDescription": "Iguala la sonoridad entre canciones usando el análisis LUFS de la biblioteca. Las canciones más altas se atenúan; nada se amplifica.",
+      "normalizationDescription": "Iguala la sonoridad entre canciones usando el análisis LUFS de la biblioteca. Las canciones más altas se atenúan; nada se amplifica. Requiere el análisis de sonoridad en Análisis de Librería, desactivado por defecto; las canciones sin analizar suenan tal cual.",
+      "djModeLabel": "Mezcla DJ al reproducir aleatorio",
+      "djModeDescription": "Ordena las canciones del aleatorio por tonalidad, BPM y energía para que encadenen bien. Se puede cambiar por lista con el chip DJ junto al botón de aleatorio.",
       "autoplayLabel": "Reproducción automática",
       "autoplayDescription": "Cuando termina un álbum o playlist, continúa automáticamente con artistas similares",
       "emptyQueue": "No hay canciones en la cola"

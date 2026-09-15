@@ -15,6 +15,8 @@ import {
 } from '../../hooks/usePlaylists';
 import { playlistsService } from '../../services/playlists.service';
 import { useQueue, usePlayback } from '@features/player';
+import { usePlayerSettingsStore, resolveDjMode } from '@features/player/store/playerSettingsStore';
+import { DjModeChip } from '@shared/components/DjModeChip';
 import { Button } from '@shared/components/ui';
 import { useModal, useDominantColors, useDocumentTitle, useNotification } from '@shared/hooks';
 import {
@@ -100,28 +102,41 @@ export default function PlaylistDetailPage() {
 
   const [shuffleLoading, setShuffleLoading] = useState(false);
 
+  // Modo DJ de esta playlist: su excepción si la hay, si no el ajuste global
+  const djModeSettings = usePlayerSettingsStore((s) => s.djMode);
+  const setPlaylistDjMode = usePlayerSettingsStore((s) => s.setPlaylistDjMode);
+  const djModeOn = resolveDjMode(djModeSettings, id);
+
+  const playRandomOrder = (tracks: Track[]) => {
+    const shuffledTracks = [...tracks];
+    for (let i = shuffledTracks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
+    }
+    setShuffle(true);
+    playQueue(shuffledTracks, 0, 'playlist');
+  };
+
   const handleShufflePlay = async () => {
     if (!id || shuffleLoading) return;
     const tracks = playlistTracks?.tracks || [];
     if (tracks.length === 0) return;
 
+    if (!djModeOn) {
+      playRandomOrder(toPlayerTracks(tracks));
+      return;
+    }
+
     setShuffleLoading(true);
     try {
-      // Try DJ-aware harmonic ordering from backend
+      // Orden armónico (tonalidad, BPM, energía) calculado en el servidor
       const result = await playlistsService.getDjShuffledTracks(id);
       const playerTracks = toPlayerTracks(result.tracks);
       setShuffle(true);
       playQueue(playerTracks, 0, 'playlist');
     } catch {
-      // Fallback: client-side Fisher-Yates shuffle
-      const playerTracks = toPlayerTracks(tracks);
-      setShuffle(true);
-      const shuffledTracks = [...playerTracks];
-      for (let i = shuffledTracks.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
-      }
-      playQueue(shuffledTracks, 0, 'playlist');
+      // Sin respuesta del servidor: orden aleatorio en cliente
+      playRandomOrder(toPlayerTracks(tracks));
     } finally {
       setShuffleLoading(false);
     }
@@ -347,6 +362,13 @@ export default function PlaylistDetailPage() {
                 >
                   {t('albums.shuffle')}
                 </Button>
+                <DjModeChip
+                  active={djModeOn}
+                  onToggle={(enabled) => id && setPlaylistDjMode(id, enabled)}
+                  title={t('djMode.playlistToggle', {
+                    state: djModeOn ? t('djMode.stateOn') : t('djMode.stateOff'),
+                  })}
+                />
                 <PlaylistOptionsMenu
                   onEdit={editModal.open}
                   onShare={shareModal.open}

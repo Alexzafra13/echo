@@ -49,7 +49,7 @@ describe('ScannerController', () => {
         { provide: GetScansHistoryUseCase, useValue: { execute: jest.fn() } },
         {
           provide: LufsAnalysisQueueService,
-          useValue: { getQueueStats: jest.fn() },
+          useValue: { getQueueStats: jest.fn(), startLufsAnalysisQueue: jest.fn() },
         },
         {
           provide: DjAnalysisQueueService,
@@ -114,6 +114,18 @@ describe('ScannerController', () => {
       expect(lufsQueueService.getQueueStats).toHaveBeenCalled();
       expect(result.isRunning).toBe(true);
       expect(result.pendingTracks).toBe(50);
+    });
+  });
+
+  describe('startLufsAnalysis', () => {
+    it('should start the LUFS analysis queue', async () => {
+      const outcome = { started: true, pending: 12, message: 'started' };
+      lufsQueueService.startLufsAnalysisQueue.mockResolvedValue(outcome);
+
+      const result = await controller.startLufsAnalysis();
+
+      expect(lufsQueueService.startLufsAnalysisQueue).toHaveBeenCalled();
+      expect(result).toEqual(outcome);
     });
   });
 

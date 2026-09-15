@@ -80,12 +80,58 @@ const CAMELOT_TO_KEY: Record<string, string> = {
   '12B': 'E',
 };
 
-// Tonalidad → "8A" (null si no es válida)
+// Sufijos de modo tal y como aparecen en los tags initialKey (en minúsculas)
+const MINOR_SUFFIXES = ['m', 'min', 'minor'];
+const MAJOR_SUFFIXES = ['', 'maj', 'major'];
+
+/**
+ * Normaliza una tonalidad escrita de cualquier forma habitual en los tags
+ * ("A minor", "Amin", "ab min", "C#maj", "F major", " am ") a la forma
+ * canónica de KEY_TO_CAMELOT ("Am", "Abm", "C#", "F"). Acepta mayúsculas y
+ * minúsculas, espacios sobrantes, ♭/♯ y los sufijos m/min/minor y maj/major
+ * (sin sufijo = mayor). Devuelve null si no se reconoce.
+ */
+export function normalizeKeyName(key: string): string | null {
+  const match = key
+    .trim()
+    .toLowerCase()
+    .match(/^([a-g])\s*([#♯b♭])?\s*([a-z]*)$/);
+  if (!match) return null;
+
+  const [, root, accidental = '', suffix] = match;
+
+  let mode: string;
+  if (MINOR_SUFFIXES.includes(suffix)) {
+    mode = 'm';
+  } else if (MAJOR_SUFFIXES.includes(suffix)) {
+    mode = '';
+  } else {
+    return null;
+  }
+
+  const alteration = accidental === '♯' ? '#' : accidental === '♭' ? 'b' : accidental;
+  return `${root.toUpperCase()}${alteration}${mode}`;
+}
+
+/**
+ * Tonalidad → "8A" (null si no es válida). Acepta tanto nombres de tonalidad
+ * en cualquiera de sus grafías (ver normalizeKeyName) como notación Camelot
+ * directa ("5A", "12b"), que es lo que escriben Mixed In Key y similares.
+ */
 export function keyToCamelot(key: string | null | undefined): string | null {
   if (!key || key === 'Unknown') return null;
-  const camelot = KEY_TO_CAMELOT[key];
+
+  // Ya viene en Camelot: solo validamos rango y normalizamos la letra
+  const camelotMatch = key.trim().match(/^(\d{1,2})\s*([abAB])$/);
+  if (camelotMatch) {
+    const parsed = parseCamelot(`${parseInt(camelotMatch[1], 10)}${camelotMatch[2].toUpperCase()}`);
+    return parsed ? formatCamelot(parsed) : null;
+  }
+
+  const normalized = normalizeKeyName(key);
+  const camelot = normalized ? KEY_TO_CAMELOT[normalized] : undefined;
   if (!camelot) return null;
-  return `${camelot.number}${camelot.letter}`;
+  return formatCamelot(camelot);
 }
 
 // "8A" → tonalidad (null si no es válida)
@@ -183,24 +229,29 @@ export interface HarmonicScoreResult {
   compatibility: HarmonicCompatibility;
 }
 
+// Score cuando alguna tonalidad es desconocida: neutral, pero por debajo de
+// cualquier caso compatible para no preferir tracks sin clave frente a ±2
+const UNKNOWN_KEY_SCORE = 40;
+
 /**
  * Puntúa la compatibilidad armónica entre dos tonalidades Camelot:
  * misma = 100; ±1 mismo modo = 90; relativo = 85; ±1 distinto modo = 75;
- * ±2 = 55; resto = 20-40.
+ * ±2 = 55; desconocida = 40; a partir de ±3 es incompatible y cae 10 puntos
+ * por paso en la rueda (±3 = 30, ±4 = 20, ±5 = 10, ±6 = 0).
  */
 export function calculateHarmonicScore(
   camelot1: string | null | undefined,
   camelot2: string | null | undefined
 ): HarmonicScoreResult {
   if (!camelot1 || !camelot2) {
-    return { score: 50, compatibility: 'compatible' }; // desconocida, neutral
+    return { score: UNKNOWN_KEY_SCORE, compatibility: 'compatible' };
   }
 
   const c1 = parseCamelot(camelot1);
   const c2 = parseCamelot(camelot2);
 
   if (!c1 || !c2) {
-    return { score: 50, compatibility: 'compatible' };
+    return { score: UNKNOWN_KEY_SCORE, compatibility: 'compatible' };
   }
 
   // misma
@@ -229,8 +280,8 @@ export function calculateHarmonicScore(
     return { score: 55, compatibility: 'compatible' };
   }
 
-  // incompatible: baja con la distancia
-  const score = Math.max(20, 50 - distance * 5);
+  // incompatible: 10 puntos menos por cada paso extra en la rueda (±6 = 0)
+  const score = Math.max(0, 60 - distance * 10);
   return { score, compatibility: 'incompatible' };
 }
 

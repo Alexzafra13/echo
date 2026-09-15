@@ -298,6 +298,63 @@ describe('useCrossfadeLogic', () => {
       expect(result.current.checkCrossfadeTiming()).toBe(true);
     });
 
+    it('should start at outroStart in smart mode', () => {
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(150);
+      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
+      const currentTrackRef = { current: { id: 't1', outroStart: 150 } as never };
+
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: { ...defaultSettings, smartMode: true },
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+          currentTrackRef,
+        })
+      );
+
+      expect(result.current.checkCrossfadeTiming()).toBe(true);
+    });
+
+    it('should ignore outroStart when smart mode is off', () => {
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(150);
+      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
+      const currentTrackRef = { current: { id: 't1', outroStart: 150 } as never };
+
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: { ...defaultSettings, smartMode: false },
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+          currentTrackRef,
+        })
+      );
+
+      expect(result.current.checkCrossfadeTiming()).toBe(false);
+    });
+
+    it('should fall back to the fixed timing when outroStart is missing', () => {
+      vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(178.5);
+      vi.mocked(mockAudioElements.getDuration).mockReturnValue(180);
+      const currentTrackRef = { current: { id: 't1' } as never };
+
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: { ...defaultSettings, smartMode: true },
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+          currentTrackRef,
+        })
+      );
+
+      expect(result.current.checkCrossfadeTiming()).toBe(true);
+    });
+
     it('should return false if track is too short for crossfade', () => {
       // Track duration 1 second, hardcoded 2 second crossfade
       vi.mocked(mockAudioElements.getCurrentTime).mockReturnValue(0.5);
@@ -469,6 +526,56 @@ describe('useCrossfadeLogic', () => {
 
       expect(success).toBe(false);
       expect(result.current.isCrossfading).toBe(false);
+    });
+  });
+
+  describe('tempo match', () => {
+    it('should ramp the outgoing playbackRate towards the tempo ratio', async () => {
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: defaultSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+        })
+      );
+
+      await act(async () => {
+        await result.current.performCrossfade({ tempoRatio: 1.04 });
+      });
+
+      const outgoing = mockAudioElements.audioRefA.current!;
+      expect(outgoing.preservesPitch).toBe(false);
+
+      const advanceTime = (global as unknown as { advanceTime: (ms: number) => void }).advanceTime;
+      act(() => advanceTime(1000));
+      expect(outgoing.playbackRate).toBeCloseTo(1.02, 3);
+
+      act(() => advanceTime(1100));
+      // Fundido terminado: la pista saliente vuelve a velocidad normal
+      expect(outgoing.playbackRate).toBe(1);
+      expect(outgoing.preservesPitch).toBe(true);
+    });
+
+    it('should leave playbackRate alone without a tempo ratio', async () => {
+      const { result } = renderHook(() =>
+        useCrossfadeLogic({
+          audioElements: mockAudioElements,
+          settings: defaultSettings,
+          isRadioMode: false,
+          repeatMode: 'off',
+          hasNextTrack: true,
+        })
+      );
+
+      await act(async () => {
+        await result.current.performCrossfade();
+      });
+
+      const advanceTime = (global as unknown as { advanceTime: (ms: number) => void }).advanceTime;
+      act(() => advanceTime(1000));
+      expect(mockAudioElements.audioRefA.current!.playbackRate).toBe(1);
     });
   });
 

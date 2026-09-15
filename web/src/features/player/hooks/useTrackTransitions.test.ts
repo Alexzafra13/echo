@@ -143,6 +143,7 @@ function createSharedRefs(): PlayerSharedRefs {
     isTransitioningRef: { current: false },
     preloadedNextRef: { current: null },
     queueContextRef: { current: undefined },
+    currentTrackRef: { current: null },
   };
 }
 

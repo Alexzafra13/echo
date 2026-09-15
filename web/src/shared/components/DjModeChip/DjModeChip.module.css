@@ -1,0 +1,41 @@
+.djChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--white-25);
+  background: var(--black-25);
+  color: var(--white-60);
+  font-size: 11px;
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.djChip:hover {
+  color: white;
+  border-color: var(--white-40);
+}
+
+.djChip:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+.djChipActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--text-on-primary);
+}
+
+.djChipActive:hover {
+  color: var(--text-on-primary);
+  border-color: var(--color-primary);
+  filter: brightness(1.1);
+}

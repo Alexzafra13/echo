@@ -30,6 +30,8 @@ export interface PlaybackContextValue {
   playPrevious: () => void;
   setCrossfadeEnabled: (enabled: boolean) => void;
   setCrossfadeDuration: (duration: number) => void;
+  setCrossfadeSmartMode: (enabled: boolean) => void;
+  setCrossfadeTempoMatch: (enabled: boolean) => void;
   setNormalizationEnabled: (enabled: boolean) => void;
 }
 

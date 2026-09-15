@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQueue } from '@features/player';
+import { usePlayerSettingsStore } from '@features/player/store/playerSettingsStore';
 import {
   tracksService,
   type ShuffledTracksResponse,
@@ -17,6 +18,9 @@ export interface UseShufflePlayReturn {
   isLoading: boolean;
   loadMoreTracks: () => Promise<void>;
   hasMore: boolean;
+  /** Modo DJ global (orden armónico por tonalidad/BPM/energía) */
+  djMode: boolean;
+  setDjMode: (enabled: boolean) => void;
 }
 
 interface ShuffleState {
@@ -35,6 +39,8 @@ interface ShuffleState {
 
 export function useShufflePlay(): UseShufflePlayReturn {
   const { playQueue, addToQueue, queue, currentIndex, isShuffle, toggleShuffle } = useQueue();
+  const djMode = usePlayerSettingsStore((s) => s.djMode.enabled);
+  const setDjMode = usePlayerSettingsStore((s) => s.setDjModeEnabled);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
 
@@ -178,14 +184,15 @@ export function useShufflePlay(): UseShufflePlayReturn {
       const maxAttempts = 5;
       let usedDjMode = false;
 
-      // First call uses DJ endpoint for harmonic ordering
-      // Subsequent calls (for pagination) use regular shuffle
+      // Con modo DJ activo la primera llamada usa el endpoint DJ (orden armónico)
+      // y las siguientes (paginación) el shuffle normal. Ambos endpoints comparten
+      // el mismo contrato de seed/skip/take, así que la paginación no cambia.
+      // Con modo DJ desactivado todo va por el shuffle aleatorio.
 
       // Fetch tracks until we have enough unseen ones
       while (newTracks.length < BATCH_SIZE && attempts < maxAttempts) {
-        // Use DJ endpoint for first fetch, regular for subsequent
         let response: ShuffledTracksResponse | DjShuffledTracksResponse;
-        if (attempts === 0) {
+        if (djMode && attempts === 0) {
           response = await tracksService.getDjShuffled({
             seed: currentSeed ?? undefined,
             skip: currentSkip,
@@ -276,7 +283,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, isShuffle, toggleShuffle, playQueue]);
+  }, [isLoading, isShuffle, toggleShuffle, playQueue, djMode]);
 
   // Auto-prefetch when remaining tracks in queue is low
   // Calculate how many tracks are left to play from current position
@@ -293,5 +300,5 @@ export function useShufflePlay(): UseShufflePlayReturn {
     }
   }, [remainingTracks, hasMore, loadMoreTracks]);
 
-  return { shufflePlay, isLoading, loadMoreTracks, hasMore };
+  return { shufflePlay, isLoading, loadMoreTracks, hasMore, djMode, setDjMode };
 }

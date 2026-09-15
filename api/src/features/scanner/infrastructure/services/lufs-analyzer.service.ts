@@ -6,6 +6,15 @@ import { getFfmpegPath } from '@features/dj/infrastructure/utils/ffmpeg.util';
 
 const execFileAsync = promisify(execFile);
 
+/**
+ * Filtro silencedetect para localizar el inicio del outro. Un fade-out musical
+ * no baja de -60 dB hasta el último instante, así que con ese umbral el punto
+ * de crossfade llegaba demasiado tarde para servir de algo. Con -40 dB
+ * sostenidos 1.5 s marcamos el arranque del fade (audio ya claramente flojo)
+ * en vez del silencio absoluto, e ignoramos pausas breves entre frases.
+ */
+const OUTRO_SILENCEDETECT = 'silencedetect=noise=-40dB:d=1.5';
+
 export interface LufsAnalysisResult {
   inputLufs: number; // Loudness integrado del archivo (LUFS)
   inputPeak: number; // True peak del archivo (dBTP)
@@ -91,7 +100,7 @@ export class LufsAnalyzerService {
           '-i',
           filePath,
           '-filter_complex',
-          '[0:a]asplit=2[a1][a2];[a1]loudnorm=print_format=json[out1];[a2]silencedetect=noise=-60dB:d=1.0[out2]',
+          `[0:a]asplit=2[a1][a2];[a1]loudnorm=print_format=json[out1];[a2]${OUTRO_SILENCEDETECT}[out2]`,
           '-map',
           '[out1]',
           '-f',
@@ -182,21 +191,9 @@ export class LufsAnalyzerService {
   // Detecta dónde empieza el outro/silencio final con el filtro silencedetect
   private async detectOutroStart(filePath: string): Promise<number | undefined> {
     try {
-      // Umbral -60dB: solo silencio real, no partes simplemente flojas.
-      // d=1.0: mínimo 1s de silencio, para ignorar pausas breves.
       const { stderr } = await execFileAsync(
         getFfmpegPath(),
-        [
-          '-nostdin',
-          '-hide_banner',
-          '-i',
-          filePath,
-          '-af',
-          'silencedetect=noise=-60dB:d=1.0',
-          '-f',
-          'null',
-          '-',
-        ],
+        ['-nostdin', '-hide_banner', '-i', filePath, '-af', OUTRO_SILENCEDETECT, '-f', 'null', '-'],
         {
           timeout: 60000,
           maxBuffer: 10 * 1024 * 1024,

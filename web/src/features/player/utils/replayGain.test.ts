@@ -27,4 +27,11 @@ describe('getTrackGainMultiplier', () => {
   it('usa la ganancia de álbum si la pista no tiene la suya', () => {
     expect(getTrackGainMultiplier({ rgAlbumGain: -6 }, true)).toBeCloseTo(0.501, 3);
   });
+
+  it('prefiere la ganancia de álbum cuando se escucha el álbum entero', () => {
+    const track = { rgTrackGain: -12, rgAlbumGain: -6 };
+    expect(getTrackGainMultiplier(track, true, true)).toBeCloseTo(0.501, 3);
+    expect(getTrackGainMultiplier(track, true)).toBeCloseTo(0.251, 3);
+    expect(getTrackGainMultiplier({ rgTrackGain: -6 }, true, true)).toBeCloseTo(0.501, 3);
+  });
 });

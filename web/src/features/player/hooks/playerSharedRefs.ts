@@ -22,4 +22,6 @@ export interface PlayerSharedRefs {
   preloadedNextRef: React.MutableRefObject<PreloadedTrack | null>;
   /** Current play context (album, playlist, shuffle, etc.) for analytics */
   queueContextRef: React.MutableRefObject<PlayContext | undefined>;
+  /** Track currently loaded in the player (kept in sync by PlayerProvider) */
+  currentTrackRef: React.MutableRefObject<Track | null>;
 }

@@ -29,7 +29,8 @@ export function useLibraryAnalysisSettings() {
       const response = await apiClient.get<SettingDTO[]>('/admin/settings');
       const settings = response.data;
 
-      const lufsEnabled = settings.find((s) => s.key === SETTINGS_KEYS.lufs)?.value !== 'false';
+      // LUFS viene desactivado de serie: solo cuenta si el admin lo ha activado
+      const lufsEnabled = settings.find((s) => s.key === SETTINGS_KEYS.lufs)?.value === 'true';
       const djEnabled = settings.find((s) => s.key === SETTINGS_KEYS.dj)?.value !== 'false';
 
       return { lufsEnabled, djEnabled };
@@ -47,9 +48,21 @@ export function useLibraryAnalysisSettings() {
     },
   });
 
-  // Toggle LUFS
+  // Toggle LUFS. Al activarlo se analizan ya las pistas pendientes, sin
+  // esperar al siguiente escaneo.
   const setLufsEnabled = (enabled: boolean) => {
-    updateMutation.mutate({ key: SETTINGS_KEYS.lufs, value: String(enabled) });
+    updateMutation.mutate(
+      { key: SETTINGS_KEYS.lufs, value: String(enabled) },
+      {
+        onSuccess: () => {
+          if (enabled) {
+            apiClient.post('/scanner/lufs-start').then(() => {
+              queryClient.invalidateQueries({ queryKey: ['scanner', 'lufs-status'] });
+            });
+          }
+        },
+      }
+    );
   };
 
   // Toggle DJ

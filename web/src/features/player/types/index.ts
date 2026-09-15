@@ -22,6 +22,13 @@ export interface NormalizationSettings {
   enabled: boolean; // Iguala la sonoridad con la ganancia LUFS de cada pista
 }
 
+export interface DjModeSettings {
+  /** Al mezclar (shuffle), ordenar por compatibilidad de tonalidad, BPM y energía */
+  enabled: boolean;
+  /** Excepciones por playlist (id → activado/desactivado); sin entrada = valor global */
+  playlistOverrides: Record<string, boolean>;
+}
+
 export interface PlayerState {
   currentTrack: Track | null;
   queue: Track[];
@@ -84,6 +91,8 @@ export interface PlayerContextValue extends PlayerState {
 
   setCrossfadeEnabled: (enabled: boolean) => void;
   setCrossfadeDuration: (duration: number) => void;
+  setCrossfadeSmartMode: (enabled: boolean) => void;
+  setCrossfadeTempoMatch: (enabled: boolean) => void;
   setNormalizationEnabled: (enabled: boolean) => void;
 
   setAutoplayEnabled: (enabled: boolean) => void;

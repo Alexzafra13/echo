@@ -2,6 +2,7 @@ import { Music } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@shared/components/ui';
 import { usePlayback, useAutoplayContext } from '@features/player';
+import { usePlayerSettingsStore } from '@features/player/store/playerSettingsStore';
 import styles from './SettingsPage.module.css';
 
 const CROSSFADE_MIN_S = 1;
@@ -13,11 +14,15 @@ export function PlaybackCard() {
     crossfade,
     setCrossfadeEnabled,
     setCrossfadeDuration,
+    setCrossfadeSmartMode,
+    setCrossfadeTempoMatch,
     normalization,
     setNormalizationEnabled,
     volumeControlSupported,
   } = usePlayback();
   const { autoplay, setAutoplayEnabled } = useAutoplayContext();
+  const djModeEnabled = usePlayerSettingsStore((s) => s.djMode.enabled);
+  const setDjModeEnabled = usePlayerSettingsStore((s) => s.setDjModeEnabled);
 
   return (
     <div className={styles.settingsPage__card}>
@@ -73,6 +78,40 @@ export function PlaybackCard() {
                 </div>
               </div>
             )}
+            {crossfade.enabled && (
+              <div className={styles.settingsPage__toggleItem}>
+                <div className={styles.settingsPage__toggleInfo}>
+                  <span className={styles.settingsPage__toggleLabel}>
+                    {t('settings.playback.smartCrossfadeLabel')}
+                  </span>
+                  <p className={styles.settingsPage__toggleDescription}>
+                    {t('settings.playback.smartCrossfadeDescription')}
+                  </p>
+                </div>
+                <Switch
+                  checked={crossfade.smartMode}
+                  onChange={setCrossfadeSmartMode}
+                  aria-label={t('settings.playback.smartCrossfadeLabel')}
+                />
+              </div>
+            )}
+            {crossfade.enabled && (
+              <div className={styles.settingsPage__toggleItem}>
+                <div className={styles.settingsPage__toggleInfo}>
+                  <span className={styles.settingsPage__toggleLabel}>
+                    {t('settings.playback.tempoMatchLabel')}
+                  </span>
+                  <p className={styles.settingsPage__toggleDescription}>
+                    {t('settings.playback.tempoMatchDescription')}
+                  </p>
+                </div>
+                <Switch
+                  checked={crossfade.tempoMatch}
+                  onChange={setCrossfadeTempoMatch}
+                  aria-label={t('settings.playback.tempoMatchLabel')}
+                />
+              </div>
+            )}
             <div className={styles.settingsPage__toggleItem}>
               <div className={styles.settingsPage__toggleInfo}>
                 <span className={styles.settingsPage__toggleLabel}>
@@ -101,6 +140,21 @@ export function PlaybackCard() {
             </div>
           </div>
         )}
+        <div className={styles.settingsPage__toggleItem}>
+          <div className={styles.settingsPage__toggleInfo}>
+            <span className={styles.settingsPage__toggleLabel}>
+              {t('settings.playback.djModeLabel')}
+            </span>
+            <p className={styles.settingsPage__toggleDescription}>
+              {t('settings.playback.djModeDescription')}
+            </p>
+          </div>
+          <Switch
+            checked={djModeEnabled}
+            onChange={setDjModeEnabled}
+            aria-label={t('settings.playback.djModeLabel')}
+          />
+        </div>
         <div className={styles.settingsPage__toggleItem}>
           <div className={styles.settingsPage__toggleInfo}>
             <span className={styles.settingsPage__toggleLabel}>
