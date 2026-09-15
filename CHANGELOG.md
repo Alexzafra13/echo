@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-15
+
 ### Changed
 
 - Connecting, syncing and removing federated servers now requires an admin account (the web only ever exposed it from the admin panel).
@@ -146,7 +148,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Initial release: library scanning, web player, smart playlists, DJ mode, LUFS analysis, metadata enrichment, social features, federation, internet radio, notifications, multi-user, themes, i18n (en/es/fr) and PWA.
 
-[Unreleased]: https://github.com/Alexzafra13/echo/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/Alexzafra13/echo/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/Alexzafra13/echo/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Alexzafra13/echo/compare/v1.0.8...v1.1.0
 [1.0.8]: https://github.com/Alexzafra13/echo/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/Alexzafra13/echo/compare/v1.0.6...v1.0.7
