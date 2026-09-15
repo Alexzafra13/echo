@@ -1,5 +1,6 @@
 import {
   keyToCamelot,
+  normalizeKeyName,
   camelotToKey,
   parseCamelot,
   formatCamelot,
@@ -82,6 +83,72 @@ describe('CamelotUtil', () => {
       expect(keyToCamelot('D#m')).toBe(keyToCamelot('Ebm'));
       expect(keyToCamelot('F#')).toBe(keyToCamelot('Gb'));
       expect(keyToCamelot('C#')).toBe(keyToCamelot('Db'));
+    });
+
+    it('should accept keys already in Camelot notation', () => {
+      expect(keyToCamelot('5A')).toBe('5A');
+      expect(keyToCamelot('12b')).toBe('12B');
+      expect(keyToCamelot('8a')).toBe('8A');
+      expect(keyToCamelot(' 1B ')).toBe('1B');
+      expect(keyToCamelot('05A')).toBe('5A');
+    });
+
+    it('should reject out-of-range Camelot notation', () => {
+      expect(keyToCamelot('0A')).toBeNull();
+      expect(keyToCamelot('13B')).toBeNull();
+      expect(keyToCamelot('8C')).toBeNull();
+    });
+
+    it('should accept minor keys with long suffixes', () => {
+      expect(keyToCamelot('Amin')).toBe('8A');
+      expect(keyToCamelot('A minor')).toBe('8A');
+      expect(keyToCamelot('A min')).toBe('8A');
+      expect(keyToCamelot('Ab minor')).toBe('1A');
+      expect(keyToCamelot('F#min')).toBe('11A');
+    });
+
+    it('should accept major keys with explicit suffixes', () => {
+      expect(keyToCamelot('C#maj')).toBe('3B');
+      expect(keyToCamelot('F major')).toBe('7B');
+      expect(keyToCamelot('Amaj')).toBe('11B');
+      expect(keyToCamelot('A major')).toBe('11B');
+    });
+
+    it('should be case-insensitive and ignore surrounding whitespace', () => {
+      expect(keyToCamelot(' am ')).toBe('8A');
+      expect(keyToCamelot('AM')).toBe('8A');
+      expect(keyToCamelot('bb')).toBe('6B');
+      expect(keyToCamelot('  C#M ')).toBe('12A');
+    });
+
+    it('should accept unicode accidentals', () => {
+      expect(keyToCamelot('A♭m')).toBe('1A');
+      expect(keyToCamelot('F♯')).toBe('2B');
+    });
+  });
+
+  // ─── normalizeKeyName ──────────────────────────────────────────────
+
+  describe('normalizeKeyName', () => {
+    it('should return canonical minor spelling', () => {
+      expect(normalizeKeyName('Am')).toBe('Am');
+      expect(normalizeKeyName('a minor')).toBe('Am');
+      expect(normalizeKeyName('Ab min')).toBe('Abm');
+      expect(normalizeKeyName('g#minor')).toBe('G#m');
+    });
+
+    it('should return canonical major spelling', () => {
+      expect(normalizeKeyName('C')).toBe('C');
+      expect(normalizeKeyName('c major')).toBe('C');
+      expect(normalizeKeyName('C#maj')).toBe('C#');
+      expect(normalizeKeyName('bb')).toBe('Bb');
+    });
+
+    it('should return null for unknown spellings', () => {
+      expect(normalizeKeyName('')).toBeNull();
+      expect(normalizeKeyName('H')).toBeNull();
+      expect(normalizeKeyName('A dorian')).toBeNull();
+      expect(normalizeKeyName('8A')).toBeNull();
     });
   });
 
@@ -351,31 +418,58 @@ describe('CamelotUtil', () => {
       expect(result.score).toBeLessThan(55);
     });
 
-    it('should return score >= 20 for any distance', () => {
-      const result = calculateHarmonicScore('1A', '7A'); // max distance = 6
-      expect(result.score).toBeGreaterThanOrEqual(20);
+    it('should drop 10 points per extra step on the wheel', () => {
+      expect(calculateHarmonicScore('8A', '11A')).toEqual({
+        score: 30,
+        compatibility: 'incompatible',
+      }); // 3
+      expect(calculateHarmonicScore('8A', '12B')).toEqual({
+        score: 20,
+        compatibility: 'incompatible',
+      }); // 4
+      expect(calculateHarmonicScore('8A', '1A')).toEqual({
+        score: 10,
+        compatibility: 'incompatible',
+      }); // 5
+      expect(calculateHarmonicScore('1A', '7A')).toEqual({
+        score: 0,
+        compatibility: 'incompatible',
+      }); // 6 (max)
     });
 
-    it('should return 50/compatible when either key is null', () => {
+    it('should never go below 0', () => {
+      for (let n = 1; n <= 12; n++) {
+        expect(calculateHarmonicScore('1A', `${n}A`).score).toBeGreaterThanOrEqual(0);
+        expect(calculateHarmonicScore('1A', `${n}B`).score).toBeGreaterThanOrEqual(0);
+      }
+    });
+
+    it('should return 40/compatible when either key is null', () => {
       expect(calculateHarmonicScore(null, '8A')).toEqual({
-        score: 50,
+        score: 40,
         compatibility: 'compatible',
       });
       expect(calculateHarmonicScore('8A', null)).toEqual({
-        score: 50,
+        score: 40,
         compatibility: 'compatible',
       });
       expect(calculateHarmonicScore(null, null)).toEqual({
-        score: 50,
+        score: 40,
         compatibility: 'compatible',
       });
     });
 
-    it('should return 50/compatible for invalid keys', () => {
+    it('should return 40/compatible for invalid keys', () => {
       expect(calculateHarmonicScore('invalid', '8A')).toEqual({
-        score: 50,
+        score: 40,
         compatibility: 'compatible',
       });
+    });
+
+    it('should rank unknown key below every compatible case but above clashes', () => {
+      const unknown = calculateHarmonicScore(null, '8A').score;
+      expect(unknown).toBeLessThan(calculateHarmonicScore('8A', '10A').score); // ±2 = 55
+      expect(unknown).toBeGreaterThan(calculateHarmonicScore('8A', '11A').score); // ±3 = 30
     });
 
     it('should handle wrap-around correctly', () => {
@@ -392,7 +486,7 @@ describe('CamelotUtil', () => {
     it('should return only the numeric score', () => {
       expect(getSimpleHarmonicScore('8A', '8A')).toBe(100);
       expect(getSimpleHarmonicScore('8A', '9A')).toBe(90);
-      expect(getSimpleHarmonicScore(null, null)).toBe(50);
+      expect(getSimpleHarmonicScore(null, null)).toBe(40);
     });
   });
 
