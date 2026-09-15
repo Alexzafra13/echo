@@ -33,6 +33,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     let message: string;
     let error: string;
+    // El interceptor de cambio de contraseña marca la respuesta para que la web redirija
+    let mustChangePassword = false;
 
     if (exception instanceof BaseError) {
       message = exception.message;
@@ -50,6 +52,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
           ? rawMessage.join('; ')
           : (rawMessage as string) || exception.message;
         error = (responseObj.error as string) || exception.name;
+        mustChangePassword = responseObj.mustChangePassword === true;
       } else {
         message = exception.message;
         error = exception.name;
@@ -70,6 +73,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       error,
       timestamp: new Date().toISOString(),
       path: sanitizedUrl,
+      ...(mustChangePassword && { mustChangePassword }),
       ...(process.env.NODE_ENV !== 'production' &&
         exception instanceof Error && {
           stack: exception.stack,
