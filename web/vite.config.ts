@@ -16,7 +16,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['images/**/*', 'fonts/**/*'],
+      includeAssets: ['images/**/*'],
       workbox: {
         // Immediately activate new service worker
         skipWaiting: true,
@@ -145,7 +145,12 @@ export default defineConfig({
               return 'vendor-query';
             }
             // Group utility libraries
-            if (id.includes('axios') || id.includes('zustand') || id.includes('zod') || id.includes('clsx')) {
+            if (
+              id.includes('axios') ||
+              id.includes('zustand') ||
+              id.includes('zod') ||
+              id.includes('clsx')
+            ) {
               return 'vendor-utils';
             }
             // Group icons (lucide-react is large)
