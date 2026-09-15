@@ -59,9 +59,9 @@ Echo est disponible dans les langues suivantes :
 
 | Langue   | Progression                                              | Cles        |
 | -------- | -------------------------------------------------------- | ----------- |
-| English  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1761 / 1761 |
-| Español  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1761 / 1761 |
-| Français | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1761 / 1761 |
+| English  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1821 / 1821 |
+| Español  | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1821 / 1821 |
+| Français | ![100%](https://img.shields.io/badge/100%25-brightgreen) | 1821 / 1821 |
 
 Vous souhaitez ajouter une nouvelle langue ? Copiez `web/src/shared/i18n/locales/en.json`, traduisez-le et ouvrez une Pull Request.
 

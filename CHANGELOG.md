@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Volume normalization in the web player: each track is attenuated according to the ReplayGain value from the library LUFS analysis, so songs play at an even loudness (on by default, toggle in Settings → Playback). Only attenuates; nothing is amplified.
+- Crossfade length is configurable again (1–12 s) from Settings → Playback.
+
+### Changed
+
+- The system media notification shows previous/next track instead of ±15 s seek buttons (seekbackward/seekforward handlers are no longer registered).
+- On iOS the player no longer attempts a crossfade (volume is hardware-only, so both tracks played at full volume); the gapless transition is used instead.
+- A crossfade that starts while the app is in the background switches tracks immediately instead of leaving the new track at volume 0 until the fade timer fires.
+
+### Fixed
+
+- Playback resumes when the PWA comes back to the foreground after the system paused it (call, voice message, another app), based on whether the user had pressed play rather than on the element state.
+- An audio element the browser resumes on its own after an interruption no longer plays on top of the current track: parked elements are muted and a stray `play` on the inactive element is paused.
+- The next track in a gapless transition could start muted on iOS.
+
 ## [1.1.1] - 2026-09-15
 
 ### Changed
