@@ -5,6 +5,7 @@ import * as schema from '../../src/infrastructure/database/schema';
 import {
   createTestApp,
   createUserAndLogin,
+  createAdminAndLogin,
   cleanUserTables,
   createTestArtist,
   createTestAlbum,
@@ -323,9 +324,7 @@ describe('Federation E2E', () => {
       });
 
       it('debería rechazar sin token', () => {
-        return request(app.getHttpServer())
-          .get('/api/federation/ping')
-          .expect(401);
+        return request(app.getHttpServer()).get('/api/federation/ping').expect(401);
       });
 
       it('debería rechazar con token revocado', async () => {
@@ -479,8 +478,8 @@ describe('Federation E2E', () => {
 
   describe('Connected Servers', () => {
     describe('GET /api/federation/servers', () => {
-      it('debería listar servidores conectados del usuario', async () => {
-        const { accessToken, user } = await createUserAndLogin(drizzle, app);
+      it('debería listar servidores conectados del administrador', async () => {
+        const { accessToken, user } = await createAdminAndLogin(drizzle, app);
 
         // Crear un servidor conectado
         await createConnectedServer(drizzle, user.id, 'Servidor de Amigo');
@@ -494,11 +493,20 @@ describe('Federation E2E', () => {
         expect(response.body.length).toBe(1);
         expect(response.body[0].name).toBe('Servidor de Amigo');
       });
+
+      it('debería rechazar a usuarios sin permisos de administrador', async () => {
+        const { accessToken } = await createUserAndLogin(drizzle, app);
+
+        return request(app.getHttpServer())
+          .get('/api/federation/servers')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(403);
+      });
     });
 
     describe('DELETE /api/federation/servers/:id', () => {
       it('debería desconectar de un servidor', async () => {
-        const { accessToken, user } = await createUserAndLogin(drizzle, app);
+        const { accessToken, user } = await createAdminAndLogin(drizzle, app);
         const server = await createConnectedServer(drizzle, user.id, 'A desconectar');
 
         await request(app.getHttpServer())
@@ -547,7 +555,7 @@ async function createInvitationToken(
   drizzle: DrizzleService,
   userId: string,
   name: string,
-  expiresInDays = 7,
+  expiresInDays = 7
 ): Promise<{ id: string; token: string }> {
   const token = generateToken();
   const expiresAt = new Date();
@@ -572,7 +580,7 @@ async function createAccessToken(
   userId: string,
   serverName: string,
   isActive = true,
-  permissions = { canBrowse: true, canStream: true, canDownload: false },
+  permissions = { canBrowse: true, canStream: true, canDownload: false }
 ): Promise<{ id: string; token: string }> {
   const token = generateToken();
 
@@ -597,7 +605,7 @@ async function createAccessToken(
 async function createConnectedServer(
   drizzle: DrizzleService,
   userId: string,
-  name: string,
+  name: string
 ): Promise<{ id: string; name: string }> {
   const [result] = await drizzle.db
     .insert(schema.connectedServers)

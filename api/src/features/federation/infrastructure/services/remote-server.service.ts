@@ -636,8 +636,11 @@ export class RemoteServerService {
       if (!['http:', 'https:'].includes(parsed.protocol)) {
         throw new Error(`Invalid protocol: ${parsed.protocol}`);
       }
-      const hostname = parsed.hostname.toLowerCase();
-      if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+      const hostname = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+      if (RemoteServerService.isLocalHost(hostname)) {
+        if (process.env.NODE_ENV === 'production') {
+          throw new ValidationError(`Refusing to connect to local address: ${hostname}`);
+        }
         this.logger.warn({ hostname }, 'Allowing localhost connection (development mode)');
       }
     } catch (error) {
@@ -646,6 +649,21 @@ export class RemoteServerService {
       }
       throw error;
     }
+  }
+
+  // Loopback, link-local y direcciones no enrutables: nunca son un servidor federado real
+  private static isLocalHost(hostname: string): boolean {
+    if (hostname === 'localhost' || hostname.endsWith('.localhost')) {
+      return true;
+    }
+    if (hostname === '0.0.0.0' || hostname.startsWith('127.') || hostname.startsWith('169.254.')) {
+      return true;
+    }
+    const ipv6 = hostname.startsWith('::ffff:') ? hostname.slice(7) : hostname;
+    if (ipv6 !== hostname) {
+      return RemoteServerService.isLocalHost(ipv6);
+    }
+    return hostname === '::1' || hostname === '::' || hostname.startsWith('fe80:');
   }
 
   private async makeRequest<T>(
