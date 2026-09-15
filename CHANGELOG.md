@@ -6,8 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-15
+
 ### Added
 
+- DJ mix is now a choice: a global "DJ mix when shuffling" setting, a DJ chip on the shuffle cards to flip it, and a per-playlist chip on your own playlists that overrides the global value.
+- Tempo matching option for the crossfade: the outgoing song is sped up or slowed down (up to 6 %) to match the BPM of the next one.
 - Smart crossfade option: the fade starts where the loudness analysis detected the real end of the song (`outroStart`) instead of a fixed number of seconds before the end.
 - `POST /api/scanner/lufs-start` starts the loudness analysis of pending tracks on demand; the Library Analysis toggle calls it when enabled.
 - Volume normalization in the web player: each track is attenuated according to the ReplayGain value from the library LUFS analysis, so songs play at an even loudness (on by default, toggle in Settings → Playback). Only attenuates; nothing is amplified.
@@ -15,6 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Key names from tags are recognised in every common spelling ("A minor", "Amin", "Ab min", "C#maj") and in Camelot notation ("5A"), instead of scoring as unknown.
+- Harmonic scoring penalises real key clashes (down to 0 for the opposite side of the wheel) and ranks unknown keys below any compatible pair.
+- Outro detection looks for the start of the fade-out (-40 dB sustained 1.5 s) instead of digital silence, so the smart crossfade has a usable point in most songs.
 - Loudness (LUFS) analysis is now off by default and must be enabled from Settings → Library Analysis.
 - The player volume is remembered between sessions.
 - When an album is played from start to end, normalization uses the album gain so the volume differences between its tracks are preserved.
@@ -22,17 +29,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The system media notification shows previous/next track instead of ±15 s seek buttons (seekbackward/seekforward handlers are no longer registered).
 - On iOS the player no longer attempts a crossfade (volume is hardware-only, so both tracks played at full volume); the gapless transition is used instead.
 - A crossfade that starts while the app is in the background switches tracks immediately instead of leaving the new track at volume 0 until the fade timer fires.
-
-### Fixed
-
-- Playback resumes when the PWA comes back to the foreground after the system paused it (call, voice message, another app), based on whether the user had pressed play rather than on the element state.
-- An audio element the browser resumes on its own after an interruption no longer plays on top of the current track: parked elements are muted and a stray `play` on the inactive element is paused.
-- The next track in a gapless transition could start muted on iOS.
-
-## [1.1.1] - 2026-09-15
-
-### Changed
-
 - Connecting, syncing and removing federated servers now requires an admin account (the web only ever exposed it from the admin panel).
 - `pnpm swagger:generate` runs through `ts-node` so decorator metadata is available, and tolerates the teardown of an app that was never started.
 - Docs aligned with the `echo_data` named volume used by `docker-compose.yml`; the configuration reference is rewritten from the variables the server actually reads; the Synology guide is linked from the README.
@@ -44,6 +40,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Playback resumes when the PWA comes back to the foreground after the system paused it (call, voice message, another app), based on whether the user had pressed play rather than on the element state.
+- An audio element the browser resumes on its own after an interruption no longer plays on top of the current track: parked elements are muted and a stray `play` on the inactive element is paused.
+- The next track in a gapless transition could start muted on iOS.
 - `COVERART_ENABLED=false` is now honoured (the value arrives as a string and was always truthy).
 - 403 responses raised by the must-change-password interceptor keep the `mustChangePassword` flag, so the web redirects to the first-login screen again.
 - Swagger reports the real package version and documents the `genres` tag; `swagger.json` regenerated.
@@ -171,8 +170,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Initial release: library scanning, web player, smart playlists, DJ mode, LUFS analysis, metadata enrichment, social features, federation, internet radio, notifications, multi-user, themes, i18n (en/es/fr) and PWA.
 
-[Unreleased]: https://github.com/Alexzafra13/echo/compare/v1.1.1...HEAD
-[1.1.1]: https://github.com/Alexzafra13/echo/compare/v1.1.0...v1.1.1
+[Unreleased]: https://github.com/Alexzafra13/echo/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/Alexzafra13/echo/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Alexzafra13/echo/compare/v1.0.8...v1.1.0
 [1.0.8]: https://github.com/Alexzafra13/echo/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/Alexzafra13/echo/compare/v1.0.6...v1.0.7
