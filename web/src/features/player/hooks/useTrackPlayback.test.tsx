@@ -89,6 +89,7 @@ function createMockParams(overrides: Partial<UseTrackPlaybackParams> = {}): UseT
     audioElements: audioElements as AudioElements,
     crossfade: crossfade as CrossfadeLogic,
     crossfadeSettings: { enabled: false, duration: 2, smartMode: false, tempoMatch: false },
+    normalizationEnabled: false,
     playTracking: playTracking as PlayTracking,
     radio: radio as RadioPlayback,
     isPlaying: false,

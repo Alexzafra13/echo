@@ -183,6 +183,7 @@ describe('useTrackTransitions', () => {
         currentTrack: mockTrack,
         userVolume: 0.7,
         autoplaySettings: { enabled: false },
+        normalizationEnabled: false,
         sharedRefs,
         radio: { isRadioMode: false },
         handlePlayNext,
@@ -325,7 +326,7 @@ describe('useTrackTransitions', () => {
       });
 
       expect(getStreamUrl).toHaveBeenCalledWith(mockTrack2);
-      expect(audioElements.loadOnInactive).toHaveBeenCalledWith('http://example.com/stream');
+      expect(audioElements.loadOnInactive).toHaveBeenCalledWith('http://example.com/stream', 1);
       expect(sharedRefs.preloadedNextRef.current).toEqual({
         trackId: 'track-2',
         nextIndex: 1,

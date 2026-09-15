@@ -90,8 +90,11 @@ vi.mock('../store', () => ({
     const state = {
       crossfade: { enabled: false, duration: 2, smartMode: false },
       autoplay: { enabled: false },
+      normalization: { enabled: true },
       setCrossfadeEnabled: vi.fn(),
+      setCrossfadeDuration: vi.fn(),
       setAutoplayEnabled: vi.fn(),
+      setNormalizationEnabled: vi.fn(),
     };
     return selector(state);
   },

@@ -10,6 +10,7 @@ import { logger } from '@shared/utils/logger';
 // Segundos antes del final para precargar la siguiente pista
 const PRELOAD_BEFORE_END_S = 15;
 import { playActiveWithRetry } from './playActiveWithRetry';
+import { getTrackGainMultiplier } from '../utils/replayGain';
 import type { AudioElements } from './useAudioElements';
 import type { CrossfadeLogic } from './useCrossfadeLogic';
 import type { PlayTracking } from './usePlayTracking';
@@ -27,6 +28,7 @@ export interface UseTrackTransitionsParams {
   setCurrentTrack: (track: Track | null) => void;
   currentTrack: Track | null;
   autoplaySettings: AutoplaySettings;
+  normalizationEnabled: boolean;
   sharedRefs: PlayerSharedRefs;
   radio: { isRadioMode: boolean };
   // Callbacks injected from PlayerContext (avoid circular deps)
@@ -44,6 +46,7 @@ export function useTrackTransitions({
   setCurrentTrack,
   currentTrack,
   autoplaySettings,
+  normalizationEnabled,
   sharedRefs,
   radio,
   handlePlayNext,
@@ -173,7 +176,10 @@ export function useTrackTransitions({
             nextIndex,
             track: nextTrack,
           };
-          audioElements.loadOnInactive(url);
+          audioElements.loadOnInactive(
+            url,
+            getTrackGainMultiplier(nextTrack, normalizationEnabled)
+          );
           logger.debug('[Player] Gapless: preloaded next track:', nextTrack.title);
         })
         .catch((e) => {

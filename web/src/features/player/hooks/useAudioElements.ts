@@ -37,11 +37,16 @@ function detectVolumeControl(): boolean {
   }
 }
 
+type AudioId = 'A' | 'B';
+
 /**
  * Gestión de dos elementos de audio (A y B) para crossfade.
  * Usa HTMLAudioElement.volume directo (sin Web Audio API) para que
  * la reproducción en segundo plano funcione en iOS.
- * En iOS el volumen es hardware — el crossfade es solo solapamiento.
+ * En iOS el volumen es hardware: ni fundido ni normalización.
+ *
+ * Cada elemento lleva una ganancia propia (normalización de sonoridad) que
+ * se multiplica por el volumen del usuario al escribir en audio.volume.
  */
 export function useAudioElements(options: UseAudioElementsOptions = {}) {
   const { initialVolume = DEFAULT_VOLUME, callbacks } = options;
@@ -56,6 +61,24 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   const [volume, setVolumeState] = useState(initialVolume);
   const [volumeControlSupported] = useState(() => detectVolumeControl());
 
+  // Ganancia de normalización de la pista cargada en cada elemento (0-1)
+  const gainRef = useRef<Record<AudioId, number>>({ A: 1, B: 1 });
+  // true mientras el crossfade reproduce a propósito el elemento inactivo
+  const inactivePlayExpectedRef = useRef(false);
+
+  const getAudioById = useCallback((id: AudioId): HTMLAudioElement | null => {
+    return id === 'A' ? audioRefA.current : audioRefB.current;
+  }, []);
+
+  const applyVolume = useCallback(
+    (id: AudioId, logicalVolume: number) => {
+      const audio = getAudioById(id);
+      if (!audio) return;
+      audio.volume = Math.min(1, Math.max(0, logicalVolume * gainRef.current[id]));
+    },
+    [getAudioById]
+  );
+
   const getActiveAudio = useCallback((): HTMLAudioElement | null => {
     return activeAudioRef.current === 'A' ? audioRefA.current : audioRefB.current;
   }, []);
@@ -64,12 +87,13 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     return activeAudioRef.current === 'A' ? audioRefB.current : audioRefA.current;
   }, []);
 
-  const getActiveAudioId = useCallback((): 'A' | 'B' => {
+  const getActiveAudioId = useCallback((): AudioId => {
     return activeAudioRef.current;
   }, []);
 
   const switchActiveAudio = useCallback(() => {
     activeAudioRef.current = activeAudioRef.current === 'A' ? 'B' : 'A';
+    inactivePlayExpectedRef.current = false;
     const newId = activeAudioRef.current;
     logger.debug('[AudioElements] Switched to audio:', newId);
 
@@ -90,45 +114,52 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   }, []);
 
   // En iOS es no-op (volumen controlado por hardware)
-  const setVolume = useCallback((newVolume: number) => {
-    const audioA = audioRefA.current;
-    const audioB = audioRefB.current;
-    if (audioA) audioA.volume = newVolume;
-    if (audioB) audioB.volume = newVolume;
-    setVolumeState(newVolume);
-  }, []);
+  const setVolume = useCallback(
+    (newVolume: number) => {
+      applyVolume('A', newVolume);
+      applyVolume('B', newVolume);
+      setVolumeState(newVolume);
+    },
+    [applyVolume]
+  );
 
-  const setAudioVolume = useCallback((audioId: 'A' | 'B', newVolume: number) => {
-    const audio = audioId === 'A' ? audioRefA.current : audioRefB.current;
-    if (audio) audio.volume = newVolume;
-  }, []);
+  const setAudioVolume = useCallback(
+    (audioId: AudioId, newVolume: number) => {
+      applyVolume(audioId, newVolume);
+    },
+    [applyVolume]
+  );
 
   // Limpia handlers (oncanplay/onerror), resetea src para forzar recarga, y
   // restaura volumen del usuario (fadeOutAudio lo deja en 0).
+  // gain: multiplicador de normalización de la pista (1 = sin cambios).
   const loadOnActive = useCallback(
-    (src: string) => {
+    (src: string, gain: number = 1) => {
       const audio = getActiveAudio();
       if (audio) {
         audio.oncanplay = null;
         audio.onerror = null;
         audio.src = '';
         audio.src = src;
-        audio.volume = volume;
+        gainRef.current[activeAudioRef.current] = gain;
+        audio.muted = false;
+        applyVolume(activeAudioRef.current, volume);
         audio.load();
       }
     },
-    [getActiveAudio, volume]
+    [getActiveAudio, applyVolume, volume]
   );
 
   // Precarga en el inactivo con volumen 0 (en iOS, se mutea porque volume es read-only)
   const loadOnInactive = useCallback(
-    (src: string) => {
+    (src: string, gain: number = 1) => {
       const audio = getInactiveAudio();
       if (audio) {
         audio.oncanplay = null;
         audio.onerror = null;
         audio.src = '';
         audio.src = src;
+        gainRef.current[activeAudioRef.current === 'A' ? 'B' : 'A'] = gain;
         audio.volume = 0;
         if (!volumeControlSupported) {
           audio.muted = true;
@@ -178,6 +209,8 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     async (waitForBuffer: boolean = true) => {
       const audio = getActiveAudio();
       if (audio) {
+        // Puede venir de una precarga muteada o de haber quedado aparcado
+        audio.muted = false;
         try {
           if (waitForBuffer) await waitForAudioReady(audio);
           await audio.play();
@@ -195,6 +228,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       const audio = getInactiveAudio();
       if (audio) {
         audio.muted = false; // Quitar mute de la precarga (iOS)
+        inactivePlayExpectedRef.current = true;
         try {
           if (waitForBuffer) await waitForAudioReady(audio);
           await audio.play();
@@ -264,19 +298,16 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       audioB ? fadeOutAudio(audioB, 50) : Promise.resolve(),
     ]);
 
-    if (audioA) {
-      audioA.oncanplay = null;
-      audioA.onerror = null;
-      audioA.pause();
-      audioA.currentTime = 0;
-      audioA.volume = volume;
-    }
-    if (audioB) {
-      audioB.oncanplay = null;
-      audioB.onerror = null;
-      audioB.pause();
-      audioB.currentTime = 0;
-      audioB.volume = volume;
+    gainRef.current = { A: 1, B: 1 };
+    inactivePlayExpectedRef.current = false;
+    for (const audio of [audioA, audioB]) {
+      if (!audio) continue;
+      audio.oncanplay = null;
+      audio.onerror = null;
+      audio.pause();
+      audio.currentTime = 0;
+      audio.muted = false;
+      audio.volume = volume;
     }
     activeAudioRef.current = 'A';
   }, [fadeOutAudio, volume]);
@@ -290,14 +321,17 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
         audio.onerror = null;
         audio.pause();
         audio.currentTime = 0;
-        audio.volume = volume;
+        applyVolume(activeAudioRef.current, volume);
       }
     },
-    [getActiveAudio, fadeOutAudio, volume]
+    [getActiveAudio, fadeOutAudio, applyVolume, volume]
   );
 
+  // Aparca el inactivo muteado: si el sistema lo reanuda por su cuenta tras una
+  // interrupción (llamada, otra app), no se oirá mezclado con el activo.
   const stopInactive = useCallback(
     async (withFade: boolean = false) => {
+      inactivePlayExpectedRef.current = false;
       const audio = getInactiveAudio();
       if (audio) {
         if (withFade && !audio.paused) await fadeOutAudio(audio, 50);
@@ -305,6 +339,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
         audio.onerror = null;
         audio.pause();
         audio.currentTime = 0;
+        audio.muted = true;
       }
     },
     [getInactiveAudio, fadeOutAudio]
@@ -342,6 +377,18 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     logger.debug('[AudioElements] Inicializado (salida directa, sin Web Audio API)');
 
     const handlePlay = () => callbacksRef.current?.onPlay?.();
+
+    // El sistema puede reanudar un elemento que ya habíamos dejado atrás
+    // (p. ej. tras una interrupción de audio). Si no es el activo ni lo está
+    // usando el crossfade, se vuelve a pausar antes de que suene mezclado.
+    const handleElementPlay = (id: AudioId, audio: HTMLAudioElement) => {
+      if (activeAudioRef.current !== id && !inactivePlayExpectedRef.current) {
+        logger.debug('[AudioElements] Ghost playback on inactive audio, pausing:', id);
+        audio.pause();
+        return;
+      }
+      handlePlay();
+    };
     const handleError = (e: Event) => callbacksRef.current?.onError?.(e);
     const handleWaiting = () => callbacksRef.current?.onWaiting?.();
     const handlePlaying = () => callbacksRef.current?.onPlaying?.();
@@ -358,7 +405,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       }
     };
 
-    const elements: Array<{ audio: HTMLAudioElement; id: 'A' | 'B' }> = [
+    const elements: Array<{ audio: HTMLAudioElement; id: AudioId }> = [
       { audio: audioA, id: 'A' },
       { audio: audioB, id: 'B' },
     ];
@@ -386,7 +433,7 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
             if (activeAudioRef.current === id) callbacksRef.current?.onEnded?.();
           },
         ],
-        ['play', handlePlay],
+        ['play', () => handleElementPlay(id, audio)],
         ['pause', handlePause],
         ['error', handleError],
         ['waiting', handleWaiting],

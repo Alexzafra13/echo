@@ -71,6 +71,9 @@ vi.mock('../../hooks/useLibraryAnalysisSettings', () => ({
 const mockPlaybackState = {
   crossfade: { enabled: false, duration: 2, smartMode: false },
   setCrossfadeEnabled: vi.fn(),
+  setCrossfadeDuration: vi.fn(),
+  normalization: { enabled: true },
+  setNormalizationEnabled: vi.fn(),
   volumeControlSupported: true,
 };
 
@@ -107,6 +110,7 @@ describe('SettingsPage', () => {
     mockUpdateHome.isPending = false;
     mockUpdateHome.isSuccess = false;
     mockPlaybackState.crossfade = { enabled: false, duration: 5, smartMode: false };
+    mockPlaybackState.normalization = { enabled: true };
     mockPlaybackState.volumeControlSupported = true;
     mockAutoplayState.autoplay = { enabled: true };
   });
@@ -295,22 +299,44 @@ describe('SettingsPage', () => {
       expect(mockPlaybackState.setCrossfadeEnabled).toHaveBeenCalledWith(true);
     });
 
-    it('should show crossfade description when enabled', () => {
+    it('should show the crossfade duration slider when enabled', () => {
       mockPlaybackState.crossfade.enabled = true;
       render(<SettingsPage />);
 
-      expect(
-        screen.getByText('Transición automática de 2 segundos entre canciones')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Duración del fundido')).toBeInTheDocument();
+      expect(screen.getByText('5 s')).toBeInTheDocument();
     });
 
-    it('should hide crossfade description when disabled', () => {
+    it('should update the crossfade duration from the slider', () => {
+      mockPlaybackState.crossfade.enabled = true;
+      render(<SettingsPage />);
+
+      fireEvent.change(screen.getByLabelText('Duración del fundido'), { target: { value: '8' } });
+
+      expect(mockPlaybackState.setCrossfadeDuration).toHaveBeenCalledWith(8);
+    });
+
+    it('should hide the crossfade duration slider when disabled', () => {
       mockPlaybackState.crossfade.enabled = false;
       render(<SettingsPage />);
 
-      expect(
-        screen.queryByText('Transición automática de 2 segundos entre canciones')
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText('Duración del fundido')).not.toBeInTheDocument();
+    });
+
+    it('should toggle volume normalization', () => {
+      render(<SettingsPage />);
+
+      const toggle = screen.getByLabelText('Normalización de volumen');
+      fireEvent.click(toggle);
+
+      expect(mockPlaybackState.setNormalizationEnabled).toHaveBeenCalledWith(false);
+    });
+
+    it('should hide normalization when volume control is not supported', () => {
+      mockPlaybackState.volumeControlSupported = false;
+      render(<SettingsPage />);
+
+      expect(screen.queryByText('Normalización de volumen')).not.toBeInTheDocument();
     });
 
     it('should render autoplay toggle', () => {

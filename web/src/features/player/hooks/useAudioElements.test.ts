@@ -407,6 +407,84 @@ describe('useAudioElements', () => {
     });
   });
 
+  describe('normalización de volumen', () => {
+    it('aplica la ganancia de la pista sobre el volumen del usuario', () => {
+      const { result } = renderHook(() => useAudioElements({ initialVolume: 0.8 }));
+      act(() => {
+        result.current.loadOnActive('http://example.com/loud.mp3', 0.5);
+      });
+      expect(audioA().volume).toBeCloseTo(0.4);
+
+      act(() => {
+        result.current.setVolume(0.5);
+      });
+      expect(audioA().volume).toBeCloseTo(0.25);
+      expect(audioB().volume).toBeCloseTo(0.5);
+    });
+
+    it('usa la ganancia del elemento inactivo al subir su volumen en el crossfade', () => {
+      const { result } = renderHook(() => useAudioElements({ initialVolume: 1 }));
+      act(() => {
+        result.current.loadOnInactive('http://example.com/next.mp3', 0.25);
+        result.current.setAudioVolume('B', 1);
+      });
+      expect(audioB().volume).toBeCloseTo(0.25);
+    });
+
+    it('restablece la ganancia al parar ambos elementos', async () => {
+      const { result } = renderHook(() => useAudioElements({ initialVolume: 0.8 }));
+      act(() => {
+        result.current.loadOnActive('http://example.com/loud.mp3', 0.5);
+      });
+      await act(async () => {
+        await result.current.stopBoth();
+      });
+      expect(audioA().volume).toBe(0.8);
+      expect(audioA().muted).toBe(false);
+    });
+  });
+
+  describe('audio fantasma tras interrupciones', () => {
+    it('playActive quita el mute de una precarga', async () => {
+      const { result } = renderHook(() => useAudioElements());
+      audioA().muted = true;
+      audioA().readyState = 4;
+      await act(async () => {
+        await result.current.playActive();
+      });
+      expect(audioA().muted).toBe(false);
+    });
+
+    it('stopInactive deja el elemento muteado', async () => {
+      const { result } = renderHook(() => useAudioElements());
+      await act(async () => {
+        await result.current.stopInactive();
+      });
+      expect(audioB().muted).toBe(true);
+      expect(audioB().pause).toHaveBeenCalled();
+    });
+
+    it('pausa el inactivo si el sistema lo reanuda por su cuenta', () => {
+      const onPlay = vi.fn();
+      renderHook(() => useAudioElements({ callbacks: { onPlay } }));
+      audioB().paused = false;
+      audioB()._triggerEvent('play');
+      expect(audioB().pause).toHaveBeenCalled();
+      expect(onPlay).not.toHaveBeenCalled();
+    });
+
+    it('permite reproducir el inactivo durante el crossfade', async () => {
+      const onPlay = vi.fn();
+      const { result } = renderHook(() => useAudioElements({ callbacks: { onPlay } }));
+      audioB().readyState = 4;
+      await act(async () => {
+        await result.current.playInactive();
+      });
+      expect(audioB().pause).not.toHaveBeenCalled();
+      expect(onPlay).toHaveBeenCalled();
+    });
+  });
+
   describe('callbacks', () => {
     it('dispara onPlay al reproducir', async () => {
       const onPlay = vi.fn();
