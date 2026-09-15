@@ -36,7 +36,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
   return (
     <div className={styles.container}>
       <div className={styles.uploadSection}>
-        <h3 className={styles.sectionTitle}>Subir desde tu PC</h3>
+        <h3 className={styles.sectionTitle}>{t('artists.uploadFromPC')}</h3>
 
         {!selectedFile ? (
           <div className={styles.uploadBox}>
@@ -57,7 +57,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
         ) : (
           <div className={styles.previewContainer}>
             <div className={styles.previewHeader}>
-              <span className={styles.previewTitle}>Preview</span>
+              <span className={styles.previewTitle}>{t('artists.preview')}</span>
               <button onClick={handleCancel} className={styles.cancelButton}>
                 <X size={20} />
               </button>

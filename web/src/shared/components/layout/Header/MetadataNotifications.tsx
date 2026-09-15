@@ -248,9 +248,9 @@ export function MetadataNotifications({ isAdmin }: MetadataNotificationsProps) {
       ) {
         close(() => setLocation(`/join/${item.data!.inviteCode}`));
       } else if (item.type === 'scan_completed') {
-        close(() => setLocation('/admin?tab=scanner'));
+        close(() => setLocation('/admin?tab=library'));
       } else if (item.type === 'enrichment_completed') {
-        close(() => setLocation('/admin/metadata'));
+        close(() => setLocation('/admin?tab=metadata'));
       }
     }
   };

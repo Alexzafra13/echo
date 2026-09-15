@@ -105,7 +105,7 @@ describe('TrackInfoModal', () => {
       render(<TrackInfoModal track={mockTrack} onClose={mockOnClose} />);
 
       expect(screen.getByText('Disco:')).toBeInTheDocument();
-      expect(screen.getByText('1 - Track 3')).toBeInTheDocument();
+      expect(screen.getByText('1 - Pista 3')).toBeInTheDocument();
     });
   });
 
@@ -126,7 +126,7 @@ describe('TrackInfoModal', () => {
     it('should render bitrate', () => {
       render(<TrackInfoModal track={mockTrack} onClose={mockOnClose} />);
 
-      expect(screen.getByText('Bitrate:')).toBeInTheDocument();
+      expect(screen.getByText('Tasa de bits:')).toBeInTheDocument();
     });
 
     it('should render file size', () => {
@@ -139,7 +139,9 @@ describe('TrackInfoModal', () => {
       render(<TrackInfoModal track={mockTrack} onClose={mockOnClose} />);
 
       expect(screen.getByText('Ubicación:')).toBeInTheDocument();
-      expect(screen.getByText('/music/test-artist/test-album/03-test-track.flac')).toBeInTheDocument();
+      expect(
+        screen.getByText('/music/test-artist/test-album/03-test-track.flac')
+      ).toBeInTheDocument();
     });
 
     it('should render added date', () => {
@@ -312,7 +314,7 @@ describe('TrackInfoModal', () => {
 
       render(<TrackInfoModal track={trackWithoutDisc as Track} onClose={mockOnClose} />);
 
-      expect(screen.getByText('1 - Track 3')).toBeInTheDocument();
+      expect(screen.getByText('1 - Pista 3')).toBeInTheDocument();
     });
   });
 });

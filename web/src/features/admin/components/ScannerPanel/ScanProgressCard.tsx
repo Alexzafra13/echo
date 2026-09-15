@@ -130,7 +130,7 @@ export function ScanProgressCard({
           <div className={styles.statItem}>
             <Film size={16} className={styles.statIcon} />
             <span className={styles.statValue}>{progress.videosFound}</span>
-            <span className={styles.statLabel}>Videos</span>
+            <span className={styles.statLabel}>{t('admin.scanner.videos')}</span>
           </div>
         )}
       </div>

@@ -206,7 +206,7 @@ describe('DashboardPanel', () => {
       fireEvent.click(screen.getByText('Reintentar'));
 
       await waitFor(() => {
-        expect(screen.getByText('Dashboard')).toBeInTheDocument();
+        expect(screen.getByText('Panel de control')).toBeInTheDocument();
       });
 
       // Initial call + 1 retry (both fail) + manual refetch (succeeds)
@@ -223,7 +223,7 @@ describe('DashboardPanel', () => {
       render(<DashboardPanel />, { wrapper: createWrapper() });
 
       await waitFor(() => {
-        expect(screen.getByText('Dashboard')).toBeInTheDocument();
+        expect(screen.getByText('Panel de control')).toBeInTheDocument();
       });
     });
 

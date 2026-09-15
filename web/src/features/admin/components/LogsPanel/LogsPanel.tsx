@@ -256,7 +256,7 @@ export function LogsPanel() {
             <option value="scanner">{t('admin.logs.categories.scanner')}</option>
             <option value="metadata">{t('admin.logs.categories.metadata')}</option>
             <option value="auth">{t('admin.logs.categories.auth')}</option>
-            <option value="api">{t('admin.logs.categories.service')}</option>
+            <option value="api">{t('admin.logs.categories.api')}</option>
             <option value="storage">{t('admin.logs.categories.storage')}</option>
             <option value="cleanup">{t('admin.logs.categories.cleanup')}</option>
           </select>
@@ -318,7 +318,7 @@ export function LogsPanel() {
                 <div className={styles.logDetails} onClick={(e) => e.stopPropagation()}>
                   {log.entityId && (
                     <CopyableDetail
-                      label="Entity ID"
+                      label={t('admin.logs.entityId')}
                       value={log.entityType ? `${log.entityId} (${log.entityType})` : log.entityId!}
                       copiedField={copiedField}
                       fieldId={`entity-${log.id}`}

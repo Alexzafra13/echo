@@ -123,7 +123,7 @@ describe('FileUploadSection', () => {
   describe('Upload Section', () => {
     it('should render section title', () => {
       render(<FileUploadSection {...defaultProps} />);
-      expect(screen.getByText('Subir desde tu PC')).toBeInTheDocument();
+      expect(screen.getByText('Subir desde PC')).toBeInTheDocument();
     });
 
     it('should render file input', () => {
@@ -150,7 +150,7 @@ describe('FileUploadSection', () => {
 
       render(<FileUploadSection {...defaultProps} />);
 
-      expect(screen.getByText('Preview')).toBeInTheDocument();
+      expect(screen.getByText('Vista previa')).toBeInTheDocument();
     });
 
     it('should show file name in preview', () => {

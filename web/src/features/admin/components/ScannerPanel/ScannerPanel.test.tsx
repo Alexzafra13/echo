@@ -349,13 +349,13 @@ describe('ScannerPanel', () => {
       render(<ScannerPanel />);
 
       expect(screen.getByText('100')).toBeInTheDocument(); // Tracks
-      expect(screen.getByText('Tracks')).toBeInTheDocument();
+      expect(screen.getByText('Pistas')).toBeInTheDocument();
       expect(screen.getByText('20')).toBeInTheDocument(); // Albums
       expect(screen.getByText('Álbumes')).toBeInTheDocument();
       expect(screen.getByText('15')).toBeInTheDocument(); // Artists
       expect(screen.getByText('Artistas')).toBeInTheDocument();
       expect(screen.getByText('18')).toBeInTheDocument(); // Covers
-      expect(screen.getByText('Covers')).toBeInTheDocument();
+      expect(screen.getByText('Portadas')).toBeInTheDocument();
     });
 
     it('should show file counter', () => {
@@ -693,9 +693,12 @@ describe('ScannerPanel', () => {
       render(<ScannerPanel />);
 
       // Wait for the timeout to trigger refetch
-      await waitFor(() => {
-        expect(mockRefetch).toHaveBeenCalled();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(mockRefetch).toHaveBeenCalled();
+        },
+        { timeout: 3000 }
+      );
     });
   });
 });

@@ -287,7 +287,7 @@ describe('LogsPanel', () => {
       fireEvent.click(screen.getByText('Failed to scan file'));
 
       await waitFor(() => {
-        expect(screen.getByText('Entity ID')).toBeInTheDocument();
+        expect(screen.getByText('ID de entidad')).toBeInTheDocument();
         expect(screen.getByText('file-123')).toBeInTheDocument();
       });
     });
@@ -302,7 +302,7 @@ describe('LogsPanel', () => {
       fireEvent.click(screen.getByText('Failed to scan file'));
 
       await waitFor(() => {
-        expect(screen.getByText('Stack Trace')).toBeInTheDocument();
+        expect(screen.getByText('Traza de error')).toBeInTheDocument();
         expect(screen.getByText('Error: ...')).toBeInTheDocument();
       });
     });
@@ -332,14 +332,14 @@ describe('LogsPanel', () => {
       fireEvent.click(screen.getByText('Failed to scan file'));
 
       await waitFor(() => {
-        expect(screen.getByText('Entity ID')).toBeInTheDocument();
+        expect(screen.getByText('ID de entidad')).toBeInTheDocument();
       });
 
       // Click to collapse
       fireEvent.click(screen.getByText('Failed to scan file'));
 
       await waitFor(() => {
-        expect(screen.queryByText('Entity ID')).not.toBeInTheDocument();
+        expect(screen.queryByText('ID de entidad')).not.toBeInTheDocument();
       });
     });
   });
