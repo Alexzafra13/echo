@@ -12,16 +12,16 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
+import { getVersion } from '../src/shared/utils/version.util';
 
 async function generate() {
   // Dynamically import AppModule to ensure all decorators are loaded
   const { AppModule } = await import('../src/app.module');
 
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-    { logger: false }
-  );
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
+    logger: ['error'],
+    abortOnError: false,
+  });
 
   app.setGlobalPrefix('api');
 
@@ -31,7 +31,7 @@ async function generate() {
       'REST API for self-hosted music streaming server with audio streaming, album/artist/playlist management, ' +
         'social features, federation, and smart recommendations. Built with NestJS and hexagonal architecture.'
     )
-    .setVersion('1.0.0')
+    .setVersion(getVersion())
     .setLicense('GPL-3.0', 'https://www.gnu.org/licenses/gpl-3.0.html')
     .addBearerAuth(
       {
@@ -56,7 +56,8 @@ async function generate() {
   console.log(`  - ${Object.keys(document.paths || {}).length} paths documented`);
   console.log(`  - ${Object.keys(document.components?.schemas || {}).length} schemas documented`);
 
-  await app.close();
+  // La app nunca llegó a inicializarse: algunos hooks de cierre no tienen nada que cerrar
+  await app.close().catch(() => undefined);
   process.exit(0);
 }
 
