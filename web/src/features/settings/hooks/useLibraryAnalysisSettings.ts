@@ -29,8 +29,8 @@ export function useLibraryAnalysisSettings() {
       const response = await apiClient.get<SettingDTO[]>('/admin/settings');
       const settings = response.data;
 
-      const lufsEnabled = settings.find(s => s.key === SETTINGS_KEYS.lufs)?.value !== 'false';
-      const djEnabled = settings.find(s => s.key === SETTINGS_KEYS.dj)?.value !== 'false';
+      const lufsEnabled = settings.find((s) => s.key === SETTINGS_KEYS.lufs)?.value !== 'false';
+      const djEnabled = settings.find((s) => s.key === SETTINGS_KEYS.dj)?.value !== 'false';
 
       return { lufsEnabled, djEnabled };
     },

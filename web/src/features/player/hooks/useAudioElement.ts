@@ -20,11 +20,7 @@ interface UseAudioElementParams {
   onStateChange: (updates: Partial<AudioState>) => void;
 }
 
-export function useAudioElement({
-  volume,
-  isRadioMode,
-  onStateChange
-}: UseAudioElementParams) {
+export function useAudioElement({ volume, isRadioMode, onStateChange }: UseAudioElementParams) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Initialize audio element
@@ -54,7 +50,7 @@ export function useAudioElement({
     const handlePlaying = () => {
       onStateChange({
         isPlaying: true,
-        radioSignalStatus: isRadioMode ? 'good' : null
+        radioSignalStatus: isRadioMode ? 'good' : null,
       });
     };
 
@@ -110,12 +106,15 @@ export function useAudioElement({
     onStateChange({ isPlaying: false, currentTime: 0 });
   }, [onStateChange]);
 
-  const seek = useCallback((time: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-      onStateChange({ currentTime: time });
-    }
-  }, [onStateChange]);
+  const seek = useCallback(
+    (time: number) => {
+      if (audioRef.current) {
+        audioRef.current.currentTime = time;
+        onStateChange({ currentTime: time });
+      }
+    },
+    [onStateChange]
+  );
 
   const setVolume = useCallback((newVolume: number) => {
     if (audioRef.current) {

@@ -33,10 +33,7 @@ export class LibraryStatsService {
   // Recuenta albumCount, songCount y tamaño del artista a partir de sus álbumes y tracks
   async updateArtistStats(artistId: string): Promise<void> {
     const [albumCountResult, trackStats] = await Promise.all([
-      this.drizzle.db
-        .select({ count: count() })
-        .from(albums)
-        .where(eq(albums.artistId, artistId)),
+      this.drizzle.db.select({ count: count() }).from(albums).where(eq(albums.artistId, artistId)),
       this.drizzle.db
         .select({
           count: count(),
@@ -58,9 +55,6 @@ export class LibraryStatsService {
   }
 
   async updateStats(albumId: string, artistId: string): Promise<void> {
-    await Promise.all([
-      this.updateAlbumStats(albumId),
-      this.updateArtistStats(artistId),
-    ]);
+    await Promise.all([this.updateAlbumStats(albumId), this.updateArtistStats(artistId)]);
   }
 }

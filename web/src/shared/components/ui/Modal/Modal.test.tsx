@@ -154,13 +154,7 @@ describe('Modal', () => {
     });
 
     it('should render both icon and subtitle together', () => {
-      render(
-        <Modal
-          {...defaultProps}
-          icon={UserPlus}
-          subtitle="Create a new user account"
-        />
-      );
+      render(<Modal {...defaultProps} icon={UserPlus} subtitle="Create a new user account" />);
 
       expect(screen.getByText('Create a new user account')).toBeInTheDocument();
       const modalIcon = document.querySelector('[class*="modalIcon"]');
@@ -169,10 +163,7 @@ describe('Modal', () => {
 
     it('should work with ReactNode as title', () => {
       render(
-        <Modal
-          {...defaultProps}
-          title={<span data-testid="custom-title">Custom Title</span>}
-        />
+        <Modal {...defaultProps} title={<span data-testid="custom-title">Custom Title</span>} />
       );
 
       expect(screen.getByTestId('custom-title')).toBeInTheDocument();

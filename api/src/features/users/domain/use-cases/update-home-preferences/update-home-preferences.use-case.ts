@@ -6,13 +6,16 @@ import {
   VALID_HOME_SECTION_IDS,
   DEFAULT_HOME_SECTIONS,
 } from '@shared/types/home-section.types';
-import { UpdateHomePreferencesInput, UpdateHomePreferencesOutput } from './update-home-preferences.dto';
+import {
+  UpdateHomePreferencesInput,
+  UpdateHomePreferencesOutput,
+} from './update-home-preferences.dto';
 
 @Injectable()
 export class UpdateHomePreferencesUseCase {
   constructor(
     @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
+    private readonly userRepository: IUserRepository
   ) {}
 
   async execute(input: UpdateHomePreferencesInput): Promise<UpdateHomePreferencesOutput> {
@@ -41,8 +44,8 @@ export class UpdateHomePreferencesUseCase {
   }
 
   private validateSections(sections: HomeSectionConfig[]): void {
-    const providedIds = sections.map(s => s.id);
-    const invalidIds = providedIds.filter(id => !VALID_HOME_SECTION_IDS.includes(id));
+    const providedIds = sections.map((s) => s.id);
+    const invalidIds = providedIds.filter((id) => !VALID_HOME_SECTION_IDS.includes(id));
 
     if (invalidIds.length > 0) {
       throw new ValidationError(`Invalid section IDs: ${invalidIds.join(', ')}`);
@@ -57,7 +60,7 @@ export class UpdateHomePreferencesUseCase {
       throw new ValidationError(`All ${VALID_HOME_SECTION_IDS.length} sections must be provided`);
     }
 
-    const orders = sections.map(s => s.order).sort((a, b) => a - b);
+    const orders = sections.map((s) => s.order).sort((a, b) => a - b);
     const expectedOrders = Array.from({ length: sections.length }, (_, i) => i);
     if (JSON.stringify(orders) !== JSON.stringify(expectedOrders)) {
       throw new ValidationError('Section orders must be sequential starting from 0');

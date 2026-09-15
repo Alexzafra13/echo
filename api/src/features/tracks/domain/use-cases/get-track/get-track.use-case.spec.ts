@@ -101,9 +101,7 @@ describe('GetTrackUseCase', () => {
       (trackRepository.findById as jest.Mock).mockResolvedValue(null);
 
       // Act & Assert
-      await expect(useCase.execute({ id: 'nonexistent-id' })).rejects.toThrow(
-        NotFoundError,
-      );
+      await expect(useCase.execute({ id: 'nonexistent-id' })).rejects.toThrow(NotFoundError);
       expect(trackRepository.findById).toHaveBeenCalledWith('nonexistent-id');
     });
 
@@ -115,9 +113,7 @@ describe('GetTrackUseCase', () => {
 
     it('debería lanzar NotFoundError si el ID es solo espacios', async () => {
       // Act & Assert
-      await expect(useCase.execute({ id: '   ' })).rejects.toThrow(
-        NotFoundError,
-      );
+      await expect(useCase.execute({ id: '   ' })).rejects.toThrow(NotFoundError);
       expect(trackRepository.findById).not.toHaveBeenCalled();
     });
 
@@ -173,9 +169,7 @@ describe('GetTrackUseCase', () => {
         updatedAt: new Date('2025-01-01'),
       });
 
-      (trackRepository.findById as jest.Mock).mockResolvedValue(
-        compilationTrack,
-      );
+      (trackRepository.findById as jest.Mock).mockResolvedValue(compilationTrack);
 
       // Act
       const result = await useCase.execute({ id: 'track-3' });

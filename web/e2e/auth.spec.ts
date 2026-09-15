@@ -31,7 +31,9 @@ test.describe('Autenticación', () => {
     await page.getByRole('button', { name: /Iniciar Sesión|Log In/i }).click();
 
     // Debe mostrar mensajes de validación de zod
-    await expect(page.getByText(/El nombre de usuario es requerido|Username is required/i)).toBeVisible();
+    await expect(
+      page.getByText(/El nombre de usuario es requerido|Username is required/i)
+    ).toBeVisible();
     await expect(page.getByText(/La contraseña es requerida|Password is required/i)).toBeVisible();
   });
 
@@ -45,7 +47,10 @@ test.describe('Autenticación', () => {
 
     // Debe mostrar alerta de error o seguir en la página de login (no redirigir)
     // El mensaje puede variar según configuración del API
-    const _hasError = await page.locator('[class*="error"], [class*="alert"], [role="alert"]').isVisible().catch(() => false);
+    const _hasError = await page
+      .locator('[class*="error"], [class*="alert"], [role="alert"]')
+      .isVisible()
+      .catch(() => false);
     const stayedOnLogin = page.url().includes('/login');
 
     // Al menos debe quedarse en login (no redirigir a home)

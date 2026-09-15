@@ -1,15 +1,6 @@
 import { Link, useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
-import {
-  Home,
-  Disc,
-  User,
-  ListMusic,
-  Radio,
-  Waves,
-  Users,
-  Shield,
-} from 'lucide-react';
+import { Home, Disc, User, ListMusic, Radio, Waves, Users, Shield } from 'lucide-react';
 import { useAuthStore } from '@shared/store';
 import { MiniPlayer } from '@features/player/components/MiniPlayer';
 import { usePageEndDetection } from '@features/player/hooks/usePageEndDetection';
@@ -55,11 +46,7 @@ export function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <Link href="/home" className={styles.sidebar__logoContainer}>
-        <img
-          src="/images/logos/echo_dark.svg"
-          alt="Echo"
-          className={styles.sidebar__logo}
-        />
+        <img src="/images/logos/echo_dark.svg" alt="Echo" className={styles.sidebar__logo} />
       </Link>
 
       <nav className={styles.sidebar__nav}>
@@ -68,15 +55,15 @@ export function Sidebar() {
           const itemClasses = [
             styles.sidebar__navItem,
             isActive(item.path) ? styles['sidebar__navItem--active'] : '',
-            'hiddenOnMobile' in item && item.hiddenOnMobile ? styles['sidebar__navItem--hiddenMobile'] : '',
-          ].filter(Boolean).join(' ');
+            'hiddenOnMobile' in item && item.hiddenOnMobile
+              ? styles['sidebar__navItem--hiddenMobile']
+              : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
 
           return (
-            <Link
-              key={item.path}
-              href={item.path}
-              className={itemClasses}
-            >
+            <Link key={item.path} href={item.path} className={itemClasses}>
               <Icon size={20} className={styles.sidebar__navIcon} />
               <span className={styles.sidebar__navLabel}>{item.label}</span>
             </Link>

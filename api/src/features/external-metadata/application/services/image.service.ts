@@ -33,7 +33,7 @@ export class ImageService {
     private readonly drizzle: DrizzleService,
     private readonly cache: ImageCacheService,
     private readonly artistImageService: ArtistImageService,
-    private readonly albumCoverService: AlbumCoverService,
+    private readonly albumCoverService: AlbumCoverService
   ) {}
 
   // ============================================
@@ -237,7 +237,10 @@ export class ImageService {
   /**
    * Get file info for an image
    */
-  private async getImageFileInfo(filePath: string, source: 'local' | 'external'): Promise<ImageResult> {
+  private async getImageFileInfo(
+    filePath: string,
+    source: 'local' | 'external'
+  ): Promise<ImageResult> {
     try {
       const stats = await fs.stat(filePath);
 

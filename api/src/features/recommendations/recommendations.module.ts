@@ -28,7 +28,14 @@ import { WaveMixSchedulerService } from './infrastructure/jobs/wave-mix-schedule
  * DrizzleService is provided globally via DrizzleModule
  */
 @Module({
-  imports: [CacheModule, UserInteractionsModule, PlayTrackingModule, ExternalMetadataModule, TracksModule, DjModule],
+  imports: [
+    CacheModule,
+    UserInteractionsModule,
+    PlayTrackingModule,
+    ExternalMetadataModule,
+    TracksModule,
+    DjModule,
+  ],
   controllers: [RecommendationsController],
   providers: [
     // Core Services
@@ -57,6 +64,12 @@ import { WaveMixSchedulerService } from './infrastructure/jobs/wave-mix-schedule
     GenerateSmartPlaylistUseCase,
     GetAutoPlaylistsUseCase,
   ],
-  exports: [ScoringService, WaveMixService, SmartPlaylistService, WAVE_MIX_GENERATOR, SMART_PLAYLIST_GENERATOR],
+  exports: [
+    ScoringService,
+    WaveMixService,
+    SmartPlaylistService,
+    WAVE_MIX_GENERATOR,
+    SMART_PLAYLIST_GENERATOR,
+  ],
 })
 export class RecommendationsModule {}

@@ -17,7 +17,7 @@ export class DjEnergyCalibrationService {
   constructor(
     @InjectPinoLogger(DjEnergyCalibrationService.name)
     private readonly logger: PinoLogger,
-    private readonly drizzle: DrizzleService,
+    private readonly drizzle: DrizzleService
   ) {}
 
   /**

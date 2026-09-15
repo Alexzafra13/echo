@@ -74,9 +74,7 @@ export function OfflineIndicator() {
       </div>
 
       {showTooltip && (
-        <div className={styles.tooltip}>
-          {t('connection.offline', 'No connection to server')}
-        </div>
+        <div className={styles.tooltip}>{t('connection.offline', 'No connection to server')}</div>
       )}
     </div>
   );

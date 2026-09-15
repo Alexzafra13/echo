@@ -6,7 +6,7 @@ import { PlayEvent } from '../entities/play-event.entity';
 export class GetUserPlayHistoryUseCase {
   constructor(
     @Inject(PLAY_TRACKING_REPOSITORY)
-    private readonly repository: IPlayTrackingRepository,
+    private readonly repository: IPlayTrackingRepository
   ) {}
 
   async execute(userId: string, limit?: number, offset?: number): Promise<PlayEvent[]> {

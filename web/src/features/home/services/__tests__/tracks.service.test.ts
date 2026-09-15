@@ -83,10 +83,9 @@ describe('tracksService', () => {
 
       await tracksService.search('Música Española');
 
-      expect(apiClient.get).toHaveBeenCalledWith(
-        '/tracks/search/M%C3%BAsica%20Espa%C3%B1ola',
-        { params: undefined }
-      );
+      expect(apiClient.get).toHaveBeenCalledWith('/tracks/search/M%C3%BAsica%20Espa%C3%B1ola', {
+        params: undefined,
+      });
     });
 
     it('should handle empty search results', async () => {

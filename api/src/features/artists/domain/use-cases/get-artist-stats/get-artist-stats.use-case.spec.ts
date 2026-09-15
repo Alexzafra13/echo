@@ -122,9 +122,7 @@ describe('GetArtistStatsUseCase', () => {
     });
 
     it('should propagate repository errors', async () => {
-      (repository.getArtistGlobalStats as jest.Mock).mockRejectedValue(
-        new Error('Database error'),
-      );
+      (repository.getArtistGlobalStats as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(useCase.execute({ artistId: 'artist-1' })).rejects.toThrow('Database error');
     });

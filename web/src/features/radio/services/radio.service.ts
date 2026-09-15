@@ -89,7 +89,7 @@ export const radioService = {
   isInFavorites: async (stationUuid: string): Promise<boolean> => {
     try {
       const favorites = await radioService.getFavorites();
-      return favorites.some(fav => fav.stationUuid === stationUuid);
+      return favorites.some((fav) => fav.stationUuid === stationUuid);
     } catch {
       return false;
     }

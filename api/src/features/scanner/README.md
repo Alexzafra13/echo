@@ -45,15 +45,17 @@ Escanea un directorio en busca de archivos de música y los importa a la BD.
 **Endpoint:** `POST /api/scanner/start`
 
 **Request:**
+
 ```json
 {
-  "path": "./uploads/music",  // Opcional, usa UPLOAD_PATH por defecto
-  "recursive": true,           // Escanear subdirectorios
-  "pruneDeleted": true         // Eliminar tracks que ya no existen
+  "path": "./uploads/music", // Opcional, usa UPLOAD_PATH por defecto
+  "recursive": true, // Escanear subdirectorios
+  "pruneDeleted": true // Eliminar tracks que ya no existen
 }
 ```
 
 **Response:**
+
 ```json
 {
   "id": "uuid-del-escaneo",
@@ -70,10 +72,11 @@ Consulta el progreso de un escaneo específico.
 **Endpoint:** `GET /api/scanner/:id`
 
 **Response:**
+
 ```json
 {
   "id": "uuid-del-escaneo",
-  "status": "running",  // pending | running | completed | failed
+  "status": "running", // pending | running | completed | failed
   "startedAt": "2024-10-26T23:00:00.000Z",
   "finishedAt": null,
   "tracksAdded": 42,
@@ -92,9 +95,12 @@ Obtiene lista paginada de todos los escaneos.
 **Endpoint:** `GET /api/scanner?page=1&limit=20`
 
 **Response:**
+
 ```json
 {
-  "scans": [ /* array de escaneos */ ],
+  "scans": [
+    /* array de escaneos */
+  ],
   "total": 100,
   "page": 1,
   "limit": 20,
@@ -138,6 +144,7 @@ El scanner soporta los siguientes formatos de audio:
 Usa la librería `music-metadata` para extraer:
 
 ### Básicos
+
 - Título
 - Artista
 - Álbum
@@ -146,23 +153,27 @@ Usa la librería `music-metadata` para extraer:
 - Género
 
 ### Track Info
+
 - Número de pista
 - Número de disco
 - Duración
 
 ### Técnicos
+
 - Bitrate
 - Sample rate
 - Canales
 - Codec
 
 ### MusicBrainz IDs
+
 - Track ID
 - Album ID
 - Artist ID
 - Album Artist ID
 
 ### Otros
+
 - Comentarios
 - Letras
 - Cover art (detecta si existe)
@@ -198,6 +209,7 @@ REDIS_PORT=6379
 Una vez que el servidor esté corriendo:
 
 ### 1. Preparar archivos
+
 ```bash
 # Colocar archivos .mp3 en uploads/music/
 mkdir -p uploads/music
@@ -205,6 +217,7 @@ cp /ruta/a/musica/*.mp3 uploads/music/
 ```
 
 ### 2. Iniciar escaneo
+
 ```bash
 curl -X POST http://localhost:3000/api/scanner/start \
   -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
@@ -216,12 +229,14 @@ curl -X POST http://localhost:3000/api/scanner/start \
 ```
 
 ### 3. Ver estado
+
 ```bash
 curl http://localhost:3000/api/scanner/SCAN_ID \
   -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
 ```
 
 ### 4. Ver historial
+
 ```bash
 curl http://localhost:3000/api/scanner \
   -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"

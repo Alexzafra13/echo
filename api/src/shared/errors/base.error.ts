@@ -2,7 +2,7 @@
 export class BaseError extends Error {
   constructor(
     public readonly code: string,
-    message: string,
+    message: string
   ) {
     super(message);
     Object.setPrototypeOf(this, BaseError.prototype);

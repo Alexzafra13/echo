@@ -44,4 +44,3 @@ export function getApiErrorMessage(error: unknown, defaultMessage: string): stri
 
   return defaultMessage;
 }
-

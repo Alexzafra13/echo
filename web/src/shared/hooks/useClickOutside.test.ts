@@ -37,10 +37,7 @@ describe('useClickOutside', () => {
 
       renderHook(() => useClickOutside(onClose, { enabled: false }));
 
-      expect(addEventListenerSpy).not.toHaveBeenCalledWith(
-        'mousedown',
-        expect.any(Function)
-      );
+      expect(addEventListenerSpy).not.toHaveBeenCalledWith('mousedown', expect.any(Function));
 
       addEventListenerSpy.mockRestore();
     });
@@ -51,10 +48,7 @@ describe('useClickOutside', () => {
 
       renderHook(() => useClickOutside(onClose, { enabled: true }));
 
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'mousedown',
-        expect.any(Function)
-      );
+      expect(addEventListenerSpy).toHaveBeenCalledWith('mousedown', expect.any(Function));
 
       addEventListenerSpy.mockRestore();
     });
@@ -65,10 +59,7 @@ describe('useClickOutside', () => {
 
       renderHook(() => useClickOutside(onClose));
 
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'mousedown',
-        expect.any(Function)
-      );
+      expect(addEventListenerSpy).toHaveBeenCalledWith('mousedown', expect.any(Function));
 
       addEventListenerSpy.mockRestore();
     });
@@ -88,9 +79,7 @@ describe('useClickOutside', () => {
 
     it('should call onClose after animationDuration', async () => {
       const onClose = vi.fn();
-      const { result } = renderHook(() =>
-        useClickOutside(onClose, { animationDuration: 200 })
-      );
+      const { result } = renderHook(() => useClickOutside(onClose, { animationDuration: 200 }));
 
       act(() => {
         result.current.close();
@@ -110,9 +99,7 @@ describe('useClickOutside', () => {
 
     it('should set isClosing to true during animation', () => {
       const onClose = vi.fn();
-      const { result } = renderHook(() =>
-        useClickOutside(onClose, { animationDuration: 200 })
-      );
+      const { result } = renderHook(() => useClickOutside(onClose, { animationDuration: 200 }));
 
       expect(result.current.isClosing).toBe(false);
 
@@ -132,9 +119,7 @@ describe('useClickOutside', () => {
     it('should call callback after close completes', () => {
       const onClose = vi.fn();
       const callback = vi.fn();
-      const { result } = renderHook(() =>
-        useClickOutside(onClose, { animationDuration: 200 })
-      );
+      const { result } = renderHook(() => useClickOutside(onClose, { animationDuration: 200 }));
 
       act(() => {
         result.current.close(callback);
@@ -163,9 +148,7 @@ describe('useClickOutside', () => {
 
     it('should prevent multiple close calls during animation', () => {
       const onClose = vi.fn();
-      const { result } = renderHook(() =>
-        useClickOutside(onClose, { animationDuration: 200 })
-      );
+      const { result } = renderHook(() => useClickOutside(onClose, { animationDuration: 200 }));
 
       act(() => {
         result.current.close();
@@ -223,10 +206,7 @@ describe('useClickOutside', () => {
 
       unmount();
 
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'mousedown',
-        expect.any(Function)
-      );
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('mousedown', expect.any(Function));
 
       removeEventListenerSpy.mockRestore();
     });

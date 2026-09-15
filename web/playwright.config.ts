@@ -26,10 +26,7 @@ export default defineConfig({
   timeout: 30000,
 
   // Reporter to use
-  reporter: [
-    ['html', { open: 'never' }],
-    ['list'],
-  ],
+  reporter: [['html', { open: 'never' }], ['list']],
 
   // Shared settings for all the projects below
   use: {

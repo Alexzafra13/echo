@@ -1,8 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import {
-  IScannerRepository,
-  SCANNER_REPOSITORY,
-} from '../../ports/scanner-repository.port';
+import { IScannerRepository, SCANNER_REPOSITORY } from '../../ports/scanner-repository.port';
 import {
   GetScansHistoryInput,
   GetScansHistoryOutput,
@@ -13,12 +10,10 @@ import {
 export class GetScansHistoryUseCase {
   constructor(
     @Inject(SCANNER_REPOSITORY)
-    private readonly scannerRepository: IScannerRepository,
+    private readonly scannerRepository: IScannerRepository
   ) {}
 
-  async execute(
-    input: GetScansHistoryInput = {},
-  ): Promise<GetScansHistoryOutput> {
+  async execute(input: GetScansHistoryInput = {}): Promise<GetScansHistoryOutput> {
     const page = input.page || 1;
     const limit = input.limit || 20;
     const skip = (page - 1) * limit;

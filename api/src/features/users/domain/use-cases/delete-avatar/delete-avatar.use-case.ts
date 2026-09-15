@@ -15,7 +15,7 @@ export class DeleteAvatarUseCase {
     private readonly userRepository: IUserRepository,
     @Inject(STORAGE_SERVICE)
     private readonly storageService: IStorageService,
-    private readonly imageService: ImageService,
+    private readonly imageService: ImageService
   ) {}
 
   async execute(input: DeleteAvatarInput): Promise<void> {

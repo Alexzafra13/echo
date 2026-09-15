@@ -47,7 +47,7 @@ export const connectedServers = pgTable(
   (table) => [
     index('idx_connected_servers_user').on(table.userId),
     index('idx_connected_servers_active').on(table.isActive),
-  ],
+  ]
 );
 
 // ============================================
@@ -76,7 +76,7 @@ export const federationTokens = pgTable(
     index('idx_federation_tokens_token').on(table.token),
     index('idx_federation_tokens_created_by').on(table.createdByUserId),
     index('idx_federation_tokens_expires').on(table.expiresAt),
-  ],
+  ]
 );
 
 // ============================================
@@ -93,11 +93,14 @@ export const federationAccessTokens = pgTable(
     token: varchar('token', { length: 512 }).notNull().unique(),
     serverName: varchar('server_name', { length: 100 }).notNull(), // Nombre del servidor que usa este token
     serverUrl: varchar('server_url', { length: 512 }), // URL del servidor conectado
-    permissions: jsonb('permissions').$type<FederationPermissions>().default({
-      canBrowse: true,
-      canStream: true,
-      canDownload: false,
-    }).notNull(),
+    permissions: jsonb('permissions')
+      .$type<FederationPermissions>()
+      .default({
+        canBrowse: true,
+        canStream: true,
+        canDownload: false,
+      })
+      .notNull(),
     isActive: boolean('is_active').default(true).notNull(),
     lastUsedAt: timestamp('last_used_at'),
     lastUsedIp: varchar('last_used_ip', { length: 45 }),
@@ -113,7 +116,7 @@ export const federationAccessTokens = pgTable(
     index('idx_federation_access_tokens_token').on(table.token),
     index('idx_federation_access_tokens_owner').on(table.ownerId),
     index('idx_federation_access_tokens_active').on(table.isActive),
-  ],
+  ]
 );
 
 // ============================================
@@ -149,8 +152,11 @@ export const albumImportQueue = pgTable(
     index('idx_album_import_queue_user').on(table.userId),
     index('idx_album_import_queue_server').on(table.connectedServerId),
     index('idx_album_import_queue_status').on(table.status),
-    check('valid_import_status', sql`${table.status} IN ('pending', 'downloading', 'completed', 'failed', 'cancelled')`),
-  ],
+    check(
+      'valid_import_status',
+      sql`${table.status} IN ('pending', 'downloading', 'completed', 'failed', 'cancelled')`
+    ),
+  ]
 );
 
 // ============================================

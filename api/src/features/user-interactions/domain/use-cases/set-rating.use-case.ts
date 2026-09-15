@@ -7,10 +7,15 @@ import { ItemType, UserRating } from '../entities/user-interaction.entity';
 export class SetRatingUseCase {
   constructor(
     @Inject(USER_INTERACTIONS_REPOSITORY)
-    private readonly repository: IUserInteractionsRepository,
+    private readonly repository: IUserInteractionsRepository
   ) {}
 
-  async execute(userId: string, itemId: string, itemType: ItemType, rating: number): Promise<UserRating> {
+  async execute(
+    userId: string,
+    itemId: string,
+    itemType: ItemType,
+    rating: number
+  ): Promise<UserRating> {
     // Validate rating (1-5 stars)
     if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
       throw new ValidationError('Rating must be an integer between 1 and 5');

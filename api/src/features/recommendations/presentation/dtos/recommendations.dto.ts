@@ -76,7 +76,12 @@ export class SmartPlaylistConfigDto {
   @Max(200)
   maxTracks?: number;
 
-  @ApiProperty({ enum: SmartPlaylistSortDto, description: 'Sort method', required: false, default: 'score' })
+  @ApiProperty({
+    enum: SmartPlaylistSortDto,
+    description: 'Sort method',
+    required: false,
+    default: 'score',
+  })
   @IsOptional()
   @IsEnum(SmartPlaylistSortDto)
   sortBy?: SmartPlaylistSortDto;

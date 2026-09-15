@@ -56,7 +56,7 @@ describe('Username Value Object', () => {
 
     it('should throw correct error message', () => {
       expect(() => new Username('x')).toThrow(
-        'Username must be 3-50 characters, alphanumeric and underscore only',
+        'Username must be 3-50 characters, alphanumeric and underscore only'
       );
     });
   });

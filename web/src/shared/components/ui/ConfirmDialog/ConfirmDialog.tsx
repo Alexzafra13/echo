@@ -109,11 +109,7 @@ export function ConfirmDialog({
           <Button variant="danger" onClick={onCancel} disabled={isLoading}>
             {t('common.cancel')}
           </Button>
-          <Button
-            variant="primary"
-            onClick={onConfirm}
-            disabled={isLoading}
-          >
+          <Button variant="primary" onClick={onConfirm} disabled={isLoading}>
             {isLoading ? t('common.processing') : confirmText}
           </Button>
         </div>

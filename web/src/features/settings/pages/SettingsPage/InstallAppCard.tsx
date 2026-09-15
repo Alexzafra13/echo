@@ -82,8 +82,14 @@ export function InstallAppCard() {
             </span>
             <p className={styles.settingsPage__toggleDescription}>
               {installed
-                ? t('settings.installApp.installedDesc', 'You can now launch Echo from your home screen or app launcher.')
-                : t('settings.installApp.description', 'Get a native app experience with quick access from your home screen.')}
+                ? t(
+                    'settings.installApp.installedDesc',
+                    'You can now launch Echo from your home screen or app launcher.'
+                  )
+                : t(
+                    'settings.installApp.description',
+                    'Get a native app experience with quick access from your home screen.'
+                  )}
             </p>
           </div>
           {!installed && (
@@ -108,7 +114,9 @@ export function InstallAppCard() {
               {t('settings.installApp.button', 'Install')}
             </button>
           )}
-          {installed && <Check size={20} style={{ color: 'var(--color-success)', flexShrink: 0 }} />}
+          {installed && (
+            <Check size={20} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
+          )}
         </div>
       </div>
     </div>

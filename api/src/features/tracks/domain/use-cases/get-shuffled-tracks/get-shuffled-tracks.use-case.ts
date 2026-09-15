@@ -11,7 +11,7 @@ const MAX_TAKE = 100;
 export class GetShuffledTracksUseCase {
   constructor(
     @Inject(TRACK_REPOSITORY)
-    private readonly trackRepository: ITrackRepository,
+    private readonly trackRepository: ITrackRepository
   ) {}
 
   async execute(input: GetShuffledTracksInput = {}): Promise<GetShuffledTracksOutput> {

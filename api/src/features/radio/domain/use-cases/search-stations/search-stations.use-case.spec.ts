@@ -1,10 +1,5 @@
 import { SearchStationsUseCase } from './search-stations.use-case';
-import {
-  IRadioBrowserApiClient,
-  RadioBrowserStation,
-  RadioTag,
-  RadioCountry,
-} from '../../ports';
+import { IRadioBrowserApiClient, RadioBrowserStation, RadioTag, RadioCountry } from '../../ports';
 
 describe('SearchStationsUseCase', () => {
   let useCase: SearchStationsUseCase;

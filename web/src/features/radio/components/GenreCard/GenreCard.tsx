@@ -19,10 +19,7 @@ export const GenreCard = memo(function GenreCard({ genre, onClick }: GenreCardPr
   }, [onClick, genre.id]);
 
   return (
-    <button
-      className={styles.genreCard}
-      onClick={handleClick}
-    >
+    <button className={styles.genreCard} onClick={handleClick}>
       <span className={styles.genreIcon}>{genre.icon}</span>
       <h3 className={styles.genreName}>{genre.name}</h3>
       <p className={styles.genreCount}>{genre.stationCount} emisoras</p>

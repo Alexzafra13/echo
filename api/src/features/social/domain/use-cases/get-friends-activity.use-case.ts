@@ -6,7 +6,7 @@ import { ActivityItem } from '../entities/friendship.entity';
 export class GetFriendsActivityUseCase {
   constructor(
     @Inject(SOCIAL_REPOSITORY)
-    private readonly socialRepository: ISocialRepository,
+    private readonly socialRepository: ISocialRepository
   ) {}
 
   async execute(userId: string, limit: number = 20): Promise<ActivityItem[]> {

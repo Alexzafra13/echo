@@ -27,7 +27,7 @@ export const metadataCache = pgTable(
   (table) => [
     primaryKey({ columns: [table.entityId, table.entityType, table.provider] }),
     index('idx_metadata_cache_expires').on(table.expiresAt),
-  ],
+  ]
 );
 
 // ============================================
@@ -51,7 +51,7 @@ export const mbidSearchCache = pgTable(
     unique('unique_mbid_search').on(table.queryText, table.queryType),
     index('idx_mbid_search_lookup').on(table.queryText, table.queryType),
     index('idx_mbid_search_expires').on(table.expiresAt),
-  ],
+  ]
 );
 
 // ============================================
@@ -78,7 +78,7 @@ export const metadataConflicts = pgTable(
     index('metadata_conflicts_entity_idx').on(table.entityId, table.entityType),
     index('metadata_conflicts_status_idx').on(table.status),
     index('metadata_conflicts_created_idx').on(table.createdAt),
-  ],
+  ]
 );
 
 // Type exports

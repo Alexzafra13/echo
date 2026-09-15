@@ -48,8 +48,7 @@ export function SessionHero({
         <h1 className={styles.heroTitle}>{session.name}</h1>
         <div className={styles.heroMeta}>
           <span>
-            {participantCount}{' '}
-            {t('sessions.participantCount', { count: participantCount })}
+            {participantCount} {t('sessions.participantCount', { count: participantCount })}
           </span>
           <span className={styles.heroMetaDot}>·</span>
           <span>
@@ -68,12 +67,7 @@ export function SessionHero({
             {copied ? <Check size={14} /> : <Copy size={14} />}
           </button>
           {isHost ? (
-            <button
-              className={styles.endBtn}
-              onClick={onEnd}
-              disabled={isEndPending}
-              type="button"
-            >
+            <button className={styles.endBtn} onClick={onEnd} disabled={isEndPending} type="button">
               <Power size={14} /> {t('sessions.end')}
             </button>
           ) : (

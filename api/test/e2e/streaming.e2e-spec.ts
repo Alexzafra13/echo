@@ -117,9 +117,7 @@ describe('Streaming E2E', () => {
       });
 
       it('debería rechazar sin autenticación', () => {
-        return request(app.getHttpServer())
-          .post('/api/stream-token/generate')
-          .expect(401);
+        return request(app.getHttpServer()).post('/api/stream-token/generate').expect(401);
       });
     });
 
@@ -153,9 +151,7 @@ describe('Streaming E2E', () => {
       });
 
       it('debería rechazar sin autenticación', () => {
-        return request(app.getHttpServer())
-          .get('/api/stream-token')
-          .expect(401);
+        return request(app.getHttpServer()).get('/api/stream-token').expect(401);
       });
     });
 
@@ -173,9 +169,7 @@ describe('Streaming E2E', () => {
       });
 
       it('debería rechazar sin autenticación', () => {
-        return request(app.getHttpServer())
-          .delete('/api/stream-token')
-          .expect(401);
+        return request(app.getHttpServer()).delete('/api/stream-token').expect(401);
       });
     });
   });
@@ -183,9 +177,7 @@ describe('Streaming E2E', () => {
   describe('Stream Authentication', () => {
     describe('HEAD /api/tracks/:id/stream', () => {
       it('debería rechazar sin token', () => {
-        return request(app.getHttpServer())
-          .head(`/api/tracks/${trackId}/stream`)
-          .expect(401);
+        return request(app.getHttpServer()).head(`/api/tracks/${trackId}/stream`).expect(401);
       });
 
       it('debería rechazar con token inválido', () => {
@@ -217,9 +209,7 @@ describe('Streaming E2E', () => {
 
     describe('GET /api/tracks/:id/stream', () => {
       it('debería rechazar sin token', () => {
-        return request(app.getHttpServer())
-          .get(`/api/tracks/${trackId}/stream`)
-          .expect(401);
+        return request(app.getHttpServer()).get(`/api/tracks/${trackId}/stream`).expect(401);
       });
 
       it('debería rechazar con token inválido', () => {
@@ -237,9 +227,7 @@ describe('Streaming E2E', () => {
 
     describe('GET /api/tracks/:id/download', () => {
       it('debería rechazar sin token', () => {
-        return request(app.getHttpServer())
-          .get(`/api/tracks/${trackId}/download`)
-          .expect(401);
+        return request(app.getHttpServer()).get(`/api/tracks/${trackId}/download`).expect(401);
       });
 
       it('debería rechazar con token inválido', () => {

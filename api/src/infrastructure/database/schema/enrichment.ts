@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  integer,
-  timestamp,
-  text,
-  index,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, integer, timestamp, text, index } from 'drizzle-orm/pg-core';
 
 // ============================================
 // EnrichmentLog
@@ -34,7 +26,7 @@ export const enrichmentLogs = pgTable(
     index('enrichment_logs_status_idx').on(table.status),
     index('enrichment_logs_created_idx').on(table.createdAt),
     index('enrichment_logs_user_idx').on(table.userId),
-  ],
+  ]
 );
 
 // Type exports

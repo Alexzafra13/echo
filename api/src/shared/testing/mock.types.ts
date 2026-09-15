@@ -43,9 +43,7 @@ export type MockFn<T = unknown> = jest.Mock<T>;
  * All methods become jest.fn() mocks
  */
 export type MockOf<T> = {
-  [K in keyof T]: T[K] extends (...args: infer A) => infer R
-    ? jest.Mock<R, A>
-    : T[K];
+  [K in keyof T]: T[K] extends (...args: infer A) => infer R ? jest.Mock<R, A> : T[K];
 };
 
 /**
@@ -63,7 +61,7 @@ export interface MockExecutionContextOptions {
 }
 
 export function createMockExecutionContext(
-  options: MockExecutionContextOptions = {},
+  options: MockExecutionContextOptions = {}
 ): ExecutionContext {
   const { request = {}, handler = () => {}, class: Class = class {} } = options;
 
@@ -97,9 +95,7 @@ export interface MockWsContextOptions {
   data?: Record<string, unknown>;
 }
 
-export function createMockWsContext(
-  options: MockWsContextOptions = {},
-): ExecutionContext {
+export function createMockWsContext(options: MockWsContextOptions = {}): ExecutionContext {
   const { client = {}, data = {} } = options;
 
   const mockClient = {
@@ -138,7 +134,7 @@ export function createMockWsContext(
  * Mock Reflector for decorator testing
  */
 export function createMockReflector(
-  overrides: Partial<Record<keyof Reflector, jest.Mock>> = {},
+  overrides: Partial<Record<keyof Reflector, jest.Mock>> = {}
 ): MockOf<Reflector> {
   return {
     get: jest.fn(),
@@ -166,9 +162,7 @@ export function createMockRepository<T>() {
 /**
  * Creates a mock service with jest.fn() for all methods
  */
-export function createMockService<T extends object>(
-  methods: (keyof T)[],
-): MockOf<T> {
+export function createMockService<T extends object>(methods: (keyof T)[]): MockOf<T> {
   const mock = {} as MockOf<T>;
   for (const method of methods) {
     (mock as Record<keyof T, jest.Mock>)[method] = jest.fn();

@@ -14,10 +14,7 @@ import {
 } from './domain/use-cases';
 
 @Module({
-  imports: [
-    AuthModule,
-    ExternalMetadataModule,
-  ],
+  imports: [AuthModule, ExternalMetadataModule],
   controllers: [UsersController],
   providers: [
     ChangePasswordUseCase,

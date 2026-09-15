@@ -6,7 +6,7 @@ import { BaseError } from './base.error';
 export class ImageProcessingError extends BaseError {
   constructor(
     public readonly reason: ImageErrorReason,
-    public readonly details?: string,
+    public readonly details?: string
   ) {
     const message = ImageProcessingError.buildMessage(reason, details);
     super('IMAGE_PROCESSING_ERROR', message);

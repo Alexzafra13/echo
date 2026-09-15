@@ -19,13 +19,15 @@ describe('LoggingInterceptor', () => {
     interceptor = new LoggingInterceptor(logService);
   });
 
-  const createMockExecutionContext = (overrides: Partial<{
-    method: string;
-    url: string;
-    user: { id: string } | undefined;
-    ip: string;
-    headers: Record<string, string>;
-  }> = {}) => {
+  const createMockExecutionContext = (
+    overrides: Partial<{
+      method: string;
+      url: string;
+      user: { id: string } | undefined;
+      ip: string;
+      headers: Record<string, string>;
+    }> = {}
+  ) => {
     const mockRequest = {
       method: overrides.method ?? 'GET',
       url: overrides.url ?? '/api/albums',
@@ -100,7 +102,7 @@ describe('LoggingInterceptor', () => {
               url: '/api/albums',
               errorMessage: 'Internal Server Error',
             }),
-            error,
+            error
           );
           done();
         },
@@ -123,7 +125,7 @@ describe('LoggingInterceptor', () => {
               statusCode: 500,
               errorMessage: 'Unexpected database error',
             }),
-            error,
+            error
           );
           done();
         },
@@ -145,7 +147,7 @@ describe('LoggingInterceptor', () => {
             expect.objectContaining({
               statusCode: 502,
             }),
-            error,
+            error
           );
           done();
         },
@@ -171,7 +173,7 @@ describe('LoggingInterceptor', () => {
             expect.objectContaining({
               statusCode: 401,
               reason: 'Invalid token',
-            }),
+            })
           );
           expect(logService.error).not.toHaveBeenCalled();
           done();
@@ -194,7 +196,7 @@ describe('LoggingInterceptor', () => {
             expect.objectContaining({
               statusCode: 403,
               reason: 'No access to resource',
-            }),
+            })
           );
           done();
         },
@@ -215,7 +217,7 @@ describe('LoggingInterceptor', () => {
             expect.any(String),
             expect.objectContaining({
               statusCode: 401,
-            }),
+            })
           );
           done();
         },
@@ -324,7 +326,7 @@ describe('LoggingInterceptor', () => {
             expect.objectContaining({
               userId: undefined,
             }),
-            error,
+            error
           );
           done();
         },
@@ -350,7 +352,7 @@ describe('LoggingInterceptor', () => {
               method: 'DELETE',
               url: '/api/albums/123',
             }),
-            error,
+            error
           );
           done();
         },

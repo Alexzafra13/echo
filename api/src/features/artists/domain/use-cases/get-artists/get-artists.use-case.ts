@@ -7,7 +7,7 @@ import { GetArtistsInput, GetArtistsOutput } from './get-artists.dto';
 export class GetArtistsUseCase {
   constructor(
     @Inject(ARTIST_REPOSITORY)
-    private readonly artistRepository: IArtistRepository,
+    private readonly artistRepository: IArtistRepository
   ) {}
 
   async execute(input: GetArtistsInput): Promise<GetArtistsOutput> {

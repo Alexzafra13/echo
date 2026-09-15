@@ -252,9 +252,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
           })
           .where(eq(tracks.id, job.trackId));
 
-        this.logger.warn(
-          `${job.trackTitle}: analysis failed, marked as analyzed (no gain data)`
-        );
+        this.logger.warn(`${job.trackTitle}: analysis failed, marked as analyzed (no gain data)`);
       }
 
       this.processedInSession++;

@@ -6,14 +6,21 @@ test.describe('Panel de Administración', () => {
       await page.goto('/admin');
 
       // Debe mostrar el dashboard por defecto (o cualquier contenido del admin)
-      await expect(page.locator('h1, h2, h3').filter({ hasText: /Dashboard|Admin|Panel/i }).first()).toBeVisible({ timeout: 15000 });
+      await expect(
+        page
+          .locator('h1, h2, h3')
+          .filter({ hasText: /Dashboard|Admin|Panel/i })
+          .first()
+      ).toBeVisible({ timeout: 15000 });
     });
 
     test('muestra las tabs de navegación', async ({ page }) => {
       await page.goto('/admin');
 
       // Esperar a que cargue el panel - buscar cualquier tab del sidebar
-      await expect(page.getByRole('button', { name: /Usuarios|Users|Dashboard|Librería|Library/i }).first()).toBeVisible({ timeout: 15000 });
+      await expect(
+        page.getByRole('button', { name: /Usuarios|Users|Dashboard|Librería|Library/i }).first()
+      ).toBeVisible({ timeout: 15000 });
 
       // Todas las tabs del sidebar (pueden ser botones o links)
       const sidebar = page.locator('nav, aside, [class*="sidebar"]').first();
@@ -27,7 +34,9 @@ test.describe('Panel de Administración', () => {
     test('navega entre tabs por URL', async ({ page }) => {
       // Navegar a Usuarios por URL
       await page.goto('/admin?tab=users');
-      await expect(page.getByText(/Gestión de Usuarios|User Management/i)).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText(/Gestión de Usuarios|User Management/i)).toBeVisible({
+        timeout: 15000,
+      });
 
       // Navegar a Logs por URL
       await page.goto('/admin?tab=logs');
@@ -38,27 +47,37 @@ test.describe('Panel de Administración', () => {
       await page.goto('/admin');
 
       // Esperar a que cargue
-      await expect(page.getByRole('button', { name: /Usuarios|Users|Dashboard/i }).first()).toBeVisible({ timeout: 15000 });
+      await expect(
+        page.getByRole('button', { name: /Usuarios|Users|Dashboard/i }).first()
+      ).toBeVisible({ timeout: 15000 });
 
       // Click en Usuarios
       await page.getByRole('button', { name: /Usuarios|Users/i }).click();
-      await expect(page.getByText(/Gestión de Usuarios|User Management/i)).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText(/Gestión de Usuarios|User Management/i)).toBeVisible({
+        timeout: 15000,
+      });
 
       // Click en Mantenimiento
       await page.getByRole('button', { name: /Mantenimiento|Maintenance/i }).click();
-      await expect(page.getByText(/Almacenamiento|Storage/i, { exact: false }).first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText(/Almacenamiento|Storage/i, { exact: false }).first()).toBeVisible(
+        { timeout: 15000 }
+      );
     });
   });
 
   test.describe('Panel de Usuarios', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/admin?tab=users');
-      await expect(page.getByText(/Gestión de Usuarios|User Management/i)).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText(/Gestión de Usuarios|User Management/i)).toBeVisible({
+        timeout: 15000,
+      });
     });
 
     test('muestra la tabla de usuarios', async ({ page }) => {
       // Botón de crear usuario
-      await expect(page.getByRole('button', { name: /Crear Usuario|Create User/i })).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole('button', { name: /Crear Usuario|Create User/i })).toBeVisible({
+        timeout: 10000,
+      });
 
       // Debe haber una tabla o lista de usuarios
       await expect(page.locator('table, [class*="user"]').first()).toBeVisible();
@@ -70,7 +89,8 @@ test.describe('Panel de Administración', () => {
 
       // Debe abrir un modal con formulario o mostrar un form inline
       // Buscar cualquier elemento que indique que se abrió algo para crear usuario
-      const modalOrForm = page.getByRole('dialog')
+      const modalOrForm = page
+        .getByRole('dialog')
         .or(page.locator('[class*="modal"]'))
         .or(page.locator('form').filter({ hasText: /usuario|user|password|nombre|name/i }));
 
@@ -103,7 +123,9 @@ test.describe('Panel de Administración', () => {
         await saveButton.click();
 
         await expect(
-          page.locator('[class*="notification"]').filter({ hasText: /guardad|success|correctamente|saved/i })
+          page
+            .locator('[class*="notification"]')
+            .filter({ hasText: /guardad|success|correctamente|saved/i })
         ).toBeVisible({ timeout: 10000 });
       }
     });

@@ -121,10 +121,7 @@ export function useAcceptConflict() {
 
   return useMutation({
     mutationFn: async (conflictId: string) => {
-      const response = await apiClient.post(
-        `/admin/metadata-conflicts/${conflictId}/accept`,
-        {}
-      );
+      const response = await apiClient.post(`/admin/metadata-conflicts/${conflictId}/accept`, {});
       return response.data;
     },
     onSuccess: () => {
@@ -142,10 +139,7 @@ export function useRejectConflict() {
 
   return useMutation({
     mutationFn: async (conflictId: string) => {
-      const response = await apiClient.post(
-        `/admin/metadata-conflicts/${conflictId}/reject`,
-        {}
-      );
+      const response = await apiClient.post(`/admin/metadata-conflicts/${conflictId}/reject`, {});
       return response.data;
     },
     onSuccess: () => {
@@ -162,10 +156,7 @@ export function useIgnoreConflict() {
 
   return useMutation({
     mutationFn: async (conflictId: string) => {
-      const response = await apiClient.post(
-        `/admin/metadata-conflicts/${conflictId}/ignore`,
-        {}
-      );
+      const response = await apiClient.post(`/admin/metadata-conflicts/${conflictId}/ignore`, {});
       return response.data;
     },
     onSuccess: () => {
@@ -181,7 +172,13 @@ export function useApplySuggestion() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ conflictId, suggestionIndex }: { conflictId: string; suggestionIndex: number }) => {
+    mutationFn: async ({
+      conflictId,
+      suggestionIndex,
+    }: {
+      conflictId: string;
+      suggestionIndex: number;
+    }) => {
       const response = await apiClient.post(
         `/admin/metadata-conflicts/${conflictId}/apply-suggestion`,
         { suggestionIndex }

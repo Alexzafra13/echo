@@ -79,7 +79,9 @@ describe('UploadRadioFaviconUseCase', () => {
     };
 
     mockStorage = {
-      getRadioFaviconPath: jest.fn().mockResolvedValue('/data/uploads/radio/test-station-uuid/favicon.png'),
+      getRadioFaviconPath: jest
+        .fn()
+        .mockResolvedValue('/data/uploads/radio/test-station-uuid/favicon.png'),
       saveImage: jest.fn().mockResolvedValue(undefined),
       deleteImage: jest.fn().mockResolvedValue(undefined),
     };
@@ -126,7 +128,7 @@ describe('UploadRadioFaviconUseCase', () => {
 
       expect(mockStorage.saveImage).toHaveBeenCalledWith(
         '/data/uploads/radio/test-station-uuid/favicon.png',
-        validInput.file.buffer,
+        validInput.file.buffer
       );
     });
 
@@ -139,7 +141,9 @@ describe('UploadRadioFaviconUseCase', () => {
     it('debería invalidar la cache', async () => {
       await useCase.execute(validInput);
 
-      expect(mockImageService.invalidateRadioFaviconCache).toHaveBeenCalledWith('test-station-uuid');
+      expect(mockImageService.invalidateRadioFaviconCache).toHaveBeenCalledWith(
+        'test-station-uuid'
+      );
     });
   });
 
@@ -183,15 +187,15 @@ describe('UploadRadioFaviconUseCase', () => {
 
   describe('execute - validaciones', () => {
     it('debería lanzar BadRequestException si stationUuid está vacío', async () => {
-      await expect(
-        useCase.execute({ ...validInput, stationUuid: '' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute({ ...validInput, stationUuid: '' })).rejects.toThrow(
+        BadRequestException
+      );
     });
 
     it('debería lanzar BadRequestException si stationUuid solo tiene espacios', async () => {
-      await expect(
-        useCase.execute({ ...validInput, stationUuid: '   ' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute({ ...validInput, stationUuid: '   ' })).rejects.toThrow(
+        BadRequestException
+      );
     });
   });
 });

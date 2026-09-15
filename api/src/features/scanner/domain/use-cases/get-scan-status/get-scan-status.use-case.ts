@@ -1,19 +1,13 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NotFoundError } from '@shared/errors';
-import {
-  IScannerRepository,
-  SCANNER_REPOSITORY,
-} from '../../ports/scanner-repository.port';
-import {
-  GetScanStatusInput,
-  GetScanStatusOutput,
-} from './get-scan-status.dto';
+import { IScannerRepository, SCANNER_REPOSITORY } from '../../ports/scanner-repository.port';
+import { GetScanStatusInput, GetScanStatusOutput } from './get-scan-status.dto';
 
 @Injectable()
 export class GetScanStatusUseCase {
   constructor(
     @Inject(SCANNER_REPOSITORY)
-    private readonly scannerRepository: IScannerRepository,
+    private readonly scannerRepository: IScannerRepository
   ) {}
 
   async execute(input: GetScanStatusInput): Promise<GetScanStatusOutput> {

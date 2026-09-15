@@ -6,7 +6,7 @@ import { GetRecentAlbumsInput, GetRecentAlbumsOutput } from './get-recent-albums
 export class GetRecentAlbumsUseCase {
   constructor(
     @Inject(ALBUM_REPOSITORY)
-    private readonly albumRepository: IAlbumRepository,
+    private readonly albumRepository: IAlbumRepository
   ) {}
 
   async execute(input: GetRecentAlbumsInput = {}): Promise<GetRecentAlbumsOutput> {

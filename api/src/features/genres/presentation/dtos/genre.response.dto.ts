@@ -54,8 +54,7 @@ export class GenreResponseDto {
     dto.artistCount = data.artistCount;
 
     if (data.coverAlbumId) {
-      const timestamp =
-        data.coverAlbumExternalInfoUpdatedAt || data.coverAlbumUpdatedAt;
+      const timestamp = data.coverAlbumExternalInfoUpdatedAt || data.coverAlbumUpdatedAt;
       const version = timestamp ? `?v=${new Date(timestamp).getTime()}` : '';
       dto.coverImageUrl = `/api/images/albums/${data.coverAlbumId}/cover${version}`;
     }

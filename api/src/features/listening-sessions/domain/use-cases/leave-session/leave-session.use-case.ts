@@ -7,7 +7,7 @@ import { LeaveSessionInput, LeaveSessionOutput } from './leave-session.dto';
 export class LeaveSessionUseCase {
   constructor(
     @Inject(LISTENING_SESSION_REPOSITORY)
-    private readonly sessionRepository: IListeningSessionRepository,
+    private readonly sessionRepository: IListeningSessionRepository
   ) {}
 
   async execute(input: LeaveSessionInput): Promise<LeaveSessionOutput> {

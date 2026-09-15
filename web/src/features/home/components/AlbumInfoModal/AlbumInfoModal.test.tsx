@@ -188,7 +188,7 @@ describe('AlbumInfoModal', () => {
     });
 
     it('should show pending status when no tracks analyzed', () => {
-      const unanalyzedTracks: Track[] = mockTracks.map(t => ({
+      const unanalyzedTracks: Track[] = mockTracks.map((t) => ({
         ...t,
         rgTrackGain: undefined,
         rgAlbumGain: undefined,
@@ -274,11 +274,11 @@ describe('AlbumInfoModal', () => {
     });
 
     it('should handle tracks with string size values', () => {
-      const tracksWithStringSize: Track[] = [
-        { ...mockTracks[0], size: '5000000' },
-      ];
+      const tracksWithStringSize: Track[] = [{ ...mockTracks[0], size: '5000000' }];
 
-      render(<AlbumInfoModal album={mockAlbum} tracks={tracksWithStringSize} onClose={mockOnClose} />);
+      render(
+        <AlbumInfoModal album={mockAlbum} tracks={tracksWithStringSize} onClose={mockOnClose} />
+      );
 
       expect(screen.getByText('Tamaño:')).toBeInTheDocument();
     });

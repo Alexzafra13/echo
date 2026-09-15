@@ -43,7 +43,11 @@ export interface IListeningSessionRepository {
   end(id: string): Promise<boolean>;
 
   // Participants
-  addParticipant(sessionId: string, userId: string, role: ParticipantRole): Promise<SessionParticipantProps>;
+  addParticipant(
+    sessionId: string,
+    userId: string,
+    role: ParticipantRole
+  ): Promise<SessionParticipantProps>;
   removeParticipant(sessionId: string, userId: string): Promise<boolean>;
   getParticipants(sessionId: string): Promise<ParticipantWithUser[]>;
   getParticipant(sessionId: string, userId: string): Promise<SessionParticipantProps | null>;

@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { MetadataCacheService } from './metadata-cache.service';
 import {
@@ -32,7 +32,7 @@ export class CleanupService {
     private readonly logger: PinoLogger,
     private readonly metadataCache: MetadataCacheService,
     private readonly orphanedFileCleaner: OrphanedFileCleanerService,
-    private readonly storageStats: StorageStatsService,
+    private readonly storageStats: StorageStatsService
   ) {}
 
   /**
@@ -113,7 +113,7 @@ export class CleanupService {
     ]);
 
     this.logger.info(
-      `Full cleanup completed: ${filesResult.filesRemoved} files, ${cacheResult.entriesRemoved} cache entries`,
+      `Full cleanup completed: ${filesResult.filesRemoved} files, ${cacheResult.entriesRemoved} cache entries`
     );
 
     return {

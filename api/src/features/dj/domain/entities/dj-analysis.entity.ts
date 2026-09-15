@@ -132,7 +132,10 @@ export class DjAnalysis {
     return areKeysCompatible(this.camelotKey, other.camelotKey);
   }
 
-  isBpmCompatibleWith(other: DjAnalysis, tolerancePercent = DJ_CONFIG.compatibility.bpmTolerancePercent): boolean {
+  isBpmCompatibleWith(
+    other: DjAnalysis,
+    tolerancePercent = DJ_CONFIG.compatibility.bpmTolerancePercent
+  ): boolean {
     if (!this.bpm || !other.bpm) {
       return false;
     }

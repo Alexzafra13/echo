@@ -30,10 +30,12 @@ Las imágenes en `/public` se referencian con rutas absolutas desde la raíz:
 ## Imágenes Necesarias
 
 ### Para Login Page:
+
 - `/images/backgrounds/login-bg.jpg` - Imagen de fondo del login
 - `/images/logos/echo-logo.png` - Logo principal con texto
 - `/images/logos/echo-icon.png` - Solo el icono/símbolo (círculo naranja)
 
 ### Opcional:
+
 - `/images/logos/echo-logo-white.png` - Logo en blanco para fondos oscuros
 - `/images/backgrounds/home-bg.jpg` - Background del home

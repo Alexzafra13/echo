@@ -32,7 +32,7 @@
 
 .switchSlider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 20px;
   width: 20px;
   left: 2px;

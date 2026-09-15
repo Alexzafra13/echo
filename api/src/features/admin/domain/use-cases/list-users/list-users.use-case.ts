@@ -6,7 +6,7 @@ import { ListUsersInput, ListUsersOutput } from './list-users.dto';
 export class ListUsersUseCase {
   constructor(
     @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
+    private readonly userRepository: IUserRepository
   ) {}
 
   async execute(input: ListUsersInput): Promise<ListUsersOutput> {
@@ -20,12 +20,13 @@ export class ListUsersUseCase {
 
     // Identificar al system admin (primer admin creado)
     const allUsers = await this.userRepository.findAll(0, 1000);
-    const adminUsers = allUsers.filter(u => u.isAdmin);
-    const systemAdmin = adminUsers.length > 0
-      ? adminUsers.reduce((oldest, current) =>
-          current.createdAt < oldest.createdAt ? current : oldest
-        )
-      : null;
+    const adminUsers = allUsers.filter((u) => u.isAdmin);
+    const systemAdmin =
+      adminUsers.length > 0
+        ? adminUsers.reduce((oldest, current) =>
+            current.createdAt < oldest.createdAt ? current : oldest
+          )
+        : null;
 
     const users = usersEntities.map((user) => ({
       id: user.id,

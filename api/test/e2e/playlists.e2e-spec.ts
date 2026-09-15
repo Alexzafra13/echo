@@ -183,9 +183,7 @@ describe('Playlists E2E', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .send({ name: 'Test', public: false });
 
-      return request(app.getHttpServer())
-        .get(`/api/playlists/${createRes.body.id}`)
-        .expect(401);
+      return request(app.getHttpServer()).get(`/api/playlists/${createRes.body.id}`).expect(401);
     });
   });
 
@@ -231,9 +229,7 @@ describe('Playlists E2E', () => {
     });
 
     it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .get('/api/playlists')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/playlists').expect(401);
     });
   });
 
@@ -302,9 +298,7 @@ describe('Playlists E2E', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .send({ name: 'Test', public: false });
 
-      return request(app.getHttpServer())
-        .delete(`/api/playlists/${createRes.body.id}`)
-        .expect(401);
+      return request(app.getHttpServer()).delete(`/api/playlists/${createRes.body.id}`).expect(401);
     });
   });
 

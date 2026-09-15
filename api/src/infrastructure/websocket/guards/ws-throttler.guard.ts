@@ -1,9 +1,4 @@
-import {
-  ExecutionContext,
-  Injectable,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
+import { ExecutionContext, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Socket } from 'socket.io';
@@ -47,7 +42,7 @@ export class WsThrottlerGuard implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @InjectPinoLogger(WsThrottlerGuard.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   onModuleInit(): void {

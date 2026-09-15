@@ -76,11 +76,7 @@ async function main() {
 
   try {
     // Check if admin user exists
-    const existingAdmin = await db
-      .select()
-      .from(users)
-      .where(eq(users.username, 'admin'))
-      .limit(1);
+    const existingAdmin = await db.select().from(users).where(eq(users.username, 'admin')).limit(1);
 
     if (existingAdmin.length > 0) {
       const admin = existingAdmin[0];
@@ -93,7 +89,7 @@ async function main() {
         .set({
           passwordHash: passwordHash,
           mustChangePassword: true,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(users.username, 'admin'));
 

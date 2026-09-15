@@ -6,7 +6,7 @@ import { SmartPlaylistConfig } from '../entities/track-score.entity';
 export class GenerateSmartPlaylistUseCase {
   constructor(
     @Inject(SMART_PLAYLIST_GENERATOR)
-    private readonly smartPlaylistService: ISmartPlaylistGenerator,
+    private readonly smartPlaylistService: ISmartPlaylistGenerator
   ) {}
 
   async execute(userId: string, config: SmartPlaylistConfig): Promise<SmartPlaylistResult> {

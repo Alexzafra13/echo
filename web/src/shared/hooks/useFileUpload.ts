@@ -29,11 +29,7 @@ const DEFAULT_ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/we
 
 // Selección y validación de archivos con preview
 export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadReturn {
-  const {
-    maxSize = DEFAULT_MAX_SIZE,
-    allowedTypes = DEFAULT_ALLOWED_TYPES,
-    onError,
-  } = options;
+  const { maxSize = DEFAULT_MAX_SIZE, allowedTypes = DEFAULT_ALLOWED_TYPES, onError } = options;
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

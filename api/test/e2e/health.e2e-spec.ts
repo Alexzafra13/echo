@@ -41,17 +41,13 @@ describe('Health Check E2E', () => {
     });
 
     it('debería ser accesible sin autenticación (público)', () => {
-      return request(app.getHttpServer())
-        .get('/api/health')
-        .expect(200);
+      return request(app.getHttpServer()).get('/api/health').expect(200);
     });
 
     it('debería responder rápidamente (< 1s)', async () => {
       const start = Date.now();
 
-      await request(app.getHttpServer())
-        .get('/api/health')
-        .expect(200);
+      await request(app.getHttpServer()).get('/api/health').expect(200);
 
       const duration = Date.now() - start;
       expect(duration).toBeLessThan(1000);
@@ -86,9 +82,7 @@ describe('Health Check E2E', () => {
       const results = await Promise.allSettled(requests);
 
       // Verificar que la mayoría fueron exitosos
-      const successful = results.filter(
-        (r) => r.status === 'fulfilled' && r.value.status === 200,
-      );
+      const successful = results.filter((r) => r.status === 'fulfilled' && r.value.status === 200);
 
       expect(successful.length).toBeGreaterThanOrEqual(4);
     });

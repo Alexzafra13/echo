@@ -12,12 +12,7 @@ import {
   Req,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { RequestWithUser } from '@shared/types/request.types';
@@ -28,11 +23,7 @@ import {
   GetItemSummaryUseCase,
 } from '../../domain/use-cases';
 import { ItemType } from '../../domain/entities/user-interaction.entity';
-import {
-  SetRatingDto,
-  GetUserInteractionsDto,
-  ItemTypeDto,
-} from '../dtos/interaction.dto';
+import { SetRatingDto, GetUserInteractionsDto, ItemTypeDto } from '../dtos/interaction.dto';
 import {
   RatingResponseDto,
   UserInteractionDto,
@@ -48,7 +39,7 @@ export class UserInteractionsController {
     private readonly setRatingUseCase: SetRatingUseCase,
     private readonly removeRatingUseCase: RemoveRatingUseCase,
     private readonly getUserInteractionsUseCase: GetUserInteractionsUseCase,
-    private readonly getItemSummaryUseCase: GetItemSummaryUseCase,
+    private readonly getItemSummaryUseCase: GetItemSummaryUseCase
   ) {}
 
   @Post('rating')
@@ -60,9 +51,17 @@ export class UserInteractionsController {
     type: RatingResponseDto,
   })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid rating value' })
-  async setRating(@Body() dto: SetRatingDto, @Req() req: RequestWithUser): Promise<RatingResponseDto> {
+  async setRating(
+    @Body() dto: SetRatingDto,
+    @Req() req: RequestWithUser
+  ): Promise<RatingResponseDto> {
     const userId = req.user.id;
-    const result = await this.setRatingUseCase.execute(userId, dto.itemId, dto.itemType as ItemType, dto.rating);
+    const result = await this.setRatingUseCase.execute(
+      userId,
+      dto.itemId,
+      dto.itemType as ItemType,
+      dto.rating
+    );
 
     return {
       userId: result.userId,
@@ -84,7 +83,7 @@ export class UserInteractionsController {
   async removeRating(
     @Param('itemId', ParseUUIDPipe) itemId: string,
     @Param('itemType') itemType: ItemTypeDto,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<void> {
     const userId = req.user.id;
     await this.removeRatingUseCase.execute(userId, itemId, itemType as ItemType);
@@ -100,10 +99,13 @@ export class UserInteractionsController {
   })
   async getUserInteractions(
     @Query() query: GetUserInteractionsDto,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<UserInteractionDto[]> {
     const userId = req.user.id;
-    const interactions = await this.getUserInteractionsUseCase.execute(userId, query.itemType as ItemType | undefined);
+    const interactions = await this.getUserInteractionsUseCase.execute(
+      userId,
+      query.itemType as ItemType | undefined
+    );
 
     return interactions.map((interaction) => ({
       userId: interaction.userId,
@@ -125,7 +127,7 @@ export class UserInteractionsController {
   async getItemSummary(
     @Param('itemId', ParseUUIDPipe) itemId: string,
     @Param('itemType') itemType: ItemTypeDto,
-    @Req() req: RequestWithUser,
+    @Req() req: RequestWithUser
   ): Promise<ItemInteractionSummaryDto> {
     const userId = req.user.id;
     const summary = await this.getItemSummaryUseCase.execute(itemId, itemType as ItemType, userId);

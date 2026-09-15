@@ -99,9 +99,7 @@ describe('GetUserPlaySummaryUseCase', () => {
     });
 
     it('should propagate repository errors', async () => {
-      (repository.getUserPlaySummary as jest.Mock).mockRejectedValue(
-        new Error('Database error'),
-      );
+      (repository.getUserPlaySummary as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(useCase.execute('user-1')).rejects.toThrow('Database error');
     });

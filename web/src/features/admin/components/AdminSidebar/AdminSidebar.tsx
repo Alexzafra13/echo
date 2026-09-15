@@ -24,11 +24,7 @@ export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps
   return (
     <aside className={styles.sidebar}>
       <Link href="/home" className={styles.sidebar__logoContainer}>
-        <img
-          src="/images/logos/echo_dark.svg"
-          alt="Echo"
-          className={styles.sidebar__logo}
-        />
+        <img src="/images/logos/echo_dark.svg" alt="Echo" className={styles.sidebar__logo} />
       </Link>
 
       <nav className={styles.sidebar__nav}>

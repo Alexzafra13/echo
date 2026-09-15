@@ -22,9 +22,7 @@ export function FilterTabs({ tabs, activeTab, onTabChange }: FilterTabsProps) {
           onClick={() => onTabChange(tab.id)}
         >
           {tab.label}
-          {tab.count !== undefined && (
-            <span className={styles.tabCount}>{tab.count}</span>
-          )}
+          {tab.count !== undefined && <span className={styles.tabCount}>{tab.count}</span>}
         </button>
       ))}
     </div>

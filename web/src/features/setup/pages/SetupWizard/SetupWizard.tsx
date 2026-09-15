@@ -150,9 +150,7 @@ export default function SetupWizard() {
             {(() => {
               type StepId = 'admin' | 'library' | 'api-keys' | 'complete';
               const order: StepId[] = ['admin', 'library', 'api-keys', 'complete'];
-              const stepIndex = order.indexOf(
-                (step === 'done' ? 'complete' : step) as StepId
-              );
+              const stepIndex = order.indexOf((step === 'done' ? 'complete' : step) as StepId);
               const renderStep = (id: StepId, label: string, number: string) => {
                 const idx = order.indexOf(id);
                 const isActive = stepIndex >= idx;
@@ -207,150 +205,147 @@ export default function SetupWizard() {
             </div>
           )}
 
-          <div
-            className={`${styles.stepSwitcher} ${isExiting ? styles.exiting : ''}`}
-          >
+          <div className={`${styles.stepSwitcher} ${isExiting ? styles.exiting : ''}`}>
+            {/* Step 1: Create Admin */}
+            {displayStep === 'admin' && (
+              <div className={styles.stepContent}>
+                <h2 className={styles.stepTitle}>
+                  <User size={24} />
+                  {t('setup.adminTitle')}
+                </h2>
+                <p className={styles.stepDescription}>{t('setup.adminDescription')}</p>
 
-          {/* Step 1: Create Admin */}
-          {displayStep === 'admin' && (
-            <div className={styles.stepContent}>
-              <h2 className={styles.stepTitle}>
-                <User size={24} />
-                {t('setup.adminTitle')}
-              </h2>
-              <p className={styles.stepDescription}>{t('setup.adminDescription')}</p>
-
-              {adminUsername ? (
-                <>
-                  <div className={styles.completedCard}>
-                    <UserAvatar
-                      userId={status?.adminUserId ?? undefined}
-                      hasAvatar={status?.adminHasAvatar ?? false}
-                      username={adminUsername}
-                      size={52}
-                      className={styles.completedAvatarImg}
-                    />
-                    <div className={styles.completedBody}>
-                      <span className={styles.completedPrimary}>{adminUsername}</span>
-                      <span className={styles.completedSecondary}>
-                        {t('setup.adminAlreadyCreated')}
-                      </span>
-                    </div>
-                    <Check size={18} className={styles.completedCheck} />
-                  </div>
-                  <div className={styles.actions}>
-                    <Button
-                      onClick={async () => {
-                        if (window.confirm(t('setup.adminResetConfirm'))) {
-                          await handleResetAdmin();
-                        }
-                      }}
-                      variant="outline"
-                      size="lg"
-                      disabled={isSubmitting}
-                    >
-                      {t('setup.adminResetButton')}
-                    </Button>
-                    <Button
-                      onClick={() => goToStep('library')}
-                      variant="primary"
-                      size="lg"
-                      fullWidth
-                      rightIcon={<ChevronRight size={20} />}
-                    >
-                      {t('setup.nextButton')}
-                    </Button>
-                  </div>
-                </>
-              ) : (
-              <form onSubmit={handleSubmit(handleAdminSubmit)} className={styles.form}>
-                <fieldset disabled={isSubmitting} className="fieldset-reset">
-                  <Input
-                    {...register('username')}
-                    type="text"
-                    label={t('setup.usernameLabel')}
-                    placeholder={t('setup.usernamePlaceholder')}
-                    error={errors.username?.message}
-                    leftIcon={<User size={20} />}
-                    autoComplete="username"
-                  />
-
-                  <Input
-                    {...register('password')}
-                    type="password"
-                    label={t('setup.passwordLabel')}
-                    placeholder={t('setup.passwordPlaceholder')}
-                    error={errors.password?.message}
-                    leftIcon={<Lock size={20} />}
-                    autoComplete="new-password"
-                  />
-
-                  {passwordValue && (
-                    <div
-                      className={styles.strengthMeter}
-                      data-score={passwordScore}
-                      aria-live="polite"
-                    >
-                      <div className={styles.strengthBars}>
-                        {[0, 1, 2, 3].map((i) => (
-                          <span
-                            key={i}
-                            className={styles.strengthBar}
-                            data-filled={i < passwordScore}
-                          />
-                        ))}
+                {adminUsername ? (
+                  <>
+                    <div className={styles.completedCard}>
+                      <UserAvatar
+                        userId={status?.adminUserId ?? undefined}
+                        hasAvatar={status?.adminHasAvatar ?? false}
+                        username={adminUsername}
+                        size={52}
+                        className={styles.completedAvatarImg}
+                      />
+                      <div className={styles.completedBody}>
+                        <span className={styles.completedPrimary}>{adminUsername}</span>
+                        <span className={styles.completedSecondary}>
+                          {t('setup.adminAlreadyCreated')}
+                        </span>
                       </div>
-                      <span className={styles.strengthLabel}>
-                        {t(
-                          passwordScore <= 1
-                            ? 'setup.passwordStrengthWeak'
-                            : passwordScore === 2
-                              ? 'setup.passwordStrengthFair'
-                              : passwordScore === 3
-                                ? 'setup.passwordStrengthGood'
-                                : 'setup.passwordStrengthStrong'
-                        )}
-                      </span>
+                      <Check size={18} className={styles.completedCheck} />
                     </div>
-                  )}
+                    <div className={styles.actions}>
+                      <Button
+                        onClick={async () => {
+                          if (window.confirm(t('setup.adminResetConfirm'))) {
+                            await handleResetAdmin();
+                          }
+                        }}
+                        variant="outline"
+                        size="lg"
+                        disabled={isSubmitting}
+                      >
+                        {t('setup.adminResetButton')}
+                      </Button>
+                      <Button
+                        onClick={() => goToStep('library')}
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        rightIcon={<ChevronRight size={20} />}
+                      >
+                        {t('setup.nextButton')}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <form onSubmit={handleSubmit(handleAdminSubmit)} className={styles.form}>
+                    <fieldset disabled={isSubmitting} className="fieldset-reset">
+                      <Input
+                        {...register('username')}
+                        type="text"
+                        label={t('setup.usernameLabel')}
+                        placeholder={t('setup.usernamePlaceholder')}
+                        error={errors.username?.message}
+                        leftIcon={<User size={20} />}
+                        autoComplete="username"
+                      />
 
-                  <Input
-                    {...register('confirmPassword')}
-                    type="password"
-                    label={t('setup.confirmPasswordLabel')}
-                    placeholder={t('setup.confirmPasswordPlaceholder')}
-                    error={errors.confirmPassword?.message}
-                    leftIcon={<Lock size={20} />}
-                    autoComplete="new-password"
-                  />
+                      <Input
+                        {...register('password')}
+                        type="password"
+                        label={t('setup.passwordLabel')}
+                        placeholder={t('setup.passwordPlaceholder')}
+                        error={errors.password?.message}
+                        leftIcon={<Lock size={20} />}
+                        autoComplete="new-password"
+                      />
 
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    loading={isSubmitting}
-                    rightIcon={<ChevronRight size={20} />}
-                  >
-                    {t('setup.nextButton')}
-                  </Button>
-                </fieldset>
-              </form>
-              )}
-            </div>
-          )}
+                      {passwordValue && (
+                        <div
+                          className={styles.strengthMeter}
+                          data-score={passwordScore}
+                          aria-live="polite"
+                        >
+                          <div className={styles.strengthBars}>
+                            {[0, 1, 2, 3].map((i) => (
+                              <span
+                                key={i}
+                                className={styles.strengthBar}
+                                data-filled={i < passwordScore}
+                              />
+                            ))}
+                          </div>
+                          <span className={styles.strengthLabel}>
+                            {t(
+                              passwordScore <= 1
+                                ? 'setup.passwordStrengthWeak'
+                                : passwordScore === 2
+                                  ? 'setup.passwordStrengthFair'
+                                  : passwordScore === 3
+                                    ? 'setup.passwordStrengthGood'
+                                    : 'setup.passwordStrengthStrong'
+                            )}
+                          </span>
+                        </div>
+                      )}
 
-          {/* Step 2: Select Library (Jellyfin-style browser) */}
-          {displayStep === 'library' && (
-            <div className={styles.stepContent}>
-              <h2 className={styles.stepTitle}>
-                <FolderOpen size={24} />
-                {t('setup.libraryTitle')}
-              </h2>
-              <p className={styles.stepDescription}>{t('setup.libraryDescription')}</p>
+                      <Input
+                        {...register('confirmPassword')}
+                        type="password"
+                        label={t('setup.confirmPasswordLabel')}
+                        placeholder={t('setup.confirmPasswordPlaceholder')}
+                        error={errors.confirmPassword?.message}
+                        leftIcon={<Lock size={20} />}
+                        autoComplete="new-password"
+                      />
 
-              {/* Quick select if music was auto-detected */}
-              {status && status.mountedLibrary.fileCount > 0 && !libraryValidation && (
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        loading={isSubmitting}
+                        rightIcon={<ChevronRight size={20} />}
+                      >
+                        {t('setup.nextButton')}
+                      </Button>
+                    </fieldset>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {/* Step 2: Select Library (Jellyfin-style browser) */}
+            {displayStep === 'library' && (
+              <div className={styles.stepContent}>
+                <h2 className={styles.stepTitle}>
+                  <FolderOpen size={24} />
+                  {t('setup.libraryTitle')}
+                </h2>
+                <p className={styles.stepDescription}>{t('setup.libraryDescription')}</p>
+
+                {/* Quick select if music was auto-detected */}
+                {status && status.mountedLibrary.fileCount > 0 && !libraryValidation && (
                   <div className={`${styles.validationResult} ${styles.valid}`}>
                     <Music size={18} />
                     <div className={styles.quickSelectContent}>
@@ -370,325 +365,323 @@ export default function SetupWizard() {
                   </div>
                 )}
 
-              {/* Directory browser - Always visible */}
-              <div className={styles.browser}>
-                {isBrowsing ? (
-                  <div className={styles.browserLoading}>
-                    <Loader2 className={styles.spinner} size={24} />
-                    <span>{t('setup.loading')}</span>
-                  </div>
-                ) : browseData ? (
-                  <>
-                    {/* Current path */}
-                    <div className={styles.currentPath}>
-                      <HardDrive size={18} />
-                      <code>{browseData.currentPath}</code>
-                      <Button
-                        onClick={() => setNewFolderOpen((v) => !v)}
-                        variant="secondary"
-                        size="sm"
-                        disabled={isBrowsing || isSubmitting}
-                        leftIcon={<FolderPlus size={14} />}
-                      >
-                        {t('setup.newFolderButton')}
-                      </Button>
-                      <Button
-                        onClick={() => handleSelectLibrary(browseData.currentPath)}
-                        variant="primary"
-                        size="sm"
-                        disabled={isSubmitting}
-                      >
-                        {t('setup.useFolderButton')}
-                      </Button>
+                {/* Directory browser - Always visible */}
+                <div className={styles.browser}>
+                  {isBrowsing ? (
+                    <div className={styles.browserLoading}>
+                      <Loader2 className={styles.spinner} size={24} />
+                      <span>{t('setup.loading')}</span>
                     </div>
-
-                    {newFolderOpen && (
-                      <form
-                        className={styles.newFolderBar}
-                        onSubmit={async (e) => {
-                          e.preventDefault();
-                          const name = newFolderName.trim();
-                          if (!name) return;
-                          setNewFolderSubmitting(true);
-                          const ok = await handleCreateDirectory(name);
-                          setNewFolderSubmitting(false);
-                          if (ok) {
-                            setNewFolderName('');
-                            setNewFolderOpen(false);
-                          }
-                        }}
-                      >
-                        <FolderPlus size={16} />
-                        <input
-                          autoFocus
-                          className={styles.newFolderInput}
-                          placeholder={t('setup.newFolderPlaceholder')}
-                          value={newFolderName}
-                          onChange={(e) => setNewFolderName(e.target.value)}
-                          disabled={newFolderSubmitting}
-                        />
+                  ) : browseData ? (
+                    <>
+                      {/* Current path */}
+                      <div className={styles.currentPath}>
+                        <HardDrive size={18} />
+                        <code>{browseData.currentPath}</code>
                         <Button
-                          type="submit"
+                          onClick={() => setNewFolderOpen((v) => !v)}
+                          variant="secondary"
+                          size="sm"
+                          disabled={isBrowsing || isSubmitting}
+                          leftIcon={<FolderPlus size={14} />}
+                        >
+                          {t('setup.newFolderButton')}
+                        </Button>
+                        <Button
+                          onClick={() => handleSelectLibrary(browseData.currentPath)}
                           variant="primary"
                           size="sm"
-                          disabled={!newFolderName.trim() || newFolderSubmitting}
-                          loading={newFolderSubmitting}
+                          disabled={isSubmitting}
                         >
-                          {t('setup.newFolderCreate')}
+                          {t('setup.useFolderButton')}
                         </Button>
-                        <button
-                          type="button"
-                          className={styles.newFolderCancel}
-                          onClick={() => {
-                            setNewFolderOpen(false);
-                            setNewFolderName('');
+                      </div>
+
+                      {newFolderOpen && (
+                        <form
+                          className={styles.newFolderBar}
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            const name = newFolderName.trim();
+                            if (!name) return;
+                            setNewFolderSubmitting(true);
+                            const ok = await handleCreateDirectory(name);
+                            setNewFolderSubmitting(false);
+                            if (ok) {
+                              setNewFolderName('');
+                              setNewFolderOpen(false);
+                            }
                           }}
-                          aria-label={t('setup.newFolderCancel')}
                         >
-                          <X size={16} />
-                        </button>
-                      </form>
-                    )}
-
-                    {/* Go up button */}
-                    {browseData.canGoUp && (
-                      <button
-                        className={styles.directoryItem}
-                        onClick={() =>
-                          browseData.parentPath && loadDirectory(browseData.parentPath)
-                        }
-                        disabled={isBrowsing}
-                      >
-                        <ChevronLeft size={16} />
-                        <FolderOpen size={18} />
-                        <span>..</span>
-                      </button>
-                    )}
-
-                    {/* Directory list */}
-                    <div className={styles.directoryList}>
-                      {browseData.directories.length === 0 ? (
-                        <div className={styles.emptyDirectory}>{t('setup.noSubdirectories')}</div>
-                      ) : (
-                        browseData.directories.map((dir) => {
-                          const isSelected =
-                            libraryValidation?.valid && selectedPath === dir.path;
-                          return (
-                            <div
-                              key={dir.path}
-                              className={`${styles.directoryRow} ${isSelected ? styles.selectedRow : ''}`}
-                            >
-                              <button
-                                className={`${styles.directoryItem} ${!dir.readable ? styles.disabled : ''}`}
-                                onClick={() => dir.readable && loadDirectory(dir.path)}
-                                disabled={!dir.readable || isBrowsing}
-                              >
-                                <ChevronRight size={16} />
-                                <FolderOpen size={18} />
-                                <span>{dir.name}</span>
-                                {dir.hasMusic && <Music size={14} className={styles.musicIcon} />}
-                                {isSelected && (
-                                  <Check size={14} className={styles.selectedCheck} />
-                                )}
-                              </button>
-                              <Button
-                                onClick={() => handleSelectLibrary(dir.path)}
-                                variant={isSelected ? 'primary' : 'outline'}
-                                size="sm"
-                                disabled={!dir.readable || isSubmitting}
-                              >
-                                {isSelected
-                                  ? t('setup.selectedButton')
-                                  : t('setup.selectButton')}
-                              </Button>
-                            </div>
-                          );
-                        })
+                          <FolderPlus size={16} />
+                          <input
+                            autoFocus
+                            className={styles.newFolderInput}
+                            placeholder={t('setup.newFolderPlaceholder')}
+                            value={newFolderName}
+                            onChange={(e) => setNewFolderName(e.target.value)}
+                            disabled={newFolderSubmitting}
+                          />
+                          <Button
+                            type="submit"
+                            variant="primary"
+                            size="sm"
+                            disabled={!newFolderName.trim() || newFolderSubmitting}
+                            loading={newFolderSubmitting}
+                          >
+                            {t('setup.newFolderCreate')}
+                          </Button>
+                          <button
+                            type="button"
+                            className={styles.newFolderCancel}
+                            onClick={() => {
+                              setNewFolderOpen(false);
+                              setNewFolderName('');
+                            }}
+                            aria-label={t('setup.newFolderCancel')}
+                          >
+                            <X size={16} />
+                          </button>
+                        </form>
                       )}
+
+                      {/* Go up button */}
+                      {browseData.canGoUp && (
+                        <button
+                          className={styles.directoryItem}
+                          onClick={() =>
+                            browseData.parentPath && loadDirectory(browseData.parentPath)
+                          }
+                          disabled={isBrowsing}
+                        >
+                          <ChevronLeft size={16} />
+                          <FolderOpen size={18} />
+                          <span>..</span>
+                        </button>
+                      )}
+
+                      {/* Directory list */}
+                      <div className={styles.directoryList}>
+                        {browseData.directories.length === 0 ? (
+                          <div className={styles.emptyDirectory}>{t('setup.noSubdirectories')}</div>
+                        ) : (
+                          browseData.directories.map((dir) => {
+                            const isSelected =
+                              libraryValidation?.valid && selectedPath === dir.path;
+                            return (
+                              <div
+                                key={dir.path}
+                                className={`${styles.directoryRow} ${isSelected ? styles.selectedRow : ''}`}
+                              >
+                                <button
+                                  className={`${styles.directoryItem} ${!dir.readable ? styles.disabled : ''}`}
+                                  onClick={() => dir.readable && loadDirectory(dir.path)}
+                                  disabled={!dir.readable || isBrowsing}
+                                >
+                                  <ChevronRight size={16} />
+                                  <FolderOpen size={18} />
+                                  <span>{dir.name}</span>
+                                  {dir.hasMusic && <Music size={14} className={styles.musicIcon} />}
+                                  {isSelected && (
+                                    <Check size={14} className={styles.selectedCheck} />
+                                  )}
+                                </button>
+                                <Button
+                                  onClick={() => handleSelectLibrary(dir.path)}
+                                  variant={isSelected ? 'primary' : 'outline'}
+                                  size="sm"
+                                  disabled={!dir.readable || isSubmitting}
+                                >
+                                  {isSelected ? t('setup.selectedButton') : t('setup.selectButton')}
+                                </Button>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </>
+                  ) : !status?.mountedLibrary.isMounted ? (
+                    /* No folders mounted - show help */
+                    <div className={styles.instructionsBox}>
+                      <h4>{t('setup.noAccessibleFolders')}</h4>
+                      <p>{t('setup.defaultPaths')}</p>
+                      <p>{t('setup.volumeInstructions')}</p>
+                      <pre>volumes:{'\n'} - /tu/ruta/musica:/mnt/music:ro</pre>
+                      <Button
+                        onClick={() => checkStatus()}
+                        variant="outline"
+                        style={{ marginTop: '12px' }}
+                      >
+                        {t('setup.checkAgainButton')}
+                      </Button>
                     </div>
-                  </>
-                ) : !status?.mountedLibrary.isMounted ? (
-                  /* No folders mounted - show help */
-                  <div className={styles.instructionsBox}>
-                    <h4>{t('setup.noAccessibleFolders')}</h4>
-                    <p>{t('setup.defaultPaths')}</p>
-                    <p>{t('setup.volumeInstructions')}</p>
-                    <pre>volumes:{'\n'} - /tu/ruta/musica:/mnt/music:ro</pre>
+                  ) : (
                     <Button
-                      onClick={() => checkStatus()}
+                      onClick={() => loadDirectory(status.mountedLibrary.path)}
                       variant="outline"
-                      style={{ marginTop: '12px' }}
+                      fullWidth
                     >
-                      {t('setup.checkAgainButton')}
+                      {t('setup.browseFoldersButton')}
+                    </Button>
+                  )}
+                </div>
+
+                {/* Validation result */}
+                {libraryValidation &&
+                  (libraryValidation.valid ? (
+                    <div className={styles.completedCard}>
+                      <div className={styles.completedFolderIcon} aria-hidden>
+                        <FolderOpen size={22} strokeWidth={2} />
+                      </div>
+                      <div className={styles.completedBody}>
+                        <span className={styles.completedPrimary}>
+                          {(selectedPath || '').split('/').filter(Boolean).pop() || '/'}
+                        </span>
+                        {selectedPath && (
+                          <span className={styles.completedSecondary}>{selectedPath}</span>
+                        )}
+                        <span className={styles.completedMeta}>
+                          {typeof libraryValidation.fileCount === 'number' &&
+                          libraryValidation.fileCount > 0
+                            ? t('setup.musicFilesFound', { count: libraryValidation.fileCount })
+                            : t('setup.noMusicFilesYet')}
+                        </span>
+                      </div>
+                      <Check size={18} className={styles.completedCheck} />
+                    </div>
+                  ) : (
+                    <div className={`${styles.validationResult} ${styles.invalid}`}>
+                      <AlertCircle size={18} />
+                      <div className={styles.validationContent}>
+                        <span>{libraryValidation.message}</span>
+                      </div>
+                    </div>
+                  ))}
+
+                {/* Next button */}
+                {libraryValidation?.valid && (
+                  <div className={styles.actions}>
+                    <Button
+                      onClick={() => goToStep('api-keys')}
+                      variant="primary"
+                      size="lg"
+                      fullWidth
+                      rightIcon={<ChevronRight size={20} />}
+                    >
+                      {t('setup.nextButton')}
                     </Button>
                   </div>
-                ) : (
-                  <Button
-                    onClick={() => loadDirectory(status.mountedLibrary.path)}
-                    variant="outline"
-                    fullWidth
-                  >
-                    {t('setup.browseFoldersButton')}
-                  </Button>
                 )}
               </div>
+            )}
 
-              {/* Validation result */}
-              {libraryValidation &&
-                (libraryValidation.valid ? (
+            {/* Step 3: API Keys (optional) */}
+            {displayStep === 'api-keys' && (
+              <ApiKeysStep
+                lastfm={apiKeys.lastfm}
+                fanart={apiKeys.fanart}
+                savedHints={status?.apiKeyHints}
+                onChange={setApiKey}
+                onSkip={() => goToStep('complete')}
+                onSave={async (keys) => {
+                  const ok = await handleSaveApiKeys(keys);
+                  if (ok) goToStep('complete');
+                }}
+                isSubmitting={isSubmitting}
+              />
+            )}
+
+            {/* Step 4: Complete */}
+            {displayStep === 'complete' && (
+              <div className={styles.stepContent}>
+                <h2 className={styles.stepTitle}>
+                  <Check size={24} />
+                  {t('setup.completeTitle')}
+                </h2>
+                <p className={styles.stepDescription}>{t('setup.completeDescription')}</p>
+
+                <div className={styles.summaryCards}>
+                  <div className={styles.completedCard}>
+                    {adminUsername && (
+                      <UserAvatar
+                        userId={status?.adminUserId ?? undefined}
+                        hasAvatar={status?.adminHasAvatar ?? false}
+                        username={adminUsername}
+                        size={52}
+                        className={styles.completedAvatarImg}
+                      />
+                    )}
+                    <div className={styles.completedBody}>
+                      <span className={styles.completedPrimary}>
+                        {adminUsername ?? t('setup.adminCreated')}
+                      </span>
+                      <span className={styles.completedSecondary}>
+                        {t('setup.adminAlreadyCreated')}
+                      </span>
+                    </div>
+                    <Check size={18} className={styles.completedCheck} />
+                  </div>
+
                   <div className={styles.completedCard}>
                     <div className={styles.completedFolderIcon} aria-hidden>
                       <FolderOpen size={22} strokeWidth={2} />
                     </div>
                     <div className={styles.completedBody}>
                       <span className={styles.completedPrimary}>
-                        {(selectedPath || '').split('/').filter(Boolean).pop() || '/'}
+                        {(selectedPath || status?.musicLibraryPath || '')
+                          .split('/')
+                          .filter(Boolean)
+                          .pop() || '/'}
                       </span>
-                      {selectedPath && (
-                        <span className={styles.completedSecondary}>{selectedPath}</span>
-                      )}
-                      <span className={styles.completedMeta}>
-                        {typeof libraryValidation.fileCount === 'number' &&
-                        libraryValidation.fileCount > 0
-                          ? t('setup.musicFilesFound', { count: libraryValidation.fileCount })
-                          : t('setup.noMusicFilesYet')}
+                      <span className={styles.completedSecondary}>
+                        {selectedPath || status?.musicLibraryPath}
                       </span>
+                      {typeof libraryValidation?.fileCount === 'number' &&
+                        libraryValidation.fileCount > 0 && (
+                          <span className={styles.completedMeta}>
+                            {t('setup.musicFilesFound', {
+                              count: libraryValidation.fileCount,
+                            })}
+                          </span>
+                        )}
                     </div>
                     <Check size={18} className={styles.completedCheck} />
                   </div>
-                ) : (
-                  <div className={`${styles.validationResult} ${styles.invalid}`}>
-                    <AlertCircle size={18} />
-                    <div className={styles.validationContent}>
-                      <span>{libraryValidation.message}</span>
-                    </div>
-                  </div>
-                ))}
-
-              {/* Next button */}
-              {libraryValidation?.valid && (
-                <div className={styles.actions}>
-                  <Button
-                    onClick={() => goToStep('api-keys')}
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    rightIcon={<ChevronRight size={20} />}
-                  >
-                    {t('setup.nextButton')}
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Step 3: API Keys (optional) */}
-          {displayStep === 'api-keys' && (
-            <ApiKeysStep
-              lastfm={apiKeys.lastfm}
-              fanart={apiKeys.fanart}
-              savedHints={status?.apiKeyHints}
-              onChange={setApiKey}
-              onSkip={() => goToStep('complete')}
-              onSave={async (keys) => {
-                const ok = await handleSaveApiKeys(keys);
-                if (ok) goToStep('complete');
-              }}
-              isSubmitting={isSubmitting}
-            />
-          )}
-
-          {/* Step 4: Complete */}
-          {displayStep === 'complete' && (
-            <div className={styles.stepContent}>
-              <h2 className={styles.stepTitle}>
-                <Check size={24} />
-                {t('setup.completeTitle')}
-              </h2>
-              <p className={styles.stepDescription}>{t('setup.completeDescription')}</p>
-
-              <div className={styles.summaryCards}>
-                <div className={styles.completedCard}>
-                  {adminUsername && (
-                    <UserAvatar
-                      userId={status?.adminUserId ?? undefined}
-                      hasAvatar={status?.adminHasAvatar ?? false}
-                      username={adminUsername}
-                      size={52}
-                      className={styles.completedAvatarImg}
-                    />
-                  )}
-                  <div className={styles.completedBody}>
-                    <span className={styles.completedPrimary}>
-                      {adminUsername ?? t('setup.adminCreated')}
-                    </span>
-                    <span className={styles.completedSecondary}>
-                      {t('setup.adminAlreadyCreated')}
-                    </span>
-                  </div>
-                  <Check size={18} className={styles.completedCheck} />
                 </div>
 
-                <div className={styles.completedCard}>
-                  <div className={styles.completedFolderIcon} aria-hidden>
-                    <FolderOpen size={22} strokeWidth={2} />
-                  </div>
-                  <div className={styles.completedBody}>
-                    <span className={styles.completedPrimary}>
-                      {(selectedPath || status?.musicLibraryPath || '')
-                        .split('/')
-                        .filter(Boolean)
-                        .pop() || '/'}
-                    </span>
-                    <span className={styles.completedSecondary}>
-                      {selectedPath || status?.musicLibraryPath}
-                    </span>
-                    {typeof libraryValidation?.fileCount === 'number' &&
-                      libraryValidation.fileCount > 0 && (
-                        <span className={styles.completedMeta}>
-                          {t('setup.musicFilesFound', {
-                            count: libraryValidation.fileCount,
-                          })}
-                        </span>
-                      )}
-                  </div>
-                  <Check size={18} className={styles.completedCheck} />
-                </div>
+                <Button
+                  onClick={handleCompleteSetup}
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  loading={isSubmitting}
+                  rightIcon={<Check size={20} />}
+                >
+                  {t('setup.completeButton')}
+                </Button>
               </div>
+            )}
 
-              <Button
-                onClick={handleCompleteSetup}
-                variant="primary"
-                size="lg"
-                fullWidth
-                loading={isSubmitting}
-                rightIcon={<Check size={20} />}
-              >
-                {t('setup.completeButton')}
-              </Button>
-            </div>
-          )}
+            {/* Done */}
+            {displayStep === 'done' && (
+              <div className={styles.stepContent}>
+                <div className={styles.successIcon}>
+                  <Check size={48} />
+                </div>
+                <h2 className={styles.stepTitle}>{t('setup.doneTitle')}</h2>
+                <p className={styles.stepDescription}>{t('setup.doneDescription')}</p>
 
-          {/* Done */}
-          {displayStep === 'done' && (
-            <div className={styles.stepContent}>
-              <div className={styles.successIcon}>
-                <Check size={48} />
+                <Button
+                  onClick={handleGoToLogin}
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  rightIcon={<ChevronRight size={20} />}
+                >
+                  {t('setup.goToLoginButton')}
+                </Button>
               </div>
-              <h2 className={styles.stepTitle}>{t('setup.doneTitle')}</h2>
-              <p className={styles.stepDescription}>{t('setup.doneDescription')}</p>
-
-              <Button
-                onClick={handleGoToLogin}
-                variant="primary"
-                size="lg"
-                fullWidth
-                rightIcon={<ChevronRight size={20} />}
-              >
-                {t('setup.goToLoginButton')}
-              </Button>
-            </div>
-          )}
+            )}
           </div>
         </div>
       </div>

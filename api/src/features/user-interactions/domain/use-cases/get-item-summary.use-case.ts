@@ -6,10 +6,14 @@ import { ItemType, ItemInteractionSummary } from '../entities/user-interaction.e
 export class GetItemSummaryUseCase {
   constructor(
     @Inject(USER_INTERACTIONS_REPOSITORY)
-    private readonly repository: IUserInteractionsRepository,
+    private readonly repository: IUserInteractionsRepository
   ) {}
 
-  async execute(itemId: string, itemType: ItemType, userId?: string): Promise<ItemInteractionSummary> {
+  async execute(
+    itemId: string,
+    itemType: ItemType,
+    userId?: string
+  ): Promise<ItemInteractionSummary> {
     return await this.repository.getItemInteractionSummary(itemId, itemType, userId);
   }
 }

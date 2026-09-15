@@ -20,16 +20,11 @@ export function LufsProgressIndicator() {
   }
 
   const total = lufsProgress.processedInSession + lufsProgress.pendingTracks;
-  const percentage = total > 0
-    ? Math.round((lufsProgress.processedInSession / total) * 100)
-    : 0;
+  const percentage = total > 0 ? Math.round((lufsProgress.processedInSession / total) * 100) : 0;
 
   return (
     <div className={styles.container}>
-      <Volume2
-        size={14}
-        className={lufsProgress.isRunning ? styles.iconRunning : styles.icon}
-      />
+      <Volume2 size={14} className={lufsProgress.isRunning ? styles.iconRunning : styles.icon} />
       <span className={styles.text}>
         LUFS: {lufsProgress.processedInSession}/{total}
         <span className={styles.percent}>({percentage}%)</span>
@@ -39,10 +34,7 @@ export function LufsProgressIndicator() {
       )}
       {lufsProgress.isRunning && (
         <div className={styles.progressBar}>
-          <div
-            className={styles.progressFill}
-            style={{ width: `${percentage}%` }}
-          />
+          <div className={styles.progressFill} style={{ width: `${percentage}%` }} />
         </div>
       )}
     </div>

@@ -6,7 +6,7 @@ import { UserPlaySummary } from '../entities/play-event.entity';
 export class GetUserPlaySummaryUseCase {
   constructor(
     @Inject(PLAY_TRACKING_REPOSITORY)
-    private readonly repository: IPlayTrackingRepository,
+    private readonly repository: IPlayTrackingRepository
   ) {}
 
   async execute(userId: string, days: number = 30): Promise<UserPlaySummary> {

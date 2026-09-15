@@ -33,11 +33,9 @@ export function parsePaginationParams(
 export function validatePagination(
   skip?: number,
   take?: number,
-  options: { maxTake?: number; defaultTake?: number } | number = {},
+  options: { maxTake?: number; defaultTake?: number } | number = {}
 ): PaginationParams {
-  const opts = typeof options === 'number'
-    ? { maxTake: options, defaultTake: 10 }
-    : options;
+  const opts = typeof options === 'number' ? { maxTake: options, defaultTake: 10 } : options;
 
   const maxTake = opts.maxTake ?? 100;
   const defaultTake = opts.defaultTake ?? 10;

@@ -18,7 +18,7 @@ export class PlaylistCollaborator {
   private constructor(private readonly props: PlaylistCollaboratorProps) {}
 
   static create(
-    props: Omit<PlaylistCollaboratorProps, 'id' | 'createdAt' | 'updatedAt'>,
+    props: Omit<PlaylistCollaboratorProps, 'id' | 'createdAt' | 'updatedAt'>
   ): PlaylistCollaborator {
     const now = new Date();
     return new PlaylistCollaborator({
@@ -33,14 +33,30 @@ export class PlaylistCollaborator {
     return new PlaylistCollaborator(props);
   }
 
-  get id(): string { return this.props.id; }
-  get playlistId(): string { return this.props.playlistId; }
-  get userId(): string { return this.props.userId; }
-  get role(): CollaboratorRole { return this.props.role; }
-  get status(): CollaboratorStatus { return this.props.status; }
-  get invitedBy(): string { return this.props.invitedBy; }
-  get createdAt(): Date { return this.props.createdAt; }
-  get updatedAt(): Date { return this.props.updatedAt; }
+  get id(): string {
+    return this.props.id;
+  }
+  get playlistId(): string {
+    return this.props.playlistId;
+  }
+  get userId(): string {
+    return this.props.userId;
+  }
+  get role(): CollaboratorRole {
+    return this.props.role;
+  }
+  get status(): CollaboratorStatus {
+    return this.props.status;
+  }
+  get invitedBy(): string {
+    return this.props.invitedBy;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt;
+  }
 
   accept(): void {
     this.props.status = 'accepted';

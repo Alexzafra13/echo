@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  real,
-  timestamp,
-  index,
-  pgEnum,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, real, timestamp, index, pgEnum } from 'drizzle-orm/pg-core';
 import { tracks } from './tracks';
 
 // ============================================
@@ -51,7 +43,7 @@ export const djAnalysis = pgTable(
     index('idx_dj_analysis_status').on(table.status),
     // Composite index for compatibility queries (status + camelot_key + bpm)
     index('idx_dj_analysis_compatibility').on(table.status, table.camelotKey, table.bpm),
-  ],
+  ]
 );
 
 // Type exports

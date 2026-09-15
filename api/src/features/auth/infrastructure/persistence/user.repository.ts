@@ -3,10 +3,7 @@ import { eq, desc, count } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { users } from '@infrastructure/database/schema';
 import { User } from '../../domain/entities/user.entity';
-import {
-  IUserRepository,
-  UserUpdateableFields
-} from '../../domain/ports/user-repository.port';
+import { IUserRepository, UserUpdateableFields } from '../../domain/ports/user-repository.port';
 import { UserMapper } from './user.mapper';
 
 @Injectable()
@@ -14,11 +11,7 @@ export class DrizzleUserRepository implements IUserRepository {
   constructor(private readonly drizzle: DrizzleService) {}
 
   async findById(id: string): Promise<User | null> {
-    const result = await this.drizzle.db
-      .select()
-      .from(users)
-      .where(eq(users.id, id))
-      .limit(1);
+    const result = await this.drizzle.db.select().from(users).where(eq(users.id, id)).limit(1);
 
     return result[0] ? UserMapper.toDomain(result[0]) : null;
   }
@@ -41,13 +34,11 @@ export class DrizzleUserRepository implements IUserRepository {
       .offset(skip)
       .limit(take);
 
-    return result.map(user => UserMapper.toDomain(user));
+    return result.map((user) => UserMapper.toDomain(user));
   }
 
   async count(): Promise<number> {
-    const result = await this.drizzle.db
-      .select({ count: count() })
-      .from(users);
+    const result = await this.drizzle.db.select({ count: count() }).from(users);
 
     return result[0]?.count ?? 0;
   }
@@ -83,10 +74,7 @@ export class DrizzleUserRepository implements IUserRepository {
     return UserMapper.toDomain(result[0]);
   }
 
-  async updatePartial(
-    id: string,
-    data: Partial<UserUpdateableFields>,
-  ): Promise<User> {
+  async updatePartial(id: string, data: Partial<UserUpdateableFields>): Promise<User> {
     const result = await this.drizzle.db
       .update(users)
       .set({
@@ -120,8 +108,6 @@ export class DrizzleUserRepository implements IUserRepository {
   }
 
   async delete(userId: string): Promise<void> {
-    await this.drizzle.db
-      .delete(users)
-      .where(eq(users.id, userId));
+    await this.drizzle.db.delete(users).where(eq(users.id, userId));
   }
 }

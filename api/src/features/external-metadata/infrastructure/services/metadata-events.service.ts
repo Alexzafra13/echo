@@ -22,8 +22,9 @@ export class MetadataEventsService {
   constructor(
     @InjectPinoLogger(MetadataEventsService.name)
     private readonly logger: PinoLogger,
-    @Optional() @Inject(NotificationsService)
-    private readonly notificationsService?: NotificationsService,
+    @Optional()
+    @Inject(NotificationsService)
+    private readonly notificationsService?: NotificationsService
   ) {}
 
   /**
@@ -61,7 +62,7 @@ export class MetadataEventsService {
       percentage: Math.round((data.current / data.total) * 100),
     });
     this.logger.debug(
-      `Enrichment progress: ${data.entityName} - ${data.step} (${data.current}/${data.total})`,
+      `Enrichment progress: ${data.entityName} - ${data.step} (${data.current}/${data.total})`
     );
   }
 
@@ -77,7 +78,7 @@ export class MetadataEventsService {
     this.emit('enrichment:completed', data);
     this.logger.info(
       `Enrichment completed: ${data.entityName} in ${data.duration}ms ` +
-        `(bio: ${data.bioUpdated}, images: ${data.imagesUpdated}, cover: ${data.coverUpdated})`,
+        `(bio: ${data.bioUpdated}, images: ${data.imagesUpdated}, cover: ${data.coverUpdated})`
     );
   }
 
@@ -119,22 +120,29 @@ export class MetadataEventsService {
     this.emit('batch:enrichment:completed', data);
     this.logger.info(
       `Batch enrichment completed: ${data.successful}/${data.total} successful ` +
-        `(${data.failed} failed) in ${data.duration}ms`,
+        `(${data.failed} failed) in ${data.duration}ms`
     );
 
     // Persistent notification for admins
     const typeLabel = data.entityType === 'artist' ? 'artistas' : 'álbumes';
-    const msg = data.failed > 0
-      ? `${data.successful}/${data.total} ${typeLabel} enriquecidos (${data.failed} errores)`
-      : `${data.successful} ${typeLabel} enriquecidos correctamente`;
-    this.notificationsService?.notifyAdmins(
-      'enrichment_completed',
-      `Enriquecimiento de ${typeLabel} completado`,
-      msg,
-      { entityType: data.entityType, total: data.total, successful: data.successful, failed: data.failed, duration: data.duration },
-    ).catch((e) => {
-      this.logger.warn({ error: (e as Error).message }, 'No se pudo notificar fin de enriquecimiento');
-    });
+    const msg =
+      data.failed > 0
+        ? `${data.successful}/${data.total} ${typeLabel} enriquecidos (${data.failed} errores)`
+        : `${data.successful} ${typeLabel} enriquecidos correctamente`;
+    this.notificationsService
+      ?.notifyAdmins('enrichment_completed', `Enriquecimiento de ${typeLabel} completado`, msg, {
+        entityType: data.entityType,
+        total: data.total,
+        successful: data.successful,
+        failed: data.failed,
+        duration: data.duration,
+      })
+      .catch((e) => {
+        this.logger.warn(
+          { error: (e as Error).message },
+          'No se pudo notificar fin de enriquecimiento'
+        );
+      });
   }
 
   emitArtistImagesUpdated(data: {
@@ -166,11 +174,7 @@ export class MetadataEventsService {
     this.logger.debug(`Cache invalidation: ${data.entityType}:${data.entityId} - ${data.reason}`);
   }
 
-  emitQueueStarted(data: {
-    totalPending: number;
-    pendingArtists: number;
-    pendingAlbums: number;
-  }) {
+  emitQueueStarted(data: { totalPending: number; pendingArtists: number; pendingAlbums: number }) {
     this.emit('queue:started', data);
     this.logger.info(`Queue started: ${data.totalPending} items pending`);
   }
@@ -191,11 +195,7 @@ export class MetadataEventsService {
     this.logger.debug(`Queue item completed: ${data.entityName}`);
   }
 
-  emitQueueItemError(data: {
-    itemType: 'artist' | 'album';
-    entityName: string;
-    error: string;
-  }) {
+  emitQueueItemError(data: { itemType: 'artist' | 'album'; entityName: string; error: string }) {
     this.emit('queue:item:error', data);
     this.logger.error(`Queue item error: ${data.entityName} - ${data.error}`);
   }

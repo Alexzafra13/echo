@@ -37,7 +37,22 @@ export class User {
   }
 
   static create(
-    props: Omit<UserProps, 'id' | 'createdAt' | 'updatedAt' | 'theme' | 'language' | 'lastLoginAt' | 'lastAccessAt' | 'isPublicProfile' | 'showTopTracks' | 'showTopArtists' | 'showTopAlbums' | 'showPlaylists' | 'homeSections'> & {
+    props: Omit<
+      UserProps,
+      | 'id'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'theme'
+      | 'language'
+      | 'lastLoginAt'
+      | 'lastAccessAt'
+      | 'isPublicProfile'
+      | 'showTopTracks'
+      | 'showTopArtists'
+      | 'showTopAlbums'
+      | 'showPlaylists'
+      | 'homeSections'
+    > & {
       theme?: string;
       language?: string;
       isPublicProfile?: boolean;
@@ -46,7 +61,7 @@ export class User {
       showTopAlbums?: boolean;
       showPlaylists?: boolean;
       homeSections?: HomeSectionConfig[];
-    },
+    }
   ): User {
     return new User({
       ...props,

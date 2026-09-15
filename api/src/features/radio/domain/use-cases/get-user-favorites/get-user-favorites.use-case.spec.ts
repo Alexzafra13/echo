@@ -86,9 +86,7 @@ describe('GetUserFavoritesUseCase', () => {
     });
 
     it('should propagate repository errors', async () => {
-      (repository.findByUserId as jest.Mock).mockRejectedValue(
-        new Error('Database error'),
-      );
+      (repository.findByUserId as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(useCase.execute('user-1')).rejects.toThrow('Database error');
     });

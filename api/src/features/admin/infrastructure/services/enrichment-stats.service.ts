@@ -19,7 +19,7 @@ export class EnrichmentStatsService {
 
   constructor(
     private readonly drizzle: DrizzleService,
-    private readonly cache: RedisService,
+    private readonly cache: RedisService
   ) {}
 
   async get(): Promise<EnrichmentStats> {
@@ -70,11 +70,9 @@ export class EnrichmentStatsService {
   private calculatePeriodStats(logs: Array<{ status: string; provider: string }>): PeriodStats {
     const total = logs.length;
     const successful = logs.filter(
-      (log) => log.status === 'success' || log.status === 'completed',
+      (log) => log.status === 'success' || log.status === 'completed'
     ).length;
-    const failed = logs.filter(
-      (log) => log.status === 'failed' || log.status === 'error',
-    ).length;
+    const failed = logs.filter((log) => log.status === 'failed' || log.status === 'error').length;
     const byProvider: Record<string, number> = {};
 
     logs.forEach((log) => {

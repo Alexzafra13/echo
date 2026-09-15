@@ -35,10 +35,7 @@ export function ProgressBar({ currentTime, duration, onSeek }: ProgressBarProps)
         onClick={handleProgressClick}
         onTouchMove={handleProgressTouch}
       >
-        <div
-          className={styles.nowPlaying__progressFill}
-          style={{ width: `${progressPercent}%` }}
-        />
+        <div className={styles.nowPlaying__progressFill} style={{ width: `${progressPercent}%` }} />
         <div
           className={styles.nowPlaying__progressHandle}
           style={{ left: `${progressPercent}%` }}

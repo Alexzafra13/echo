@@ -42,7 +42,7 @@ export class MusicLibraryDetectorService {
 
   constructor(
     @InjectPinoLogger(MusicLibraryDetectorService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   /**
@@ -117,11 +117,7 @@ export class MusicLibraryDetectorService {
   /**
    * Count music files in directory (limited depth)
    */
-  async countMusicFiles(
-    dirPath: string,
-    maxDepth: number,
-    currentDepth = 0,
-  ): Promise<number> {
+  async countMusicFiles(dirPath: string, maxDepth: number, currentDepth = 0): Promise<number> {
     if (currentDepth >= maxDepth) return 0;
 
     let count = 0;
@@ -140,7 +136,7 @@ export class MusicLibraryDetectorService {
             count += await this.countMusicFiles(
               path.join(dirPath, entry.name),
               maxDepth,
-              currentDepth + 1,
+              currentDepth + 1
             );
           } catch {
             // Skip directories we can't read
@@ -159,7 +155,7 @@ export class MusicLibraryDetectorService {
    */
   private async checkMountPoint(
     mountPath: string,
-    requireMusic: boolean,
+    requireMusic: boolean
   ): Promise<MountedLibraryInfo | null> {
     try {
       await fs.access(mountPath, fs.constants.R_OK);

@@ -23,9 +23,14 @@ test.describe('Reproductor de Audio', () => {
 
     // Debe mostrar título de página, álbumes, loading o estado vacío
     await expect(
-      page.getByRole('heading', { name: /Álbumes|Albums/i }).or(
-        page.getByText(/Cargando álbumes|Loading albums|No hay álbumes|No albums|Error al cargar|Error loading/i)
-      ).first()
+      page
+        .getByRole('heading', { name: /Álbumes|Albums/i })
+        .or(
+          page.getByText(
+            /Cargando álbumes|Loading albums|No hay álbumes|No albums|Error al cargar|Error loading/i
+          )
+        )
+        .first()
     ).toBeVisible({ timeout: 15000 });
   });
 
@@ -36,9 +41,14 @@ test.describe('Reproductor de Audio', () => {
 
     // Debe mostrar título, contenido o estado vacío
     await expect(
-      page.getByRole('heading', { name: /Artistas|Artists/i }).or(
-        page.getByText(/Cargando artistas|Loading artists|No hay artistas|No artists|Error al cargar|Error loading/i)
-      ).first()
+      page
+        .getByRole('heading', { name: /Artistas|Artists/i })
+        .or(
+          page.getByText(
+            /Cargando artistas|Loading artists|No hay artistas|No artists|Error al cargar|Error loading/i
+          )
+        )
+        .first()
     ).toBeVisible({ timeout: 15000 });
   });
 
@@ -47,9 +57,10 @@ test.describe('Reproductor de Audio', () => {
 
     // Esperar a que carguen los álbumes o el estado vacío
     await expect(
-      page.getByRole('heading', { name: /Álbumes|Albums/i }).or(
-        page.getByText(/No hay álbumes|No albums/i)
-      ).first()
+      page
+        .getByRole('heading', { name: /Álbumes|Albums/i })
+        .or(page.getByText(/No hay álbumes|No albums/i))
+        .first()
     ).toBeVisible({ timeout: 15000 });
 
     // Los álbumes se renderizan como <article> con imagen, no como <a> links
@@ -71,9 +82,14 @@ test.describe('Radio', () => {
 
     // Debe mostrar el título "Radio" o estado de carga
     await expect(
-      page.getByRole('heading', { name: /Radio/i, level: 1 }).or(
-        page.getByText(/Cargando emisoras|Loading stations|No se encontraron emisoras|No stations/i)
-      ).first()
+      page
+        .getByRole('heading', { name: /Radio/i, level: 1 })
+        .or(
+          page.getByText(
+            /Cargando emisoras|Loading stations|No se encontraron emisoras|No stations/i
+          )
+        )
+        .first()
     ).toBeVisible({ timeout: 15000 });
   });
 });

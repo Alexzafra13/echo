@@ -14,7 +14,7 @@ export function generateAlbumPid(
   mbzAlbumId: string | null | undefined,
   artistId: string,
   albumName: string,
-  year?: number | null,
+  year?: number | null
 ): string {
   // If MusicBrainz ID exists, use it as PID
   if (mbzAlbumId) {
@@ -41,7 +41,7 @@ export function generateAlbumPid(
  */
 export function generateArtistPid(
   mbzArtistId: string | null | undefined,
-  artistName: string,
+  artistName: string
 ): string {
   // If MusicBrainz ID exists, use it as PID
   if (mbzArtistId) {

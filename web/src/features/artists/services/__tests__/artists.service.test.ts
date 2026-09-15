@@ -160,9 +160,7 @@ describe('artistsService', () => {
   describe('getAlbums', () => {
     it('should fetch albums by artist ID', async () => {
       const mockAlbumsResponse = {
-        data: [
-          { id: 'album-1', title: 'Album 1', artist: 'Test Artist', artistId: 'artist-1' },
-        ],
+        data: [{ id: 'album-1', title: 'Album 1', artist: 'Test Artist', artistId: 'artist-1' }],
         total: 5,
         skip: 0,
         take: 100,

@@ -1,18 +1,5 @@
-import {
-  Controller,
-  Get,
-  Param,
-  UseGuards,
-  HttpStatus,
-  ParseUUIDPipe,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-} from '@nestjs/swagger';
+import { Controller, Get, Param, UseGuards, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { JwtUser } from '@shared/types/request.types';
@@ -24,14 +11,13 @@ import { PublicProfileResponseDto } from './dtos';
 @Controller('profiles')
 @UseGuards(JwtAuthGuard)
 export class PublicProfilesController {
-  constructor(
-    private readonly getPublicProfileUseCase: GetPublicProfileUseCase,
-  ) {}
+  constructor(private readonly getPublicProfileUseCase: GetPublicProfileUseCase) {}
 
   @Get(':userId')
   @ApiOperation({
     summary: 'Obtener perfil público de un usuario',
-    description: 'Obtiene el perfil público de un usuario. Si el perfil es privado, solo devuelve información básica.',
+    description:
+      'Obtiene el perfil público de un usuario. Si el perfil es privado, solo devuelve información básica.',
   })
   @ApiParam({
     name: 'userId',
@@ -53,7 +39,7 @@ export class PublicProfilesController {
   })
   async getPublicProfile(
     @Param('userId', ParseUUIDPipe) userId: string,
-    @CurrentUser() currentUser: JwtUser,
+    @CurrentUser() currentUser: JwtUser
   ): Promise<PublicProfileResponseDto> {
     const result = await this.getPublicProfileUseCase.execute({
       userId,

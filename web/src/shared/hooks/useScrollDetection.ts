@@ -84,7 +84,8 @@ export function useScrollDetection(
 
         // Strategy 3: Check if parent itself is scrollable
         const parentStyles = window.getComputedStyle(parent);
-        const parentHasScroll = parentStyles.overflowY === 'auto' || parentStyles.overflowY === 'scroll';
+        const parentHasScroll =
+          parentStyles.overflowY === 'auto' || parentStyles.overflowY === 'scroll';
 
         if (parentHasScroll) {
           return parent;

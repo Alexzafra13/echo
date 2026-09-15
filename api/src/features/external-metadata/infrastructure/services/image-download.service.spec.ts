@@ -116,9 +116,9 @@ describe('ImageDownloadService', () => {
       });
 
       // Act & Assert
-      await expect(
-        service.downloadImage('https://example.com/notfound.jpg')
-      ).rejects.toThrow('ImageDownload API error: HTTP 404 Not Found');
+      await expect(service.downloadImage('https://example.com/notfound.jpg')).rejects.toThrow(
+        'ImageDownload API error: HTTP 404 Not Found'
+      );
     });
 
     it('debería rechazar si content-type no es imagen', async () => {
@@ -134,9 +134,9 @@ describe('ImageDownloadService', () => {
       });
 
       // Act & Assert
-      await expect(
-        service.downloadImage('https://example.com/file.html')
-      ).rejects.toThrow('Invalid content type: text/html');
+      await expect(service.downloadImage('https://example.com/file.html')).rejects.toThrow(
+        'Invalid content type: text/html'
+      );
     });
 
     it('debería rechazar si imagen es muy grande (content-length)', async () => {
@@ -154,9 +154,9 @@ describe('ImageDownloadService', () => {
       });
 
       // Act & Assert
-      await expect(
-        service.downloadImage('https://example.com/large.jpg')
-      ).rejects.toThrow('Image too large');
+      await expect(service.downloadImage('https://example.com/large.jpg')).rejects.toThrow(
+        'Image too large'
+      );
     });
 
     it('debería rechazar si buffer descargado es muy grande', async () => {
@@ -174,9 +174,9 @@ describe('ImageDownloadService', () => {
       });
 
       // Act & Assert
-      await expect(
-        service.downloadImage('https://example.com/large.jpg')
-      ).rejects.toThrow('Image too large');
+      await expect(service.downloadImage('https://example.com/large.jpg')).rejects.toThrow(
+        'Image too large'
+      );
     });
 
     it('debería rechazar si buffer no contiene imagen válida', async () => {
@@ -194,9 +194,9 @@ describe('ImageDownloadService', () => {
       });
 
       // Act & Assert
-      await expect(
-        service.downloadImage('https://example.com/invalid.jpg')
-      ).rejects.toThrow('Downloaded file is not a valid image');
+      await expect(service.downloadImage('https://example.com/invalid.jpg')).rejects.toThrow(
+        'Downloaded file is not a valid image'
+      );
     });
 
     it('debería manejar errores de red', async () => {
@@ -204,9 +204,9 @@ describe('ImageDownloadService', () => {
       (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
       // Act & Assert
-      await expect(
-        service.downloadImage('https://example.com/image.jpg')
-      ).rejects.toThrow('Network error');
+      await expect(service.downloadImage('https://example.com/image.jpg')).rejects.toThrow(
+        'Network error'
+      );
     });
   });
 

@@ -8,7 +8,10 @@ import {
   libraryScans,
   tracks,
 } from '@infrastructure/database/schema';
-import { ActiveAlerts, StorageBreakdown } from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
+import {
+  ActiveAlerts,
+  StorageBreakdown,
+} from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
 
 @Injectable()
 export class AlertsService {
@@ -44,13 +47,10 @@ export class AlertsService {
         .where(
           and(
             inArray(libraryScans.status, ['failed', 'error']),
-            gte(libraryScans.startedAt, weekAgo),
-          ),
+            gte(libraryScans.startedAt, weekAgo)
+          )
         ),
-      this.drizzle.db
-        .select({ count: count() })
-        .from(tracks)
-        .where(isNotNull(tracks.missingAt)),
+      this.drizzle.db.select({ count: count() }).from(tracks).where(isNotNull(tracks.missingAt)),
     ]);
 
     const orphanedArtistImages = orphanedArtistImagesResult[0]?.count ?? 0;

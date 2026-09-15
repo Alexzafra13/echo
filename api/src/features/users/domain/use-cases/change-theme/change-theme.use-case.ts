@@ -9,14 +9,12 @@ export class ChangeThemeUseCase {
 
   constructor(
     @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
+    private readonly userRepository: IUserRepository
   ) {}
 
   async execute(input: ChangeThemeInput): Promise<void> {
     if (!this.VALID_THEMES.includes(input.theme)) {
-      throw new ValidationError(
-        `Invalid theme. Must be one of: ${this.VALID_THEMES.join(', ')}`,
-      );
+      throw new ValidationError(`Invalid theme. Must be one of: ${this.VALID_THEMES.join(', ')}`);
     }
 
     const user = await this.userRepository.findById(input.userId);

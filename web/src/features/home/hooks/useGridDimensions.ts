@@ -28,12 +28,18 @@ export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimens
   const { maxRows, containerPadding, headerHeight = 200 } = config;
 
   const [dimensions, setDimensions] = useState<GridDimensions>(() =>
-    calculateDimensions(window.innerWidth, window.innerHeight, maxRows, containerPadding, headerHeight)
+    calculateDimensions(
+      window.innerWidth,
+      window.innerHeight,
+      maxRows,
+      containerPadding,
+      headerHeight
+    )
   );
 
   useEffect(() => {
     const handleResize = () => {
-      setDimensions(prev => {
+      setDimensions((prev) => {
         const newDimensions = calculateDimensions(
           window.innerWidth,
           window.innerHeight,
@@ -43,10 +49,7 @@ export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimens
         );
 
         // Solo actualizar si realmente cambiaron las dimensiones
-        if (
-          newDimensions.columns === prev.columns &&
-          newDimensions.rows === prev.rows
-        ) {
+        if (newDimensions.columns === prev.columns && newDimensions.rows === prev.rows) {
           return prev;
         }
         return newDimensions;
@@ -140,7 +143,7 @@ function calculateColumns(
   windowWidth: number,
   minItemWidth: number,
   gap: number,
-  _padding: number,
+  _padding: number
 ): number {
   // Calcular ancho del sidebar según breakpoints (sincronizado con Sidebar.module.css)
   let sidebarWidth = 200; // Desktop default
@@ -157,7 +160,7 @@ function calculateColumns(
   // - homePage__content: padding 0 30px (60px total horizontal)
   // - albumGrid__grid: padding 0 20px (40px total horizontal)
   const contentPadding = 60; // HomePage content padding
-  const gridPadding = 40;    // AlbumGrid padding
+  const gridPadding = 40; // AlbumGrid padding
 
   // Ancho disponible para el grid (restando sidebar y TODOS los paddings)
   const availableWidth = windowWidth - sidebarWidth - contentPadding - gridPadding;

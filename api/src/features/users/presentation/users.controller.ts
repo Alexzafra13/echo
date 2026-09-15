@@ -13,7 +13,14 @@ import {
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { MultipartFile } from '@fastify/multipart';
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
@@ -53,7 +60,7 @@ export class UsersController {
     private readonly uploadAvatarUseCase: UploadAvatarUseCase,
     private readonly deleteAvatarUseCase: DeleteAvatarUseCase,
     private readonly updatePrivacySettingsUseCase: UpdatePrivacySettingsUseCase,
-    private readonly updateHomePreferencesUseCase: UpdateHomePreferencesUseCase,
+    private readonly updateHomePreferencesUseCase: UpdateHomePreferencesUseCase
   ) {}
 
   @Put('password')
@@ -61,24 +68,25 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Cambiar contraseña',
-    description: 'Permite al usuario cambiar su contraseña actual por una nueva. Requiere la contraseña actual para validación.'
+    description:
+      'Permite al usuario cambiar su contraseña actual por una nueva. Requiere la contraseña actual para validación.',
   })
   @ApiBody({ type: ChangePasswordRequestDto })
   @ApiResponse({
     status: 204,
-    description: 'Contraseña cambiada exitosamente'
+    description: 'Contraseña cambiada exitosamente',
   })
   @ApiResponse({
     status: 400,
-    description: 'Contraseña actual incorrecta o contraseña nueva inválida'
+    description: 'Contraseña actual incorrecta o contraseña nueva inválida',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado'
+    description: 'No autenticado',
   })
   async changePassword(
     @CurrentUser() user: JwtUser,
-    @Body() dto: ChangePasswordRequestDto,
+    @Body() dto: ChangePasswordRequestDto
   ): Promise<void> {
     await this.changePasswordUseCase.execute({
       userId: user.id,
@@ -91,25 +99,25 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Actualizar perfil',
-    description: 'Actualiza la información del perfil del usuario (nombre)'
+    description: 'Actualiza la información del perfil del usuario (nombre)',
   })
   @ApiBody({ type: UpdateProfileRequestDto })
   @ApiResponse({
     status: 200,
     description: 'Perfil actualizado exitosamente',
-    type: UserResponseDto
+    type: UserResponseDto,
   })
   @ApiResponse({
     status: 400,
-    description: 'Datos inválidos'
+    description: 'Datos inválidos',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado'
+    description: 'No autenticado',
   })
   async updateProfile(
     @CurrentUser() user: JwtUser,
-    @Body() dto: UpdateProfileRequestDto,
+    @Body() dto: UpdateProfileRequestDto
   ): Promise<UserResponseDto> {
     const result = await this.updateProfileUseCase.execute({
       userId: user.id,
@@ -123,24 +131,24 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Cambiar tema',
-    description: 'Cambia el tema de la interfaz del usuario (light o dark)'
+    description: 'Cambia el tema de la interfaz del usuario (light o dark)',
   })
   @ApiBody({ type: ChangeThemeRequestDto })
   @ApiResponse({
     status: 204,
-    description: 'Tema cambiado exitosamente'
+    description: 'Tema cambiado exitosamente',
   })
   @ApiResponse({
     status: 400,
-    description: 'Tema inválido'
+    description: 'Tema inválido',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado'
+    description: 'No autenticado',
   })
   async changeTheme(
     @CurrentUser() user: JwtUser,
-    @Body() dto: ChangeThemeRequestDto,
+    @Body() dto: ChangeThemeRequestDto
   ): Promise<void> {
     await this.changeThemeUseCase.execute({
       userId: user.id,
@@ -152,24 +160,24 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Cambiar idioma',
-    description: 'Cambia el idioma de la interfaz del usuario (es o en)'
+    description: 'Cambia el idioma de la interfaz del usuario (es o en)',
   })
   @ApiBody({ type: ChangeLanguageRequestDto })
   @ApiResponse({
     status: 204,
-    description: 'Idioma cambiado exitosamente'
+    description: 'Idioma cambiado exitosamente',
   })
   @ApiResponse({
     status: 400,
-    description: 'Idioma inválido'
+    description: 'Idioma inválido',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado'
+    description: 'No autenticado',
   })
   async changeLanguage(
     @CurrentUser() user: JwtUser,
-    @Body() dto: ChangeLanguageRequestDto,
+    @Body() dto: ChangeLanguageRequestDto
   ): Promise<void> {
     await this.changeLanguageUseCase.execute({
       userId: user.id,
@@ -182,7 +190,8 @@ export class UsersController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Subir avatar de usuario',
-    description: 'Sube una imagen de avatar para el usuario. Tamaño máximo: 5MB. Formatos permitidos: JPEG, PNG, WebP.'
+    description:
+      'Sube una imagen de avatar para el usuario. Tamaño máximo: 5MB. Formatos permitidos: JPEG, PNG, WebP.',
   })
   @ApiBody({
     schema: {
@@ -191,10 +200,10 @@ export class UsersController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Archivo de imagen (JPEG, PNG, o WebP)'
-        }
-      }
-    }
+          description: 'Archivo de imagen (JPEG, PNG, o WebP)',
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 200,
@@ -204,21 +213,21 @@ export class UsersController {
       properties: {
         avatarPath: { type: 'string' },
         avatarSize: { type: 'number' },
-        avatarMimeType: { type: 'string' }
-      }
-    }
+        avatarMimeType: { type: 'string' },
+      },
+    },
   })
   @ApiResponse({
     status: 400,
-    description: 'Archivo inválido (tamaño, tipo, o contenido)'
+    description: 'Archivo inválido (tamaño, tipo, o contenido)',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado'
+    description: 'No autenticado',
   })
   async uploadAvatar(
     @Req() request: FastifyRequest & { file: () => Promise<MultipartFile> },
-    @CurrentUser() user: JwtUser,
+    @CurrentUser() user: JwtUser
   ) {
     const data = await request.file();
 
@@ -255,15 +264,15 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Eliminar avatar de usuario',
-    description: 'Elimina el avatar actual del usuario'
+    description: 'Elimina el avatar actual del usuario',
   })
   @ApiResponse({
     status: 204,
-    description: 'Avatar eliminado exitosamente'
+    description: 'Avatar eliminado exitosamente',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado'
+    description: 'No autenticado',
   })
   async deleteAvatar(@CurrentUser() user: JwtUser): Promise<void> {
     await this.deleteAvatarUseCase.execute({
@@ -275,20 +284,18 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Obtener configuración de privacidad',
-    description: 'Obtiene la configuración de privacidad del perfil del usuario actual'
+    description: 'Obtiene la configuración de privacidad del perfil del usuario actual',
   })
   @ApiResponse({
     status: 200,
     description: 'Configuración de privacidad',
-    type: PrivacySettingsResponseDto
+    type: PrivacySettingsResponseDto,
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado'
+    description: 'No autenticado',
   })
-  async getPrivacySettings(
-    @CurrentUser() user: JwtUser,
-  ): Promise<PrivacySettingsResponseDto> {
+  async getPrivacySettings(@CurrentUser() user: JwtUser): Promise<PrivacySettingsResponseDto> {
     const result = await this.updatePrivacySettingsUseCase.execute({
       userId: user.id,
     });
@@ -299,25 +306,25 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Actualizar configuración de privacidad',
-    description: 'Actualiza la configuración de privacidad del perfil público del usuario'
+    description: 'Actualiza la configuración de privacidad del perfil público del usuario',
   })
   @ApiBody({ type: UpdatePrivacySettingsRequestDto })
   @ApiResponse({
     status: 200,
     description: 'Configuración de privacidad actualizada',
-    type: PrivacySettingsResponseDto
+    type: PrivacySettingsResponseDto,
   })
   @ApiResponse({
     status: 400,
-    description: 'Datos inválidos'
+    description: 'Datos inválidos',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado'
+    description: 'No autenticado',
   })
   async updatePrivacySettings(
     @CurrentUser() user: JwtUser,
-    @Body() dto: UpdatePrivacySettingsRequestDto,
+    @Body() dto: UpdatePrivacySettingsRequestDto
   ): Promise<PrivacySettingsResponseDto> {
     const result = await this.updatePrivacySettingsUseCase.execute({
       userId: user.id,
@@ -336,20 +343,18 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Obtener preferencias del home',
-    description: 'Obtiene la configuración de secciones del home del usuario actual'
+    description: 'Obtiene la configuración de secciones del home del usuario actual',
   })
   @ApiResponse({
     status: 200,
     description: 'Configuración del home',
-    type: HomePreferencesResponseDto
+    type: HomePreferencesResponseDto,
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado'
+    description: 'No autenticado',
   })
-  async getHomePreferences(
-    @CurrentUser() user: JwtUser,
-  ): Promise<HomePreferencesResponseDto> {
+  async getHomePreferences(@CurrentUser() user: JwtUser): Promise<HomePreferencesResponseDto> {
     const result = await this.updateHomePreferencesUseCase.execute({
       userId: user.id,
     });
@@ -360,25 +365,26 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Actualizar preferencias del home',
-    description: 'Actualiza la configuración de secciones del home (orden, habilitadas/deshabilitadas)'
+    description:
+      'Actualiza la configuración de secciones del home (orden, habilitadas/deshabilitadas)',
   })
   @ApiBody({ type: UpdateHomePreferencesRequestDto })
   @ApiResponse({
     status: 200,
     description: 'Configuración del home actualizada',
-    type: HomePreferencesResponseDto
+    type: HomePreferencesResponseDto,
   })
   @ApiResponse({
     status: 400,
-    description: 'Datos inválidos'
+    description: 'Datos inválidos',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado'
+    description: 'No autenticado',
   })
   async updateHomePreferences(
     @CurrentUser() user: JwtUser,
-    @Body() dto: UpdateHomePreferencesRequestDto,
+    @Body() dto: UpdateHomePreferencesRequestDto
   ): Promise<HomePreferencesResponseDto> {
     const result = await this.updateHomePreferencesUseCase.execute({
       userId: user.id,

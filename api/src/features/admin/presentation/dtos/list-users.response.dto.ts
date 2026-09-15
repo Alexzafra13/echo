@@ -92,7 +92,7 @@ export class ListUsersResponseDto {
 
   static fromDomain(data: ListUsersOutput): ListUsersResponseDto {
     const dto = new ListUsersResponseDto();
-    dto.users = data.users.map(user => {
+    dto.users = data.users.map((user) => {
       const userDto = new UserItemDto();
       userDto.id = user.id;
       userDto.username = user.username;

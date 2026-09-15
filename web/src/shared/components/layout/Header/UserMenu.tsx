@@ -18,13 +18,7 @@ interface UserMenuProps {
   onLogout: () => void;
 }
 
-export function UserMenu({
-  user,
-  avatarTimestamp,
-  isOpen,
-  onOpenChange,
-  onLogout,
-}: UserMenuProps) {
+export function UserMenu({ user, avatarTimestamp, isOpen, onOpenChange, onLogout }: UserMenuProps) {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
 

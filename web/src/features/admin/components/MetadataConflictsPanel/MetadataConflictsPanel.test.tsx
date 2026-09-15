@@ -28,18 +28,12 @@ vi.mock('./components', () => ({
     isSelected: boolean;
     onClick: () => void;
   }) => (
-    <button
-      data-testid={`artist-item-${artistName}`}
-      data-selected={isSelected}
-      onClick={onClick}
-    >
+    <button data-testid={`artist-item-${artistName}`} data-selected={isSelected} onClick={onClick}>
       {artistName} ({conflictCount})
     </button>
   ),
   ConflictCard: ({ conflict }: { conflict: { id: string; field: string } }) => (
-    <div data-testid={`conflict-card-${conflict.id}`}>
-      Conflict: {conflict.field}
-    </div>
+    <div data-testid={`conflict-card-${conflict.id}`}>Conflict: {conflict.field}</div>
   ),
 }));
 

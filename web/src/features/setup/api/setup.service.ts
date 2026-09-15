@@ -96,10 +96,7 @@ export async function createDirectory(path: string, name: string): Promise<Direc
 /**
  * Guardar claves de API externas (ambas opcionales)
  */
-export async function saveApiKeys(keys: {
-  lastfm?: string;
-  fanart?: string;
-}): Promise<void> {
+export async function saveApiKeys(keys: { lastfm?: string; fanart?: string }): Promise<void> {
   await axios.post(`${API_BASE}/api-keys`, keys);
 }
 

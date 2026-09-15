@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  timestamp,
-  index,
-  unique,
-  check,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, index, unique, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 
@@ -39,7 +31,7 @@ export const friendships = pgTable(
     // Check constraints
     check('no_self_friendship', sql`${table.requesterId} != ${table.addresseeId}`),
     check('valid_status', sql`${table.status} IN ('pending', 'accepted', 'blocked')`),
-  ],
+  ]
 );
 
 // Type exports

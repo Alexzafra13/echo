@@ -187,7 +187,8 @@
 }
 
 @keyframes progressIdlePulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       0 0 9px -2px var(--primary-30),
       0 0 18px -7px var(--primary-20);
@@ -673,11 +674,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.04),
-    rgba(255, 255, 255, 0) 60%
-  );
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 60%);
   pointer-events: none;
 }
 

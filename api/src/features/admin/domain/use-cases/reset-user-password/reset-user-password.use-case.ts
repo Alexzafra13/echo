@@ -17,7 +17,7 @@ export class ResetUserPasswordUseCase {
     private readonly userRepository: IUserRepository,
     @Inject(PASSWORD_SERVICE)
     private readonly passwordService: IPasswordService,
-    private readonly logService: LogService,
+    private readonly logService: LogService
   ) {}
 
   async execute(input: ResetUserPasswordInput): Promise<ResetUserPasswordOutput> {
@@ -27,12 +27,14 @@ export class ResetUserPasswordUseCase {
     }
 
     if (input.adminId && input.userId === input.adminId) {
-      throw new ForbiddenError('No puedes resetear tu propia contraseña desde el panel de admin. Usa la opción de cambio de contraseña en tu perfil.');
+      throw new ForbiddenError(
+        'No puedes resetear tu propia contraseña desde el panel de admin. Usa la opción de cambio de contraseña en tu perfil.'
+      );
     }
 
     // Prevent resetting the system admin's password
     const allUsers = await this.userRepository.findAll(0, 1000);
-    const adminUsers = allUsers.filter(u => u.isAdmin);
+    const adminUsers = allUsers.filter((u) => u.isAdmin);
     if (adminUsers.length > 0) {
       const systemAdmin = adminUsers.reduce((oldest, current) =>
         current.createdAt < oldest.createdAt ? current : oldest
@@ -50,15 +52,11 @@ export class ResetUserPasswordUseCase {
       mustChangePassword: true,
     });
 
-    await this.logService.info(
-      LogCategory.AUTH,
-      `Password reset by admin: ${user.username}`,
-      {
-        userId: user.id,
-        username: user.username,
-        resetBy: input.adminId,
-      },
-    );
+    await this.logService.info(LogCategory.AUTH, `Password reset by admin: ${user.username}`, {
+      userId: user.id,
+      username: user.username,
+      resetBy: input.adminId,
+    });
 
     return {
       temporaryPassword,

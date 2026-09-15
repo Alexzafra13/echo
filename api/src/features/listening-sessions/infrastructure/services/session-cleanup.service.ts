@@ -1,7 +1,10 @@
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
-import { IListeningSessionRepository, LISTENING_SESSION_REPOSITORY } from '../../domain/ports/listening-session-repository.port';
+import {
+  IListeningSessionRepository,
+  LISTENING_SESSION_REPOSITORY,
+} from '../../domain/ports/listening-session-repository.port';
 import { ListeningSessionsGateway } from '../../presentation/gateway/listening-sessions.gateway';
 
 // Tiempo sin actividad antes de cerrar la sesion (30 minutos)
@@ -28,7 +31,7 @@ export class SessionCleanupService implements OnModuleInit {
     private readonly bullmqService: BullmqService,
     @Inject(LISTENING_SESSION_REPOSITORY)
     private readonly sessionRepository: IListeningSessionRepository,
-    private readonly gateway: ListeningSessionsGateway,
+    private readonly gateway: ListeningSessionsGateway
   ) {}
 
   async onModuleInit() {
@@ -69,7 +72,7 @@ export class SessionCleanupService implements OnModuleInit {
       this.QUEUE_NAME,
       'session-inactivity-timeout',
       { sessionId, reason: 'inactividad (30 min sin actividad)' },
-      { jobId, delay: INACTIVITY_TIMEOUT_MS, removeOnComplete: true, removeOnFail: true },
+      { jobId, delay: INACTIVITY_TIMEOUT_MS, removeOnComplete: true, removeOnFail: true }
     );
 
     this.logger.debug({ sessionId }, 'Timer de inactividad programado (30 min)');
@@ -93,7 +96,7 @@ export class SessionCleanupService implements OnModuleInit {
       this.QUEUE_NAME,
       'session-host-disconnect',
       { sessionId, reason: 'host desconectado (5 min sin reconectar)' },
-      { jobId, delay: HOST_DISCONNECT_TIMEOUT_MS, removeOnComplete: true, removeOnFail: true },
+      { jobId, delay: HOST_DISCONNECT_TIMEOUT_MS, removeOnComplete: true, removeOnFail: true }
     );
 
     this.logger.info({ sessionId }, 'Timer de desconexion del host programado (5 min)');

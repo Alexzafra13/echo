@@ -95,25 +95,25 @@ describe('SearchTracksUseCase', () => {
 
     it('debería lanzar ValidationError si query está vacío', async () => {
       // Act & Assert
-      await expect(
-        useCase.execute({ query: '', skip: 0, take: 10 }),
-      ).rejects.toThrow(ValidationError);
+      await expect(useCase.execute({ query: '', skip: 0, take: 10 })).rejects.toThrow(
+        ValidationError
+      );
       expect(trackRepository.search).not.toHaveBeenCalled();
     });
 
     it('debería lanzar ValidationError si query es solo espacios', async () => {
       // Act & Assert
-      await expect(
-        useCase.execute({ query: '   ', skip: 0, take: 10 }),
-      ).rejects.toThrow(ValidationError);
+      await expect(useCase.execute({ query: '   ', skip: 0, take: 10 })).rejects.toThrow(
+        ValidationError
+      );
       expect(trackRepository.search).not.toHaveBeenCalled();
     });
 
     it('debería lanzar ValidationError si query tiene menos de 2 caracteres', async () => {
       // Act & Assert
-      await expect(
-        useCase.execute({ query: 'a', skip: 0, take: 10 }),
-      ).rejects.toThrow(ValidationError);
+      await expect(useCase.execute({ query: 'a', skip: 0, take: 10 })).rejects.toThrow(
+        ValidationError
+      );
       expect(trackRepository.search).not.toHaveBeenCalled();
     });
 
@@ -255,9 +255,7 @@ describe('SearchTracksUseCase', () => {
         updatedAt: new Date('2025-01-02'),
       });
 
-      (trackRepository.search as jest.Mock).mockResolvedValue([
-        trackWithAllFields,
-      ]);
+      (trackRepository.search as jest.Mock).mockResolvedValue([trackWithAllFields]);
 
       // Act
       const result = await useCase.execute({

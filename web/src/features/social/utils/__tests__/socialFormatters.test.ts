@@ -67,10 +67,7 @@ describe('socialFormatters', () => {
       expect(shouldShowCover('became_friends')).toBe(false);
     });
 
-    it.each([
-      'created_playlist',
-      'played_track',
-    ])('should return true for %s', (actionType) => {
+    it.each(['created_playlist', 'played_track'])('should return true for %s', (actionType) => {
       expect(shouldShowCover(actionType)).toBe(true);
     });
   });

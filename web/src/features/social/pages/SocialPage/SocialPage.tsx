@@ -48,10 +48,7 @@ export default function SocialPage() {
 
   // URL del avatar real (null si no tiene foto subida)
   const avatarUrl = useMemo(
-    () =>
-      currentUser?.hasAvatar
-        ? getUserAvatarUrl(currentUser.id, true)
-        : null,
+    () => (currentUser?.hasAvatar ? getUserAvatarUrl(currentUser.id, true) : null),
     [currentUser]
   );
 

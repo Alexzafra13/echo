@@ -24,12 +24,12 @@ Once complete, open **http://localhost:4567** and follow the setup wizard to cre
 
 ## Requirements
 
-| Requirement | Minimum |
-|-------------|---------|
-| OS | Debian 11+, Ubuntu 20.04+, Fedora 38+, Arch Linux |
-| Architecture | x86_64 or aarch64 (ARM64) |
-| Disk space | 1 GB free |
-| RAM | 1 GB (2 GB recommended) |
+| Requirement  | Minimum                                           |
+| ------------ | ------------------------------------------------- |
+| OS           | Debian 11+, Ubuntu 20.04+, Fedora 38+, Arch Linux |
+| Architecture | x86_64 or aarch64 (ARM64)                         |
+| Disk space   | 1 GB free                                         |
+| RAM          | 1 GB (2 GB recommended)                           |
 
 ## Update
 
@@ -58,12 +58,12 @@ sudo journalctl -u echo -f        # View logs
 
 ## File Locations
 
-| Path | Description |
-|------|-------------|
-| `/opt/echo` | Application files |
-| `/opt/echo/api/.env` | Configuration (auto-generated) |
-| `/var/lib/echo` | Data (covers, metadata, uploads) |
-| `/srv/music` | Default music directory |
+| Path                 | Description                      |
+| -------------------- | -------------------------------- |
+| `/opt/echo`          | Application files                |
+| `/opt/echo/api/.env` | Configuration (auto-generated)   |
+| `/var/lib/echo`      | Data (covers, metadata, uploads) |
+| `/srv/music`         | Default music directory          |
 
 ## Music Library
 
@@ -87,14 +87,14 @@ Then restart: `sudo systemctl restart echo`
 
 All configuration is auto-generated during installation. Edit `/opt/echo/api/.env` only if you need to change defaults:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `4567` | Server port |
-| `DATABASE_URL` | auto-generated | PostgreSQL connection string |
-| `REDIS_HOST` | `localhost` | Redis host |
-| `LIBRARY_PATH` | `/srv/music` | Primary music directory |
-| `ALLOWED_MUSIC_PATHS` | `/srv/music,/mnt,/media,/home` | Directories the scanner can access |
-| `CORS_ORIGINS` | auto-detected | Set explicitly if behind a reverse proxy |
+| Variable              | Default                        | Description                              |
+| --------------------- | ------------------------------ | ---------------------------------------- |
+| `PORT`                | `4567`                         | Server port                              |
+| `DATABASE_URL`        | auto-generated                 | PostgreSQL connection string             |
+| `REDIS_HOST`          | `localhost`                    | Redis host                               |
+| `LIBRARY_PATH`        | `/srv/music`                   | Primary music directory                  |
+| `ALLOWED_MUSIC_PATHS` | `/srv/music,/mnt,/media,/home` | Directories the scanner can access       |
+| `CORS_ORIGINS`        | auto-detected                  | Set explicitly if behind a reverse proxy |
 
 After editing, restart the service: `sudo systemctl restart echo`
 
@@ -111,29 +111,34 @@ CORS_ORIGINS=https://music.yourdomain.com
 ## Troubleshooting
 
 **Service won't start:**
+
 ```bash
 sudo journalctl -u echo --no-pager -n 50
 ```
 
 **Service keeps restarting:**
 The service has crash-loop protection (max 5 restarts in 5 minutes). Check logs for the root cause:
+
 ```bash
 sudo journalctl -u echo --no-pager -n 100
 ```
 
 **Database connection issues:**
+
 ```bash
 sudo systemctl status postgresql
 sudo -u postgres psql -c "SELECT 1"
 ```
 
 **Redis connection issues:**
+
 ```bash
 sudo systemctl status redis-server   # Debian/Ubuntu
 sudo systemctl status redis           # Fedora/Arch
 ```
 
 **Rebuild from scratch** (keeps data):
+
 ```bash
 sudo systemctl stop echo
 cd /opt/echo

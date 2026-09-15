@@ -10,7 +10,7 @@ export class GetCollaboratorsUseCase {
     @Inject(PLAYLIST_REPOSITORY)
     private readonly playlistRepository: IPlaylistRepository,
     @Inject(COLLABORATOR_REPOSITORY)
-    private readonly collaboratorRepository: ICollaboratorRepository,
+    private readonly collaboratorRepository: ICollaboratorRepository
   ) {}
 
   async execute(input: GetCollaboratorsInput): Promise<GetCollaboratorsOutput> {
@@ -27,7 +27,7 @@ export class GetCollaboratorsUseCase {
     const isOwner = playlist.ownerId === input.requesterId;
     const isCollaborator = await this.collaboratorRepository.hasAccess(
       input.playlistId,
-      input.requesterId,
+      input.requesterId
     );
 
     if (!isOwner && !isCollaborator) {

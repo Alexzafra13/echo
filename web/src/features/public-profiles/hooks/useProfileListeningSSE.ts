@@ -23,19 +23,22 @@ export function useProfileListeningSSE(targetUserId: string) {
     ? `${apiUrl}/social/listening/stream?userId=${encodeURIComponent(currentUser!.id)}&token=${encodeURIComponent(accessToken!)}`
     : null;
 
-  const events = useMemo(() => ({
-    'listening-update': (event: MessageEvent) => {
-      try {
-        const update: ListeningUpdate = JSON.parse(event.data);
-        if (update.userId === targetUserId) {
-          logger.debug('[SSE] Profile listening update:', update);
-          queryClient.invalidateQueries({ queryKey: ['public-profile', targetUserId] });
+  const events = useMemo(
+    () => ({
+      'listening-update': (event: MessageEvent) => {
+        try {
+          const update: ListeningUpdate = JSON.parse(event.data);
+          if (update.userId === targetUserId) {
+            logger.debug('[SSE] Profile listening update:', update);
+            queryClient.invalidateQueries({ queryKey: ['public-profile', targetUserId] });
+          }
+        } catch (err) {
+          logger.error('[SSE] Failed to parse listening update:', err);
         }
-      } catch (err) {
-        logger.error('[SSE] Failed to parse listening update:', err);
-      }
-    },
-  }), [targetUserId, queryClient]);
+      },
+    }),
+    [targetUserId, queryClient]
+  );
 
   useSSE({
     url,

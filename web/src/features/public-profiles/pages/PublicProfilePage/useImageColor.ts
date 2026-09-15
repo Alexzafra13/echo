@@ -21,7 +21,7 @@ export const getColorFromString = (str: string): string => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convertir a entero de 32 bits
   }
   return DEFAULT_COLORS[Math.abs(hash) % DEFAULT_COLORS.length];
@@ -33,7 +33,7 @@ export const getColorFromString = (str: string): string => {
  */
 export const useImageColor = (imageUrl?: string, fallbackId?: string): string => {
   const fallbackColor = useMemo(
-    () => fallbackId ? getColorFromString(fallbackId) : DEFAULT_COLORS[0],
+    () => (fallbackId ? getColorFromString(fallbackId) : DEFAULT_COLORS[0]),
     [fallbackId]
   );
   const [color, setColor] = useState(fallbackColor);
@@ -45,7 +45,7 @@ export const useImageColor = (imageUrl?: string, fallbackId?: string): string =>
     }
 
     extractDominantColor(imageUrl)
-      .then(extractedColor => setColor(extractedColor))
+      .then((extractedColor) => setColor(extractedColor))
       .catch(() => setColor(fallbackColor));
   }, [imageUrl, fallbackColor]);
 

@@ -12,8 +12,5 @@ export interface IArtistBioRetriever extends IAgent {
    * @param name Artist name (fallback for search)
    * @returns ArtistBio entity or null if not found
    */
-  getArtistBio(
-    mbid: string | null,
-    name: string
-  ): Promise<ArtistBio | null>;
+  getArtistBio(mbid: string | null, name: string): Promise<ArtistBio | null>;
 }

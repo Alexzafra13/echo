@@ -17,11 +17,7 @@ module.exports = {
   testEnvironment: 'node',
 
   // Excluir tests de integración y E2E
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '\\.integration-spec\\.ts$',
-    '\\.e2e-spec\\.ts$',
-  ],
+  testPathIgnorePatterns: ['/node_modules/', '\\.integration-spec\\.ts$', '\\.e2e-spec\\.ts$'],
 
   // NO cargamos setup de BD - los unit tests usan mocks
   // setupFilesAfterEnv: [] - intencionalmente vacío

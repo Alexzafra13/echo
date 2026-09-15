@@ -7,7 +7,7 @@ import { UpdateProfileInput, UpdateProfileOutput } from './update-profile.dto';
 export class UpdateProfileUseCase {
   constructor(
     @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
+    private readonly userRepository: IUserRepository
   ) {}
 
   async execute(input: UpdateProfileInput): Promise<UpdateProfileOutput> {

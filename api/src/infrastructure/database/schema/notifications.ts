@@ -37,9 +37,9 @@ export const notifications = pgTable(
     index('idx_notifications_created').on(table.createdAt),
     check(
       'valid_notification_type',
-      sql`${table.type} IN ('friend_request_received', 'friend_request_accepted', 'enrichment_completed', 'system_alert', 'scan_completed', 'new_content')`,
+      sql`${table.type} IN ('friend_request_received', 'friend_request_accepted', 'enrichment_completed', 'system_alert', 'scan_completed', 'new_content')`
     ),
-  ],
+  ]
 );
 
 // Type exports
@@ -63,7 +63,7 @@ export const notificationPreferences = pgTable(
   (table) => [
     unique('unique_user_notification_type').on(table.userId, table.notificationType),
     index('idx_notification_prefs_user').on(table.userId),
-  ],
+  ]
 );
 
 // Type exports

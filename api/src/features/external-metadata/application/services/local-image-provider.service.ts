@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -35,7 +35,7 @@ export interface LocalArtistImages {
 export class LocalImageProvider {
   constructor(
     @InjectPinoLogger(LocalImageProvider.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {}
 
   // Naming conventions (orden de prioridad)
@@ -71,11 +71,7 @@ export class LocalImageProvider {
     'clearlogo.jpg',
   ];
 
-  private readonly BANNER_IMAGE_NAMES = [
-    'banner.jpg',
-    'banner.png',
-    'banner.jpeg',
-  ];
+  private readonly BANNER_IMAGE_NAMES = ['banner.jpg', 'banner.png', 'banner.jpeg'];
 
   /**
    * Busca imágenes locales en la carpeta de un artista
@@ -93,7 +89,7 @@ export class LocalImageProvider {
 
       // Leer archivos de la carpeta
       const files = await fs.readdir(artistFolderPath);
-      const lowerCaseFiles = files.map(f => f.toLowerCase());
+      const lowerCaseFiles = files.map((f) => f.toLowerCase());
 
       this.logger.debug(`Scanning folder for local images: ${artistFolderPath}`);
       this.logger.debug(`Found ${files.length} files`);

@@ -34,7 +34,10 @@ describe('useFocusTrap', () => {
     Object.defineProperty(button1, 'offsetParent', { value: container, configurable: true });
     Object.defineProperty(button2, 'offsetParent', { value: container, configurable: true });
     Object.defineProperty(button3, 'offsetParent', { value: container, configurable: true });
-    Object.defineProperty(outsideButton, 'offsetParent', { value: document.body, configurable: true });
+    Object.defineProperty(outsideButton, 'offsetParent', {
+      value: document.body,
+      configurable: true,
+    });
 
     // Focus outside button initially
     outsideButton.focus();
@@ -79,9 +82,7 @@ describe('useFocusTrap', () => {
 
       renderHook(() => useFocusTrap<HTMLDivElement>(false));
 
-      const keydownCalls = addEventListenerSpy.mock.calls.filter(
-        call => call[0] === 'keydown'
-      );
+      const keydownCalls = addEventListenerSpy.mock.calls.filter((call) => call[0] === 'keydown');
       expect(keydownCalls.length).toBe(0);
     });
   });
@@ -383,7 +384,7 @@ describe('useFocusTrap', () => {
 
       // Initially no keydown listener
       const initialKeydownCalls = addEventListenerSpy.mock.calls.filter(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
       expect(initialKeydownCalls.length).toBe(0);
 
@@ -392,7 +393,7 @@ describe('useFocusTrap', () => {
 
       // Now should have keydown listener
       const afterKeydownCalls = addEventListenerSpy.mock.calls.filter(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
       expect(afterKeydownCalls.length).toBe(1);
     });
@@ -415,7 +416,7 @@ describe('useFocusTrap', () => {
 
       // Should have removed keydown listener
       const keydownCalls = removeEventListenerSpy.mock.calls.filter(
-        call => call[0] === 'keydown'
+        (call) => call[0] === 'keydown'
       );
       expect(keydownCalls.length).toBe(1);
     });

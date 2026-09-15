@@ -18,8 +18,7 @@ export function useUpdatePrivacySettings() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdatePrivacySettingsRequest) =>
-      settingsService.updatePrivacySettings(data),
+    mutationFn: (data: UpdatePrivacySettingsRequest) => settingsService.updatePrivacySettings(data),
     onSuccess: (data) => {
       queryClient.setQueryData(['privacy-settings'], data);
     },
@@ -49,8 +48,7 @@ export function useUpdateHomePreferences() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdateHomePreferencesRequest) =>
-      settingsService.updateHomePreferences(data),
+    mutationFn: (data: UpdateHomePreferencesRequest) => settingsService.updateHomePreferences(data),
     onSuccess: (data) => {
       queryClient.setQueryData(['home-preferences'], data);
     },

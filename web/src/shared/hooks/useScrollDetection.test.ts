@@ -38,9 +38,7 @@ describe('useScrollDetection', () => {
     });
 
     it('should return isScrolled true when alwaysScrolled is true', () => {
-      const { result } = renderHook(() =>
-        useScrollDetection({ alwaysScrolled: true })
-      );
+      const { result } = renderHook(() => useScrollDetection({ alwaysScrolled: true }));
 
       expect(result.current.isScrolled).toBe(true);
     });
@@ -55,9 +53,7 @@ describe('useScrollDetection', () => {
     });
 
     it('should accept custom threshold', () => {
-      const { result } = renderHook(() =>
-        useScrollDetection({ threshold: 100 })
-      );
+      const { result } = renderHook(() => useScrollDetection({ threshold: 100 }));
 
       expect(result.current.isScrolled).toBe(false);
     });
@@ -87,9 +83,7 @@ describe('useScrollDetection', () => {
     });
 
     it('should return true immediately without waiting for scroll events', () => {
-      const { result } = renderHook(() =>
-        useScrollDetection({ alwaysScrolled: true })
-      );
+      const { result } = renderHook(() => useScrollDetection({ alwaysScrolled: true }));
 
       // Should be true on first render
       expect(result.current.isScrolled).toBe(true);
@@ -103,11 +97,9 @@ describe('useScrollDetection', () => {
       renderHook(() => useScrollDetection());
 
       // Should fall back to window scroll listener
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'scroll',
-        expect.any(Function),
-        { passive: true }
-      );
+      expect(addEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function), {
+        passive: true,
+      });
 
       addEventListenerSpy.mockRestore();
     });
@@ -119,10 +111,7 @@ describe('useScrollDetection', () => {
 
       unmount();
 
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'scroll',
-        expect.any(Function)
-      );
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function));
 
       removeEventListenerSpy.mockRestore();
     });

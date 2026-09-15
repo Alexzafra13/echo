@@ -36,7 +36,7 @@ export class GetDashboardStatsUseCase {
     @Inject(SCAN_STATS_PROVIDER)
     private readonly scanStats: IScanStatsProvider,
     @Inject(ALERTS_PROVIDER)
-    private readonly alerts: IAlertsProvider,
+    private readonly alerts: IAlertsProvider
   ) {}
 
   async execute(_input: GetDashboardStatsInput): Promise<GetDashboardStatsOutput> {
@@ -78,7 +78,7 @@ export class GetDashboardStatsUseCase {
     } catch (error) {
       this.logger.error(
         `Error getting dashboard stats: ${(error as Error).message}`,
-        (error as Error).stack,
+        (error as Error).stack
       );
       throw error;
     }

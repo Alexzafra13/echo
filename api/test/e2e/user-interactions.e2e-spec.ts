@@ -313,9 +313,7 @@ describe('User Interactions E2E', () => {
     });
 
     it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .get('/api/interactions/me')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/interactions/me').expect(401);
     });
   });
 

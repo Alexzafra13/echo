@@ -6,7 +6,7 @@ import { ListeningUser } from '../entities/friendship.entity';
 export class GetListeningFriendsUseCase {
   constructor(
     @Inject(SOCIAL_REPOSITORY)
-    private readonly socialRepository: ISocialRepository,
+    private readonly socialRepository: ISocialRepository
   ) {}
 
   async execute(userId: string): Promise<ListeningUser[]> {

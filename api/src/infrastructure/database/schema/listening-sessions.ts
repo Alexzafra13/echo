@@ -38,7 +38,7 @@ export const listeningSessions = pgTable(
     index('idx_listening_sessions_host').on(table.hostId),
     index('idx_listening_sessions_invite_code').on(table.inviteCode),
     index('idx_listening_sessions_active').on(table.isActive),
-  ],
+  ]
 );
 
 // ============================================
@@ -64,7 +64,7 @@ export const listeningSessionParticipants = pgTable(
     index('idx_session_participants_session').on(table.sessionId),
     index('idx_session_participants_user').on(table.userId),
     check('valid_participant_role', sql`${table.role} IN ('host', 'dj', 'listener')`),
-  ],
+  ]
 );
 
 // ============================================
@@ -91,7 +91,7 @@ export const listeningSessionQueue = pgTable(
   (table) => [
     index('idx_session_queue_session').on(table.sessionId, table.position),
     unique('unique_session_queue_position').on(table.sessionId, table.position),
-  ],
+  ]
 );
 
 // Type exports

@@ -2,7 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { listeningSessionsService } from '../services/listening-sessions.service';
 import { useSessionStore } from '../store/sessionStore';
 import { useAuthStore } from '@shared/store';
-import type { CreateSessionDto, JoinSessionDto, AddToQueueDto, UpdateParticipantRoleDto } from '../types';
+import type {
+  CreateSessionDto,
+  JoinSessionDto,
+  AddToQueueDto,
+  UpdateParticipantRoleDto,
+} from '../types';
 
 const SESSION_KEY = 'listening-session';
 
@@ -64,7 +69,7 @@ export function useJoinSession() {
       const session = await listeningSessionsService.getSession(result.sessionId);
       const userId = useAuthStore.getState().user?.id;
       const me = session.participants.find((p) => p.userId === userId);
-      setActiveSession(session, (me?.role ?? 'listener'));
+      setActiveSession(session, me?.role ?? 'listener');
       queryClient.setQueryData([SESSION_KEY, result.sessionId], session);
     },
   });

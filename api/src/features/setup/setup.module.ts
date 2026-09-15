@@ -1,10 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SetupController } from './presentation/setup.controller';
 import { SetupService } from './application/setup.service';
-import {
-  DirectoryBrowserService,
-  MusicLibraryDetectorService,
-} from './application/services';
+import { DirectoryBrowserService, MusicLibraryDetectorService } from './application/services';
 
 /**
  * Setup Module
@@ -22,11 +19,7 @@ import {
  */
 @Module({
   controllers: [SetupController],
-  providers: [
-    SetupService,
-    DirectoryBrowserService,
-    MusicLibraryDetectorService,
-  ],
+  providers: [SetupService, DirectoryBrowserService, MusicLibraryDetectorService],
   exports: [SetupService],
 })
 export class SetupModule {}

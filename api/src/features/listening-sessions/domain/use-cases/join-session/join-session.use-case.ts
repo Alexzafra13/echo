@@ -7,7 +7,7 @@ import { JoinSessionInput, JoinSessionOutput } from './join-session.dto';
 export class JoinSessionUseCase {
   constructor(
     @Inject(LISTENING_SESSION_REPOSITORY)
-    private readonly sessionRepository: IListeningSessionRepository,
+    private readonly sessionRepository: IListeningSessionRepository
   ) {}
 
   async execute(input: JoinSessionInput): Promise<JoinSessionOutput> {

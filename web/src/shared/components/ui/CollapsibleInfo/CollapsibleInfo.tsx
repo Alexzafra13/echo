@@ -18,7 +18,12 @@ interface CollapsibleInfoProps {
  * Collapsible information box with blue accent
  * Used throughout admin panels for informational messages
  */
-export function CollapsibleInfo({ title, children, defaultExpanded = false, className }: CollapsibleInfoProps) {
+export function CollapsibleInfo({
+  title,
+  children,
+  defaultExpanded = false,
+  className,
+}: CollapsibleInfoProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const contentId = useId();
 

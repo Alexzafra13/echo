@@ -232,15 +232,17 @@ describe('PlaylistRepository Integration', () => {
 
     describe('findById', () => {
       it('debería encontrar playlist por ID', async () => {
-        const playlist = await repository.create(Playlist.create({
-          name: 'Find Me',
-          ownerId: testUserId,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
+        const playlist = await repository.create(
+          Playlist.create({
+            name: 'Find Me',
+            ownerId: testUserId,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
 
         const found = await repository.findById(playlist.id);
 
@@ -258,24 +260,28 @@ describe('PlaylistRepository Integration', () => {
 
     describe('findByOwnerId', () => {
       it('debería encontrar playlists del usuario', async () => {
-        await repository.create(Playlist.create({
-          name: 'Playlist 1',
-          ownerId: testUserId,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
-        await repository.create(Playlist.create({
-          name: 'Playlist 2',
-          ownerId: testUserId,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
+        await repository.create(
+          Playlist.create({
+            name: 'Playlist 1',
+            ownerId: testUserId,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
+        await repository.create(
+          Playlist.create({
+            name: 'Playlist 2',
+            ownerId: testUserId,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
 
         const playlists = await repository.findByOwnerId(testUserId, 0, 10);
 
@@ -284,15 +290,17 @@ describe('PlaylistRepository Integration', () => {
 
       it('debería paginar resultados', async () => {
         for (let i = 0; i < 5; i++) {
-          await repository.create(Playlist.create({
-            name: `Playlist ${i}`,
-            ownerId: testUserId,
-            public: false,
-            duration: 0,
-            size: 0,
-            songCount: 0,
-            sync: false,
-          }));
+          await repository.create(
+            Playlist.create({
+              name: `Playlist ${i}`,
+              ownerId: testUserId,
+              public: false,
+              duration: 0,
+              size: 0,
+              songCount: 0,
+              sync: false,
+            })
+          );
         }
 
         const page1 = await repository.findByOwnerId(testUserId, 0, 2);
@@ -305,24 +313,28 @@ describe('PlaylistRepository Integration', () => {
 
     describe('findPublic', () => {
       it('debería encontrar solo playlists públicas', async () => {
-        await repository.create(Playlist.create({
-          name: 'Public',
-          ownerId: testUserId,
-          public: true,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
-        await repository.create(Playlist.create({
-          name: 'Private',
-          ownerId: testUserId,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
+        await repository.create(
+          Playlist.create({
+            name: 'Public',
+            ownerId: testUserId,
+            public: true,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
+        await repository.create(
+          Playlist.create({
+            name: 'Private',
+            ownerId: testUserId,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
 
         const publicPlaylists = await repository.findPublic(0, 10);
 
@@ -333,33 +345,39 @@ describe('PlaylistRepository Integration', () => {
 
     describe('search', () => {
       beforeEach(async () => {
-        await repository.create(Playlist.create({
-          name: 'Rock Hits',
-          ownerId: testUserId,
-          public: true,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
-        await repository.create(Playlist.create({
-          name: 'Pop Songs',
-          ownerId: testUserId,
-          public: true,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
-        await repository.create(Playlist.create({
-          name: 'Rock Ballads',
-          ownerId: testUserId,
-          public: true,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
+        await repository.create(
+          Playlist.create({
+            name: 'Rock Hits',
+            ownerId: testUserId,
+            public: true,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
+        await repository.create(
+          Playlist.create({
+            name: 'Pop Songs',
+            ownerId: testUserId,
+            public: true,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
+        await repository.create(
+          Playlist.create({
+            name: 'Rock Ballads',
+            ownerId: testUserId,
+            public: true,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
       });
 
       it('debería buscar por nombre (case insensitive)', async () => {
@@ -369,15 +387,17 @@ describe('PlaylistRepository Integration', () => {
       });
 
       it('debería manejar caracteres especiales', async () => {
-        await repository.create(Playlist.create({
-          name: 'Test % Special',
-          ownerId: testUserId,
-          public: true,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
+        await repository.create(
+          Playlist.create({
+            name: 'Test % Special',
+            ownerId: testUserId,
+            public: true,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
 
         const results = await repository.search('%', 0, 10);
 
@@ -387,15 +407,17 @@ describe('PlaylistRepository Integration', () => {
 
     describe('update', () => {
       it('debería actualizar playlist', async () => {
-        const playlist = await repository.create(Playlist.create({
-          name: 'Original',
-          ownerId: testUserId,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
+        const playlist = await repository.create(
+          Playlist.create({
+            name: 'Original',
+            ownerId: testUserId,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
 
         const toUpdate = Playlist.fromPrimitives({
           ...playlist.toPrimitives(),
@@ -414,15 +436,17 @@ describe('PlaylistRepository Integration', () => {
 
     describe('delete', () => {
       it('debería eliminar playlist', async () => {
-        const playlist = await repository.create(Playlist.create({
-          name: 'To Delete',
-          ownerId: testUserId,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
+        const playlist = await repository.create(
+          Playlist.create({
+            name: 'To Delete',
+            ownerId: testUserId,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
 
         const deleted = await repository.delete(playlist.id);
         const found = await repository.findById(playlist.id);
@@ -440,24 +464,28 @@ describe('PlaylistRepository Integration', () => {
 
     describe('count', () => {
       it('debería contar playlists totales', async () => {
-        await repository.create(Playlist.create({
-          name: 'P1',
-          ownerId: testUserId,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
-        await repository.create(Playlist.create({
-          name: 'P2',
-          ownerId: testUserId,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
+        await repository.create(
+          Playlist.create({
+            name: 'P1',
+            ownerId: testUserId,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
+        await repository.create(
+          Playlist.create({
+            name: 'P2',
+            ownerId: testUserId,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
 
         const count = await repository.count();
 
@@ -467,24 +495,28 @@ describe('PlaylistRepository Integration', () => {
       it('debería contar por owner', async () => {
         const user2 = await createTestUser('other_user');
 
-        await repository.create(Playlist.create({
-          name: 'User1 Playlist',
-          ownerId: testUserId,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
-        await repository.create(Playlist.create({
-          name: 'User2 Playlist',
-          ownerId: user2.id,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
+        await repository.create(
+          Playlist.create({
+            name: 'User1 Playlist',
+            ownerId: testUserId,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
+        await repository.create(
+          Playlist.create({
+            name: 'User2 Playlist',
+            ownerId: user2.id,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
 
         const countUser1 = await repository.countByOwnerId(testUserId);
         const countUser2 = await repository.countByOwnerId(user2.id);
@@ -499,15 +531,17 @@ describe('PlaylistRepository Integration', () => {
     let testPlaylistId: string;
 
     beforeEach(async () => {
-      const playlist = await repository.create(Playlist.create({
-        name: 'Track Test Playlist',
-        ownerId: testUserId,
-        public: false,
-        duration: 0,
-        size: 0,
-        songCount: 0,
-        sync: false,
-      }));
+      const playlist = await repository.create(
+        Playlist.create({
+          name: 'Track Test Playlist',
+          ownerId: testUserId,
+          public: false,
+          duration: 0,
+          size: 0,
+          songCount: 0,
+          sync: false,
+        })
+      );
       testPlaylistId = playlist.id;
     });
 
@@ -529,11 +563,13 @@ describe('PlaylistRepository Integration', () => {
 
       it('debería agregar múltiples tracks', async () => {
         for (let i = 0; i < 3; i++) {
-          await repository.addTrack(PlaylistTrack.create({
-            playlistId: testPlaylistId,
-            trackId: testTrackIds[i],
-            trackOrder: i + 1,
-          }));
+          await repository.addTrack(
+            PlaylistTrack.create({
+              playlistId: testPlaylistId,
+              trackId: testTrackIds[i],
+              trackOrder: i + 1,
+            })
+          );
         }
 
         const tracks = await repository.getPlaylistTracks(testPlaylistId);
@@ -556,7 +592,7 @@ describe('PlaylistRepository Integration', () => {
       it('debería manejar adiciones concurrentes (race condition)', async () => {
         // Simular adiciones concurrentes con Promise.allSettled
         // para manejar posibles errores de serialización de transacciones
-        const promises = testTrackIds.map(trackId =>
+        const promises = testTrackIds.map((trackId) =>
           repository.addTrackWithAutoOrder(testPlaylistId, trackId)
         );
 
@@ -565,13 +601,13 @@ describe('PlaylistRepository Integration', () => {
         // Contar cuántas fueron exitosas
         const successfulResults = results
           .filter((r): r is PromiseFulfilledResult<PlaylistTrack> => r.status === 'fulfilled')
-          .map(r => r.value);
+          .map((r) => r.value);
 
         // Al menos algunas deberían ser exitosas
         expect(successfulResults.length).toBeGreaterThan(0);
 
         // Verificar que los exitosos tienen órdenes únicos
-        const orders = successfulResults.map(r => r.trackOrder);
+        const orders = successfulResults.map((r) => r.trackOrder);
         const uniqueOrders = new Set(orders);
         expect(uniqueOrders.size).toBe(successfulResults.length);
 
@@ -586,11 +622,13 @@ describe('PlaylistRepository Integration', () => {
 
     describe('removeTrack', () => {
       it('debería eliminar track de playlist', async () => {
-        await repository.addTrack(PlaylistTrack.create({
-          playlistId: testPlaylistId,
-          trackId: testTrackIds[0],
-          trackOrder: 1,
-        }));
+        await repository.addTrack(
+          PlaylistTrack.create({
+            playlistId: testPlaylistId,
+            trackId: testTrackIds[0],
+            trackOrder: 1,
+          })
+        );
 
         const removed = await repository.removeTrack(testPlaylistId, testTrackIds[0]);
         const isInPlaylist = await repository.isTrackInPlaylist(testPlaylistId, testTrackIds[0]);
@@ -609,21 +647,27 @@ describe('PlaylistRepository Integration', () => {
     describe('getPlaylistTracks', () => {
       it('debería retornar tracks ordenados', async () => {
         // Agregar en orden inverso
-        await repository.addTrack(PlaylistTrack.create({
-          playlistId: testPlaylistId,
-          trackId: testTrackIds[2],
-          trackOrder: 3,
-        }));
-        await repository.addTrack(PlaylistTrack.create({
-          playlistId: testPlaylistId,
-          trackId: testTrackIds[0],
-          trackOrder: 1,
-        }));
-        await repository.addTrack(PlaylistTrack.create({
-          playlistId: testPlaylistId,
-          trackId: testTrackIds[1],
-          trackOrder: 2,
-        }));
+        await repository.addTrack(
+          PlaylistTrack.create({
+            playlistId: testPlaylistId,
+            trackId: testTrackIds[2],
+            trackOrder: 3,
+          })
+        );
+        await repository.addTrack(
+          PlaylistTrack.create({
+            playlistId: testPlaylistId,
+            trackId: testTrackIds[0],
+            trackOrder: 1,
+          })
+        );
+        await repository.addTrack(
+          PlaylistTrack.create({
+            playlistId: testPlaylistId,
+            trackId: testTrackIds[1],
+            trackOrder: 2,
+          })
+        );
 
         const tracks = await repository.getPlaylistTracks(testPlaylistId);
 
@@ -642,11 +686,13 @@ describe('PlaylistRepository Integration', () => {
 
     describe('isTrackInPlaylist', () => {
       it('debería retornar true si track está en playlist', async () => {
-        await repository.addTrack(PlaylistTrack.create({
-          playlistId: testPlaylistId,
-          trackId: testTrackIds[0],
-          trackOrder: 1,
-        }));
+        await repository.addTrack(
+          PlaylistTrack.create({
+            playlistId: testPlaylistId,
+            trackId: testTrackIds[0],
+            trackOrder: 1,
+          })
+        );
 
         const isIn = await repository.isTrackInPlaylist(testPlaylistId, testTrackIds[0]);
 
@@ -664,11 +710,13 @@ describe('PlaylistRepository Integration', () => {
       beforeEach(async () => {
         // Agregar 3 tracks en orden 1, 2, 3
         for (let i = 0; i < 3; i++) {
-          await repository.addTrack(PlaylistTrack.create({
-            playlistId: testPlaylistId,
-            trackId: testTrackIds[i],
-            trackOrder: i + 1,
-          }));
+          await repository.addTrack(
+            PlaylistTrack.create({
+              playlistId: testPlaylistId,
+              trackId: testTrackIds[i],
+              trackOrder: i + 1,
+            })
+          );
         }
       });
 
@@ -697,9 +745,7 @@ describe('PlaylistRepository Integration', () => {
 
       it('debería reordenar parcialmente', async () => {
         // Solo cambiar el primero al final
-        const newOrder = [
-          { trackId: testTrackIds[0], order: 4 },
-        ];
+        const newOrder = [{ trackId: testTrackIds[0], order: 4 }];
 
         await repository.reorderTracks(testPlaylistId, newOrder);
         const tracks = await repository.getPlaylistTracks(testPlaylistId);
@@ -712,11 +758,13 @@ describe('PlaylistRepository Integration', () => {
     describe('getPlaylistAlbumIds', () => {
       it('debería retornar album IDs únicos', async () => {
         for (const trackId of testTrackIds) {
-          await repository.addTrack(PlaylistTrack.create({
-            playlistId: testPlaylistId,
-            trackId,
-            trackOrder: testTrackIds.indexOf(trackId) + 1,
-          }));
+          await repository.addTrack(
+            PlaylistTrack.create({
+              playlistId: testPlaylistId,
+              trackId,
+              trackOrder: testTrackIds.indexOf(trackId) + 1,
+            })
+          );
         }
 
         const albumIds = await repository.getPlaylistAlbumIds(testPlaylistId);
@@ -728,27 +776,33 @@ describe('PlaylistRepository Integration', () => {
 
     describe('getBatchPlaylistAlbumIds', () => {
       it('debería obtener album IDs para múltiples playlists', async () => {
-        const playlist2 = await repository.create(Playlist.create({
-          name: 'Playlist 2',
-          ownerId: testUserId,
-          public: false,
-          duration: 0,
-          size: 0,
-          songCount: 0,
-          sync: false,
-        }));
+        const playlist2 = await repository.create(
+          Playlist.create({
+            name: 'Playlist 2',
+            ownerId: testUserId,
+            public: false,
+            duration: 0,
+            size: 0,
+            songCount: 0,
+            sync: false,
+          })
+        );
 
         // Agregar tracks a ambas playlists
-        await repository.addTrack(PlaylistTrack.create({
-          playlistId: testPlaylistId,
-          trackId: testTrackIds[0],
-          trackOrder: 1,
-        }));
-        await repository.addTrack(PlaylistTrack.create({
-          playlistId: playlist2.id,
-          trackId: testTrackIds[1],
-          trackOrder: 1,
-        }));
+        await repository.addTrack(
+          PlaylistTrack.create({
+            playlistId: testPlaylistId,
+            trackId: testTrackIds[0],
+            trackOrder: 1,
+          })
+        );
+        await repository.addTrack(
+          PlaylistTrack.create({
+            playlistId: playlist2.id,
+            trackId: testTrackIds[1],
+            trackOrder: 1,
+          })
+        );
 
         const result = await repository.getBatchPlaylistAlbumIds([testPlaylistId, playlist2.id]);
 
@@ -768,37 +822,45 @@ describe('PlaylistRepository Integration', () => {
 
   describe('Public Playlists by Artist', () => {
     it('debería encontrar playlists públicas con tracks del artista', async () => {
-      const publicPlaylist = await repository.create(Playlist.create({
-        name: 'Public with Artist',
-        ownerId: testUserId,
-        public: true,
-        duration: 0,
-        size: 0,
-        songCount: 0,
-        sync: false,
-      }));
+      const publicPlaylist = await repository.create(
+        Playlist.create({
+          name: 'Public with Artist',
+          ownerId: testUserId,
+          public: true,
+          duration: 0,
+          size: 0,
+          songCount: 0,
+          sync: false,
+        })
+      );
 
-      const privatePlaylist = await repository.create(Playlist.create({
-        name: 'Private with Artist',
-        ownerId: testUserId,
-        public: false,
-        duration: 0,
-        size: 0,
-        songCount: 0,
-        sync: false,
-      }));
+      const privatePlaylist = await repository.create(
+        Playlist.create({
+          name: 'Private with Artist',
+          ownerId: testUserId,
+          public: false,
+          duration: 0,
+          size: 0,
+          songCount: 0,
+          sync: false,
+        })
+      );
 
       // Agregar tracks del mismo artista a ambas
-      await repository.addTrack(PlaylistTrack.create({
-        playlistId: publicPlaylist.id,
-        trackId: testTrackIds[0],
-        trackOrder: 1,
-      }));
-      await repository.addTrack(PlaylistTrack.create({
-        playlistId: privatePlaylist.id,
-        trackId: testTrackIds[1],
-        trackOrder: 1,
-      }));
+      await repository.addTrack(
+        PlaylistTrack.create({
+          playlistId: publicPlaylist.id,
+          trackId: testTrackIds[0],
+          trackOrder: 1,
+        })
+      );
+      await repository.addTrack(
+        PlaylistTrack.create({
+          playlistId: privatePlaylist.id,
+          trackId: testTrackIds[1],
+          trackOrder: 1,
+        })
+      );
 
       const results = await repository.findPublicByArtistId(testArtistId, 0, 10);
 
@@ -807,35 +869,43 @@ describe('PlaylistRepository Integration', () => {
     });
 
     it('debería contar playlists públicas por artista', async () => {
-      const playlist1 = await repository.create(Playlist.create({
-        name: 'Public 1',
-        ownerId: testUserId,
-        public: true,
-        duration: 0,
-        size: 0,
-        songCount: 0,
-        sync: false,
-      }));
-      const playlist2 = await repository.create(Playlist.create({
-        name: 'Public 2',
-        ownerId: testUserId,
-        public: true,
-        duration: 0,
-        size: 0,
-        songCount: 0,
-        sync: false,
-      }));
+      const playlist1 = await repository.create(
+        Playlist.create({
+          name: 'Public 1',
+          ownerId: testUserId,
+          public: true,
+          duration: 0,
+          size: 0,
+          songCount: 0,
+          sync: false,
+        })
+      );
+      const playlist2 = await repository.create(
+        Playlist.create({
+          name: 'Public 2',
+          ownerId: testUserId,
+          public: true,
+          duration: 0,
+          size: 0,
+          songCount: 0,
+          sync: false,
+        })
+      );
 
-      await repository.addTrack(PlaylistTrack.create({
-        playlistId: playlist1.id,
-        trackId: testTrackIds[0],
-        trackOrder: 1,
-      }));
-      await repository.addTrack(PlaylistTrack.create({
-        playlistId: playlist2.id,
-        trackId: testTrackIds[1],
-        trackOrder: 1,
-      }));
+      await repository.addTrack(
+        PlaylistTrack.create({
+          playlistId: playlist1.id,
+          trackId: testTrackIds[0],
+          trackOrder: 1,
+        })
+      );
+      await repository.addTrack(
+        PlaylistTrack.create({
+          playlistId: playlist2.id,
+          trackId: testTrackIds[1],
+          trackOrder: 1,
+        })
+      );
 
       const count = await repository.countPublicByArtistId(testArtistId);
 
@@ -880,21 +950,25 @@ describe('PlaylistRepository Integration', () => {
     });
 
     it('debería eliminar playlist con tracks (cascade)', async () => {
-      const playlist = await repository.create(Playlist.create({
-        name: 'With Tracks',
-        ownerId: testUserId,
-        public: false,
-        duration: 0,
-        size: 0,
-        songCount: 0,
-        sync: false,
-      }));
+      const playlist = await repository.create(
+        Playlist.create({
+          name: 'With Tracks',
+          ownerId: testUserId,
+          public: false,
+          duration: 0,
+          size: 0,
+          songCount: 0,
+          sync: false,
+        })
+      );
 
-      await repository.addTrack(PlaylistTrack.create({
-        playlistId: playlist.id,
-        trackId: testTrackIds[0],
-        trackOrder: 1,
-      }));
+      await repository.addTrack(
+        PlaylistTrack.create({
+          playlistId: playlist.id,
+          trackId: testTrackIds[0],
+          trackOrder: 1,
+        })
+      );
 
       await repository.delete(playlist.id);
 

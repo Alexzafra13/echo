@@ -5,7 +5,7 @@ import { IPlayTrackingRepository, PLAY_TRACKING_REPOSITORY } from '../ports';
 export class GetRecentlyPlayedUseCase {
   constructor(
     @Inject(PLAY_TRACKING_REPOSITORY)
-    private readonly repository: IPlayTrackingRepository,
+    private readonly repository: IPlayTrackingRepository
   ) {}
 
   async execute(userId: string, limit: number = 20): Promise<string[]> {

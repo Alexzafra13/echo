@@ -7,7 +7,7 @@ import { apiClient } from '@shared/services/api';
 export interface ArtistImages {
   artistId: string;
   images: {
-    profile?: ImageMetadata;      // Unified profile image (replaces small/medium/large)
+    profile?: ImageMetadata; // Unified profile image (replaces small/medium/large)
     background?: ImageMetadata;
     banner?: ImageMetadata;
     logo?: ImageMetadata;
@@ -19,8 +19,8 @@ interface ImageMetadata {
   size?: number;
   mimeType?: string;
   lastModified?: string;
-  tag?: string;                   // MD5 hash for cache-busting
-  source?: 'local' | 'external';  // Image source
+  tag?: string; // MD5 hash for cache-busting
+  source?: 'local' | 'external'; // Image source
 }
 
 /**
@@ -40,7 +40,8 @@ export function getArtistImageUrl(artistId: string, imageType: string, tag?: str
 
   // Fallback: check for manual refresh parameter in URL
   if (new URLSearchParams(window.location.search).has('_refresh')) {
-    const timestamp = new URLSearchParams(window.location.search).get('_refresh') || Date.now().toString();
+    const timestamp =
+      new URLSearchParams(window.location.search).get('_refresh') || Date.now().toString();
     return `${baseUrl}?_t=${timestamp}`;
   }
 
@@ -77,7 +78,7 @@ export function useArtistImages(artistId: string | undefined, enabled: boolean =
     },
     enabled: enabled && !!artistId,
     staleTime: 1000 * 60 * 30, // 30 minutes - images don't change often
-    gcTime: 1000 * 60 * 60,    // 1 hour cache time
+    gcTime: 1000 * 60 * 60, // 1 hour cache time
     retry: false, // Don't retry on error - if no images exist, that's expected
   });
 }

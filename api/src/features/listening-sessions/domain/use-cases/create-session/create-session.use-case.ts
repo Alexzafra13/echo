@@ -8,7 +8,7 @@ import { CreateSessionInput, CreateSessionOutput } from './create-session.dto';
 export class CreateSessionUseCase {
   constructor(
     @Inject(LISTENING_SESSION_REPOSITORY)
-    private readonly sessionRepository: IListeningSessionRepository,
+    private readonly sessionRepository: IListeningSessionRepository
   ) {}
 
   async execute(input: CreateSessionInput): Promise<CreateSessionOutput> {

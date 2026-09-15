@@ -1,9 +1,19 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ARTIST_REPOSITORY, IArtistRepository } from '../../ports/artist-repository.port';
-import { SIMILAR_ARTISTS_PROVIDER, ISimilarArtistsProvider } from '../../ports/similar-artists.port';
-import { PLAY_TRACKING_REPOSITORY, IPlayTrackingRepository } from '@features/play-tracking/domain/ports';
-import { GetRelatedArtistsInput, GetRelatedArtistsOutput, RelatedArtistData } from './get-related-artists.dto';
+import {
+  SIMILAR_ARTISTS_PROVIDER,
+  ISimilarArtistsProvider,
+} from '../../ports/similar-artists.port';
+import {
+  PLAY_TRACKING_REPOSITORY,
+  IPlayTrackingRepository,
+} from '@features/play-tracking/domain/ports';
+import {
+  GetRelatedArtistsInput,
+  GetRelatedArtistsOutput,
+  RelatedArtistData,
+} from './get-related-artists.dto';
 
 /**
  * GetRelatedArtistsUseCase - Get related artists with 3-tier fallback
@@ -25,7 +35,7 @@ export class GetRelatedArtistsUseCase {
     @Inject(PLAY_TRACKING_REPOSITORY)
     private readonly playTrackingRepository: IPlayTrackingRepository,
     @Inject(SIMILAR_ARTISTS_PROVIDER)
-    private readonly similarArtistsProvider: ISimilarArtistsProvider,
+    private readonly similarArtistsProvider: ISimilarArtistsProvider
   ) {}
 
   async execute(input: GetRelatedArtistsInput): Promise<GetRelatedArtistsOutput> {
@@ -67,12 +77,12 @@ export class GetRelatedArtistsUseCase {
   private async getFromExternalProvider(
     artist: { mbzArtistId?: string | null; name: string },
     artistId: string,
-    limit: number,
+    limit: number
   ): Promise<GetRelatedArtistsOutput | null> {
     const similarArtists = await this.similarArtistsProvider.getSimilarArtists(
       artist.mbzArtistId || null,
       artist.name,
-      50, // Get more so we can filter to local library
+      50 // Get more so we can filter to local library
     );
 
     this.logger.info(
@@ -80,12 +90,14 @@ export class GetRelatedArtistsUseCase {
     );
 
     if (!similarArtists || similarArtists.length === 0) {
-      this.logger.info(`[Autoplay] No similar artists found for: ${artist.name}, trying internal patterns`);
+      this.logger.info(
+        `[Autoplay] No similar artists found for: ${artist.name}, trying internal patterns`
+      );
       return null;
     }
 
     // OPTIMIZATION: Bulk lookup all artist names in a single query
-    const artistNames = similarArtists.map(s => s.name);
+    const artistNames = similarArtists.map((s) => s.name);
     const artistMap = await this.artistRepository.findByNames(artistNames);
 
     const relatedArtists: RelatedArtistData[] = [];
@@ -121,7 +133,7 @@ export class GetRelatedArtistsUseCase {
 
     if (relatedArtists.length > 0) {
       this.logger.info(
-        `[Autoplay] Found ${relatedArtists.length} related artists IN library: ${relatedArtists.map(a => a.name).join(', ')}`
+        `[Autoplay] Found ${relatedArtists.length} related artists IN library: ${relatedArtists.map((a) => a.name).join(', ')}`
       );
       return {
         data: relatedArtists,
@@ -140,11 +152,11 @@ export class GetRelatedArtistsUseCase {
    */
   private async getFromGenreAndAudio(
     artistId: string,
-    limit: number,
+    limit: number
   ): Promise<GetRelatedArtistsOutput | null> {
     const similar = await this.artistRepository.findSimilarByGenreAndAudio(
       artistId,
-      limit * 2, // Fetch extra to filter low-quality
+      limit * 2 // Fetch extra to filter low-quality
     );
 
     if (similar.length === 0) {
@@ -153,7 +165,7 @@ export class GetRelatedArtistsUseCase {
     }
 
     // Filter: keep only results with score >= 0.15 (at least some genre overlap)
-    const qualityResults = similar.filter(r => r.score >= 0.15);
+    const qualityResults = similar.filter((r) => r.score >= 0.15);
 
     if (qualityResults.length === 0) {
       this.logger.debug('Genre/audio results too weak, trying co-listening');
@@ -161,12 +173,12 @@ export class GetRelatedArtistsUseCase {
     }
 
     // Bulk lookup artist details
-    const artistIds = qualityResults.slice(0, limit).map(r => r.artistId);
+    const artistIds = qualityResults.slice(0, limit).map((r) => r.artistId);
     const artists = await this.artistRepository.findByIds(artistIds);
-    const artistMap = new Map(artists.map(a => [a.id, a]));
+    const artistMap = new Map(artists.map((a) => [a.id, a]));
 
     // Normalize scores to 0-100
-    const maxScore = Math.max(...qualityResults.map(r => r.score));
+    const maxScore = Math.max(...qualityResults.map((r) => r.score));
 
     const relatedArtists: RelatedArtistData[] = [];
     for (const stat of qualityResults) {
@@ -185,7 +197,7 @@ export class GetRelatedArtistsUseCase {
 
     if (relatedArtists.length > 0) {
       this.logger.info(
-        `Found ${relatedArtists.length} related artists from genre/audio: ${relatedArtists.map(a => a.name).join(', ')}`
+        `Found ${relatedArtists.length} related artists from genre/audio: ${relatedArtists.map((a) => a.name).join(', ')}`
       );
       return {
         data: relatedArtists,
@@ -204,12 +216,12 @@ export class GetRelatedArtistsUseCase {
    */
   private async getFromInternalPatterns(
     artistId: string,
-    limit: number,
+    limit: number
   ): Promise<GetRelatedArtistsOutput> {
     // Fetch more than needed so we can filter low-quality results
     const internalRelated = await this.playTrackingRepository.getRelatedArtists(
       artistId,
-      limit * 3,
+      limit * 3
     );
 
     if (internalRelated.length === 0) {
@@ -222,16 +234,16 @@ export class GetRelatedArtistsUseCase {
     }
 
     // Filter out low-quality results: keep only those with at least 10% of the top score
-    const maxScore = Math.max(...internalRelated.map(r => r.score));
+    const maxScore = Math.max(...internalRelated.map((r) => r.score));
     const minScoreThreshold = maxScore * 0.1;
-    const qualityResults = internalRelated.filter(r => r.score >= minScoreThreshold);
+    const qualityResults = internalRelated.filter((r) => r.score >= minScoreThreshold);
 
     // OPTIMIZATION: Bulk lookup all artist IDs in a single query
-    const artistIds = qualityResults.map(r => r.artistId);
+    const artistIds = qualityResults.map((r) => r.artistId);
     const artists = await this.artistRepository.findByIds(artistIds);
 
     // Create map for O(1) lookup
-    const artistMap = new Map(artists.map(a => [a.id, a]));
+    const artistMap = new Map(artists.map((a) => [a.id, a]));
 
     const relatedArtists: RelatedArtistData[] = [];
     for (const stat of qualityResults) {
@@ -248,9 +260,7 @@ export class GetRelatedArtistsUseCase {
       }
     }
 
-    this.logger.debug(
-      `Found ${relatedArtists.length} related artists from internal patterns`
-    );
+    this.logger.debug(`Found ${relatedArtists.length} related artists from internal patterns`);
 
     return {
       data: relatedArtists,

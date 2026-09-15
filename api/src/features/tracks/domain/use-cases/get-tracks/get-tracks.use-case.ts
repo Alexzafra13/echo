@@ -7,7 +7,7 @@ import { GetTracksInput, GetTracksOutput } from './get-tracks.dto';
 export class GetTracksUseCase {
   constructor(
     @Inject(TRACK_REPOSITORY)
-    private readonly trackRepository: ITrackRepository,
+    private readonly trackRepository: ITrackRepository
   ) {}
 
   async execute(input: GetTracksInput): Promise<GetTracksOutput> {

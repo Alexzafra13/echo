@@ -89,7 +89,7 @@ describe('GetUserPlayHistoryUseCase', () => {
 
     it('should propagate repository errors', async () => {
       (repository.getUserPlayHistory as jest.Mock).mockRejectedValue(
-        new Error('Database connection failed'),
+        new Error('Database connection failed')
       );
 
       await expect(useCase.execute('user-1')).rejects.toThrow('Database connection failed');

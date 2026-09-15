@@ -24,9 +24,8 @@ export const SHUFFLE_GRADIENT_PALETTES: readonly [string, string][] = [
  * Get a random gradient from the palettes
  */
 export function getRandomGradient(): { background: string } {
-  const palette = SHUFFLE_GRADIENT_PALETTES[
-    Math.floor(Math.random() * SHUFFLE_GRADIENT_PALETTES.length)
-  ];
+  const palette =
+    SHUFFLE_GRADIENT_PALETTES[Math.floor(Math.random() * SHUFFLE_GRADIENT_PALETTES.length)];
   return {
     background: `linear-gradient(135deg, ${palette[0]} 0%, ${palette[1]} 100%)`,
   };

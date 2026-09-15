@@ -72,11 +72,9 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      setTokens: (accessToken, refreshToken) =>
-        set({ accessToken, refreshToken }),
+      setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
 
-      updateAvatarTimestamp: () =>
-        set({ avatarTimestamp: Date.now() }),
+      updateAvatarTimestamp: () => set({ avatarTimestamp: Date.now() }),
     }),
     {
       name: 'echo-auth-storage',
@@ -97,14 +95,18 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (_state, error) => {
         if (error) {
           logger.error('[AuthStore] Error loading persisted state:', error);
-          try { localStorage.removeItem('echo-auth-storage'); } catch { /* modo privado */ }
+          try {
+            localStorage.removeItem('echo-auth-storage');
+          } catch {
+            /* modo privado */
+          }
         }
       },
 
       // Safe merge: ensure defaults are always present
       merge: (persistedState, currentState) => ({
         ...currentState,
-        ...(persistedState as Partial<AuthState> || {}),
+        ...((persistedState as Partial<AuthState>) || {}),
       }),
 
       // Only persist essential auth data

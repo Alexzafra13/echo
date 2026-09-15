@@ -22,17 +22,17 @@ class CompactDrizzleLogger {
   logQuery(query: string, params: unknown[]): void {
     // Compact query: remove extra whitespace and truncate if too long
     const compactQuery = query.replace(/\s+/g, ' ').trim();
-    const displayQuery = compactQuery.length > this.MAX_QUERY_LENGTH
-      ? `${compactQuery.substring(0, this.MAX_QUERY_LENGTH)}...`
-      : compactQuery;
+    const displayQuery =
+      compactQuery.length > this.MAX_QUERY_LENGTH
+        ? `${compactQuery.substring(0, this.MAX_QUERY_LENGTH)}...`
+        : compactQuery;
 
     // Compact params: stringify and truncate
-    const paramsStr = params.length > 0
-      ? JSON.stringify(params)
-      : '';
-    const displayParams = paramsStr.length > this.MAX_PARAMS_LENGTH
-      ? `${paramsStr.substring(0, this.MAX_PARAMS_LENGTH)}...`
-      : paramsStr;
+    const paramsStr = params.length > 0 ? JSON.stringify(params) : '';
+    const displayParams =
+      paramsStr.length > this.MAX_PARAMS_LENGTH
+        ? `${paramsStr.substring(0, this.MAX_PARAMS_LENGTH)}...`
+        : paramsStr;
 
     // Log as debug level with compact format
     if (displayParams) {
@@ -50,7 +50,7 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @InjectPinoLogger(DrizzleService.name)
-    private readonly logger: PinoLogger,
+    private readonly logger: PinoLogger
   ) {
     // Production-ready pool configuration
     this.pool = new Pool({

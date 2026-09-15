@@ -276,9 +276,7 @@ export class LibraryCleanupService {
     }
 
     if (deletedCount > 0) {
-      this.logger.info(
-        ` Purgados ${deletedCount} tracks desaparecidos hace más de ${days} días`
-      );
+      this.logger.info(` Purgados ${deletedCount} tracks desaparecidos hace más de ${days} días`);
       await this.deleteOrphanedAlbums();
       await this.deleteOrphanedArtists();
     }

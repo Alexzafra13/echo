@@ -7,7 +7,7 @@ import { EndSessionInput, EndSessionOutput } from './end-session.dto';
 export class EndSessionUseCase {
   constructor(
     @Inject(LISTENING_SESSION_REPOSITORY)
-    private readonly sessionRepository: IListeningSessionRepository,
+    private readonly sessionRepository: IListeningSessionRepository
   ) {}
 
   async execute(input: EndSessionInput): Promise<EndSessionOutput> {

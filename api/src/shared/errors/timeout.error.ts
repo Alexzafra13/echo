@@ -6,7 +6,7 @@ import { BaseError } from './base.error';
 export class TimeoutError extends BaseError {
   constructor(
     public readonly timeoutMs: number,
-    public readonly operation?: string,
+    public readonly operation?: string
   ) {
     const message = operation
       ? `${operation} timed out after ${timeoutMs}ms`

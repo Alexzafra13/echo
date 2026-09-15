@@ -184,12 +184,7 @@ describe('Input', () => {
     });
 
     it('should not show toggle if custom rightIcon is provided', () => {
-      render(
-        <Input
-          type="password"
-          rightIcon={<Search data-testid="custom-icon" />}
-        />
-      );
+      render(<Input type="password" rightIcon={<Search data-testid="custom-icon" />} />);
 
       expect(screen.getByTestId('custom-icon')).toBeInTheDocument();
       expect(screen.queryByLabelText(/mostrar contraseña/i)).not.toBeInTheDocument();
@@ -232,13 +227,7 @@ describe('Input', () => {
 
   describe('HTML attributes', () => {
     it('should pass through standard input attributes', () => {
-      render(
-        <Input
-          disabled
-          required
-          maxLength={10}
-        />
-      );
+      render(<Input disabled required maxLength={10} />);
 
       const input = screen.getByRole('textbox');
 

@@ -134,21 +134,13 @@ describe('Button', () => {
 
   describe('icons', () => {
     it('should render left icon', () => {
-      render(
-        <Button leftIcon={<Home data-testid="left-icon" />}>
-          With Left Icon
-        </Button>
-      );
+      render(<Button leftIcon={<Home data-testid="left-icon" />}>With Left Icon</Button>);
 
       expect(screen.getByTestId('left-icon')).toBeInTheDocument();
     });
 
     it('should render right icon', () => {
-      render(
-        <Button rightIcon={<Home data-testid="right-icon" />}>
-          With Right Icon
-        </Button>
-      );
+      render(<Button rightIcon={<Home data-testid="right-icon" />}>With Right Icon</Button>);
 
       expect(screen.getByTestId('right-icon')).toBeInTheDocument();
     });

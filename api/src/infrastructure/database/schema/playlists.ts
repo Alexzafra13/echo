@@ -25,7 +25,9 @@ export const playlists = pgTable(
     coverImageUrl: varchar('cover_image_url', { length: 512 }),
     duration: integer('duration').default(0).notNull(),
     size: bigint('size', { mode: 'number' }).default(0).notNull(),
-    ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     public: boolean('public').default(false).notNull(),
     songCount: integer('song_count').default(0).notNull(),
     path: varchar('path', { length: 512 }),
@@ -33,9 +35,7 @@ export const playlists = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => [
-    index('idx_playlists_owner').on(table.ownerId),
-  ],
+  (table) => [index('idx_playlists_owner').on(table.ownerId)]
 );
 
 // ============================================
@@ -45,15 +45,19 @@ export const playlistTracks = pgTable(
   'playlist_tracks',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    playlistId: uuid('playlist_id').notNull().references(() => playlists.id, { onDelete: 'cascade' }),
-    trackId: uuid('track_id').notNull().references(() => tracks.id, { onDelete: 'cascade' }),
+    playlistId: uuid('playlist_id')
+      .notNull()
+      .references(() => playlists.id, { onDelete: 'cascade' }),
+    trackId: uuid('track_id')
+      .notNull()
+      .references(() => tracks.id, { onDelete: 'cascade' }),
     trackOrder: integer('track_order').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [
     unique('playlist_tracks_playlist_order_unique').on(table.playlistId, table.trackOrder),
     index('idx_playlist_tracks_playlist').on(table.playlistId, table.trackOrder),
-  ],
+  ]
 );
 
 // Type exports

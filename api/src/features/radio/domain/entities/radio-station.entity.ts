@@ -35,13 +35,8 @@ export class RadioStation {
   static createCustom(
     props: Omit<
       RadioStationProps,
-      | 'id'
-      | 'source'
-      | 'stationUuid'
-      | 'isFavorite'
-      | 'createdAt'
-      | 'updatedAt'
-    >,
+      'id' | 'source' | 'stationUuid' | 'isFavorite' | 'createdAt' | 'updatedAt'
+    >
   ): RadioStation {
     return new RadioStation({
       ...props,
@@ -73,7 +68,7 @@ export class RadioStation {
       votes?: number;
       clickcount?: number;
       lastcheckok?: boolean;
-    },
+    }
   ): RadioStation {
     return new RadioStation({
       id: generateUuid(),

@@ -201,7 +201,12 @@ describe('DjAnalysisQueueService', () => {
         'dj-analysis-queue',
         'analyze-track',
         { trackId: 't1', trackTitle: 'Track 1', filePath: '/music/t1.mp3' },
-        { attempts: 3, removeOnComplete: true, removeOnFail: true, backoff: { type: 'exponential', delay: 5000 } }
+        {
+          attempts: 3,
+          removeOnComplete: true,
+          removeOnFail: true,
+          backoff: { type: 'exponential', delay: 5000 },
+        }
       );
     });
 
@@ -226,7 +231,12 @@ describe('DjAnalysisQueueService', () => {
         'dj-analysis-queue',
         'analyze-track',
         { trackId: 't1', trackTitle: 'Track 1', filePath: '/music/t1.mp3' },
-        { attempts: 3, removeOnComplete: true, removeOnFail: true, backoff: { type: 'exponential', delay: 5000 } }
+        {
+          attempts: 3,
+          removeOnComplete: true,
+          removeOnFail: true,
+          backoff: { type: 'exponential', delay: 5000 },
+        }
       );
     });
   });

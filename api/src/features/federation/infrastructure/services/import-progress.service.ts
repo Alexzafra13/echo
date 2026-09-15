@@ -11,9 +11,7 @@ export class ImportProgressService {
   }
 
   subscribeForUser(userId: string): Observable<AlbumImportProgressEvent> {
-    return this.progressSubject.asObservable().pipe(
-      filter((event) => event.userId === userId),
-    );
+    return this.progressSubject.asObservable().pipe(filter((event) => event.userId === userId));
   }
 
   subscribeAll(): Observable<AlbumImportProgressEvent> {

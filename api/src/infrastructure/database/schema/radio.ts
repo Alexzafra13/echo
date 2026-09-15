@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  integer,
-  boolean,
-  timestamp,
-  index,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, integer, boolean, timestamp, index } from 'drizzle-orm/pg-core';
 import { users } from './users';
 
 // ============================================
@@ -16,7 +8,9 @@ export const radioStations = pgTable(
   'radio_stations',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     stationUuid: varchar('station_uuid', { length: 255 }),
     name: varchar('name', { length: 255 }).notNull(),
     url: varchar('url', { length: 512 }).notNull(),
@@ -42,7 +36,7 @@ export const radioStations = pgTable(
     index('radio_stations_user_id_idx').on(table.userId),
     index('radio_stations_station_uuid_idx').on(table.stationUuid),
     index('radio_stations_user_favorite_idx').on(table.userId, table.isFavorite),
-  ],
+  ]
 );
 
 // ============================================
@@ -66,7 +60,7 @@ export const radioStationImages = pgTable(
   (table) => [
     index('radio_station_images_station_uuid_idx').on(table.stationUuid),
     index('radio_station_images_source_idx').on(table.source),
-  ],
+  ]
 );
 
 // Type exports

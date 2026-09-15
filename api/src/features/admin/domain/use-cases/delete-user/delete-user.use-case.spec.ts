@@ -85,7 +85,12 @@ describe('DeleteUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(adminToDelete);
-      mockUserRepository.findAll.mockResolvedValue([systemAdmin, adminToDelete, otherAdmin, regularUser]);
+      mockUserRepository.findAll.mockResolvedValue([
+        systemAdmin,
+        adminToDelete,
+        otherAdmin,
+        regularUser,
+      ]);
       mockUserRepository.updatePartial.mockResolvedValue({
         ...adminToDelete,
         isActive: false,

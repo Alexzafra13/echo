@@ -17,29 +17,33 @@ export function getPlayerDisplayInfo(
   currentTrack: Track | null
 ): PlayerDisplayInfo {
   if (isRadioMode && currentRadioStation) {
-    const firstTag = currentRadioStation.tags && typeof currentRadioStation.tags === 'string' && currentRadioStation.tags.trim()
-      ? currentRadioStation.tags.split(',')[0]
-      : null;
+    const firstTag =
+      currentRadioStation.tags &&
+      typeof currentRadioStation.tags === 'string' &&
+      currentRadioStation.tags.trim()
+        ? currentRadioStation.tags.split(',')[0]
+        : null;
 
     return {
       title: currentRadioStation.name,
-      artist: [
-        currentRadioStation.country,
-        firstTag
-      ].filter(Boolean).join(' • ') || 'Radio',
-      cover: currentRadioStation.customFaviconUrl || currentRadioStation.favicon || '/images/covers/placeholder.jpg'
+      artist: [currentRadioStation.country, firstTag].filter(Boolean).join(' • ') || 'Radio',
+      cover:
+        currentRadioStation.customFaviconUrl ||
+        currentRadioStation.favicon ||
+        '/images/covers/placeholder.jpg',
     };
   }
 
   return {
     title: currentTrack?.title || '',
     artist: currentTrack?.artist || currentTrack?.artistName || '',
-    cover: currentTrack?.album?.cover
-      || currentTrack?.coverImage
-      || (currentTrack?.albumId ? `/api/images/albums/${currentTrack.albumId}/cover` : '')
-      || '/images/covers/placeholder.jpg',
+    cover:
+      currentTrack?.album?.cover ||
+      currentTrack?.coverImage ||
+      (currentTrack?.albumId ? `/api/images/albums/${currentTrack.albumId}/cover` : '') ||
+      '/images/covers/placeholder.jpg',
     albumId: currentTrack?.albumId || currentTrack?.album?.id,
     albumName: currentTrack?.albumName || currentTrack?.album?.title,
-    artistId: currentTrack?.artistId
+    artistId: currentTrack?.artistId,
   };
 }

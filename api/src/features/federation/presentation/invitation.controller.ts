@@ -13,23 +13,17 @@ import {
   Inject,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { User } from '@infrastructure/database/schema';
 import { FederationTokenService } from '../domain/services';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
 import {
-  CreateInvitationTokenDto,
-  InvitationTokenResponseDto,
-} from './dto';
+  IFederationRepository,
+  FEDERATION_REPOSITORY,
+} from '../domain/ports/federation.repository';
+import { CreateInvitationTokenDto, InvitationTokenResponseDto } from './dto';
 
 // Creación de tokens de invitación para que otros conecten a tu servidor
 @ApiTags('federation')
@@ -42,7 +36,7 @@ export class InvitationController {
     private readonly logger: PinoLogger,
     private readonly tokenService: FederationTokenService,
     @Inject(FEDERATION_REPOSITORY)
-    private readonly repository: IFederationRepository,
+    private readonly repository: IFederationRepository
   ) {}
 
   @Post()
@@ -57,13 +51,13 @@ export class InvitationController {
   })
   async createInvitationToken(
     @CurrentUser() user: User,
-    @Body() dto: CreateInvitationTokenDto,
+    @Body() dto: CreateInvitationTokenDto
   ): Promise<InvitationTokenResponseDto> {
     const token = await this.tokenService.generateInvitationToken(
       user.id,
       dto.name,
       dto.expiresInDays,
-      dto.maxUses,
+      dto.maxUses
     );
 
     this.logger.info({ userId: user.id, tokenId: token.id }, 'Invitation token created');
@@ -90,9 +84,7 @@ export class InvitationController {
     description: 'Lista de tokens',
     type: [InvitationTokenResponseDto],
   })
-  async getInvitationTokens(
-    @CurrentUser() user: User,
-  ): Promise<InvitationTokenResponseDto[]> {
+  async getInvitationTokens(@CurrentUser() user: User): Promise<InvitationTokenResponseDto[]> {
     const tokens = await this.tokenService.getUserInvitationTokens(user.id);
 
     return tokens.map((token) => ({
@@ -118,7 +110,7 @@ export class InvitationController {
   @ApiResponse({ status: 403, description: 'Sin acceso al token' })
   async deleteInvitationToken(
     @CurrentUser() user: User,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseUUIDPipe) id: string
   ): Promise<void> {
     const token = await this.repository.findFederationTokenById(id);
     if (!token) {

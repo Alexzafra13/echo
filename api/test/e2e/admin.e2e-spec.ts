@@ -188,9 +188,7 @@ describe('Admin E2E', () => {
     });
 
     it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .get('/api/admin/users')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/admin/users').expect(401);
     });
 
     it('debería rechazar si no es admin', async () => {
@@ -302,9 +300,7 @@ describe('Admin E2E', () => {
     });
 
     it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .delete(`/api/admin/users/${targetUserId}`)
-        .expect(401);
+      return request(app.getHttpServer()).delete(`/api/admin/users/${targetUserId}`).expect(401);
     });
   });
 

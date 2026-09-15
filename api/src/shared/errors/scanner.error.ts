@@ -6,7 +6,7 @@ import { BaseError } from './base.error';
 export class ScannerError extends BaseError {
   constructor(
     public readonly reason: ScannerErrorReason,
-    public readonly details?: string,
+    public readonly details?: string
   ) {
     const message = ScannerError.buildMessage(reason, details);
     super('SCANNER_ERROR', message);
@@ -27,7 +27,4 @@ export class ScannerError extends BaseError {
   }
 }
 
-export type ScannerErrorReason =
-  | 'SCAN_ALREADY_RUNNING'
-  | 'NO_LIBRARY_PATH'
-  | 'INVALID_PATH';
+export type ScannerErrorReason = 'SCAN_ALREADY_RUNNING' | 'NO_LIBRARY_PATH' | 'INVALID_PATH';
