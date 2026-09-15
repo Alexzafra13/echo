@@ -41,6 +41,19 @@ describe('playerSettingsStore', () => {
     });
   });
 
+  describe('volume', () => {
+    it('should default to 0.7 and clamp values', () => {
+      expect(usePlayerSettingsStore.getState().volume).toBe(0.7);
+      usePlayerSettingsStore.getState().setVolume(1.5);
+      expect(usePlayerSettingsStore.getState().volume).toBe(1);
+      usePlayerSettingsStore.getState().setVolume(-1);
+      expect(usePlayerSettingsStore.getState().volume).toBe(0);
+      usePlayerSettingsStore.getState().setVolume(0.4);
+      expect(usePlayerSettingsStore.getState().volume).toBe(0.4);
+      usePlayerSettingsStore.getState().setVolume(0.7);
+    });
+  });
+
   describe('normalization actions', () => {
     it('should disable and re-enable normalization', () => {
       usePlayerSettingsStore.getState().setNormalizationEnabled(false);

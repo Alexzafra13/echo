@@ -72,6 +72,7 @@ const mockPlaybackState = {
   crossfade: { enabled: false, duration: 2, smartMode: false },
   setCrossfadeEnabled: vi.fn(),
   setCrossfadeDuration: vi.fn(),
+  setCrossfadeSmartMode: vi.fn(),
   normalization: { enabled: true },
   setNormalizationEnabled: vi.fn(),
   volumeControlSupported: true,
@@ -321,6 +322,15 @@ describe('SettingsPage', () => {
       render(<SettingsPage />);
 
       expect(screen.queryByText('Duración del fundido')).not.toBeInTheDocument();
+    });
+
+    it('should toggle smart crossfade when crossfade is enabled', () => {
+      mockPlaybackState.crossfade.enabled = true;
+      render(<SettingsPage />);
+
+      fireEvent.click(screen.getByLabelText('Fundido inteligente'));
+
+      expect(mockPlaybackState.setCrossfadeSmartMode).toHaveBeenCalledWith(true);
     });
 
     it('should toggle volume normalization', () => {

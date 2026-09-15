@@ -84,6 +84,14 @@ export class ScannerController {
     return this.lufsQueueService.getQueueStats();
   }
 
+  @Post('lufs-start')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Inicia el análisis LUFS de las pistas pendientes' })
+  @ApiResponse({ status: 200, description: 'Resultado del arranque de la cola' })
+  async startLufsAnalysis() {
+    return this.lufsQueueService.startLufsAnalysisQueue();
+  }
+
   @Get('dj-status')
   @ApiOperation({ summary: 'Obtiene el estado del análisis DJ en segundo plano' })
   @ApiResponse({

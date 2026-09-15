@@ -13,6 +13,7 @@ export function PlaybackCard() {
     crossfade,
     setCrossfadeEnabled,
     setCrossfadeDuration,
+    setCrossfadeSmartMode,
     normalization,
     setNormalizationEnabled,
     volumeControlSupported,
@@ -71,6 +72,23 @@ export function PlaybackCard() {
                     })}
                   </span>
                 </div>
+              </div>
+            )}
+            {crossfade.enabled && (
+              <div className={styles.settingsPage__toggleItem}>
+                <div className={styles.settingsPage__toggleInfo}>
+                  <span className={styles.settingsPage__toggleLabel}>
+                    {t('settings.playback.smartCrossfadeLabel')}
+                  </span>
+                  <p className={styles.settingsPage__toggleDescription}>
+                    {t('settings.playback.smartCrossfadeDescription')}
+                  </p>
+                </div>
+                <Switch
+                  checked={crossfade.smartMode}
+                  onChange={setCrossfadeSmartMode}
+                  aria-label={t('settings.playback.smartCrossfadeLabel')}
+                />
               </div>
             )}
             <div className={styles.settingsPage__toggleItem}>

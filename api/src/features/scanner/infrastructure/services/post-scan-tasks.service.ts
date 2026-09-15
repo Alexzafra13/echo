@@ -52,9 +52,10 @@ export class PostScanTasksService {
 
   async startLufsAnalysis(): Promise<void> {
     try {
+      // Desactivado de serie: es un análisis costoso y se activa desde el panel
       const lufsAnalysisEnabled = await this.settingsService.getBoolean(
         'lufs.auto_analysis.enabled',
-        true
+        false
       );
 
       if (!lufsAnalysisEnabled) {

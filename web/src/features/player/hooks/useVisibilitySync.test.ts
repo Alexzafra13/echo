@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useVisibilitySync } from './useVisibilitySync';
+import { useVisibilitySync, MAX_RESUME_AFTER_INTERRUPTION_MS } from './useVisibilitySync';
 
 vi.mock('@shared/utils/logger', () => ({
   logger: { debug: vi.fn(), warn: vi.fn(), error: vi.fn(), info: vi.fn() },
@@ -28,8 +28,47 @@ describe('useVisibilitySync', () => {
       useVisibilitySync({
         isPlaying: false,
         wantsToPlayRef: { current: true },
+        interruptedAtRef: { current: null },
         getActiveAudio: () => audio as unknown as HTMLAudioElement,
         setIsPlaying,
+      })
+    );
+
+    foreground();
+
+    expect(audio.play).toHaveBeenCalled();
+  });
+
+  it('no reanuda una interrupción antigua y olvida la intención', () => {
+    const audio = { paused: true, ended: false, play: vi.fn().mockResolvedValue(undefined) };
+    const wantsToPlayRef = { current: true };
+
+    renderHook(() =>
+      useVisibilitySync({
+        isPlaying: false,
+        wantsToPlayRef,
+        interruptedAtRef: { current: Date.now() - MAX_RESUME_AFTER_INTERRUPTION_MS - 1000 },
+        getActiveAudio: () => audio as unknown as HTMLAudioElement,
+        setIsPlaying: vi.fn(),
+      })
+    );
+
+    foreground();
+
+    expect(audio.play).not.toHaveBeenCalled();
+    expect(wantsToPlayRef.current).toBe(false);
+  });
+
+  it('reanuda una interrupción reciente', () => {
+    const audio = { paused: true, ended: false, play: vi.fn().mockResolvedValue(undefined) };
+
+    renderHook(() =>
+      useVisibilitySync({
+        isPlaying: false,
+        wantsToPlayRef: { current: true },
+        interruptedAtRef: { current: Date.now() - 30_000 },
+        getActiveAudio: () => audio as unknown as HTMLAudioElement,
+        setIsPlaying: vi.fn(),
       })
     );
 
@@ -45,6 +84,7 @@ describe('useVisibilitySync', () => {
       useVisibilitySync({
         isPlaying: false,
         wantsToPlayRef: { current: false },
+        interruptedAtRef: { current: null },
         getActiveAudio: () => audio as unknown as HTMLAudioElement,
         setIsPlaying: vi.fn(),
       })
@@ -63,6 +103,7 @@ describe('useVisibilitySync', () => {
       useVisibilitySync({
         isPlaying: false,
         wantsToPlayRef: { current: false },
+        interruptedAtRef: { current: null },
         getActiveAudio: () => audio as unknown as HTMLAudioElement,
         setIsPlaying,
       })
@@ -80,6 +121,7 @@ describe('useVisibilitySync', () => {
       useVisibilitySync({
         isPlaying: false,
         wantsToPlayRef: { current: true },
+        interruptedAtRef: { current: null },
         getActiveAudio: () => audio as unknown as HTMLAudioElement,
         setIsPlaying: vi.fn(),
       })

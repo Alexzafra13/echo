@@ -84,6 +84,7 @@ export interface PlayerContextValue extends PlayerState {
 
   setCrossfadeEnabled: (enabled: boolean) => void;
   setCrossfadeDuration: (duration: number) => void;
+  setCrossfadeSmartMode: (enabled: boolean) => void;
   setNormalizationEnabled: (enabled: boolean) => void;
 
   setAutoplayEnabled: (enabled: boolean) => void;

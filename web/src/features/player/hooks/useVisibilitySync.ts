@@ -1,10 +1,16 @@
-import { useEffect, type RefObject } from 'react';
+import { useEffect, type MutableRefObject, type RefObject } from 'react';
 import { logger } from '@shared/utils/logger';
+
+// Pasado este tiempo desde que el sistema pausó la música, no se reanuda sola:
+// lo más probable es que el usuario haya pasado a otra cosa.
+export const MAX_RESUME_AFTER_INTERRUPTION_MS = 10 * 60 * 1000;
 
 interface UseVisibilitySyncOptions {
   isPlaying: boolean;
   /** Intención del usuario: true desde que pulsa play hasta que pausa o para */
-  wantsToPlayRef: RefObject<boolean>;
+  wantsToPlayRef: MutableRefObject<boolean>;
+  /** Momento en que el sistema pausó el audio sin que el usuario lo pidiera */
+  interruptedAtRef: RefObject<number | null>;
   getActiveAudio: () => HTMLAudioElement | null;
   setIsPlaying: (playing: boolean) => void;
 }
@@ -20,6 +26,7 @@ interface UseVisibilitySyncOptions {
 export function useVisibilitySync({
   isPlaying,
   wantsToPlayRef,
+  interruptedAtRef,
   getActiveAudio,
   setIsPlaying,
 }: UseVisibilitySyncOptions) {
@@ -31,6 +38,16 @@ export function useVisibilitySync({
       if (!activeAudio) return;
 
       if (wantsToPlayRef.current && activeAudio.paused && !activeAudio.ended) {
+        const interruptedAt = interruptedAtRef.current;
+        if (
+          interruptedAt !== null &&
+          Date.now() - interruptedAt > MAX_RESUME_AFTER_INTERRUPTION_MS
+        ) {
+          logger.debug('[Player] Interruption too old, not resuming automatically');
+          wantsToPlayRef.current = false;
+          return;
+        }
+
         logger.debug('[Player] App foregrounded: audio was suspended, attempting resume');
         activeAudio.play().catch(() => {
           logger.warn('[Player] Resume after foreground failed, syncing state');
@@ -43,5 +60,5 @@ export function useVisibilitySync({
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [getActiveAudio, isPlaying, wantsToPlayRef, setIsPlaying]);
+  }, [getActiveAudio, isPlaying, wantsToPlayRef, interruptedAtRef, setIsPlaying]);
 }

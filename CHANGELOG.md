@@ -8,11 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Smart crossfade option: the fade starts where the loudness analysis detected the real end of the song (`outroStart`) instead of a fixed number of seconds before the end.
+- `POST /api/scanner/lufs-start` starts the loudness analysis of pending tracks on demand; the Library Analysis toggle calls it when enabled.
 - Volume normalization in the web player: each track is attenuated according to the ReplayGain value from the library LUFS analysis, so songs play at an even loudness (on by default, toggle in Settings → Playback). Only attenuates; nothing is amplified.
 - Crossfade length is configurable again (1–12 s) from Settings → Playback.
 
 ### Changed
 
+- Loudness (LUFS) analysis is now off by default and must be enabled from Settings → Library Analysis.
+- The player volume is remembered between sessions.
+- When an album is played from start to end, normalization uses the album gain so the volume differences between its tracks are preserved.
+- Playback is not resumed automatically if the system interrupted it more than ten minutes ago.
 - The system media notification shows previous/next track instead of ±15 s seek buttons (seekbackward/seekforward handlers are no longer registered).
 - On iOS the player no longer attempts a crossfade (volume is hardware-only, so both tracks played at full volume); the gapless transition is used instead.
 - A crossfade that starts while the app is in the background switches tracks immediately instead of leaving the new track at volume 0 until the fade timer fires.

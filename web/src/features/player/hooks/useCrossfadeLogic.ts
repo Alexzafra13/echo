@@ -7,7 +7,7 @@ import { useRef, useCallback, useEffect, useState } from 'react';
 import { useLatestCallback } from '@shared/hooks';
 import { logger } from '@shared/utils/logger';
 import type { AudioElements } from './useAudioElements';
-import type { CrossfadeSettings } from '../types';
+import type { CrossfadeSettings, Track } from '../types';
 
 // Límites de la duración configurable del crossfade (segundos)
 const CROSSFADE_MIN_S = 1;
@@ -26,6 +26,8 @@ interface UseCrossfadeLogicParams {
   isRadioMode: boolean;
   repeatMode: 'off' | 'all' | 'one';
   hasNextTrack: boolean;
+  /** Pista en reproducción (para el modo inteligente, que usa su outroStart) */
+  currentTrackRef?: React.RefObject<Track | null>;
 
   onCrossfadeStart?: () => void;
   onCrossfadeComplete?: () => void;
@@ -54,6 +56,7 @@ export function useCrossfadeLogic({
   isRadioMode,
   repeatMode,
   hasNextTrack,
+  currentTrackRef,
   onCrossfadeStart,
   onCrossfadeComplete,
   onCrossfadeTrigger,
@@ -355,21 +358,33 @@ export function useCrossfadeLogic({
     const duration = audioElements.getDuration();
     const currentTime = audioElements.getCurrentTime();
     const crossfadeDuration = getCrossfadeDurationS(currentSettings);
-
     const timeRemaining = duration - currentTime;
 
-    if (
-      timeRemaining <= crossfadeDuration &&
-      timeRemaining > 0 &&
-      !crossfadeStartedRef.current &&
-      duration > crossfadeDuration
-    ) {
+    if (crossfadeStartedRef.current || !(duration > crossfadeDuration) || timeRemaining <= 0) {
+      return false;
+    }
+
+    // Modo inteligente: arrancar donde el análisis detectó el final real de la
+    // canción (silencio o fade de salida), si es un punto razonable.
+    const outroStart = currentSettings.smartMode ? currentTrackRef?.current?.outroStart : undefined;
+    const smartStart =
+      outroStart !== undefined &&
+      Number.isFinite(outroStart) &&
+      outroStart > 0 &&
+      outroStart < duration
+        ? outroStart
+        : null;
+
+    const shouldStart =
+      smartStart !== null ? currentTime >= smartStart : timeRemaining <= crossfadeDuration;
+
+    if (shouldStart) {
       crossfadeStartedRef.current = true;
       return true;
     }
 
     return false;
-  }, [isRadioMode, repeatMode, hasNextTrack, audioElements]);
+  }, [isRadioMode, repeatMode, hasNextTrack, audioElements, currentTrackRef]);
 
   // Stable timeupdate handler — useLatestCallback ensures it always uses the
   // latest checkCrossfadeTiming without causing listener churn on state changes.

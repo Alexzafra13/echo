@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { DEFAULT_VOLUME } from '../types';
 import type { CrossfadeSettings, AutoplaySettings, NormalizationSettings } from '../types';
 
 // Incrementar al cambiar la estructura del estado persistido
@@ -12,6 +13,8 @@ interface PlayerSettingsState {
   crossfade: CrossfadeSettings;
   autoplay: AutoplaySettings;
   normalization: NormalizationSettings;
+  /** Volumen del usuario (0-1), se conserva entre sesiones */
+  volume: number;
 
   setPlayerPreference: (preference: PlayerPreference) => void;
   setCrossfadeEnabled: (enabled: boolean) => void;
@@ -20,6 +23,7 @@ interface PlayerSettingsState {
   setCrossfadeTempoMatch: (tempoMatch: boolean) => void;
   setAutoplayEnabled: (enabled: boolean) => void;
   setNormalizationEnabled: (enabled: boolean) => void;
+  setVolume: (volume: number) => void;
 }
 
 const DEFAULT_CROSSFADE: CrossfadeSettings = {
@@ -42,6 +46,7 @@ const initialState = {
   crossfade: DEFAULT_CROSSFADE,
   autoplay: DEFAULT_AUTOPLAY,
   normalization: DEFAULT_NORMALIZATION,
+  volume: DEFAULT_VOLUME,
 };
 
 export const usePlayerSettingsStore = create<PlayerSettingsState>()(
@@ -83,6 +88,11 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
         set((state) => ({
           normalization: { ...state.normalization, enabled },
         })),
+
+      setVolume: (volume) =>
+        set({
+          volume: Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : DEFAULT_VOLUME,
+        }),
     }),
     {
       name: 'echo-player-settings',

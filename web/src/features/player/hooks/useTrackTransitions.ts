@@ -178,7 +178,11 @@ export function useTrackTransitions({
           };
           audioElements.loadOnInactive(
             url,
-            getTrackGainMultiplier(nextTrack, normalizationEnabled)
+            getTrackGainMultiplier(
+              nextTrack,
+              normalizationEnabled,
+              queueContextRef.current === 'album'
+            )
           );
           logger.debug('[Player] Gapless: preloaded next track:', nextTrack.title);
         })

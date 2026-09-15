@@ -85,7 +85,11 @@ export function useTrackPlayback({
       isTransitioningRef.current = false;
 
       // Reuse preloaded audio if available, otherwise load now
-      const gain = getTrackGainMultiplier(track, normalizationEnabled);
+      const gain = getTrackGainMultiplier(
+        track,
+        normalizationEnabled,
+        queueContextRef.current === 'album'
+      );
       const preloaded = preloadedNextRef.current;
       if (preloaded && preloaded.trackId === track.id) {
         preloadedNextRef.current = null;
@@ -131,7 +135,10 @@ export function useTrackPlayback({
       // isTransitioningRef is already true from playTrack
       crossfade.clearCrossfade();
       audioElements.stopInactive();
-      audioElements.loadOnActive(streamUrl, getTrackGainMultiplier(track, normalizationEnabled));
+      audioElements.loadOnActive(
+        streamUrl,
+        getTrackGainMultiplier(track, normalizationEnabled, queueContextRef.current === 'album')
+      );
 
       setCurrentTrack(track);
       playTracking.startPlaySession(track, queueContextRef.current);

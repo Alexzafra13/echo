@@ -746,9 +746,9 @@
     },
     "libraryAnalysis": {
       "title": "Library Analysis",
-      "description": "These analyses run automatically after each library scan. Disable them if you prefer to save processing time.",
+      "description": "These analyses run automatically after each library scan. Loudness analysis is off by default; enable it here to start analysing your library.",
       "lufs": "LUFS Analysis",
-      "lufsDescription": "Calculates volume levels (ReplayGain) for audio normalization",
+      "lufsDescription": "Measures loudness (ReplayGain) so the player can even out the volume between songs",
       "dj": "DJ Analysis",
       "djDescription": "Detects BPM, key, and energy for harmonic mix suggestions"
     },
@@ -773,9 +773,11 @@
       "crossfadeDuration": "Crossfade length",
       "crossfadeDurationDescription": "How long both songs overlap while one fades into the other",
       "crossfadeDurationValue": "{{seconds}} s",
+      "smartCrossfadeLabel": "Smart crossfade",
+      "smartCrossfadeDescription": "Starts the crossfade where the analysis detects the song actually ends (silence or fade-out) instead of a fixed number of seconds before the end. Requires the DJ analysis.",
       "unavailable": "Not available on this device. iOS does not allow volume control from the web, which prevents crossfading and volume normalization. Gapless transition is used automatically.",
       "normalizationLabel": "Volume normalization",
-      "normalizationDescription": "Evens out loudness between songs using the library LUFS analysis. Louder songs are turned down; nothing is amplified.",
+      "normalizationDescription": "Evens out loudness between songs using the library LUFS analysis. Louder songs are turned down; nothing is amplified. Requires the loudness analysis in Library Analysis, which is off by default; songs not yet analysed play unchanged.",
       "autoplayLabel": "Autoplay",
       "autoplayDescription": "When an album or playlist ends, automatically continues with similar artists",
       "emptyQueue": "No songs in the queue"
